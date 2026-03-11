@@ -147,15 +147,48 @@
             margin-top: 20px;
             text-align: center;
         }
+        /* Container da chave PIX */
+        .pix-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
         .pix-key {
             font-family: monospace;
             background: white;
-            padding: 10px;
+            padding: 10px 15px;
             border-radius: 8px;
-            margin: 10px 0;
-            word-break: break-all;
+            border: 2px solid #E0E0E0;
             font-size: 1.1rem;
             letter-spacing: 1px;
+            word-break: break-all;
+        }
+        /* Botão de copiar */
+        .btn-copiar {
+            width: auto;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #A8E6CF, #7FCDCD);
+            color: #2D3436;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-copiar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(127, 205, 205, 0.4);
+        }
+        .btn-copiar.copiado {
+            background: linear-gradient(135deg, #81C784, #66BB6A);
+            color: white;
         }
         .success {
             display: none;
@@ -256,8 +289,16 @@
 
                 <div class="pix-info">
                     <p><strong>💳 Pagamento via PIX</strong></p>
-                    <p style="font-size: 0.9rem; margin: 10px 0;">CNPJ: <span class="pix-key">50403919000102</span></p>
-                    <p style="font-size: 0.85rem; color: #636E72;">Amanda Marcelino</p>
+                    <p style="font-size: 0.85rem; color: #636E72; margin-bottom: 10px;">Amanda Marcelino</p>
+                    
+                    <!-- Chave PIX com botão de copiar -->
+                    <div class="pix-container">
+                        <span class="pix-key" id="pixKey">50403919000102</span>
+                        <button type="button" class="btn-copiar" onclick="copiarPix()">
+                            📋 Copiar
+                        </button>
+                    </div>
+                    
                     <p style="font-size: 0.8rem; margin-top: 10px; color: #FF6B8A;">
                         * Para SC (até 1kg) e Florianópolis, efetue o pagamento antes de enviar.<br>
                         * Outros estados: aguarde o orçamento.
@@ -281,6 +322,42 @@
         // URL do seu Web App do Google Sheets
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrr3t0brkuVPkhunAsbPSMW65WLq6KOSnevXU9VbJWclDCetqvK_UEwyZk9Whe9BQc/exec';
         
+        // Função para copiar chave PIX
+        function copiarPix() {
+            const pixKey = document.getElementById('pixKey').innerText;
+            const btn = document.querySelector('.btn-copiar');
+            
+            // Copia para área de transferência
+            navigator.clipboard.writeText(pixKey).then(function() {
+                // Muda o botão para "Copiado!"
+                btn.innerHTML = '✓ Copiado!';
+                btn.classList.add('copiado');
+                
+                // Volta ao normal após 2 segundos
+                setTimeout(function() {
+                    btn.innerHTML = '📋 Copiar';
+                    btn.classList.remove('copiado');
+                }, 2000);
+                
+            }).catch(function(err) {
+                // Fallback para navegadores antigos
+                const textArea = document.createElement('textarea');
+                textArea.value = pixKey;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                btn.innerHTML = '✓ Copiado!';
+                btn.classList.add('copiado');
+                
+                setTimeout(function() {
+                    btn.innerHTML = '📋 Copiar';
+                    btn.classList.remove('copiado');
+                }, 2000);
+            });
+        }
+
         // Função para selecionar região e destacar o card
         function selecionarRegiao(regiao) {
             // Remove a classe 'selecionado' de todos os cards
