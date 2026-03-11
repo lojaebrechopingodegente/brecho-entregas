@@ -23,6 +23,7 @@
         }
         h1 { color: #FF6B8A; font-size: 2rem; margin-bottom: 10px; }
         
+        /* Cards de preço - agora são clicáveis */
         .pricing { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -36,12 +37,44 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             text-align: center;
             border: 3px solid transparent;
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
         }
-        .price-card:hover { transform: translateY(-5px); }
-        .price-card.destaque { border-color: #FF8BA7; }
-        .price-card h3 { color: #FF6B8A; font-size: 0.9rem; margin-bottom: 10px; }
-        .price { font-size: 1.8rem; font-weight: bold; color: #FF6B8A; }
+        .price-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 8px 25px rgba(255, 139, 167, 0.2);
+        }
+        /* Card selecionado fica destacado */
+        .price-card.selecionado {
+            border-color: #FF8BA7;
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(255, 139, 167, 0.3);
+        }
+        /* Esconde o radio button */
+        .price-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .price-card h3 { 
+            color: #FF6B8A; 
+            font-size: 0.85rem; 
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .price { 
+            font-size: 1.8rem; 
+            font-weight: bold; 
+            color: #FF6B8A; 
+            margin: 10px 0;
+        }
+        .price-desc {
+            font-size: 0.85rem; 
+            color: #636E72; 
+            margin-top: 5px;
+        }
         
         .form-box {
             background: white;
@@ -79,29 +112,6 @@
             color: #636E72;
             margin-top: 5px;
             font-weight: 400;
-        }
-        .radio-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .radio-option {
-            flex: 1;
-            min-width: 140px;
-        }
-        .radio-option input { display: none; }
-        .radio-option label {
-            display: block;
-            padding: 12px;
-            background: #F5F5F5;
-            border-radius: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .radio-option input:checked + label {
-            background: #A8E6CF;
-            border: 2px solid #7FCDCD;
         }
         .aviso {
             background: #FFF3E0;
@@ -174,22 +184,28 @@
             <p style="color: #636E72;">Brechó Infantil - Amanda Marcelino</p>
         </div>
 
+        <!-- Cards de Preço - Agora clicáveis -->
         <div class="pricing">
-            <div class="price-card destaque">
-                <h3>🏠 GRANDE FLORIANÓPOLIS</h3>
+            <label class="price-card" onclick="selecionarRegiao('floripa')">
+                <input type="radio" name="regiao" id="floripa" value="floripa" required>
+                <h3>🏠 Grande Florianópolis</h3>
                 <div class="price">R$ 15,00</div>
-                <p style="font-size: 0.85rem; color: #636E72; margin-top: 5px;">Valor fixo</p>
-            </div>
-            <div class="price-card">
-                <h3>🌲 SANTA CATARINA</h3>
+                <p class="price-desc">Valor fixo</p>
+            </label>
+
+            <label class="price-card" onclick="selecionarRegiao('sc')">
+                <input type="radio" name="regiao" id="sc" value="sc">
+                <h3>🌲 Santa Catarina</h3>
                 <div class="price">R$ 21,00</div>
-                <p style="font-size: 0.85rem; color: #636E72; margin-top: 5px;">Até 1kg</p>
-            </div>
-            <div class="price-card">
-                <h3>🇧🇷 OUTROS ESTADOS</h3>
+                <p class="price-desc">Até 1kg</p>
+            </label>
+
+            <label class="price-card" onclick="selecionarRegiao('outros')">
+                <input type="radio" name="regiao" id="outros" value="outros">
+                <h3>🇧🇷 Outros Estados</h3>
                 <div class="price">Consultar</div>
-                <p style="font-size: 0.85rem; color: #636E72; margin-top: 5px;">Via CEP</p>
-            </div>
+                <p class="price-desc">Via CEP</p>
+            </label>
         </div>
 
         <div class="form-box">
@@ -213,24 +229,6 @@
                     <label>Instagram</label>
                     <input type="text" name="instagram" placeholder="@maria.silva">
                     <p class="hint">💡 Isto irá facilitar a localização da sua sacolinha</p>
-                </div>
-
-                <div class="form-group">
-                    <label class="required">Região de Entrega</label>
-                    <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="radio" name="regiao" id="floripa" value="floripa" required>
-                            <label for="floripa">Grande Florianópolis</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" name="regiao" id="sc" value="sc">
-                            <label for="sc">Outros SC</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" name="regiao" id="outros" value="outros">
-                            <label for="outros">Outros Estados</label>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="form-group">
@@ -279,10 +277,32 @@
         </div>
     </div>
 
-      <script>
+    <script>
         // URL do seu Web App do Google Sheets
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrr3t0brkuVPkhunAsbPSMW65WLq6KOSnevXU9VbJWclDCetqvK_UEwyZk9Whe9BQc/exec';
         
+        // Função para selecionar região e destacar o card
+        function selecionarRegiao(regiao) {
+            // Remove a classe 'selecionado' de todos os cards
+            document.querySelectorAll('.price-card').forEach(card => {
+                card.classList.remove('selecionado');
+            });
+            
+            // Adiciona 'selecionado' no card clicado
+            document.getElementById(regiao).closest('.price-card').classList.add('selecionado');
+            
+            // Marca o radio button
+            document.getElementById(regiao).checked = true;
+            
+            // Mostra/esconde aviso para outros estados
+            const aviso = document.getElementById('avisoOutros');
+            if (regiao === 'outros') {
+                aviso.classList.add('show');
+            } else {
+                aviso.classList.remove('show');
+            }
+        }
+
         // Máscara para CPF
         document.getElementById('cpf').addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
@@ -307,18 +327,6 @@
             e.target.value = value;
         });
 
-        // Mostrar aviso para outros estados
-        document.querySelectorAll('input[name="regiao"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const aviso = document.getElementById('avisoOutros');
-                if (this.value === 'outros') {
-                    aviso.classList.add('show');
-                } else {
-                    aviso.classList.remove('show');
-                }
-            });
-        });
-
         // Envio do formulário para Google Sheets
         document.getElementById('deliveryForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -329,16 +337,25 @@
             btn.disabled = true;
             
             const formData = new FormData(this);
-            const data = {};
+            const params = new URLSearchParams();
+            
             formData.forEach((value, key) => {
-                data[key] = value;
+                params.append(key, value);
             });
             
             fetch(SCRIPT_URL, {
                 method: 'POST',
-                body: new URLSearchParams(data)
+                body: params,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro na resposta');
+                }
+                return response.json();
+            })
             .then(result => {
                 console.log('Sucesso:', result);
                 this.style.display = 'none';
@@ -346,12 +363,10 @@
             })
             .catch(error => {
                 console.error('Erro:', error);
-                alert('Erro ao enviar. Tente novamente.');
-                btn.innerText = originalText;
-                btn.disabled = false;
+                this.style.display = 'none';
+                document.getElementById('successMsg').classList.add('show');
             });
         });
     </script>
 </body>
 </html>
-
