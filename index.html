@@ -23,6 +23,106 @@
         }
         h1 { color: #FF6B8A; font-size: 2rem; margin-bottom: 10px; }
         
+        /* AVISO DE PRAZO - NOVO */
+        .aviso-prazo {
+            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+            border: 3px solid #FF9800;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.2);
+        }
+        .aviso-prazo-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .aviso-prazo h2 {
+            color: #E65100;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .aviso-prazo p {
+            color: #BF360C;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+        .aviso-prazo strong {
+            color: #E65100;
+            font-weight: 700;
+        }
+        
+        /* CHECKBOX DE CONFIRMAÇÃO - NOVO */
+        .confirmacao-container {
+            background: white;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .confirmacao-container.ativo {
+            border-color: #A8E6CF;
+            background: #F0FFF4;
+        }
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: #FF6B8A;
+        }
+        .checkbox-wrapper label {
+            margin: 0;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #2D3436;
+            font-weight: 600;
+        }
+        .checkbox-wrapper input[type="checkbox"]:checked + label {
+            color: #2E7D32;
+        }
+        
+        /* FORMULÁRIO DESABILITADO - NOVO */
+        .form-box.desabilitado {
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(0.5);
+        }
+        .form-box.desabilitado::after {
+            content: "👆 Marque a caixa acima para começar";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #FF6B8A;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            white-space: nowrap;
+            z-index: 10;
+        }
+        .form-box {
+            position: relative;
+            background: white;
+            padding: 35px;
+            border-radius: 25px;
+            box-shadow: 0 10px 40px rgba(255, 139, 167, 0.15);
+            transition: all 0.3s;
+        }
+        
         /* Cards de preço - agora são clicáveis */
         .pricing { 
             display: grid; 
@@ -76,12 +176,6 @@
             margin-top: 5px;
         }
         
-        .form-box {
-            background: white;
-            padding: 35px;
-            border-radius: 25px;
-            box-shadow: 0 10px 40px rgba(255, 139, 167, 0.15);
-        }
         .form-group { margin-bottom: 20px; }
         label { 
             display: block; 
@@ -217,6 +311,28 @@
             <p style="color: #636E72;">Loja e Brechó Pingo de Gente</p>
         </div>
 
+        <!-- AVISO DE PRAZO DE ENTREGA -->
+        <div class="aviso-prazo">
+            <div class="aviso-prazo-icon">📅</div>
+            <h2>⏰ Prazo de Entrega</h2>
+            <p>
+                As solicitações recebidas até às <strong>17:00hs de Quarta-feira</strong> serão enviadas na 
+                <strong>Quinta e Sexta-feira</strong> da mesma semana.<br><br>
+                Após essa data serão enviadas na <strong>Quinta e Sexta-feira</strong> da próxima semana.<br>
+                <strong>Não precisa preencher novamente</strong> a solicitação, só aguardar!
+            </p>
+        </div>
+
+        <!-- CHECKBOX DE CONFIRMAÇÃO - NOVO -->
+        <div class="confirmacao-container" id="confirmacaoBox">
+            <div class="checkbox-wrapper">
+                <input type="checkbox" id="confirmarPrazo" onchange="habilitarFormulario()">
+                <label for="confirmarPrazo">
+                    ✅ Li e entendi o prazo de entrega acima
+                </label>
+            </div>
+        </div>
+
         <!-- Cards de Preço - Agora clicáveis -->
         <div class="pricing">
             <label class="price-card" onclick="selecionarRegiao('floripa')">
@@ -241,7 +357,8 @@
             </label>
         </div>
 
-        <div class="form-box">
+        <!-- FORMULÁRIO COM CLASSE DESABILITADO INICIALMENTE -->
+        <div class="form-box desabilitado" id="formBox">
             <form id="deliveryForm">
                 <div class="form-group">
                     <label class="required">Nome completo</label>
@@ -322,6 +439,26 @@
         // URL do seu Web App do Google Sheets
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrr3t0brkuVPkhunAsbPSMW65WLq6KOSnevXU9VbJWclDCetqvK_UEwyZk9Whe9BQc/exec';
         
+        // FUNÇÃO PARA HABILITAR/DESABILITAR FORMULÁRIO - NOVO
+        function habilitarFormulario() {
+            const checkbox = document.getElementById('confirmarPrazo');
+            const formBox = document.getElementById('formBox');
+            const confirmacaoBox = document.getElementById('confirmacaoBox');
+            
+            if (checkbox.checked) {
+                // Habilita o formulário
+                formBox.classList.remove('desabilitado');
+                confirmacaoBox.classList.add('ativo');
+                
+                // Rola suavemente até o formulário
+                formBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                // Desabilita o formulário
+                formBox.classList.add('desabilitado');
+                confirmacaoBox.classList.remove('ativo');
+            }
+        }
+        
         // Função para copiar chave PIX
         function copiarPix() {
             const pixKey = document.getElementById('pixKey').innerText;
@@ -360,6 +497,12 @@
 
         // Função para selecionar região e destacar o card
         function selecionarRegiao(regiao) {
+            // Verifica se o formulário está habilitado
+            if (document.getElementById('formBox').classList.contains('desabilitado')) {
+                alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo de entrega" acima para continuar.');
+                return;
+            }
+            
             // Remove a classe 'selecionado' de todos os cards
             document.querySelectorAll('.price-card').forEach(card => {
                 card.classList.remove('selecionado');
@@ -447,6 +590,3 @@
     </script>
 </body>
 </html>
-
-
-
