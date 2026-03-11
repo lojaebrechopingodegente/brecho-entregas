@@ -14,16 +14,23 @@
         }
         .container { max-width: 700px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 30px; }
-        .logo { 
-            width: 70px; height: 70px; 
-            background: linear-gradient(135deg, #FF8BA7, #FF6B8A);
-            border-radius: 50%; margin: 0 auto 15px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 35px;
-        }
-        h1 { color: #FF6B8A; font-size: 2rem; margin-bottom: 10px; }
         
-        /* AVISO DE PRAZO - NOVO */
+        /* LOGO - AJUSTADA */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo-img {
+            max-width: 300px;  /* largura máxima */
+            width: 90%;        /* responsivo */
+            height: auto;      /* mantém proporção */
+            display: block;
+            margin: 0 auto;
+        }
+        
+        h1 { color: #FF6B8A; font-size: 1.8rem; margin-bottom: 10px; }
+        
+        /* AVISO DE PRAZO */
         .aviso-prazo {
             background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
             border: 3px solid #FF9800;
@@ -54,7 +61,7 @@
             font-weight: 700;
         }
         
-        /* CHECKBOX DE CONFIRMAÇÃO - NOVO */
+        /* CHECKBOX DE CONFIRMAÇÃO */
         .confirmacao-container {
             background: white;
             border: 2px solid #E0E0E0;
@@ -92,7 +99,7 @@
             color: #2E7D32;
         }
         
-        /* FORMULÁRIO DESABILITADO - NOVO */
+        /* FORMULÁRIO DESABILITADO */
         .form-box.desabilitado {
             opacity: 0.5;
             pointer-events: none;
@@ -123,7 +130,7 @@
             transition: all 0.3s;
         }
         
-        /* Cards de preço - agora são clicáveis */
+        /* Cards de preço */
         .pricing { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -145,13 +152,11 @@
             transform: translateY(-5px); 
             box-shadow: 0 8px 25px rgba(255, 139, 167, 0.2);
         }
-        /* Card selecionado fica destacado */
         .price-card.selecionado {
             border-color: #FF8BA7;
             transform: scale(1.05);
             box-shadow: 0 10px 30px rgba(255, 139, 167, 0.3);
         }
-        /* Esconde o radio button */
         .price-card input[type="radio"] {
             position: absolute;
             opacity: 0;
@@ -241,7 +246,6 @@
             margin-top: 20px;
             text-align: center;
         }
-        /* Container da chave PIX */
         .pix-container {
             display: flex;
             align-items: center;
@@ -260,7 +264,6 @@
             letter-spacing: 1px;
             word-break: break-all;
         }
-        /* Botão de copiar */
         .btn-copiar {
             width: auto;
             padding: 10px 20px;
@@ -306,15 +309,16 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">
-    <img src="https://raw.githubusercontent.com/lojaebrechopingodegente/brecho-entregas/main/logo.png" 
-          alt="Logo Pingo de Gente"
-          style="width: 100%; height: 100%; border-radius: 50%
-        
-        ;">
-</div>
+            <!-- LOGO DO BRECHÓ -->
+            <div class="logo-container">
+                <img src="https://raw.githubusercontent.com/lojaebrechopingodegente/brecho-entregas/main/logo.png" 
+                     alt="Pingo de Gente - Loja e Brechó Infantil" 
+                     class="logo-img"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <!-- Fallback se a imagem não carregar -->
+                <div class="logo" style="display: none; width: 70px; height: 70px; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); border-radius: 50%; margin: 0 auto 15px; align-items: center; justify-content: center; font-size: 35px;">👶</div>
+            </div>
             <h1>Solicitação de Entrega</h1>
-            <p style="color: #636E72;">Loja e Brechó Pingo de Gente</p>
         </div>
 
         <!-- AVISO DE PRAZO DE ENTREGA -->
@@ -329,7 +333,7 @@
             </p>
         </div>
 
-        <!-- CHECKBOX DE CONFIRMAÇÃO - NOVO -->
+        <!-- CHECKBOX DE CONFIRMAÇÃO -->
         <div class="confirmacao-container" id="confirmacaoBox">
             <div class="checkbox-wrapper">
                 <input type="checkbox" id="confirmarPrazo" onchange="habilitarFormulario()">
@@ -339,7 +343,7 @@
             </div>
         </div>
 
-        <!-- Cards de Preço - Agora clicáveis -->
+        <!-- Cards de Preço -->
         <div class="pricing">
             <label class="price-card" onclick="selecionarRegiao('floripa')">
                 <input type="radio" name="regiao" id="floripa" value="floripa" required>
@@ -363,7 +367,7 @@
             </label>
         </div>
 
-        <!-- FORMULÁRIO COM CLASSE DESABILITADO INICIALMENTE -->
+        <!-- FORMULÁRIO -->
         <div class="form-box desabilitado" id="formBox">
             <form id="deliveryForm">
                 <div class="form-group">
@@ -414,7 +418,6 @@
                     <p><strong>💳 Pagamento via PIX</strong></p>
                     <p style="font-size: 0.85rem; color: #636E72; margin-bottom: 10px;">Amanda Marcelino</p>
                     
-                    <!-- Chave PIX com botão de copiar -->
                     <div class="pix-container">
                         <span class="pix-key" id="pixKey">50403919000102</span>
                         <button type="button" class="btn-copiar" onclick="copiarPix()">
@@ -445,21 +448,17 @@
         // URL do seu Web App do Google Sheets
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrr3t0brkuVPkhunAsbPSMW65WLq6KOSnevXU9VbJWclDCetqvK_UEwyZk9Whe9BQc/exec';
         
-        // FUNÇÃO PARA HABILITAR/DESABILITAR FORMULÁRIO - NOVO
+        // FUNÇÃO PARA HABILITAR/DESABILITAR FORMULÁRIO
         function habilitarFormulario() {
             const checkbox = document.getElementById('confirmarPrazo');
             const formBox = document.getElementById('formBox');
             const confirmacaoBox = document.getElementById('confirmacaoBox');
             
             if (checkbox.checked) {
-                // Habilita o formulário
                 formBox.classList.remove('desabilitado');
                 confirmacaoBox.classList.add('ativo');
-                
-                // Rola suavemente até o formulário
                 formBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
             } else {
-                // Desabilita o formulário
                 formBox.classList.add('desabilitado');
                 confirmacaoBox.classList.remove('ativo');
             }
@@ -470,20 +469,14 @@
             const pixKey = document.getElementById('pixKey').innerText;
             const btn = document.querySelector('.btn-copiar');
             
-            // Copia para área de transferência
             navigator.clipboard.writeText(pixKey).then(function() {
-                // Muda o botão para "Copiado!"
                 btn.innerHTML = '✓ Copiado!';
                 btn.classList.add('copiado');
-                
-                // Volta ao normal após 2 segundos
                 setTimeout(function() {
                     btn.innerHTML = '📋 Copiar';
                     btn.classList.remove('copiado');
                 }, 2000);
-                
             }).catch(function(err) {
-                // Fallback para navegadores antigos
                 const textArea = document.createElement('textarea');
                 textArea.value = pixKey;
                 document.body.appendChild(textArea);
@@ -493,7 +486,6 @@
                 
                 btn.innerHTML = '✓ Copiado!';
                 btn.classList.add('copiado');
-                
                 setTimeout(function() {
                     btn.innerHTML = '📋 Copiar';
                     btn.classList.remove('copiado');
@@ -501,26 +493,20 @@
             });
         }
 
-        // Função para selecionar região e destacar o card
+        // Função para selecionar região
         function selecionarRegiao(regiao) {
-            // Verifica se o formulário está habilitado
             if (document.getElementById('formBox').classList.contains('desabilitado')) {
                 alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo de entrega" acima para continuar.');
                 return;
             }
             
-            // Remove a classe 'selecionado' de todos os cards
             document.querySelectorAll('.price-card').forEach(card => {
                 card.classList.remove('selecionado');
             });
             
-            // Adiciona 'selecionado' no card clicado
             document.getElementById(regiao).closest('.price-card').classList.add('selecionado');
-            
-            // Marca o radio button
             document.getElementById(regiao).checked = true;
             
-            // Mostra/esconde aviso para outros estados
             const aviso = document.getElementById('avisoOutros');
             if (regiao === 'outros') {
                 aviso.classList.add('show');
@@ -553,7 +539,7 @@
             e.target.value = value;
         });
 
-        // Envio do formulário para Google Sheets
+        // Envio do formulário
         document.getElementById('deliveryForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -596,6 +582,3 @@
     </script>
 </body>
 </html>
-
-
-
