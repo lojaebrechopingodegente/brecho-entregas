@@ -301,6 +301,7 @@
         // Controle de cópia do PIX
         let pixCopiado = false;
         let regiaoSelecionadaAtual = '';
+        let alertaExibido = false;  // NOVO: Controle para evitar duplo alerta
         
         // Referências aos elementos
         const checkbox = document.getElementById('confirmarPrazo');
@@ -310,13 +311,14 @@
         const mensagemFrete = document.getElementById('mensagemFrete');
         const pixKey = document.getElementById('pixKey');
         const avisoOutros = document.getElementById('avisoOutros');
+        const regiaoContainer = document.getElementById('regiaoContainer');
         
-        // Evento do checkbox - apenas um listener
+        // Evento do checkbox
         checkbox.addEventListener('change', function() {
             if (this.checked) {
                 formBox.classList.remove('desabilitado');
                 confirmacaoBox.classList.add('ativo');
-                document.getElementById('regiaoContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
                 formBox.classList.add('desabilitado');
                 confirmacaoBox.classList.remove('ativo');
@@ -326,14 +328,24 @@
                 pixContainer.classList.remove('mostrar');
                 mensagemFrete.classList.remove('mostrar');
                 regiaoSelecionadaAtual = '';
+                pixCopiado = false;
             }
         });
         
-        // Eventos dos cards de região - usando event delegation
-        document.getElementById('regiaoContainer').addEventListener('click', function(e) {
+        // Eventos dos cards de região - CORREÇÃO AQUI
+        regiaoContainer.addEventListener('click', function(e) {
+            // Previne propagação do evento
+            e.stopPropagation();
+            
             // Verifica se clicou no checkbox primeiro
             if (!checkbox.checked) {
-                alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo para solicitações semanais" acima para continuar.');
+                // Só exibe alerta se ainda não foi exibido neste clique
+                if (!alertaExibido) {
+                    alertaExibido = true;
+                    alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo para solicitações semanais" acima para continuar.');
+                    // Reseta a flag após um pequeno delay
+                    setTimeout(() => { alertaExibido = false; }, 100);
+                }
                 return;
             }
             
@@ -447,7 +459,7 @@
                     setTimeout(() => card.classList.remove('erro'), 500);
                 });
                 
-                document.getElementById('regiaoContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
             
