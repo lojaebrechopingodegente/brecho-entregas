@@ -350,7 +350,7 @@
             });
         }
 
-        // Função para selecionar região - CORRIGIDA
+               // Função para selecionar região
         function selecionarRegiao(regiao) {
             // Verifica apenas uma vez se o checkbox está marcado
             const checkbox = document.getElementById('confirmarPrazo');
@@ -383,22 +383,24 @@
             const avisoOutros = document.getElementById('avisoOutros');
             
             if (regiao === 'floripa') {
+                // Grande Florianópolis - mostra PIX de R$15
                 pixContainer.classList.remove('oculto');
                 mensagemFrete.classList.add('oculto');
                 pixKey.innerText = PIX_FLORIPA;
                 avisoOutros.classList.remove('show');
             } else if (regiao === 'sc') {
+                // Santa Catarina - mostra PIX de R$21
                 pixContainer.classList.remove('oculto');
                 mensagemFrete.classList.add('oculto');
                 pixKey.innerText = PIX_SC;
                 avisoOutros.classList.remove('show');
             } else if (regiao === 'outros') {
+                // Outros estados - oculta PIX, mostra mensagem de frete
                 pixContainer.classList.add('oculto');
                 mensagemFrete.classList.remove('oculto');
                 avisoOutros.classList.add('show');
             }
         }
-
         // Máscara para CPF
         document.getElementById('cpf').addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
