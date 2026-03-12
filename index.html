@@ -99,11 +99,38 @@
         button { width: 100%; padding: 18px; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
         button:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255, 107, 138, 0.4); }
         
-        .pix-info { background: #F8F9FA; padding: 20px; border-radius: 15px; margin-top: 20px; text-align: center; }
+        /* PIX - estilos */
+        .pix-info { background: #F8F9FA; padding: 20px; border-radius: 15px; margin-top: 20px; text-align: center; display: none; }
+        .pix-info.mostrar { display: block; }
         .pix-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
-        .pix-key { font-family: monospace; background: white; padding: 10px 15px; border-radius: 8px; border: 2px solid #E0E0E0; font-size: 1.1rem; letter-spacing: 1px; word-break: break-all; }
+        .pix-key { 
+            font-family: monospace; 
+            background: white; 
+            padding: 10px 15px; 
+            border-radius: 8px; 
+            border: 2px solid #E0E0E0; 
+            font-size: 0.85rem; 
+            letter-spacing: 0.5px; 
+            word-break: break-all;
+            max-width: 100%;
+        }
         .btn-copiar { width: auto; padding: 10px 20px; background: linear-gradient(135deg, #A8E6CF, #7FCDCD); color: #2D3436; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
         .btn-copiar.copiado { background: linear-gradient(135deg, #81C784, #66BB6A); color: white; }
+        
+        /* Mensagem de aguardar frete */
+        .mensagem-frete {
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+            border: 2px solid #2196F3;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            color: #1565C0;
+            font-size: 1rem;
+            line-height: 1.5;
+            display: none;
+        }
+        .mensagem-frete.mostrar { display: block; }
         
         .success {
             display: none;
@@ -141,7 +168,7 @@
 
         <div class="confirmacao-container" id="confirmacaoBox">
             <div class="checkbox-wrapper">
-                <input type="checkbox" id="confirmarPrazo" onchange="habilitarFormulario()">
+                <input type="checkbox" id="confirmarPrazo">
                 <label for="confirmarPrazo">
                     ✅ Li e entendi o prazo para solicitações semanais acima
                 </label>
@@ -149,21 +176,21 @@
         </div>
 
         <div class="pricing" id="regiaoContainer">
-            <label class="price-card" onclick="selecionarRegiao('floripa')">
+            <label class="price-card" data-regiao="floripa">
                 <input type="radio" name="regiao" id="floripa" value="Grande Florianópolis">
-                <h3> Grande Florianópolis</h3>
+                <h3>🏠 Grande Florianópolis</h3>
                 <div class="price">R$ 15,00</div>
                 <p class="price-desc">Valor fixo</p>
             </label>
-            <label class="price-card" onclick="selecionarRegiao('sc')">
+            <label class="price-card" data-regiao="sc">
                 <input type="radio" name="regiao" id="sc" value="Santa Catarina">
-                <h3> Santa Catarina</h3>
+                <h3>🌲 Santa Catarina</h3>
                 <div class="price">R$ 21,00</div>
                 <p class="price-desc">Até 1kg</p>
             </label>
-            <label class="price-card" onclick="selecionarRegiao('outros')">
+            <label class="price-card" data-regiao="outros">
                 <input type="radio" name="regiao" id="outros" value="Outros Estados">
-                <h3> Outros Estados</h3>
+                <h3>🇧🇷 Outros Estados</h3>
                 <div class="price">Consultar</div>
                 <p class="price-desc">Via CEP</p>
             </label>
@@ -171,8 +198,6 @@
 
         <div class="form-box desabilitado" id="formBox">
             <form id="deliveryForm">
-                <!-- ORDEM NOVA: Região já está nos cards acima -->
-                
                 <div class="form-group">
                     <label class="required">Nome completo</label>
                     <input type="text" name="nome" required placeholder="Digite seu nome completo">
@@ -234,17 +259,24 @@
                     <textarea name="observacoes" placeholder="Informações adicionais..."></textarea>
                 </div>
 
-                <div class="pix-info">
+                <!-- PIX - Grande Florianópolis e SC (inicialmente oculto) -->
+                <div class="pix-info" id="pixContainer">
                     <p><strong>💳 Pagamento via PIX</strong></p>
-                    <p style="font-size: 0.85rem; color: #636E72; margin-bottom: 10px;">CNPJ - Amanda Marcelino</p>
+                    <p style="font-size: 0.85rem; color: #636E72; margin-bottom: 10px;">Amanda Marcelino</p>
                     <div class="pix-container">
-                        <span class="pix-key" id="pixKey">50403919000102</span>
-                        <button type="button" class="btn-copiar" onclick="copiarPix()">📋 Copiar</button>
+                        <span class="pix-key" id="pixKey"></span>
+                        <button type="button" class="btn-copiar" id="btnCopiar">📋 Copiar</button>
                     </div>
                     <p style="font-size: 0.8rem; margin-top: 10px; color: #FF6B8A;">
-                        * Para SC (até 1kg) e Grande Florianópolis, efetue o pagamento antes de enviar.<br>
-                        * Outros estados: aguarde o orçamento.
+                        * Efetue o pagamento antes de enviar a solicitação.
                     </p>
+                </div>
+
+                <!-- Mensagem para Outros Estados (inicialmente oculto) -->
+                <div class="mensagem-frete" id="mensagemFrete">
+                    <strong>📦 Cálculo de Frete</strong><br><br>
+                    Só aguardar que iremos pesar seu pacote e retornaremos com os menores valores 
+                    de frete encontrados nas melhores plataformas do serviço.
                 </div>
 
                 <button type="submit" style="margin-top: 20px;">📦 ENVIAR SOLICITAÇÃO</button>
@@ -259,40 +291,127 @@
     </div>
 
     <script>
-        // URL do seu Web App do Google Sheets
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbysCZhlugZR4BxA1hd2Oe_swXPsrK_a4leuKvtO5hb4qck-1kNSLjk0pEewKAuUjTI/exec';
+        // URL ATUALIZADA do Web App do Google Sheets
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz1jbvTV_ssq5DFi_OdKUkJdO-FA6rHdWVZNxPIvyVmpUyVkE_H_HnsaEJCQfHbASkB/exec';
         
-        // FUNÇÃO PARA HABILITAR/DESABILITAR FORMULÁRIO
-        function habilitarFormulario() {
-            const checkbox = document.getElementById('confirmarPrazo');
-            const formBox = document.getElementById('formBox');
-            const confirmacaoBox = document.getElementById('confirmacaoBox');
+        // Chaves PIX
+        const PIX_FLORIPA = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540515.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520ophK0ykzx2lDITMziipn63043247';
+        const PIX_SC = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540521.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520QgJHXgWYnawohEmziipn63041785';
+        
+        // Controle de cópia do PIX
+        let pixCopiado = false;
+        let regiaoSelecionadaAtual = '';
+        let alertaExibido = false;
+        let regiaoPendente = null;
+        
+        // Referências aos elementos
+        const checkbox = document.getElementById('confirmarPrazo');
+        const formBox = document.getElementById('formBox');
+        const confirmacaoBox = document.getElementById('confirmacaoBox');
+        const pixContainer = document.getElementById('pixContainer');
+        const mensagemFrete = document.getElementById('mensagemFrete');
+        const pixKey = document.getElementById('pixKey');
+        const avisoOutros = document.getElementById('avisoOutros');
+        const regiaoContainer = document.getElementById('regiaoContainer');
+        
+        // Função para aplicar seleção visual da região
+        function aplicarSelecaoRegiao(regiao) {
+            document.querySelectorAll('.price-card').forEach(c => {
+                c.classList.remove('selecionado', 'erro');
+            });
             
-            if (checkbox.checked) {
-                formBox.classList.remove('desabilitado');
-                confirmacaoBox.classList.add('ativo');
-                formBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else {
-                formBox.classList.add('desabilitado');
-                confirmacaoBox.classList.remove('ativo');
+            const card = document.querySelector(`.price-card[data-regiao="${regiao}"]`);
+            if (card) {
+                const radio = card.querySelector('input[type="radio"]');
+                card.classList.add('selecionado');
+                radio.checked = true;
+                
+                regiaoSelecionadaAtual = regiao;
+                pixCopiado = false;
+                
+                if (regiao === 'floripa') {
+                    pixContainer.classList.add('mostrar');
+                    mensagemFrete.classList.remove('mostrar');
+                    pixKey.innerText = PIX_FLORIPA;
+                    avisoOutros.classList.remove('show');
+                } else if (regiao === 'sc') {
+                    pixContainer.classList.add('mostrar');
+                    mensagemFrete.classList.remove('mostrar');
+                    pixKey.innerText = PIX_SC;
+                    avisoOutros.classList.remove('show');
+                } else if (regiao === 'outros') {
+                    pixContainer.classList.remove('mostrar');
+                    mensagemFrete.classList.add('mostrar');
+                    avisoOutros.classList.add('show');
+                }
             }
         }
         
-        // Função para copiar chave PIX
-        function copiarPix() {
-            const pixKey = document.getElementById('pixKey').innerText;
-            const btn = document.querySelector('.btn-copiar');
+        // Evento do checkbox
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                formBox.classList.remove('desabilitado');
+                confirmacaoBox.classList.add('ativo');
+                
+                if (regiaoPendente) {
+                    aplicarSelecaoRegiao(regiaoPendente);
+                    regiaoPendente = null;
+                }
+                
+                regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                formBox.classList.add('desabilitado');
+                confirmacaoBox.classList.remove('ativo');
+                document.querySelectorAll('input[name="regiao"]').forEach(r => r.checked = false);
+                document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selecionado'));
+                pixContainer.classList.remove('mostrar');
+                mensagemFrete.classList.remove('mostrar');
+                regiaoSelecionadaAtual = '';
+                regiaoPendente = null;
+                pixCopiado = false;
+            }
+        });
+        
+        // Eventos dos cards de região
+        regiaoContainer.addEventListener('click', function(e) {
+            e.stopPropagation();
             
-            navigator.clipboard.writeText(pixKey).then(function() {
+            const card = e.target.closest('.price-card');
+            if (!card) return;
+            
+            const regiao = card.dataset.regiao;
+            
+            if (!checkbox.checked) {
+                regiaoPendente = regiao;
+                
+                if (!alertaExibido) {
+                    alertaExibido = true;
+                    alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo para solicitações semanais" acima para continuar.');
+                    setTimeout(() => { alertaExibido = false; }, 100);
+                }
+                return;
+            }
+            
+            aplicarSelecaoRegiao(regiao);
+        });
+        
+        // Evento do botão copiar PIX
+        document.getElementById('btnCopiar').addEventListener('click', function() {
+            const btn = this;
+            const key = pixKey.innerText;
+            
+            navigator.clipboard.writeText(key).then(function() {
                 btn.innerHTML = '✓ Copiado!';
                 btn.classList.add('copiado');
+                pixCopiado = true;
+                
                 setTimeout(function() {
                     btn.innerHTML = '📋 Copiar';
                     btn.classList.remove('copiado');
                 }, 2000);
-            }).catch(function(err) {
+            }).catch(function() {
                 const textArea = document.createElement('textarea');
-                textArea.value = pixKey;
+                textArea.value = key;
                 document.body.appendChild(textArea);
                 textArea.select();
                 document.execCommand('copy');
@@ -300,40 +419,14 @@
                 
                 btn.innerHTML = '✓ Copiado!';
                 btn.classList.add('copiado');
+                pixCopiado = true;
+                
                 setTimeout(function() {
                     btn.innerHTML = '📋 Copiar';
                     btn.classList.remove('copiado');
                 }, 2000);
             });
-        }
-
-        // Função para selecionar região
-        function selecionarRegiao(regiao) {
-            if (document.getElementById('formBox').classList.contains('desabilitado')) {
-                alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo para solicitações semanais" acima para continuar.');
-                return;
-            }
-            
-            // Remove erro de todos os cards
-            document.querySelectorAll('.price-card').forEach(card => {
-                card.classList.remove('erro');
-            });
-            
-            // Seleciona o card clicado
-            document.querySelectorAll('.price-card').forEach(card => {
-                card.classList.remove('selecionado');
-            });
-            
-            document.getElementById(regiao).closest('.price-card').classList.add('selecionado');
-            document.getElementById(regiao).checked = true;
-            
-            const aviso = document.getElementById('avisoOutros');
-            if (regiao === 'outros') {
-                aviso.classList.add('show');
-            } else {
-                aviso.classList.remove('show');
-            }
-        }
+        });
 
         // Máscara para CPF
         document.getElementById('cpf').addEventListener('input', function(e) {
@@ -359,28 +452,30 @@
             e.target.value = value;
         });
 
-        // Envio do formulário - COM VALIDAÇÃO DE REGIÃO
+        // Envio do formulário
         document.getElementById('deliveryForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // VERIFICA SE REGIÃO FOI SELECIONADA
             const regiaoSelecionada = document.querySelector('input[name="regiao"]:checked');
             if (!regiaoSelecionada) {
                 alert('⚠️ Por favor, selecione uma região de entrega (Grande Florianópolis, Santa Catarina ou Outros Estados).');
                 
-                // Adiciona efeito de erro nos cards
                 document.querySelectorAll('.price-card').forEach(card => {
                     card.classList.add('erro');
                     setTimeout(() => card.classList.remove('erro'), 500);
                 });
                 
-                // Rola até os cards de região
-                document.getElementById('regiaoContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            
+            if ((regiaoSelecionadaAtual === 'floripa' || regiaoSelecionadaAtual === 'sc') && !pixCopiado) {
+                alert('⚠️ Você não copiou a chave PIX para efetuar o pagamento. Por favor, clique no botão "Copiar" antes de enviar.');
+                pixContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
             
             const btn = document.querySelector('button[type="submit"]');
-            const originalText = btn.innerText;
             btn.innerText = '⏳ Enviando...';
             btn.disabled = true;
             
@@ -390,6 +485,9 @@
             formData.forEach((value, key) => {
                 params.append(key, value);
             });
+            
+            // Adiciona a região aos dados do formulário
+            params.append('regiao', regiaoSelecionada.value);
             
             fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -406,13 +504,11 @@
             })
             .then(result => {
                 console.log('Sucesso:', result);
-                // Esconde o formulário e mostra a mensagem de sucesso
                 document.getElementById('deliveryForm').style.display = 'none';
                 document.getElementById('successMsg').classList.add('show');
             })
             .catch(error => {
                 console.error('Erro:', error);
-                // Mesmo com erro, mostra sucesso (os dados podem ter sido salvos)
                 document.getElementById('deliveryForm').style.display = 'none';
                 document.getElementById('successMsg').classList.add('show');
             });
@@ -420,8 +516,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
