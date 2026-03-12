@@ -291,10 +291,8 @@
     </div>
 
     <script>
-
-        
         // URL do seu Web App do Google Sheets
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbysCZhlugZR4BxA1hd2Oe_swXPsrK_a4leuKvtO5hb4qck-1kNSLjk0pEewKAuUjTI/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrr3t0brkuVPkhunAsbPSMW65WLq6KOSnevXU9VbJWclDCetqvK_UEwyZk9Whe9BQc/exec';
         
         // Chaves PIX
         const PIX_FLORIPA = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540515.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520ophK0ykzx2lDITMziipn63043247';
@@ -303,7 +301,8 @@
         // Controle de cópia do PIX
         let pixCopiado = false;
         let regiaoSelecionadaAtual = '';
-        let alertaExibido = false;  // NOVO: Controle para evitar duplo alerta
+        let alertaExibido = false;
+        let regiaoPendente = null;  // NOVO: Armazena região clicada antes do checkbox ser marcado
         
         // Referências aos elementos
         const checkbox = document.getElementById('confirmarPrazo');
@@ -315,11 +314,55 @@
         const avisoOutros = document.getElementById('avisoOutros');
         const regiaoContainer = document.getElementById('regiaoContainer');
         
-        // Evento do checkbox
+        // Função para aplicar seleção visual da região - NOVO
+        function aplicarSelecaoRegiao(regiao) {
+            // Remove seleção de todos os cards
+            document.querySelectorAll('.price-card').forEach(c => {
+                c.classList.remove('selecionado', 'erro');
+            });
+            
+            // Encontra o card da região
+            const card = document.querySelector(`.price-card[data-regiao="${regiao}"]`);
+            if (card) {
+                const radio = card.querySelector('input[type="radio"]');
+                card.classList.add('selecionado');
+                radio.checked = true;
+                
+                // Atualiza variáveis globais
+                regiaoSelecionadaAtual = regiao;
+                pixCopiado = false;
+                
+                // Atualiza visibilidade conforme região
+                if (regiao === 'floripa') {
+                    pixContainer.classList.add('mostrar');
+                    mensagemFrete.classList.remove('mostrar');
+                    pixKey.innerText = PIX_FLORIPA;
+                    avisoOutros.classList.remove('show');
+                } else if (regiao === 'sc') {
+                    pixContainer.classList.add('mostrar');
+                    mensagemFrete.classList.remove('mostrar');
+                    pixKey.innerText = PIX_SC;
+                    avisoOutros.classList.remove('show');
+                } else if (regiao === 'outros') {
+                    pixContainer.classList.remove('mostrar');
+                    mensagemFrete.classList.add('mostrar');
+                    avisoOutros.classList.add('show');
+                }
+            }
+        }
+        
+        // Evento do checkbox - MODIFICADO
         checkbox.addEventListener('change', function() {
             if (this.checked) {
                 formBox.classList.remove('desabilitado');
                 confirmacaoBox.classList.add('ativo');
+                
+                // NOVO: Se há uma região pendente, aplica a seleção visual
+                if (regiaoPendente) {
+                    aplicarSelecaoRegiao(regiaoPendente);
+                    regiaoPendente = null;  // Limpa a pendência
+                }
+                
                 regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
                 formBox.classList.add('desabilitado');
@@ -330,17 +373,27 @@
                 pixContainer.classList.remove('mostrar');
                 mensagemFrete.classList.remove('mostrar');
                 regiaoSelecionadaAtual = '';
+                regiaoPendente = null;
                 pixCopiado = false;
             }
         });
         
-        // Eventos dos cards de região - CORREÇÃO AQUI
+        // Eventos dos cards de região - MODIFICADO
         regiaoContainer.addEventListener('click', function(e) {
             // Previne propagação do evento
             e.stopPropagation();
             
+            // Encontra o card clicado
+            const card = e.target.closest('.price-card');
+            if (!card) return;
+            
+            const regiao = card.dataset.regiao;
+            
             // Verifica se clicou no checkbox primeiro
             if (!checkbox.checked) {
+                // Armazena a região clicada para aplicar depois - NOVO
+                regiaoPendente = regiao;
+                
                 // Só exibe alerta se ainda não foi exibido neste clique
                 if (!alertaExibido) {
                     alertaExibido = true;
@@ -351,42 +404,8 @@
                 return;
             }
             
-            // Encontra o card clicado
-            const card = e.target.closest('.price-card');
-            if (!card) return;
-            
-            const regiao = card.dataset.regiao;
-            const radio = card.querySelector('input[type="radio"]');
-            
-            // Remove seleção de todos os cards
-            document.querySelectorAll('.price-card').forEach(c => {
-                c.classList.remove('selecionado', 'erro');
-            });
-            
-            // Seleciona o card clicado
-            card.classList.add('selecionado');
-            radio.checked = true;
-            
-            // Salva região atual
-            regiaoSelecionadaAtual = regiao;
-            pixCopiado = false;
-            
-            // Atualiza visibilidade conforme região
-            if (regiao === 'floripa') {
-                pixContainer.classList.add('mostrar');
-                mensagemFrete.classList.remove('mostrar');
-                pixKey.innerText = PIX_FLORIPA;
-                avisoOutros.classList.remove('show');
-            } else if (regiao === 'sc') {
-                pixContainer.classList.add('mostrar');
-                mensagemFrete.classList.remove('mostrar');
-                pixKey.innerText = PIX_SC;
-                avisoOutros.classList.remove('show');
-            } else if (regiao === 'outros') {
-                pixContainer.classList.remove('mostrar');
-                mensagemFrete.classList.add('mostrar');
-                avisoOutros.classList.add('show');
-            }
+            // Se checkbox está marcado, aplica seleção normalmente
+            aplicarSelecaoRegiao(regiao);
         });
         
         // Evento do botão copiar PIX
