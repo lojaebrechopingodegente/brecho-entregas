@@ -56,6 +56,84 @@
         }
         .form-box { position: relative; background: white; padding: 35px; border-radius: 25px; box-shadow: 0 10px 40px rgba(255, 139, 167, 0.15); }
         
+        /* NOVO: Estilos para busca de CPF */
+        .cpf-busca-container {
+            position: relative;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .cpf-busca-container input {
+            flex: 1;
+        }
+        .btn-buscar {
+            width: auto !important;
+            padding: 14px 20px !important;
+            background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+            font-size: 0.9rem !important;
+            white-space: nowrap;
+        }
+        .btn-buscar:disabled {
+            background: #ccc !important;
+            cursor: not-allowed;
+        }
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #FF6B8A;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .dados-carregados {
+            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+        .dados-carregados.show {
+            display: block;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dados-carregados p {
+            margin: 0;
+            color: #2E7D32;
+            font-size: 0.9rem;
+        }
+        .dados-carregados strong {
+            color: #1B5E20;
+        }
+        .limpar-dados {
+            background: none;
+            border: none;
+            color: #666;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            padding: 0 !important;
+            width: auto !important;
+            text-align: left;
+        }
+        .limpar-dados:hover {
+            color: #FF6B8A;
+            background: none !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+        
         /* Cards de preço */
         .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .price-card {
@@ -75,7 +153,7 @@
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+n            75% { transform: translateX(5px); }
         }
         
         .form-group { margin-bottom: 20px; }
@@ -198,57 +276,71 @@
 
         <div class="form-box desabilitado" id="formBox">
             <form id="deliveryForm">
+                <!-- NOVO: Campo CPF com busca -->
                 <div class="form-group">
-                    <label class="required">Nome completo</label>
-                    <input type="text" name="nome" required placeholder="Digite seu nome completo">
+                    <label class="required">CPF</label>
+                    <div class="cpf-busca-container">
+                        <input type="text" name="cpf" id="cpf" required placeholder="000.000.000-00" maxlength="14">
+                        <button type="button" class="btn-buscar" id="btnBuscarCPF" onclick="buscarPorCPF()">
+                            🔍 Buscar
+                        </button>
+                    </div>
+                    <div class="loading-spinner" id="loadingSpinner"></div>
+                    <div class="dados-carregados" id="dadosCarregados">
+                        <p>✅ <strong>Dados encontrados!</strong> Formulário preenchido com seu cadastro anterior.</p>
+                        <button type="button" class="limpar-dados" onclick="limparDados()">
+                            🗑️ Limpar dados e preencher novo cadastro
+                        </button>
+                    </div>
+                    <p class="hint">💡 Digite seu CPF e clique em buscar para carregar seus dados cadastrados</p>
                 </div>
                 
                 <div class="form-group">
-                    <label class="required">CPF</label>
-                    <input type="text" name="cpf" id="cpf" required placeholder="000.000.000-00" maxlength="14">
+                    <label class="required">Nome completo</label>
+                    <input type="text" name="nome" id="nome" required placeholder="Digite seu nome completo">
                 </div>
                 
                 <div class="form-group">
                     <label class="required">WhatsApp</label>
-                    <input type="tel" name="whatsapp" required placeholder="(48) 99999-9999">
+                    <input type="tel" name="whatsapp" id="whatsapp" required placeholder="(48) 99999-9999">
                 </div>
                 
                 <div class="form-group">
                     <label>Instagram</label>
-                    <input type="text" name="instagram" placeholder="@maria.silva">
+                    <input type="text" name="instagram" id="instagram" placeholder="@maria.silva">
                     <p class="hint">💡 Isto irá facilitar a localização da sua sacolinha</p>
                 </div>
                 
                 <div class="form-group">
                     <label class="required">Rua / Avenida</label>
-                    <input type="text" name="rua" required placeholder="Nome da rua ou avenida">
+                    <input type="text" name="rua" id="rua" required placeholder="Nome da rua ou avenida">
                 </div>
                 
                 <div class="endereco-grid">
                     <div class="form-group">
                         <label class="required">Nº</label>
-                        <input type="text" name="numero" required placeholder="Número">
+                        <input type="text" name="numero" id="numero" required placeholder="Número">
                     </div>
                     <div class="form-group">
                         <label>Complemento</label>
-                        <input type="text" name="complemento" placeholder="Apto, bloco...">
+                        <input type="text" name="complemento" id="complemento" placeholder="Apto, bloco...">
                     </div>
                 </div>
                 
                 <div class="endereco-grid">
                     <div class="form-group">
                         <label class="required">Bairro</label>
-                        <input type="text" name="bairro" required placeholder="Bairro">
+                        <input type="text" name="bairro" id="bairro" required placeholder="Bairro">
                     </div>
                     <div class="form-group">
                         <label class="required">Cidade</label>
-                        <input type="text" name="cidade" required placeholder="Cidade">
+                        <input type="text" name="cidade" id="cidade" required placeholder="Cidade">
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label class="required">CEP</label>
-                    <input type="text" name="cep" id="cep" required placeholder="00000-000" maxlength="9">
+                    <input type="text" name="cep" id="cepEndereco" required placeholder="00000-000" maxlength="9">
                     <div class="aviso" id="avisoOutros">
                         ⚠️ Para outros estados, aguarde nosso contato com o valor do frete após a solicitação.
                     </div>
@@ -256,7 +348,7 @@
                 
                 <div class="form-group">
                     <label>Observações</label>
-                    <textarea name="observacoes" placeholder="Informações adicionais..."></textarea>
+                    <textarea name="observacoes" id="observacoes" placeholder="Informações adicionais..."></textarea>
                 </div>
 
                 <!-- PIX - Grande Florianópolis e SC (inicialmente oculto) -->
@@ -291,7 +383,7 @@
     </div>
 
     <script>
-        // URL ATUALIZADA do Web App do Google Sheets
+        // URL do Web App do Google Sheets
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz1jbvTV_ssq5DFi_OdKUkJdO-FA6rHdWVZNxPIvyVmpUyVkE_H_HnsaEJCQfHbASkB/exec';
         
         // Chaves PIX
@@ -303,6 +395,7 @@
         let regiaoSelecionadaAtual = '';
         let alertaExibido = false;
         let regiaoPendente = null;
+        let dadosClienteCarregados = false; // NOVO: Controla se dados foram carregados
         
         // Referências aos elementos
         const checkbox = document.getElementById('confirmarPrazo');
@@ -313,6 +406,124 @@
         const pixKey = document.getElementById('pixKey');
         const avisoOutros = document.getElementById('avisoOutros');
         const regiaoContainer = document.getElementById('regiaoContainer');
+        
+        // NOVO: Referências dos campos do formulário
+        const camposFormulario = {
+            cpf: document.getElementById('cpf'),
+            nome: document.getElementById('nome'),
+            whatsapp: document.getElementById('whatsapp'),
+            instagram: document.getElementById('instagram'),
+            rua: document.getElementById('rua'),
+            numero: document.getElementById('numero'),
+            complemento: document.getElementById('complemento'),
+            bairro: document.getElementById('bairro'),
+            cidade: document.getElementById('cidade'),
+            cep: document.getElementById('cepEndereco'),
+            observacoes: document.getElementById('observacoes')
+        };
+        
+        // NOVO: Função para buscar dados por CPF
+        function buscarPorCPF() {
+            const cpf = camposFormulario.cpf.value.replace(/\D/g, '');
+            
+            if (cpf.length !== 11) {
+                alert('⚠️ Por favor, digite um CPF válido com 11 dígitos.');
+                camposFormulario.cpf.focus();
+                return;
+            }
+            
+            const btnBuscar = document.getElementById('btnBuscarCPF');
+            const spinner = document.getElementById('loadingSpinner');
+            const msgDados = document.getElementById('dadosCarregados');
+            
+            // Mostra loading
+            btnBuscar.disabled = true;
+            spinner.style.display = 'block';
+            msgDados.classList.remove('show');
+            
+            // Faz a requisição para buscar dados
+            fetch(`${SCRIPT_URL}?action=buscar&cpf=${cpf}`)
+                .then(response => response.json())
+                .then(data => {
+                    spinner.style.display = 'none';
+                    btnBuscar.disabled = false;
+                    
+                    if (data.encontrado) {
+                        // Preenche os campos com os dados encontrados
+                        preencherCampos(data.dados);
+                        dadosClienteCarregados = true;
+                        msgDados.classList.add('show');
+                        
+                        // Foca no campo de região para continuar
+                        setTimeout(() => {
+                            regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 500);
+                    } else {
+                        alert('ℹ️ CPF não encontrado em nossa base. Prossiga com o preenchimento manual.');
+                        dadosClienteCarregados = false;
+                        limparCamposExcetoCPF();
+                    }
+                })
+                .catch(error => {
+                    spinner.style.display = 'none';
+                    btnBuscar.disabled = false;
+                    console.error('Erro na busca:', error);
+                    alert('❌ Erro ao buscar dados. Tente novamente ou preencha manualmente.');
+                });
+        }
+        
+        // NOVO: Função para preencher campos
+        function preencherCampos(dados) {
+            camposFormulario.nome.value = dados.nome || '';
+            camposFormulario.whatsapp.value = dados.whatsapp || '';
+            camposFormulario.instagram.value = dados.instagram || '';
+            camposFormulario.rua.value = dados.rua || '';
+            camposFormulario.numero.value = dados.numero || '';
+            camposFormulario.complemento.value = dados.complemento || '';
+            camposFormulario.bairro.value = dados.bairro || '';
+            camposFormulario.cidade.value = dados.cidade || '';
+            camposFormulario.cep.value = dados.cep || '';
+            
+            // Adiciona efeito visual nos campos preenchidos
+            Object.values(camposFormulario).forEach(campo => {
+                if (campo && campo.value && campo.id !== 'cpf') {
+                    campo.style.backgroundColor = '#E8F5E9';
+                    campo.style.borderColor = '#4CAF50';
+                    setTimeout(() => {
+                        campo.style.backgroundColor = '';
+                        campo.style.borderColor = '';
+                    }, 2000);
+                }
+            });
+        }
+        
+        // NOVO: Função para limpar todos os campos exceto CPF
+        function limparCamposExcetoCPF() {
+            Object.keys(camposFormulario).forEach(key => {
+                if (key !== 'cpf' && camposFormulario[key]) {
+                    camposFormulario[key].value = '';
+                }
+            });
+        }
+        
+        // NOVO: Função para limpar dados carregados
+        function limparDados() {
+            if (confirm('Tem certeza que deseja limpar todos os dados e preencher novo cadastro?')) {
+                Object.values(camposFormulario).forEach(campo => {
+                    if (campo) campo.value = '';
+                });
+                document.getElementById('dadosCarregados').classList.remove('show');
+                dadosClienteCarregados = false;
+                
+                // Reseta seleção de região
+                document.querySelectorAll('input[name="regiao"]').forEach(r => r.checked = false);
+                document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selecionado'));
+                pixContainer.classList.remove('mostrar');
+                mensagemFrete.classList.remove('mostrar');
+                regiaoSelecionadaAtual = '';
+                pixCopiado = false;
+            }
+        }
         
         // Função para aplicar seleção visual da região
         function aplicarSelecaoRegiao(regiao) {
@@ -444,7 +655,7 @@
         });
 
         // Máscara para CEP
-        document.getElementById('cep').addEventListener('input', function(e) {
+        document.getElementById('cepEndereco').addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length > 5) {
                 value = value.substring(0, 5) + '-' + value.substring(5, 8);
