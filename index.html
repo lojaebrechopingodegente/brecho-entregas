@@ -14,8 +14,10 @@
         }
         .container { max-width: 700px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 30px; }
+        
         .logo-container { text-align: center; margin-bottom: 20px; }
         .logo-img { max-width: 300px; width: 90%; height: auto; display: block; margin: 0 auto; }
+        
         h1 { color: #FF6B8A; font-size: 1.8rem; margin-bottom: 10px; }
         
         .aviso-prazo {
@@ -54,6 +56,7 @@
         }
         .form-box { position: relative; background: white; padding: 35px; border-radius: 25px; box-shadow: 0 10px 40px rgba(255, 139, 167, 0.15); }
         
+        /* Cards de preço */
         .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .price-card {
             background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);
@@ -67,6 +70,14 @@
         .price { font-size: 1.8rem; font-weight: bold; color: #FF6B8A; margin: 10px 0; }
         .price-desc { font-size: 0.85rem; color: #636E72; margin-top: 5px; }
         
+        /* ERRO - quando não seleciona região */
+        .price-card.erro { border-color: #ff4444; animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
         .form-group { margin-bottom: 20px; }
         label { display: block; font-weight: 600; margin-bottom: 8px; color: #2D3436; }
         .required::after { content: " *"; color: #FF6B8A; }
@@ -78,8 +89,8 @@
         textarea { resize: vertical; min-height: 100px; }
         .hint { font-size: 0.8rem; color: #636E72; margin-top: 5px; font-weight: 400; }
         
-        .endereco-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; }
-        .endereco-grid .form-group:first-child { grid-column: 1 / -1; }
+        /* GRID PARA ENDEREÇO - 2 COLUNAS */
+        .endereco-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         @media (max-width: 600px) { .endereco-grid { grid-template-columns: 1fr; } }
         
         .aviso { background: #FFF3E0; border-left: 4px solid #FFD93D; padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; font-size: 0.9rem; display: none; }
@@ -90,7 +101,8 @@
         
         .pix-info { background: #F8F9FA; padding: 20px; border-radius: 15px; margin-top: 20px; text-align: center; }
         .pix-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
-        .pix-key { font-family: monospace; background: white; padding: 10px 15px; border-radius: 8px; border: 2px solid #E0E0E0; font-size: 1.1rem; letter-spacing: 1px; word-break: break-all; }
+        .pix-key { font-family: monospace; background: white; padding: 10px 15px; border-radius: 8px; border: 2px solid #E0E0E0; font-size: 1.1rem; letter
+                .pix-key { font-family: monospace; background: white; padding: 10px 15px; border-radius: 8px; border: 2px solid #E0E0E0; font-size: 1.1rem; letter-spacing: 1px; word-break: break-all; }
         .btn-copiar { width: auto; padding: 10px 20px; background: linear-gradient(135deg, #A8E6CF, #7FCDCD); color: #2D3436; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
         .btn-copiar.copiado { background: linear-gradient(135deg, #81C784, #66BB6A); color: white; }
         
@@ -131,9 +143,9 @@
             </div>
         </div>
 
-        <div class="pricing">
+        <div class="pricing" id="regiaoContainer">
             <label class="price-card" onclick="selecionarRegiao('floripa')">
-                <input type="radio" name="regiao" id="floripa" value="Grande Florianópolis" required>
+                <input type="radio" name="regiao" id="floripa" value="Grande Florianópolis">
                 <h3>🏠 Grande Florianópolis</h3>
                 <div class="price">R$ 15,00</div>
                 <p class="price-desc">Valor fixo</p>
@@ -171,6 +183,8 @@
                     <input type="text" name="instagram" placeholder="@maria.silva">
                     <p class="hint">💡 Isto irá facilitar a localização da sua sacolinha</p>
                 </div>
+                
+                <!-- ORDEM NOVA: CEP → Cidade → Bairro → Rua → Nº → Complemento -->
                 <div class="form-group">
                     <label class="required">CEP</label>
                     <input type="text" name="cep" id="cep" required placeholder="00000-000" maxlength="9">
@@ -179,11 +193,6 @@
                     </div>
                 </div>
                 
-                <!-- ENDEREÇO SEPARADO - NOVO -->
-                <div class="form-group">
-                    <label class="required">Rua / Avenida</label>
-                    <input type="text" name="rua" required placeholder="Nome da rua ou avenida">
-                </div>
                 <div class="endereco-grid">
                     <div class="form-group">
                         <label class="required">Cidade</label>
@@ -193,6 +202,14 @@
                         <label class="required">Bairro</label>
                         <input type="text" name="bairro" required placeholder="Bairro">
                     </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="required">Rua / Avenida</label>
+                    <input type="text" name="rua" required placeholder="Nome da rua ou avenida">
+                </div>
+                
+                <div class="endereco-grid">
                     <div class="form-group">
                         <label class="required">Nº</label>
                         <input type="text" name="numero" required placeholder="Número">
@@ -227,14 +244,14 @@
             <div class="success" id="successMsg">
                 <div class="check-icon">✓</div>
                 <h2 style="color: #FF6B8A; margin-bottom: 10px;">Solicitação Enviada!</h2>
-                <p>Recebemos seus dados e entraremos em contato em breve.</p>
+                <p>Recebemos seus dados e entrare                <p>Recebemos seus dados e entraremos em contato em breve.</p>
             </div>
         </div>
     </div>
 
-        <script>
+    <script>
         // URL do seu Web App do Google Sheets
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7dRlMcL3TNylcEOTqqthLYb3Hu8i0quVl2Q3LP1-MazPRQW2dFtXcWJEsYcVA3XNk/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrr3t0brkuVPkhunAsbPSMW65WLq6KOSnevXU9VbJWclDCetqvK_UEwyZk9Whe9BQc/exec';
         
         // FUNÇÃO PARA HABILITAR/DESABILITAR FORMULÁRIO
         function habilitarFormulario() {
@@ -288,6 +305,12 @@
                 return;
             }
             
+            // Remove erro de todos os cards
+            document.querySelectorAll('.price-card').forEach(card => {
+                card.classList.remove('erro');
+            });
+            
+            // Seleciona o card clicado
             document.querySelectorAll('.price-card').forEach(card => {
                 card.classList.remove('selecionado');
             });
@@ -327,9 +350,25 @@
             e.target.value = value;
         });
 
-        // Envio do formulário
+        // Envio do formulário - COM VALIDAÇÃO DE REGIÃO
         document.getElementById('deliveryForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            // VERIFICA SE REGIÃO FOI SELECIONADA
+            const regiaoSelecionada = document.querySelector('input[name="regiao"]:checked');
+            if (!regiaoSelecionada) {
+                alert('⚠️ Por favor, selecione uma região de entrega (Grande Florianópolis, Santa Catarina ou Outros Estados).');
+                
+                // Adiciona efeito de erro nos cards
+                document.querySelectorAll('.price-card').forEach(card => {
+                    card.classList.add('erro');
+                    setTimeout(() => card.classList.remove('erro'), 500);
+                });
+                
+                // Rola até os cards de região
+                document.getElementById('regiaoContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
             
             const btn = document.querySelector('button[type="submit"]');
             const originalText = btn.innerText;
@@ -370,4 +409,3 @@
     </script>
 </body>
 </html>
-
