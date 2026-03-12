@@ -153,7 +153,7 @@
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px); }
-n            75% { transform: translateX(5px); }
+            75% { transform: translateX(5px); }
         }
         
         .form-group { margin-bottom: 20px; }
@@ -383,8 +383,8 @@ n            75% { transform: translateX(5px); }
     </div>
 
     <script>
-        // URL do Web App do Google Sheets
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwW-fX0YOGV6B7bZlyzHf5epSoQ4J5GNoip01CgtZGU0pG3-l2ELix0A7XgwbyMOrT9/exec';
+        // URL ATUALIZADA do Web App do Google Sheets
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzW4NZ4wuSdH7g3loqnzCOo2vA-s5KcmZ2OwsaSu7aSp4kin0YOHnvn1r6rVv4xvlyN/exec';
         
         // Chaves PIX
         const PIX_FLORIPA = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540515.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520ophK0ykzx2lDITMziipn63043247';
@@ -395,7 +395,7 @@ n            75% { transform: translateX(5px); }
         let regiaoSelecionadaAtual = '';
         let alertaExibido = false;
         let regiaoPendente = null;
-        let dadosClienteCarregados = false; // NOVO: Controla se dados foram carregados
+        let dadosClienteCarregados = false;
         
         // Referências aos elementos
         const checkbox = document.getElementById('confirmarPrazo');
@@ -407,7 +407,7 @@ n            75% { transform: translateX(5px); }
         const avisoOutros = document.getElementById('avisoOutros');
         const regiaoContainer = document.getElementById('regiaoContainer');
         
-        // NOVO: Referências dos campos do formulário
+        // Referências dos campos do formulário
         const camposFormulario = {
             cpf: document.getElementById('cpf'),
             nome: document.getElementById('nome'),
@@ -422,7 +422,7 @@ n            75% { transform: translateX(5px); }
             observacoes: document.getElementById('observacoes')
         };
         
-        // NOVO: Função para buscar dados por CPF
+        // Função para buscar dados por CPF
         function buscarPorCPF() {
             const cpf = camposFormulario.cpf.value.replace(/\D/g, '');
             
@@ -441,38 +441,51 @@ n            75% { transform: translateX(5px); }
             spinner.style.display = 'block';
             msgDados.classList.remove('show');
             
-            // Faz a requisição para buscar dados
-            fetch(`${SCRIPT_URL}?action=buscar&cpf=${cpf}`)
-                .then(response => response.json())
-                .then(data => {
-                    spinner.style.display = 'none';
-                    btnBuscar.disabled = false;
+            // Usa JSONP para contornar CORS
+            const callbackName = 'callback_' + Date.now();
+            const script = document.createElement('script');
+            
+            // Define a função callback global
+            window[callbackName] = function(data) {
+                // Limpa
+                delete window[callbackName];
+                document.head.removeChild(script);
+                
+                spinner.style.display = 'none';
+                btnBuscar.disabled = false;
+                
+                if (data.encontrado) {
+                    preencherCampos(data.dados);
+                    dadosClienteCarregados = true;
+                    msgDados.classList.add('show');
                     
-                    if (data.encontrado) {
-                        // Preenche os campos com os dados encontrados
-                        preencherCampos(data.dados);
-                        dadosClienteCarregados = true;
-                        msgDados.classList.add('show');
-                        
-                        // Foca no campo de região para continuar
-                        setTimeout(() => {
-                            regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 500);
-                    } else {
-                        alert('ℹ️ CPF não encontrado em nossa base. Prossiga com o preenchimento manual.');
-                        dadosClienteCarregados = false;
-                        limparCamposExcetoCPF();
-                    }
-                })
-                .catch(error => {
+                    setTimeout(() => {
+                        regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 500);
+                } else {
+                    alert('ℹ️ CPF não encontrado em nossa base. Prossiga com o preenchimento manual.');
+                    dadosClienteCarregados = false;
+                    limparCamposExcetoCPF();
+                }
+            };
+            
+            // Timeout de segurança
+            setTimeout(() => {
+                if (window[callbackName]) {
+                    delete window[callbackName];
+                    if (script.parentNode) document.head.removeChild(script);
                     spinner.style.display = 'none';
                     btnBuscar.disabled = false;
-                    console.error('Erro na busca:', error);
                     alert('❌ Erro ao buscar dados. Tente novamente ou preencha manualmente.');
-                });
+                }
+            }, 10000);
+            
+            // Adiciona o script JSONP
+            script.src = `${SCRIPT_URL}?action=buscar&cpf=${cpf}&callback=${callbackName}`;
+            document.head.appendChild(script);
         }
         
-        // NOVO: Função para preencher campos
+        // Função para preencher campos
         function preencherCampos(dados) {
             camposFormulario.nome.value = dados.nome || '';
             camposFormulario.whatsapp.value = dados.whatsapp || '';
@@ -497,7 +510,7 @@ n            75% { transform: translateX(5px); }
             });
         }
         
-        // NOVO: Função para limpar todos os campos exceto CPF
+        // Função para limpar todos os campos exceto CPF
         function limparCamposExcetoCPF() {
             Object.keys(camposFormulario).forEach(key => {
                 if (key !== 'cpf' && camposFormulario[key]) {
@@ -506,7 +519,7 @@ n            75% { transform: translateX(5px); }
             });
         }
         
-        // NOVO: Função para limpar dados carregados
+        // Função para limpar dados carregados
         function limparDados() {
             if (confirm('Tem certeza que deseja limpar todos os dados e preencher novo cadastro?')) {
                 Object.values(camposFormulario).forEach(campo => {
