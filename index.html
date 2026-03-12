@@ -14,23 +14,10 @@
         }
         .container { max-width: 700px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 30px; }
-        
-        /* LOGO - AJUSTADA */
-        .logo-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .logo-img {
-            max-width: 300px;  /* largura máxima */
-            width: 90%;        /* responsivo */
-            height: auto;      /* mantém proporção */
-            display: block;
-            margin: 0 auto;
-        }
-        
+        .logo-container { text-align: center; margin-bottom: 20px; }
+        .logo-img { max-width: 300px; width: 90%; height: auto; display: block; margin: 0 auto; }
         h1 { color: #FF6B8A; font-size: 1.8rem; margin-bottom: 10px; }
         
-        /* AVISO DE PRAZO */
         .aviso-prazo {
             background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
             border: 3px solid #FF9800;
@@ -40,28 +27,10 @@
             text-align: center;
             box-shadow: 0 5px 15px rgba(255, 152, 0, 0.2);
         }
-        .aviso-prazo-icon {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-        .aviso-prazo h2 {
-            color: #E65100;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-        .aviso-prazo p {
-            color: #BF360C;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin: 0;
-        }
-        .aviso-prazo strong {
-            color: #E65100;
-            font-weight: 700;
-        }
+        .aviso-prazo h2 { color: #E65100; font-size: 1.1rem; margin-bottom: 10px; font-weight: 700; }
+        .aviso-prazo p { color: #BF360C; font-size: 0.95rem; line-height: 1.5; margin: 0; }
+        .aviso-prazo strong { color: #E65100; font-weight: 700; }
         
-        /* CHECKBOX DE CONFIRMAÇÃO */
         .confirmacao-container {
             background: white;
             border: 2px solid #E0E0E0;
@@ -69,262 +38,82 @@
             padding: 15px 20px;
             margin-bottom: 25px;
             text-align: center;
-            transition: all 0.3s;
         }
-        .confirmacao-container.ativo {
-            border-color: #A8E6CF;
-            background: #F0FFF4;
-        }
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-        .checkbox-wrapper input[type="checkbox"] {
-            width: 22px;
-            height: 22px;
-            cursor: pointer;
-            accent-color: #FF6B8A;
-        }
-        .checkbox-wrapper label {
-            margin: 0;
-            cursor: pointer;
-            font-size: 1rem;
-            color: #2D3436;
-            font-weight: 600;
-        }
-        .checkbox-wrapper input[type="checkbox"]:checked + label {
-            color: #2E7D32;
-        }
+        .confirmacao-container.ativo { border-color: #A8E6CF; background: #F0FFF4; }
+        .checkbox-wrapper { display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+        .checkbox-wrapper input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: #FF6B8A; }
+        .checkbox-wrapper label { margin: 0; cursor: pointer; font-size: 1rem; color: #2D3436; font-weight: 600; }
         
-        /* FORMULÁRIO DESABILITADO */
-        .form-box.desabilitado {
-            opacity: 0.5;
-            pointer-events: none;
-            filter: grayscale(0.5);
-        }
+        .form-box.desabilitado { opacity: 0.5; pointer-events: none; filter: grayscale(0.5); }
         .form-box.desabilitado::after {
             content: "👆 Marque a caixa acima para começar";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #FF6B8A;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            white-space: nowrap;
-            z-index: 10;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #FF6B8A; color: white; padding: 15px 25px; border-radius: 10px;
+            font-weight: bold; font-size: 1.1rem; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            white-space: nowrap; z-index: 10;
         }
-        .form-box {
-            position: relative;
-            background: white;
-            padding: 35px;
-            border-radius: 25px;
-            box-shadow: 0 10px 40px rgba(255, 139, 167, 0.15);
-            transition: all 0.3s;
-        }
+        .form-box { position: relative; background: white; padding: 35px; border-radius: 25px; box-shadow: 0 10px 40px rgba(255, 139, 167, 0.15); }
         
-        /* Cards de preço */
-        .pricing { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px; 
-            margin-bottom: 30px;
-        }
+        .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .price-card {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            text-align: center;
-            border: 3px solid transparent;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
+            background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center; border: 3px solid transparent; transition: all 0.3s ease;
+            cursor: pointer; position: relative;
         }
-        .price-card:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 8px 25px rgba(255, 139, 167, 0.2);
-        }
-        .price-card.selecionado {
-            border-color: #FF8BA7;
-            transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(255, 139, 167, 0.3);
-        }
-        .price-card input[type="radio"] {
-            position: absolute;
-            opacity: 0;
-            cursor: pointer;
-        }
-        .price-card h3 { 
-            color: #FF6B8A; 
-            font-size: 0.85rem; 
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .price { 
-            font-size: 1.8rem; 
-            font-weight: bold; 
-            color: #FF6B8A; 
-            margin: 10px 0;
-        }
-        .price-desc {
-            font-size: 0.85rem; 
-            color: #636E72; 
-            margin-top: 5px;
-        }
+        .price-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(255, 139, 167, 0.2); }
+        .price-card.selecionado { border-color: #FF8BA7; transform: scale(1.05); box-shadow: 0 10px 30px rgba(255, 139, 167, 0.3); }
+        .price-card input[type="radio"] { position: absolute; opacity: 0; cursor: pointer; }
+        .price-card h3 { color: #FF6B8A; font-size: 0.85rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .price { font-size: 1.8rem; font-weight: bold; color: #FF6B8A; margin: 10px 0; }
+        .price-desc { font-size: 0.85rem; color: #636E72; margin-top: 5px; }
         
         .form-group { margin-bottom: 20px; }
-        label { 
-            display: block; 
-            font-weight: 600; 
-            margin-bottom: 8px;
-            color: #2D3436;
-        }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #2D3436; }
         .required::after { content: " *"; color: #FF6B8A; }
         input, select, textarea {
-            width: 100%;
-            padding: 14px 18px;
-            border: 2px solid #E0E0E0;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s;
+            width: 100%; padding: 14px 18px; border: 2px solid #E0E0E0;
+            border-radius: 12px; font-size: 1rem; transition: all 0.3s;
         }
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #FF8BA7;
-            box-shadow: 0 0 0 4px rgba(255, 139, 167, 0.1);
-        }
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-        .hint {
-            font-size: 0.8rem;
-            color: #636E72;
-            margin-top: 5px;
-            font-weight: 400;
-        }
-        .aviso {
-            background: #FFF3E0;
-            border-left: 4px solid #FFD93D;
-            padding: 12px;
-            margin-top: 10px;
-            border-radius: 0 8px 8px 0;
-            font-size: 0.9rem;
-            display: none;
-        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #FF8BA7; box-shadow: 0 0 0 4px rgba(255, 139, 167, 0.1); }
+        textarea { resize: vertical; min-height: 100px; }
+        .hint { font-size: 0.8rem; color: #636E72; margin-top: 5px; font-weight: 400; }
+        
+        .endereco-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; }
+        .endereco-grid .form-group:first-child { grid-column: 1 / -1; }
+        @media (max-width: 600px) { .endereco-grid { grid-template-columns: 1fr; } }
+        
+        .aviso { background: #FFF3E0; border-left: 4px solid #FFD93D; padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; font-size: 0.9rem; display: none; }
         .aviso.show { display: block; }
         
-        button {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #FF8BA7, #FF6B8A);
-            color: white;
-            border: none;
-            border-radius: 15px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(255, 107, 138, 0.4);
-        }
-        .pix-info {
-            background: #F8F9FA;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-            text-align: center;
-        }
-        .pix-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin: 10px 0;
-            flex-wrap: wrap;
-        }
-        .pix-key {
-            font-family: monospace;
-            background: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 2px solid #E0E0E0;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            word-break: break-all;
-        }
-        .btn-copiar {
-            width: auto;
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #A8E6CF, #7FCDCD);
-            color: #2D3436;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .btn-copiar:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(127, 205, 205, 0.4);
-        }
-        .btn-copiar.copiado {
-            background: linear-gradient(135deg, #81C784, #66BB6A);
-            color: white;
-        }
-        .success {
-            display: none;
-            text-align: center;
-            padding: 40px;
-        }
+        button { width: 100%; padding: 18px; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255, 107, 138, 0.4); }
+        
+        .pix-info { background: #F8F9FA; padding: 20px; border-radius: 15px; margin-top: 20px; text-align: center; }
+        .pix-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
+        .pix-key { font-family: monospace; background: white; padding: 10px 15px; border-radius: 8px; border: 2px solid #E0E0E0; font-size: 1.1rem; letter-spacing: 1px; word-break: break-all; }
+        .btn-copiar { width: auto; padding: 10px 20px; background: linear-gradient(135deg, #A8E6CF, #7FCDCD); color: #2D3436; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+        .btn-copiar.copiado { background: linear-gradient(135deg, #81C784, #66BB6A); color: white; }
+        
+        .success { display: none; text-align: center; padding: 40px; }
         .success.show { display: block; }
-        .check-icon {
-            width: 80px;
-            height: 80px;
-            background: #A8E6CF;
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-        }
+        .check-icon { width: 80px; height: 80px; background: #A8E6CF; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <!-- LOGO DO BRECHÓ -->
             <div class="logo-container">
                 <img src="https://raw.githubusercontent.com/lojaebrechopingodegente/brecho-entregas/main/logo.png" 
-                     alt="Pingo de Gente - Loja e Brechó Infantil" 
-                     class="logo-img"
+                     alt="Pingo de Gente" class="logo-img"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <!-- Fallback se a imagem não carregar -->
                 <div class="logo" style="display: none; width: 70px; height: 70px; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); border-radius: 50%; margin: 0 auto 15px; align-items: center; justify-content: center; font-size: 35px;">👶</div>
             </div>
             <h1>Solicitação de Entrega</h1>
         </div>
 
-        <!-- AVISO DE PRAZO DE ENTREGA -->
         <div class="aviso-prazo">
-            <div class="aviso-prazo-icon">📅</div>
-            <h2>⏰ Prazo de Entrega</h2>
+            <div style="font-size: 2rem; margin-bottom: 10px;">📅</div>
+            <h2>⏰ Prazo para solicitações semanais!</h2>
             <p>
                 As solicitações recebidas até às <strong>17:00hs de Quarta-feira</strong> serão enviadas na 
                 <strong>Quinta e Sexta-feira</strong> da mesma semana.<br><br>
@@ -333,64 +122,55 @@
             </p>
         </div>
 
-        <!-- CHECKBOX DE CONFIRMAÇÃO -->
         <div class="confirmacao-container" id="confirmacaoBox">
             <div class="checkbox-wrapper">
                 <input type="checkbox" id="confirmarPrazo" onchange="habilitarFormulario()">
                 <label for="confirmarPrazo">
-                    ✅ Li e entendi o prazo de entrega acima
+                    ✅ Li e entendi o prazo para solicitações semanais acima
                 </label>
             </div>
         </div>
 
-        <!-- Cards de Preço -->
         <div class="pricing">
             <label class="price-card" onclick="selecionarRegiao('floripa')">
-                <input type="radio" name="regiao" id="floripa" value="floripa" required>
+                <input type="radio" name="regiao" id="floripa" value="Grande Florianópolis" required>
                 <h3>🏠 Grande Florianópolis</h3>
                 <div class="price">R$ 15,00</div>
                 <p class="price-desc">Valor fixo</p>
             </label>
-
             <label class="price-card" onclick="selecionarRegiao('sc')">
-                <input type="radio" name="regiao" id="sc" value="sc">
+                <input type="radio" name="regiao" id="sc" value="Santa Catarina">
                 <h3>🌲 Santa Catarina</h3>
                 <div class="price">R$ 21,00</div>
                 <p class="price-desc">Até 1kg</p>
             </label>
-
             <label class="price-card" onclick="selecionarRegiao('outros')">
-                <input type="radio" name="regiao" id="outros" value="outros">
+                <input type="radio" name="regiao" id="outros" value="Outros Estados">
                 <h3>🇧🇷 Outros Estados</h3>
                 <div class="price">Consultar</div>
                 <p class="price-desc">Via CEP</p>
             </label>
         </div>
 
-        <!-- FORMULÁRIO -->
         <div class="form-box desabilitado" id="formBox">
             <form id="deliveryForm">
                 <div class="form-group">
                     <label class="required">Nome completo</label>
                     <input type="text" name="nome" required placeholder="Digite seu nome completo">
                 </div>
-
                 <div class="form-group">
                     <label class="required">CPF</label>
                     <input type="text" name="cpf" id="cpf" required placeholder="000.000.000-00" maxlength="14">
                 </div>
-
                 <div class="form-group">
                     <label class="required">WhatsApp</label>
                     <input type="tel" name="whatsapp" required placeholder="(48) 99999-9999">
                 </div>
-
                 <div class="form-group">
                     <label>Instagram</label>
                     <input type="text" name="instagram" placeholder="@maria.silva">
                     <p class="hint">💡 Isto irá facilitar a localização da sua sacolinha</p>
                 </div>
-
                 <div class="form-group">
                     <label class="required">CEP</label>
                     <input type="text" name="cep" id="cep" required placeholder="00000-000" maxlength="9">
@@ -398,42 +178,50 @@
                         ⚠️ Para outros estados, aguarde nosso contato com o valor do frete após a solicitação.
                     </div>
                 </div>
-
+                
+                <!-- ENDEREÇO SEPARADO - NOVO -->
                 <div class="form-group">
-                    <label class="required">Endereço completo</label>
-                    <input type="text" name="endereco" required placeholder="Rua, número, bairro">
+                    <label class="required">Rua / Avenida</label>
+                    <input type="text" name="rua" required placeholder="Nome da rua ou avenida">
                 </div>
-
-                <div class="form-group">
-                    <label>Complemento</label>
-                    <input type="text" name="complemento" placeholder="Apto, bloco, referência...">
+                <div class="endereco-grid">
+                    <div class="form-group">
+                        <label class="required">Cidade</label>
+                        <input type="text" name="cidade" required placeholder="Cidade">
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Bairro</label>
+                        <input type="text" name="bairro" required placeholder="Bairro">
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Nº</label>
+                        <input type="text" name="numero" required placeholder="Número">
+                    </div>
+                    <div class="form-group">
+                        <label>Complemento</label>
+                        <input type="text" name="complemento" placeholder="Apto, bloco...">
+                    </div>
                 </div>
-
+                
                 <div class="form-group">
                     <label>Observações</label>
-                    <textarea name="observacoes" placeholder="Informações adicionais sobre a entrega..."></textarea>
+                    <textarea name="observacoes" placeholder="Informações adicionais..."></textarea>
                 </div>
 
                 <div class="pix-info">
                     <p><strong>💳 Pagamento via PIX</strong></p>
                     <p style="font-size: 0.85rem; color: #636E72; margin-bottom: 10px;">Amanda Marcelino</p>
-                    
                     <div class="pix-container">
                         <span class="pix-key" id="pixKey">50403919000102</span>
-                        <button type="button" class="btn-copiar" onclick="copiarPix()">
-                            📋 Copiar
-                        </button>
+                        <button type="button" class="btn-copiar" onclick="copiarPix()">📋 Copiar</button>
                     </div>
-                    
                     <p style="font-size: 0.8rem; margin-top: 10px; color: #FF6B8A;">
                         * Para SC (até 1kg) e Grande Florianópolis, efetue o pagamento antes de enviar.<br>
                         * Outros estados: aguarde o orçamento.
                     </p>
                 </div>
 
-                <button type="submit" style="margin-top: 20px;">
-                    📦 ENVIAR SOLICITAÇÃO
-                </button>
+                <button type="submit" style="margin-top: 20px;">📦 ENVIAR SOLICITAÇÃO</button>
             </form>
 
             <div class="success" id="successMsg">
@@ -444,7 +232,7 @@
         </div>
     </div>
 
-    <script>
+        <script>
         // URL do seu Web App do Google Sheets
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrr3t0brkuVPkhunAsbPSMW65WLq6KOSnevXU9VbJWclDCetqvK_UEwyZk9Whe9BQc/exec';
         
@@ -496,7 +284,7 @@
         // Função para selecionar região
         function selecionarRegiao(regiao) {
             if (document.getElementById('formBox').classList.contains('desabilitado')) {
-                alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo de entrega" acima para continuar.');
+                alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo para solicitações semanais" acima para continuar.');
                 return;
             }
             
