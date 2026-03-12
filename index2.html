@@ -288,7 +288,6 @@
             </div>
         </div>
     </div>
-
     <script>
         // URL do seu Web App do Google Sheets
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrr3t0brkuVPkhunAsbPSMW65WLq6KOSnevXU9VbJWclDCetqvK_UEwyZk9Whe9BQc/exec';
@@ -351,9 +350,11 @@
             });
         }
 
-        // Função para selecionar região
+        // Função para selecionar região - CORRIGIDA
         function selecionarRegiao(regiao) {
-            if (document.getElementById('formBox').classList.contains('desabilitado')) {
+            // Verifica apenas uma vez se o checkbox está marcado
+            const checkbox = document.getElementById('confirmarPrazo');
+            if (!checkbox.checked) {
                 alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo para solicitações semanais" acima para continuar.');
                 return;
             }
@@ -382,19 +383,16 @@
             const avisoOutros = document.getElementById('avisoOutros');
             
             if (regiao === 'floripa') {
-                // Grande Florianópolis - mostra PIX de R$15
                 pixContainer.classList.remove('oculto');
                 mensagemFrete.classList.add('oculto');
                 pixKey.innerText = PIX_FLORIPA;
                 avisoOutros.classList.remove('show');
             } else if (regiao === 'sc') {
-                // Santa Catarina - mostra PIX de R$21
                 pixContainer.classList.remove('oculto');
                 mensagemFrete.classList.add('oculto');
                 pixKey.innerText = PIX_SC;
                 avisoOutros.classList.remove('show');
             } else if (regiao === 'outros') {
-                // Outros estados - oculta PIX, mostra mensagem de frete
                 pixContainer.classList.add('oculto');
                 mensagemFrete.classList.remove('oculto');
                 avisoOutros.classList.add('show');
@@ -486,5 +484,6 @@
             });
         });
     </script>
+  
 </body>
 </html>
