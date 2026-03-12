@@ -291,8 +291,8 @@
     </div>
 
     <script>
-        // URL do seu Web App do Google Sheets
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbysCZhlugZR4BxA1hd2Oe_swXPsrK_a4leuKvtO5hb4qck-1kNSLjk0pEewKAuUjTI/exec';
+        // URL ATUALIZADA do Web App do Google Sheets
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz1jbvTV_ssq5DFi_OdKUkJdO-FA6rHdWVZNxPIvyVmpUyVkE_H_HnsaEJCQfHbASkB/exec';
         
         // Chaves PIX
         const PIX_FLORIPA = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540515.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520ophK0ykzx2lDITMziipn63043247';
@@ -302,7 +302,7 @@
         let pixCopiado = false;
         let regiaoSelecionadaAtual = '';
         let alertaExibido = false;
-        let regiaoPendente = null;  // NOVO: Armazena região clicada antes do checkbox ser marcado
+        let regiaoPendente = null;
         
         // Referências aos elementos
         const checkbox = document.getElementById('confirmarPrazo');
@@ -314,25 +314,21 @@
         const avisoOutros = document.getElementById('avisoOutros');
         const regiaoContainer = document.getElementById('regiaoContainer');
         
-        // Função para aplicar seleção visual da região - NOVO
+        // Função para aplicar seleção visual da região
         function aplicarSelecaoRegiao(regiao) {
-            // Remove seleção de todos os cards
             document.querySelectorAll('.price-card').forEach(c => {
                 c.classList.remove('selecionado', 'erro');
             });
             
-            // Encontra o card da região
             const card = document.querySelector(`.price-card[data-regiao="${regiao}"]`);
             if (card) {
                 const radio = card.querySelector('input[type="radio"]');
                 card.classList.add('selecionado');
                 radio.checked = true;
                 
-                // Atualiza variáveis globais
                 regiaoSelecionadaAtual = regiao;
                 pixCopiado = false;
                 
-                // Atualiza visibilidade conforme região
                 if (regiao === 'floripa') {
                     pixContainer.classList.add('mostrar');
                     mensagemFrete.classList.remove('mostrar');
@@ -351,23 +347,21 @@
             }
         }
         
-        // Evento do checkbox - MODIFICADO
+        // Evento do checkbox
         checkbox.addEventListener('change', function() {
             if (this.checked) {
                 formBox.classList.remove('desabilitado');
                 confirmacaoBox.classList.add('ativo');
                 
-                // NOVO: Se há uma região pendente, aplica a seleção visual
                 if (regiaoPendente) {
                     aplicarSelecaoRegiao(regiaoPendente);
-                    regiaoPendente = null;  // Limpa a pendência
+                    regiaoPendente = null;
                 }
                 
                 regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
                 formBox.classList.add('desabilitado');
                 confirmacaoBox.classList.remove('ativo');
-                // Desmarca região ao desmarcar checkbox
                 document.querySelectorAll('input[name="regiao"]').forEach(r => r.checked = false);
                 document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selecionado'));
                 pixContainer.classList.remove('mostrar');
@@ -378,33 +372,26 @@
             }
         });
         
-        // Eventos dos cards de região - MODIFICADO
+        // Eventos dos cards de região
         regiaoContainer.addEventListener('click', function(e) {
-            // Previne propagação do evento
             e.stopPropagation();
             
-            // Encontra o card clicado
             const card = e.target.closest('.price-card');
             if (!card) return;
             
             const regiao = card.dataset.regiao;
             
-            // Verifica se clicou no checkbox primeiro
             if (!checkbox.checked) {
-                // Armazena a região clicada para aplicar depois - NOVO
                 regiaoPendente = regiao;
                 
-                // Só exibe alerta se ainda não foi exibido neste clique
                 if (!alertaExibido) {
                     alertaExibido = true;
                     alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo para solicitações semanais" acima para continuar.');
-                    // Reseta a flag após um pequeno delay
                     setTimeout(() => { alertaExibido = false; }, 100);
                 }
                 return;
             }
             
-            // Se checkbox está marcado, aplica seleção normalmente
             aplicarSelecaoRegiao(regiao);
         });
         
@@ -423,7 +410,6 @@
                     btn.classList.remove('copiado');
                 }, 2000);
             }).catch(function() {
-                // Fallback
                 const textArea = document.createElement('textarea');
                 textArea.value = key;
                 document.body.appendChild(textArea);
@@ -470,7 +456,6 @@
         document.getElementById('deliveryForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Verifica região
             const regiaoSelecionada = document.querySelector('input[name="regiao"]:checked');
             if (!regiaoSelecionada) {
                 alert('⚠️ Por favor, selecione uma região de entrega (Grande Florianópolis, Santa Catarina ou Outros Estados).');
@@ -484,7 +469,6 @@
                 return;
             }
             
-            // Verifica cópia do PIX
             if ((regiaoSelecionadaAtual === 'floripa' || regiaoSelecionadaAtual === 'sc') && !pixCopiado) {
                 alert('⚠️ Você não copiou a chave PIX para efetuar o pagamento. Por favor, clique no botão "Copiar" antes de enviar.');
                 pixContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -501,6 +485,9 @@
             formData.forEach((value, key) => {
                 params.append(key, value);
             });
+            
+            // Adiciona a região aos dados do formulário
+            params.append('regiao', regiaoSelecionada.value);
             
             fetch(SCRIPT_URL, {
                 method: 'POST',
