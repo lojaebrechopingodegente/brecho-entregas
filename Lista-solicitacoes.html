@@ -798,9 +798,12 @@
         // FUNÇÃO PDF ATUALIZADA - PRETO E BRANCO
         // ============================================
         async function gerarPDF() {
-            if (idsSelecionados.size === 0) {
-                alert('⚠️ Selecione pelo menos uma solicitação para gerar o PDF.');
-                return;
+            const pdfData = doc.output('blob');
+const pdfUrl = URL.createObjectURL(pdfData);
+window.open(pdfUrl, '_blank');
+
+// Libera o objeto URL após um tempo (opcional, mas recomendado)
+setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
             }
 
             const { jsPDF } = window.jspdf;
