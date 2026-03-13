@@ -394,6 +394,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="container">
@@ -459,7 +460,7 @@
                 <h2>📋 Lista de Solicitações</h2>
                 <span id="periodoSelecionado"></span>
             </div>
-            
+
             <div class="selecao-massa">
                 <label>
                     <input type="checkbox" id="selecionarTodos" onchange="toggleSelecionarTodos()">
@@ -510,7 +511,7 @@
     <script>
         // ⚠️ IMPORTANTE: Substitua esta URL pela URL do seu Web App após implantar
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyaev7QaAzKCxPzvuP2fspmmA8nvwtbnZeLMXNlwFyYzvuBSbw26zgfVPh0Nu35NBRE/exec';
-        
+
         let dadosCarregados = [];
         let idsSelecionados = new Set();
 
@@ -518,7 +519,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const hoje = new Date();
             const seteDiasAtras = new Date(hoje.getTime() - (7 * 24 * 60 * 60 * 1000));
-            
+
             document.getElementById('dataFinal').value = formatarDataInput(hoje);
             document.getElementById('dataInicial').value = formatarDataInput(seteDiasAtras);
         });
@@ -591,7 +592,7 @@
             try {
                 // Usar JSONP para contornar CORS
                 const callbackName = 'callback_' + Date.now();
-                
+
                 const resultado = await new Promise((resolve, reject) => {
                     const script = document.createElement('script');
                     const timeout = setTimeout(() => {
@@ -618,17 +619,17 @@
 
                 dadosCarregados = resultado.dados || [];
                 idsSelecionados.clear(); // Limpar seleções anteriores
-                
+
                 renderizarTabela();
                 atualizarEstatisticas();
-                
+
                 document.getElementById('periodoSelecionado').textContent = 
                     `Período: ${formatarDataBr(dataInicial)} a ${formatarDataBr(dataFinal)}`;
 
             } catch (erro) {
                 console.error('Erro:', erro);
                 alert('❌ Erro ao carregar dados. Verifique se a URL do Web App está correta e se o script foi implantado.');
-                
+
                 // Mostrar estado vazio em caso de erro
                 document.getElementById('emptyState').style.display = 'block';
                 document.getElementById('tabelaContainer').style.display = 'none';
@@ -658,11 +659,11 @@
             dadosCarregados.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 tr.dataset.index = index;
-                
+
                 const enderecoCompleto = `${item.rua || ''}, ${item.numero || ''}${item.complemento ? ' - ' + item.complemento : ''} - ${item.bairro || ''}, ${item.cidade || ''}`;
-                
+
                 const whatsappNumero = formatarWhatsApp(item.whatsapp);
-                
+
                 tr.innerHTML = `
                     <td>
                         <input type="checkbox" class="checkbox-selecao" 
@@ -688,18 +689,18 @@
                     <td style="max-width: 200px; font-size: 0.85rem;">${enderecoCompleto}</td>
                     <td style="max-width: 150px; font-size: 0.85rem;">${item.observacoes || '-'}</td>
                 `;
-                
+
                 if (idsSelecionados.has(index)) {
                     tr.classList.add('selecionado');
                 }
-                
+
                 tbody.appendChild(tr);
             });
 
             document.getElementById('tabelaContainer').style.display = 'block';
             document.getElementById('tabelaContainer').classList.add('fade-in');
             document.getElementById('statsContainer').style.display = 'grid';
-            
+
             atualizarBotaoPDF();
         }
 
@@ -709,12 +710,12 @@
             } else {
                 idsSelecionados.add(index);
             }
-            
+
             const tr = document.querySelector(`tr[data-index="${index}"]`);
             if (tr) {
                 tr.classList.toggle('selecionado', idsSelecionados.has(index));
             }
-            
+
             atualizarContadores();
             atualizarBotaoPDF();
         }
@@ -723,19 +724,19 @@
             const checkboxHeader = document.getElementById('checkboxHeader');
             const selecionarTodos = document.getElementById('selecionarTodos');
             const checked = checkboxHeader.checked || selecionarTodos.checked;
-            
+
             // Sincronizar checkboxes
             checkboxHeader.checked = checked;
             selecionarTodos.checked = checked;
-            
+
             idsSelecionados.clear();
-            
+
             if (checked) {
                 dadosCarregados.forEach((_, index) => {
                     idsSelecionados.add(index);
                 });
             }
-            
+
             renderizarTabela();
             atualizarContadores();
         }
@@ -743,7 +744,7 @@
         function atualizarContadores() {
             const selecionadas = idsSelecionados.size;
             const total = dadosCarregados.length;
-            
+
             document.getElementById('statSelecionadas').textContent = selecionadas;
             document.getElementById('infoSelecao').textContent = 
                 selecionadas > 0 ? `${selecionadas} de ${total} selecionados` : '';
@@ -765,7 +766,7 @@
             document.getElementById('statFloripa').textContent = floripa;
             document.getElementById('statSC').textContent = sc;
             document.getElementById('statOutros').textContent = outros;
-            
+
             atualizarContadores();
         }
 
@@ -786,6 +787,9 @@
             document.getElementById('selecionarTodos').checked = false;
         }
 
+        // ============================================
+        // FUNÇÃO PDF ATUALIZADA - PRETO E BRANCO
+        // ============================================
         async function gerarPDF() {
             if (idsSelecionados.size === 0) {
                 alert('⚠️ Selecione pelo menos uma solicitação para gerar o PDF.');
@@ -794,82 +798,83 @@
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
-            
+
             const dataInicial = document.getElementById('dataInicial').value;
             const dataFinal = document.getElementById('dataFinal').value;
 
-            // Cabeçalho
-            doc.setFillColor(255, 107, 138);
-            doc.rect(0, 0, 297, 30, 'F');
-            
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(20);
+            // Cabeçalho - SEM FUNDO PRETO (apenas texto preto em fundo branco)
+            doc.setTextColor(0, 0, 0); // Preto
+            doc.setFontSize(18);
             doc.setFont('helvetica', 'bold');
-            doc.text('Loja e Brechó Pingo de Gente - Solicitações de Entrega', 15, 20);
-            
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Período: ${formatarDataBr(dataInicial)} a ${formatarDataBr(dataFinal)}`, 15, 28);
+            doc.text('Loja e Brechó Pingo de Gente - Solicitações de Entrega', 15, 15);
 
-            // Dados selecionados
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Período: ${formatarDataBr(dataInicial)} a ${formatarDataBr(dataFinal)}`, 15, 22);
+
+            // Linha divisória preta
+            doc.setDrawColor(0, 0, 0);
+            doc.setLineWidth(0.5);
+            doc.line(10, 25, 287, 25);
+
+            // Dados selecionados - SEM CPF, WhatsApp, Endereço e Bairro
             const dadosSelecionados = Array.from(idsSelecionados).map(index => {
                 const item = dadosCarregados[index];
                 return [
                     formatarDataBr(item.data),
                     item.nome || '-',
-                    formatarCPF(item.cpf),
-                    item.whatsapp || '-',
                     item.instagram || '-',
                     item.regiao || '-',
                     formatarCEP(item.cep),
-                    `${item.rua || ''}, ${item.numero || ''}`,
-                    item.bairro || '-',
                     item.cidade || '-',
                     item.observacoes || '-'
                 ];
             });
 
-            // Tabela
+            // Tabela - PRETO E BRANCO TOTAL
             doc.autoTable({
-                head: [['Data', 'Nome', 'CPF', 'WhatsApp', 'Instagram', 'Região', 'CEP', 'Endereço', 'Bairro', 'Cidade', 'Obs']],
+                head: [['Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Observações']],
                 body: dadosSelecionados,
-                startY: 40,
+                startY: 30,
                 theme: 'grid',
                 headStyles: {
-                    fillColor: [255, 107, 138],
-                    textColor: 255,
-                    fontSize: 10,
-                    fontStyle: 'bold'
+                    fillColor: [255, 255, 255], // Fundo branco
+                    textColor: [0, 0, 0], // Texto preto
+                    fontSize: 11,
+                    fontStyle: 'bold',
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.5
                 },
                 bodyStyles: {
-                    fontSize: 9,
-                    textColor: 50
+                    fontSize: 10,
+                    textColor: [0, 0, 0], // Preto
+                    fillColor: [255, 255, 255] // Fundo branco
                 },
                 alternateRowStyles: {
-                    fillColor: [255, 245, 247]
+                    fillColor: [255, 255, 255] // Todas as linhas brancas (sem alternância de cor)
                 },
                 columnStyles: {
-                    0: { cellWidth: 20 },
-                    1: { cellWidth: 35 },
-                    2: { cellWidth: 25 },
-                    3: { cellWidth: 25 },
-                    4: { cellWidth: 25 },
-                    5: { cellWidth: 30 },
-                    6: { cellWidth: 20 },
-                    7: { cellWidth: 35 },
-                    8: { cellWidth: 25 },
-                    9: { cellWidth: 25 },
-                    10: { cellWidth: 'auto' }
+                    0: { cellWidth: 25 },  // Data
+                    1: { cellWidth: 50 },  // Nome
+                    2: { cellWidth: 35 },  // Instagram
+                    3: { cellWidth: 40 },  // Região
+                    4: { cellWidth: 25 },  // CEP
+                    5: { cellWidth: 35 },  // Cidade
+                    6: { cellWidth: 'auto' } // Observações
                 },
-                margin: { top: 40 }
+                margin: { top: 30, left: 10, right: 10 },
+                styles: {
+                    lineColor: [0, 0, 0], // Linhas pretas
+                    lineWidth: 0.5
+                }
             });
 
-            // Rodapé
+            // Rodapé - PRETO E BRANCO
             const pageCount = doc.internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
                 doc.setFontSize(10);
-                doc.setTextColor(128);
+                doc.setTextColor(0, 0, 0); // Preto
                 doc.text(
                     `Página ${i} de ${pageCount} - Total de ${dadosSelecionados.length} solicitações selecionadas`,
                     297 / 2,
