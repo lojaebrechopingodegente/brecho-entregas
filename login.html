@@ -31,7 +31,22 @@
             text-align: center;
         }
 
-        .logo {
+        .logo-container {
+            width: 200px;
+            height: 80px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-fallback {
             width: 80px;
             height: 80px;
             background: linear-gradient(135deg, #FF8BA7, #FF6B8A);
@@ -39,8 +54,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px;
             font-size: 40px;
+            display: none;
         }
 
         h1 {
@@ -177,7 +192,12 @@
 </head>
 <body>
     <div class="login-container">
-        <div class="logo">👶</div>
+        <div class="logo-container">
+            <img src="https://raw.githubusercontent.com/lojaebrechopingodegente/brecho-entregas/main/logo.png" 
+                 alt="Pingo de Gente" class="logo-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="logo-fallback">👶</div>
+        </div>
         <h1>Pingo de Gente</h1>
         <p class="subtitle">Gerenciamento de Entregas</p>
 
