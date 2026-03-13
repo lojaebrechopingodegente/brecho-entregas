@@ -795,15 +795,12 @@
         }
 
         // ============================================
-        // FUNÇÃO PDF ATUALIZADA - PRETO E BRANCO
+        // FUNÇÃO PDF ATUALIZADA - ABRE EM NOVA ABA
         // ============================================
         async function gerarPDF() {
-            const pdfData = doc.output('blob');
-const pdfUrl = URL.createObjectURL(pdfData);
-window.open(pdfUrl, '_blank');
-
-// Libera o objeto URL após um tempo (opcional, mas recomendado)
-setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
+            if (idsSelecionados.size === 0) {
+                alert('⚠️ Selecione pelo menos uma solicitação para gerar o PDF.');
+                return;
             }
 
             const { jsPDF } = window.jspdf;
@@ -893,9 +890,13 @@ setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
                 );
             }
 
-            // Download
-            const nomeArquivo = `solicitacoes_${dataInicial}_${dataFinal}.pdf`;
-            doc.save(nomeArquivo);
+            // ABRE EM NOVA ABA em vez de download
+            const pdfData = doc.output('blob');
+            const pdfUrl = URL.createObjectURL(pdfData);
+            window.open(pdfUrl, '_blank');
+            
+            // Libera o objeto URL após um tempo (opcional, mas recomendado)
+            setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
         }
     </script>
 </body>
