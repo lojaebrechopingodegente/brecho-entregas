@@ -3,840 +3,369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solicitação de Entrega - Loja e Brechó Pingo de Gente</title>
+    <title>Login - Pingo de Gente</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #FFF5F7 0%, #F0FFF4 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 20px;
         }
-        .container { max-width: 700px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 30px; }
 
-        .logo-container { text-align: center; margin-bottom: 20px; }
-        .logo-img { max-width: 300px; width: 90%; height: auto; display: block; margin: 0 auto; }
-
-        h1 { color: #FF6B8A; font-size: 1.8rem; margin-bottom: 10px; }
-
-        /* MENSAGEM UNIFICADA DE ENVIO */
-        .info-envio-unificado {
-            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
-            border: 3px solid #FF9800;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
             text-align: center;
-            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.2);
         }
-        .info-envio-unificado h2 {
-            color: #E65100;
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            font-weight: 700;
+
+        .logo-container {
+            width: 200px;
+            height: 80px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .info-envio-unificado .data-atual {
-            font-size: 1.1rem;
-            color: #424242;
-            margin-bottom: 15px;
+
+        .logo-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-fallback {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #FF8BA7, #FF6B8A);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            display: none;
+        }
+
+        h1 {
+            color: #2D3436;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #636E72;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            color: #2D3436;
             font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
         }
-        .info-envio-unificado .envio-info {
+
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
             font-size: 1rem;
-            color: #2E7D32;
-            margin-bottom: 10px;
-            line-height: 1.6;
+            transition: all 0.3s;
         }
-        .info-envio-unificado .prazo-info {
-            font-size: 0.95rem;
-            color: #BF360C;
-            margin-bottom: 0;
+
+        input[type="password"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            color: #636E72;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
             font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
         }
-        .emoji-grande {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .error-message.show {
             display: block;
         }
 
-        .confirmacao-container {
-            background: white;
-            border: 2px solid #E0E0E0;
-            border-radius: 12px;
-            padding: 15px 20px;
-            margin-bottom: 25px;
-            text-align: center;
+        .hint {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #b2bec3;
         }
-        .confirmacao-container.ativo { border-color: #A8E6CF; background: #F0FFF4; }
-        .checkbox-wrapper { display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
-        .checkbox-wrapper input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: #FF6B8A; }
-        .checkbox-wrapper label { margin: 0; cursor: pointer; font-size: 1rem; color: #2D3436; font-weight: 600; }
 
-        .form-box.desabilitado { opacity: 0.5; pointer-events: none; filter: grayscale(0.5); }
-        .form-box.desabilitado::after {
-            content: "👆 Marque a caixa acima para começar";
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #FF6B8A; color: white; padding: 15px 25px; border-radius: 10px;
-            font-weight: bold; font-size: 1.1rem; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            white-space: nowrap; z-index: 10;
+        /* Animação de shake para erro */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
-        .form-box { position: relative; background: white; padding: 35px; border-radius: 25px; box-shadow: 0 10px 40px rgba(255, 139, 167, 0.15); }
 
-        /* Estilos para busca de CPF */
-        .cpf-busca-container {
-            position: relative;
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
+        .shake {
+            animation: shake 0.5s;
         }
-        .cpf-busca-container input {
-            flex: 1;
-        }
-        .btn-buscar {
-            width: auto !important;
-            padding: 14px 20px !important;
-            background: linear-gradient(135deg, #4CAF50, #45a049) !important;
-            font-size: 0.9rem !important;
-            white-space: nowrap;
-        }
-        .btn-buscar:disabled {
-            background: #ccc !important;
-            cursor: not-allowed;
-        }
-        .loading-spinner {
+
+        /* Loading spinner */
+        .spinner {
             display: none;
             width: 20px;
             height: 20px;
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #FF6B8A;
+            border-top: 3px solid #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .dados-carregados {
-            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
-            border: 2px solid #4CAF50;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 10px;
-            display: none;
-            animation: slideDown 0.3s ease;
-        }
-        .dados-carregados.show {
-            display: block;
-        }
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .dados-carregados p {
-            margin: 0;
-            color: #2E7D32;
-            font-size: 0.9rem;
-        }
-        .dados-carregados strong {
-            color: #1B5E20;
-        }
-        .limpar-dados {
-            background: none;
-            border: none;
-            color: #666;
-            text-decoration: underline;
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin-top: 8px;
-            padding: 0 !important;
-            width: auto !important;
-            text-align: left;
-        }
-        .limpar-dados:hover {
-            color: #FF6B8A;
-            background: none !important;
-            box-shadow: none !important;
-            transform: none !important;
-        }
-
-        /* Cards de preço */
-        .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .price-card {
-            background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            text-align: center; border: 3px solid transparent; transition: all 0.3s ease;
-            cursor: pointer; position: relative;
-        }
-        .price-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(255, 139, 167, 0.2); }
-        .price-card.selecionado { border-color: #FF8BA7; transform: scale(1.05); box-shadow: 0 10px 30px rgba(255, 139, 167, 0.3); }
-        .price-card input[type="radio"] { position: absolute; opacity: 0; cursor: pointer; }
-        .price-card h3 { color: #FF6B8A; font-size: 0.85rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .price { font-size: 1.8rem; font-weight: bold; color: #FF6B8A; margin: 10px 0; }
-        .price-desc { font-size: 0.85rem; color: #636E72; margin-top: 5px; }
-
-        /* ERRO - quando não seleciona região */
-        .price-card.erro { border-color: #ff4444; animation: shake 0.5s; }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-weight: 600; margin-bottom: 8px; color: #2D3436; }
-        .required::after { content: " *"; color: #FF6B8A; }
-        input, select, textarea {
-            width: 100%; padding: 14px 18px; border: 2px solid #E0E0E0;
-            border-radius: 12px; font-size: 1rem; transition: all 0.3s;
-        }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: #FF8BA7; box-shadow: 0 0 0 4px rgba(255, 139, 167, 0.1); }
-        textarea { resize: vertical; min-height: 100px; }
-        .hint { font-size: 0.8rem; color: #636E72; margin-top: 5px; font-weight: 400; }
-
-        /* GRID PARA ENDEREÇO - 2 COLUNAS */
-        .endereco-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        @media (max-width: 600px) { .endereco-grid { grid-template-columns: 1fr; } }
-
-        .aviso { background: #FFF3E0; border-left: 4px solid #FFD93D; padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; font-size: 0.9rem; display: none; }
-        .aviso.show { display: block; }
-
-        button { width: 100%; padding: 18px; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
-        button:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255, 107, 138, 0.4); }
-
-        /* PIX - estilos */
-        .pix-info { background: #F8F9FA; padding: 20px; border-radius: 15px; margin-top: 20px; text-align: center; display: none; }
-        .pix-info.mostrar { display: block; }
-        .pix-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
-        .pix-key { 
-            font-family: monospace; 
-            background: white; 
-            padding: 10px 15px; 
-            border-radius: 8px; 
-            border: 2px solid #E0E0E0; 
-            font-size: 0.85rem; 
-            letter-spacing: 0.5px; 
-            word-break: break-all;
-            max-width: 100%;
-        }
-        .btn-copiar { width: auto; padding: 10px 20px; background: linear-gradient(135deg, #A8E6CF, #7FCDCD); color: #2D3436; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
-        .btn-copiar.copiado { background: linear-gradient(135deg, #81C784, #66BB6A); color: white; }
-
-        /* Mensagem de aguardar frete */
-        .mensagem-frete {
-            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-            border: 2px solid #2196F3;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-            text-align: center;
-            color: #1565C0;
-            font-size: 1rem;
-            line-height: 1.5;
-            display: none;
-        }
-        .mensagem-frete.mostrar { display: block; }
-
-        .success {
-            display: none;
-            text-align: center;
-            padding: 40px;
-        }
-        .success.show { 
-            display: block !important;
-        }
-        .check-icon { width: 80px; height: 80px; background: #A8E6CF; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
     </style>
 <base target="_blank">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo-container">
-                <img src="https://raw.githubusercontent.com/lojaebrechopingodegente/brecho-entregas/main/logo.png" 
-                     alt="Pingo de Gente" class="logo-img"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="logo" style="display: none; width: 70px; height: 70px; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); border-radius: 50%; margin: 0 auto 15px; align-items: center; justify-content: center; font-size: 35px;">👶</div>
+    <div class="login-container">
+        <div class="logo-container">
+            <img src="https://raw.githubusercontent.com/lojaebrechopingodegente/brecho-entregas/main/logo.png" 
+                 alt="Pingo de Gente" class="logo-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="logo-fallback">👶</div>
+        </div>
+        <h1>Pingo de Gente</h1>
+        <p class="subtitle">Gerenciamento de Entregas</p>
+
+        <div class="error-message" id="errorMessage">
+            ⚠️ Senha incorreta. Tente novamente.
+        </div>
+
+        <form id="loginForm" onsubmit="return fazerLogin(event)">
+            <div class="form-group">
+                <label for="senha">Senha de Acesso</label>
+                <input 
+                    type="password" 
+                    id="senha" 
+                    placeholder="Digite a senha..."
+                    required
+                    autocomplete="off"
+                >
             </div>
-            <h1>Solicitação de Entrega</h1>
-        </div>
 
-        <!-- MENSAGEM UNIFICADA -->
-        <div id="infoEnvioUnificado" class="info-envio-unificado">
-            <!-- Conteúdo será preenchido pelo JavaScript -->
-        </div>
-
-        <div class="confirmacao-container" id="confirmacaoBox">
-            <div class="checkbox-wrapper">
-                <input type="checkbox" id="confirmarPrazo">
-                <label for="confirmarPrazo">
-                    ✅ Li e entendi o prazo para solicitações semanais acima
+            <div class="checkbox-group">
+                <input type="checkbox" id="mostrarSenha" onchange="toggleSenha()">
+                <label for="mostrarSenha" style="margin:0; font-weight:normal; cursor:pointer;">
+                    Mostrar senha
                 </label>
             </div>
-        </div>
 
-        <div class="pricing" id="regiaoContainer">
-            <label class="price-card" data-regiao="floripa">
-                <input type="radio" name="regiao" id="floripa" value="Grande Florianópolis">
-                <h3>🏠 Grande Florianópolis</h3>
-                <div class="price">R$ 15,00</div>
-                <p class="price-desc">Valor fixo</p>
-            </label>
-            <label class="price-card" data-regiao="sc">
-                <input type="radio" name="regiao" id="sc" value="Santa Catarina">
-                <h3>🌲 Santa Catarina</h3>
-                <div class="price">R$ 21,00</div>
-                <p class="price-desc">Até 1kg</p>
-            </label>
-            <label class="price-card" data-regiao="outros">
-                <input type="radio" name="regiao" id="outros" value="Outros Estados">
-                <h3>🇧🇷 Outros Estados</h3>
-                <div class="price">Consultar</div>
-                <p class="price-desc">Via CEP</p>
-            </label>
-        </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="lembrarSenha">
+                <label for="lembrarSenha" style="margin:0; font-weight:normal; cursor:pointer;">
+                    Lembrar senha neste dispositivo
+                </label>
+            </div>
 
-        <div class="form-box desabilitado" id="formBox">
-            <form id="deliveryForm">
-                <!-- Campo CPF com busca -->
-                <div class="form-group">
-                    <label class="required">CPF</label>
-                    <div class="cpf-busca-container">
-                        <input type="text" name="cpf" id="cpf" required placeholder="000.000.000-00" maxlength="14">
-                        <button type="button" class="btn-buscar" id="btnBuscarCPF" onclick="buscarPorCPF()">
-                            🔍 Buscar
-                        </button>
-                    </div>
-                    <div class="loading-spinner" id="loadingSpinner"></div>
-                    <div class="dados-carregados" id="dadosCarregados">
-                        <p>✅ <strong>Dados encontrados!</strong> Formulário preenchido com seu cadastro anterior.</p>
-                        <button type="button" class="limpar-dados" onclick="limparDados()">
-                            🗑️ Limpar dados e preencher novo cadastro
-                        </button>
-                    </div>
-                    <p class="hint">💡 Digite seu CPF (Caso você já tenha realizado solicitações anteriormente, basta clicar em buscar para carregar seus dados automaticamente)</p>
-                </div>
+            <button type="submit" id="btnEntrar">
+                <span id="btnTexto">🔐 Entrar</span>
+                <div class="spinner" id="spinner"></div>
+            </button>
+        </form>
 
-                <div class="form-group">
-                    <label class="required">Nome completo</label>
-                    <input type="text" name="nome" id="nome" required placeholder="Digite seu nome completo">
-                </div>
-
-                <div class="form-group">
-                    <label class="required">WhatsApp</label>
-                    <input type="tel" name="whatsapp" id="whatsapp" required placeholder="(48) 99999-9999">
-                </div>
-
-                <div class="form-group">
-                    <label>Instagram</label>
-                    <input type="text" name="instagram" id="instagram" placeholder="@maria.silva">
-                    <p class="hint">💡 Isto irá facilitar a localização da sua sacolinha</p>
-                </div>
-
-                <div class="form-group">
-                    <label class="required">Rua / Avenida</label>
-                    <input type="text" name="rua" id="rua" required placeholder="Nome da rua ou avenida">
-                </div>
-
-                <div class="endereco-grid">
-                    <div class="form-group">
-                        <label class="required">Nº</label>
-                        <input type="text" name="numero" id="numero" required placeholder="Número">
-                    </div>
-                    <div class="form-group">
-                        <label>Complemento</label>
-                        <input type="text" name="complemento" id="complemento" placeholder="Apto, bloco...">
-                    </div>
-                </div>
-
-                <div class="endereco-grid">
-                    <div class="form-group">
-                        <label class="required">Bairro</label>
-                        <input type="text" name="bairro" id="bairro" required placeholder="Bairro">
-                    </div>
-                    <div class="form-group">
-                        <label class="required">Cidade</label>
-                        <input type="text" name="cidade" id="cidade" required placeholder="Cidade">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="required">CEP</label>
-                    <input type="text" name="cep" id="cepEndereco" required placeholder="00000-000" maxlength="9">
-                    <div class="aviso" id="avisoOutros">
-                        ⚠️ Para outros estados, aguarde nosso contato com o valor do frete após a solicitação.
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Observações</label>
-                    <textarea name="observacoes" id="observacoes" placeholder="Informações adicionais..."></textarea>
-                </div>
-
-                <!-- PIX - Grande Florianópolis e SC (inicialmente oculto) -->
-                <div class="pix-info" id="pixContainer">
-                    <p><strong>💳 Pagamento via PIX</strong></p>
-                    <p style="font-size: 0.85rem; color: #636E72; margin-bottom: 10px;">Amanda Marcelino</p>
-                    <div class="pix-container">
-                        <span class="pix-key" id="pixKey"></span>
-                        <button type="button" class="btn-copiar" id="btnCopiar">📋 Copiar</button>
-                    </div>
-                    <p style="font-size: 0.8rem; margin-top: 10px; color: #FF6B8A;">
-                        * Efetue o pagamento antes de enviar a solicitação.
-                    </p>
-                </div>
-
-                <!-- Mensagem para Outros Estados (inicialmente oculto) -->
-                <div class="mensagem-frete" id="mensagemFrete">
-                    <strong>📦 Cálculo de Frete</strong><br><br>
-                    Só aguardar que iremos pesar seu pacote e retornaremos com os menores valores 
-                    de frete encontrados nas melhores plataformas do serviço.
-                </div>
-
-                <button type="submit" style="margin-top: 20px;">📦 ENVIAR SOLICITAÇÃO</button>
-            </form>
-
-         <div class="success" id="successMsg">
-    <div class="check-icon">✓</div>
-    <h2 style="color: #FF6B8A; margin-bottom: 10px;">Solicitação Enviada!</h2>
-    <p>Não esqueça de enviar o comprovante do PIX no Instagram do Brechó</p>
-    <p style="margin-top: 15px;">
-        <a href="https://www.instagram.com/pingodegentelojaebrecho/" 
-           target="_blank" 
-           style="display: inline-block; background: linear-gradient(135deg, #833AB4, #FD1D1D, #F77737); color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(131, 58, 180, 0.3); transition: transform 0.2s;">
-            📱 Abrir Instagram @pingodegentelojaebrecho
-        </a>
-    </p>
-</div>
-        </div>
+        <p class="hint">
+            💡 Dica: A senha é fornecida pela administradora da loja
+        </p>
     </div>
 
     <script>
-        // URL do Web App do Google Sheets
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzW4NZ4wuSdH7g3loqnzCOo2vA-s5KcmZ2OwsaSu7aSp4kin0YOHnvn1r6rVv4xvlyN/exec';
+        // ============================================
+        // CONFIGURAÇÃO - ALTERE AQUI A SENHA DESEJADA
+        // ============================================
+        const SENHA_CORRETA = '770057'; // 🔑 Mude para sua senha
 
-        // Chaves PIX
-        const PIX_FLORIPA = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540515.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520ophK0ykzx2lDITMziipn63043247';
-        const PIX_SC = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540521.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520QgJHXgWYnawohEmziipn63041785';
+        // Nome da página principal (ajuste se necessário)
+        const PAGINA_PRINCIPAL = 'Lista-solicitacoes.html';
 
-        // Controle de cópia do PIX
-        let pixCopiado = false;
-        let regiaoSelecionadaAtual = '';
-        let alertaExibido = false;
-        let regiaoPendente = null;
-        let dadosClienteCarregados = false;
+        // Chave para localStorage
+        const STORAGE_KEY = 'pingo_autenticado';
+        const STORAGE_SENHA = 'pingo_senha_hash';
 
-        // Referências aos elementos
-        const checkbox = document.getElementById('confirmarPrazo');
-        const formBox = document.getElementById('formBox');
-        const confirmacaoBox = document.getElementById('confirmacaoBox');
-        const pixContainer = document.getElementById('pixContainer');
-        const mensagemFrete = document.getElementById('mensagemFrete');
-        const pixKey = document.getElementById('pixKey');
-        const avisoOutros = document.getElementById('avisoOutros');
-        const regiaoContainer = document.getElementById('regiaoContainer');
+        // Verificar se já está autenticado ao carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            verificarAutenticacao();
+        });
 
-        // Referências dos campos do formulário
-        const camposFormulario = {
-            cpf: document.getElementById('cpf'),
-            nome: document.getElementById('nome'),
-            whatsapp: document.getElementById('whatsapp'),
-            instagram: document.getElementById('instagram'),
-            rua: document.getElementById('rua'),
-            numero: document.getElementById('numero'),
-            complemento: document.getElementById('complemento'),
-            bairro: document.getElementById('bairro'),
-            cidade: document.getElementById('cidade'),
-            cep: document.getElementById('cepEndereco'),
-            observacoes: document.getElementById('observacoes')
-        };
-
-        // Função para formatar data no padrão brasileiro
-        function formatarData(data) {
-            const dia = data.getDate().toString().padStart(2, '0');
-            const mes = (data.getMonth() + 1).toString().padStart(2, '0');
-            const ano = data.getFullYear();
-            return `${dia}/${mes}/${ano}`;
-        }
-
-        function obterNomeDiaSemana(dia) {
-            const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-            return dias[dia];
-        }
-
-        // Função unificada para exibir informação de envio
-        function atualizarInfoEnvio() {
-            const agora = new Date();
-            const diaSemana = agora.getDay(); // 0=Domingo, 1=Segunda, 2=Terça, 3=Quarta, 4=Quinta, 5=Sexta, 6=Sábado
-            const hora = agora.getHours();
-            const minutos = agora.getMinutes();
-
-            // Converte para minutos totais para facilitar comparação
-            const horaAtualEmMinutos = (hora * 60) + minutos;
-            const limiteQuarta = (17 * 60); // 17:00 = 1020 minutos
-
-            const infoDiv = document.getElementById('infoEnvioUnificado');
-
-            // Data atual formatada
-            const dataAtualStr = formatarData(agora);
-            const nomeDiaAtual = obterNomeDiaSemana(diaSemana);
-
-            let html = `<span class="emoji-grande">⏰</span>`;
-            html += `<h2>Próximo Envio</h2>`;
-            html += `<p class="data-atual">Hoje é ${nomeDiaAtual} dia ${dataAtualStr}.</p>`;
-
-            // Verifica se é quarta-feira antes das 17:00
-            if (diaSemana === 3 && horaAtualEmMinutos < limiteQuarta) {
-                // Quarta antes das 17h - envio na mesma semana (quinta e sexta)
-                const quintaEnvio = new Date(agora);
-                quintaEnvio.setDate(agora.getDate() + 1);
-
-                const sextaEnvio = new Date(agora);
-                sextaEnvio.setDate(agora.getDate() + 2);
-
-                html += `<p class="envio-info">Sua sacola será enviada entre <strong>Quinta e Sexta-feira desta semana</strong><br>(${formatarData(quintaEnvio)} e ${formatarData(sextaEnvio)})</p>`;
-                html += `<p class="prazo-info">Solicitações abertas até <strong>Quarta-feira ${dataAtualStr} às 17:00h</strong></p>`;
-            } else {
-                // Qualquer outro dia ou quarta após 17h - envio na próxima semana
-                // Calcular próxima quarta-feira
-                let diasAteQuarta = (3 - diaSemana + 7) % 7;
-                if (diasAteQuarta === 0 && (diaSemana !== 3 || horaAtualEmMinutos >= limiteQuarta)) {
-                    diasAteQuarta = 7;
+        function verificarAutenticacao() {
+            // Verificar se tem senha salva (lembrar senha)
+            const senhaSalva = localStorage.getItem(STORAGE_SENHA);
+            if (senhaSalva) {
+                // Verificar se a senha salva está correta (hash simples)
+                if (verificarHash(SENHA_CORRETA, senhaSalva)) {
+                    redirecionar();
+                    return;
                 }
-
-                const proximaQuarta = new Date(agora);
-                proximaQuarta.setDate(agora.getDate() + diasAteQuarta);
-
-                const quintaEnvio = new Date(proximaQuarta);
-                quintaEnvio.setDate(proximaQuarta.getDate() + 1);
-
-                const sextaEnvio = new Date(proximaQuarta);
-                sextaEnvio.setDate(proximaQuarta.getDate() + 2);
-
-                html += `<p class="envio-info">Sua sacola será enviada entre <strong>Quinta e Sexta-feira da próxima semana</strong><br>(${formatarData(quintaEnvio)} e ${formatarData(sextaEnvio)})</p>`;
-                html += `<p class="prazo-info">Solicitações abertas até <strong>Quarta-feira ${formatarData(proximaQuarta)} às 17:00h</strong></p>`;
             }
 
-            infoDiv.innerHTML = html;
+            // Verificar se tem sessão ativa
+            const autenticado = sessionStorage.getItem(STORAGE_KEY);
+            if (autenticado === 'true') {
+                redirecionar();
+            }
         }
 
-        // Executa ao carregar a página
-        document.addEventListener('DOMContentLoaded', atualizarInfoEnvio);
+        function fazerLogin(event) {
+            event.preventDefault();
 
-        // Função para buscar dados por CPF
-        function buscarPorCPF() {
-            const cpf = camposFormulario.cpf.value.replace(/\D/g, '');
+            const senhaInput = document.getElementById('senha');
+            const btnTexto = document.getElementById('btnTexto');
+            const spinner = document.getElementById('spinner');
+            const btn = document.getElementById('btnEntrar');
+            const errorDiv = document.getElementById('errorMessage');
+            const container = document.querySelector('.login-container');
 
-            if (cpf.length !== 11) {
-                alert('⚠️ Por favor, digite um CPF válido com 11 dígitos.');
-                camposFormulario.cpf.focus();
-                return;
-            }
+            const senhaDigitada = senhaInput.value.trim();
 
-            const btnBuscar = document.getElementById('btnBuscarCPF');
-            const spinner = document.getElementById('loadingSpinner');
-            const msgDados = document.getElementById('dadosCarregados');
-
-            // Mostra loading
-            btnBuscar.disabled = true;
+            // Mostrar loading
+            btnTexto.style.display = 'none';
             spinner.style.display = 'block';
-            msgDados.classList.remove('show');
-
-            // Usa JSONP para contornar CORS
-            const callbackName = 'callback_' + Date.now();
-            const script = document.createElement('script');
-
-            // Define a função callback global
-            window[callbackName] = function(data) {
-                // Limpa
-                delete window[callbackName];
-                document.head.removeChild(script);
-
-                spinner.style.display = 'none';
-                btnBuscar.disabled = false;
-
-                if (data.encontrado) {
-                    preencherCampos(data.dados);
-                    dadosClienteCarregados = true;
-                    msgDados.classList.add('show');
-
-                    setTimeout(() => {
-                        regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 500);
-                } else {
-                    alert('ℹ️ CPF não encontrado em nossa base. Prossiga com o preenchimento manual.');
-                    dadosClienteCarregados = false;
-                    limparCamposExcetoCPF();
-                }
-            };
-
-            // Timeout de segurança
-            setTimeout(() => {
-                if (window[callbackName]) {
-                    delete window[callbackName];
-                    if (script.parentNode) document.head.removeChild(script);
-                    spinner.style.display = 'none';
-                    btnBuscar.disabled = false;
-                    alert('❌ Erro ao buscar dados. Tente novamente ou preencha manualmente.');
-                }
-            }, 10000);
-
-            // Adiciona o script JSONP
-            script.src = `${SCRIPT_URL}?action=buscar&cpf=${cpf}&callback=${callbackName}`;
-            document.head.appendChild(script);
-        }
-
-        // Função para preencher campos
-        function preencherCampos(dados) {
-            camposFormulario.nome.value = dados.nome || '';
-            camposFormulario.whatsapp.value = dados.whatsapp || '';
-            camposFormulario.instagram.value = dados.instagram || '';
-            camposFormulario.rua.value = dados.rua || '';
-            camposFormulario.numero.value = dados.numero || '';
-            camposFormulario.complemento.value = dados.complemento || '';
-            camposFormulario.bairro.value = dados.bairro || '';
-            camposFormulario.cidade.value = dados.cidade || '';
-            camposFormulario.cep.value = dados.cep || '';
-
-            // Adiciona efeito visual nos campos preenchidos
-            Object.values(camposFormulario).forEach(campo => {
-                if (campo && campo.value && campo.id !== 'cpf') {
-                    campo.style.backgroundColor = '#E8F5E9';
-                    campo.style.borderColor = '#4CAF50';
-                    setTimeout(() => {
-                        campo.style.backgroundColor = '';
-                        campo.style.borderColor = '';
-                    }, 2000);
-                }
-            });
-        }
-
-        // Função para limpar todos os campos exceto CPF
-        function limparCamposExcetoCPF() {
-            Object.keys(camposFormulario).forEach(key => {
-                if (key !== 'cpf' && camposFormulario[key]) {
-                    camposFormulario[key].value = '';
-                }
-            });
-        }
-
-        // Função para limpar dados carregados
-        function limparDados() {
-            if (confirm('Tem certeza que deseja limpar todos os dados e preencher novo cadastro?')) {
-                Object.values(camposFormulario).forEach(campo => {
-                    if (campo) campo.value = '';
-                });
-                document.getElementById('dadosCarregados').classList.remove('show');
-                dadosClienteCarregados = false;
-
-                // Reseta seleção de região
-                document.querySelectorAll('input[name="regiao"]').forEach(r => r.checked = false);
-                document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selecionado'));
-                pixContainer.classList.remove('mostrar');
-                mensagemFrete.classList.remove('mostrar');
-                regiaoSelecionadaAtual = '';
-                pixCopiado = false;
-            }
-        }
-
-        // Função para aplicar seleção visual da região
-        function aplicarSelecaoRegiao(regiao) {
-            document.querySelectorAll('.price-card').forEach(c => {
-                c.classList.remove('selecionado', 'erro');
-            });
-
-            const card = document.querySelector(`.price-card[data-regiao="${regiao}"]`);
-            if (card) {
-                const radio = card.querySelector('input[type="radio"]');
-                card.classList.add('selecionado');
-                radio.checked = true;
-
-                regiaoSelecionadaAtual = regiao;
-                pixCopiado = false;
-
-                if (regiao === 'floripa') {
-                    pixContainer.classList.add('mostrar');
-                    mensagemFrete.classList.remove('mostrar');
-                    pixKey.innerText = PIX_FLORIPA;
-                    avisoOutros.classList.remove('show');
-                } else if (regiao === 'sc') {
-                    pixContainer.classList.add('mostrar');
-                    mensagemFrete.classList.remove('mostrar');
-                    pixKey.innerText = PIX_SC;
-                    avisoOutros.classList.remove('show');
-                } else if (regiao === 'outros') {
-                    pixContainer.classList.remove('mostrar');
-                    mensagemFrete.classList.add('mostrar');
-                    avisoOutros.classList.add('show');
-                }
-            }
-        }
-
-        // Evento do checkbox
-        checkbox.addEventListener('change', function() {
-            if (this.checked) {
-                formBox.classList.remove('desabilitado');
-                confirmacaoBox.classList.add('ativo');
-
-                if (regiaoPendente) {
-                    aplicarSelecaoRegiao(regiaoPendente);
-                    regiaoPendente = null;
-                }
-
-                regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            } else {
-                formBox.classList.add('desabilitado');
-                confirmacaoBox.classList.remove('ativo');
-                document.querySelectorAll('input[name="regiao"]').forEach(r => r.checked = false);
-                document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selecionado'));
-                pixContainer.classList.remove('mostrar');
-                mensagemFrete.classList.remove('mostrar');
-                regiaoSelecionadaAtual = '';
-                regiaoPendente = null;
-                pixCopiado = false;
-            }
-        });
-
-        // Eventos dos cards de região
-        regiaoContainer.addEventListener('click', function(e) {
-            e.stopPropagation();
-
-            const card = e.target.closest('.price-card');
-            if (!card) return;
-
-            const regiao = card.dataset.regiao;
-
-            if (!checkbox.checked) {
-                regiaoPendente = regiao;
-
-                if (!alertaExibido) {
-                    alertaExibido = true;
-                    alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo para solicitações semanais" acima para continuar.');
-                    setTimeout(() => { alertaExibido = false; }, 100);
-                }
-                return;
-            }
-
-            aplicarSelecaoRegiao(regiao);
-        });
-
-        // Evento do botão copiar PIX
-        document.getElementById('btnCopiar').addEventListener('click', function() {
-            const btn = this;
-            const key = pixKey.innerText;
-
-            navigator.clipboard.writeText(key).then(function() {
-                btn.innerHTML = '✓ Copiado!';
-                btn.classList.add('copiado');
-                pixCopiado = true;
-
-                setTimeout(function() {
-                    btn.innerHTML = '📋 Copiar';
-                    btn.classList.remove('copiado');
-                }, 2000);
-            }).catch(function() {
-                const textArea = document.createElement('textarea');
-                textArea.value = key;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-
-                btn.innerHTML = '✓ Copiado!';
-                btn.classList.add('copiado');
-                pixCopiado = true;
-
-                setTimeout(function() {
-                    btn.innerHTML = '📋 Copiar';
-                    btn.classList.remove('copiado');
-                }, 2000);
-            });
-        });
-
-        // Máscara para CPF
-        document.getElementById('cpf').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.substring(0, 11);
-
-            if (value.length > 9) {
-                value = value.substring(0, 3) + '.' + value.substring(3, 6) + '.' + value.substring(6, 9) + '-' + value.substring(9);
-            } else if (value.length > 6) {
-                value = value.substring(0, 3) + '.' + value.substring(3, 6) + '.' + value.substring(6);
-            } else if (value.length > 3) {
-                value = value.substring(0, 3) + '.' + value.substring(3);
-            }
-            e.target.value = value;
-        });
-
-        // Máscara para CEP
-        document.getElementById('cepEndereco').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 5) {
-                value = value.substring(0, 5) + '-' + value.substring(5, 8);
-            }
-            e.target.value = value;
-        });
-
-        // Envio do formulário
-        document.getElementById('deliveryForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const regiaoSelecionada = document.querySelector('input[name="regiao"]:checked');
-            if (!regiaoSelecionada) {
-                alert('⚠️ Por favor, selecione uma região de entrega (Grande Florianópolis, Santa Catarina ou Outros Estados).');
-
-                document.querySelectorAll('.price-card').forEach(card => {
-                    card.classList.add('erro');
-                    setTimeout(() => card.classList.remove('erro'), 500);
-                });
-
-                regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
-
-            if ((regiaoSelecionadaAtual === 'floripa' || regiaoSelecionadaAtual === 'sc') && !pixCopiado) {
-                alert('⚠️ Você não copiou a chave PIX para efetuar o pagamento. Por favor, clique no botão "Copiar" antes de enviar.');
-                pixContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
-
-            const btn = document.querySelector('button[type="submit"]');
-            btn.innerText = '⏳ Enviando...';
             btn.disabled = true;
+            errorDiv.classList.remove('show');
 
-            const formData = new FormData(this);
-            const params = new URLSearchParams();
+            // Simular delay para UX (opcional)
+            setTimeout(() => {
+                if (senhaDigitada === SENHA_CORRETA) {
+                    // Sucesso!
 
-            formData.forEach((value, key) => {
-                params.append(key, value);
-            });
+                    // Verificar se quer lembrar senha
+                    const lembrar = document.getElementById('lembrarSenha').checked;
+                    if (lembrar) {
+                        // Salvar hash da senha (não a senha em si)
+                        localStorage.setItem(STORAGE_SENHA, criarHash(SENHA_CORRETA));
+                    }
 
-            // Adiciona a região aos dados do formulário
-            params.append('regiao', regiaoSelecionada.value);
+                    // Marcar sessão como autenticada
+                    sessionStorage.setItem(STORAGE_KEY, 'true');
 
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: params,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    // Redirecionar
+                    redirecionar();
+                } else {
+                    // Erro
+                    btnTexto.style.display = 'inline';
+                    spinner.style.display = 'none';
+                    btn.disabled = false;
+
+                    errorDiv.classList.add('show');
+                    container.classList.add('shake');
+
+                    setTimeout(() => {
+                        container.classList.remove('shake');
+                    }, 500);
+
+                    senhaInput.value = '';
+                    senhaInput.focus();
                 }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Erro na resposta');
-                }
-                return response.json();
-            })
-            .then(result => {
-                console.log('Sucesso:', result);
-                document.getElementById('deliveryForm').style.display = 'none';
-                document.getElementById('successMsg').classList.add('show');
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                document.getElementById('deliveryForm').style.display = 'none';
-                document.getElementById('successMsg').classList.add('show');
-            });
+            }, 500);
+
+            return false;
+        }
+
+        function redirecionar() {
+            // Redirecionar para a página principal
+            window.location.href = PAGINA_PRINCIPAL;
+        }
+
+        function toggleSenha() {
+            const senhaInput = document.getElementById('senha');
+            const mostrar = document.getElementById('mostrarSenha').checked;
+
+            senhaInput.type = mostrar ? 'text' : 'password';
+        }
+
+        // Funções simples de hash (para não armazenar senha em texto plano)
+        function criarHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString(16);
+        }
+
+        function verificarHash(str, hashArmazenado) {
+            return criarHash(str) === hashArmazenado;
+        }
+
+        // Permitir pressionar Enter no input
+        document.getElementById('senha').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                fazerLogin(e);
+            }
         });
     </script>
 </body>
