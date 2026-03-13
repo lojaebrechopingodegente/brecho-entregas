@@ -20,6 +20,57 @@
         
         h1 { color: #FF6B8A; font-size: 1.8rem; margin-bottom: 10px; }
         
+        /* NOVO: Estilos para informação dinâmica de envio */
+        .info-envio-dinamico {
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+            border: 3px solid #2196F3;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .info-envio-dinamico.esta-semana {
+            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+            border-color: #4CAF50;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.2);
+        }
+        .info-envio-dinamico.proxima-semana {
+            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+            border-color: #FF9800;
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.2);
+        }
+        .info-envio-dinamico h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #1565C0;
+        }
+        .info-envio-dinamico.esta-semana h3 {
+            color: #2E7D32;
+        }
+        .info-envio-dinamico.proxima-semana h3 {
+            color: #E65100;
+        }
+        .info-envio-dinamico p {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin: 0;
+            color: #424242;
+        }
+        .info-envio-dinamico strong {
+            font-weight: 700;
+        }
+        .emoji-grande {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
         .aviso-prazo {
             background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
             border: 3px solid #FF9800;
@@ -32,22 +83,6 @@
         .aviso-prazo h2 { color: #E65100; font-size: 1.1rem; margin-bottom: 10px; font-weight: 700; }
         .aviso-prazo p { color: #BF360C; font-size: 0.95rem; line-height: 1.5; margin: 0; }
         .aviso-prazo strong { color: #E65100; font-weight: 700; }
-        
-        /* Badge de status */
-        #status-badge {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
         
         .confirmacao-container {
             background: white;
@@ -249,11 +284,19 @@
             <h1>Solicitação de Entrega</h1>
         </div>
 
+        <!-- NOVO: Informação dinâmica sobre próximo envio -->
+        <div id="infoEnvioDinamico" class="info-envio-dinamico">
+            <!-- Conteúdo será preenchido pelo JavaScript -->
+        </div>
+
         <div class="aviso-prazo">
             <div style="font-size: 2rem; margin-bottom: 10px;">📅</div>
-            <h2 id="titulo-prazo">📦 Próximo Envio</h2>
-            <p id="texto-prazo">
-                Calculando datas de envio...
+            <h2>⏰ Prazo para solicitações semanais!</h2>
+            <p>
+                As solicitações recebidas até às <strong>17:00hs de Quarta-feira</strong> serão enviadas na 
+                <strong>Quinta e Sexta-feira</strong> da mesma semana.<br><br>
+                Após essa data serão enviadas na <strong>Quinta e Sexta-feira</strong> da próxima semana.<br>
+                <strong>Não precisa preencher novamente</strong> a solicitação, só aguardar!
             </p>
         </div>
 
@@ -403,113 +446,6 @@
         const PIX_FLORIPA = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540515.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520ophK0ykzx2lDITMziipn63043247';
         const PIX_SC = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540521.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520QgJHXgWYnawohEmziipn63041785';
         
-        // ============ CÁLCULO AUTOMÁTICO DE DATAS ============
-        
-        const MESES_PT = ['', 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-                          'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-        
-        const DIAS_SEMANA_PT = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 
-                               'quinta-feira', 'sexta-feira', 'sábado'];
-        
-        function formatarData(data) {
-            return `${data.getDate()} de ${MESES_PT[data.getMonth()]}`;
-        }
-        
-        function formatarDataCompleta(data) {
-            return `${DIAS_SEMANA_PT[data.getDay()]}, ${data.getDate()} de ${MESES_PT[data.getMonth()]}`;
-        }
-        
-        function calcularProximasEntregas() {
-            const agora = new Date();
-            const diaSemana = agora.getDay(); // 0=domingo, 1=seg, 2=ter, 3=qua, 4=qui, 5=sex, 6=sab
-            const hora = agora.getHours();
-            
-            // Encontrar a próxima quarta-feira (dia 3)
-            let diasAteQuarta = (3 - diaSemana + 7) % 7;
-            
-            // Se hoje é quarta e já passou das 17h, vai para próxima quarta
-            if (diaSemana === 3 && hora >= 17) {
-                diasAteQuarta = 7;
-            }
-            
-            // Se hoje é depois de quarta (qui, sex, sab, dom), vai para próxima quarta  
-            if (diaSemana > 3) {
-                diasAteQuarta = (3 - diaSemana + 7) % 7;
-                if (diasAteQuarta === 0) diasAteQuarta = 7;
-            }
-            
-            // Calcular a data da quarta-feira do prazo
-            const quartaPrazo = new Date(agora);
-            quartaPrazo.setDate(agora.getDate() + diasAteQuarta);
-            quartaPrazo.setHours(17, 0, 0, 0);
-            
-            // Dias de envio: quinta e sexta após a quarta do prazo
-            const quintaEnvio = new Date(quartaPrazo);
-            quintaEnvio.setDate(quartaPrazo.getDate() + 1);
-            
-            const sextaEnvio = new Date(quartaPrazo);
-            sextaEnvio.setDate(quartaPrazo.getDate() + 2);
-            
-            // Verificar se ainda está no prazo
-            const estaNoPrazo = agora <= quartaPrazo;
-            
-            return {
-                tipo: estaNoPrazo ? 'proxima_semana' : 'proxima_semana',
-                quartaPrazo: quartaPrazo,
-                quinta: quintaEnvio,
-                sexta: sextaEnvio,
-                limiteStr: `17:00hs de ${formatarData(quartaPrazo)} (${DIAS_SEMANA_PT[quartaPrazo.getDay()]})`,
-                envioStr: `${formatarData(quintaEnvio)} e ${formatarData(sextaEnvio)}`,
-                envioCompleto: `${formatarDataCompleta(quintaEnvio)} e ${formatarDataCompleta(sextaEnvio)}`,
-                estaNoPrazo: estaNoPrazo
-            };
-        }
-        
-        function atualizarDatasNoHTML() {
-            const datas = calcularProximasEntregas();
-            
-            // Atualizar o aviso principal
-            const avisoPrazo = document.getElementById('texto-prazo');
-            const tituloPrazo = document.getElementById('titulo-prazo');
-            
-            if (avisoPrazo && tituloPrazo) {
-                tituloPrazo.textContent = '📦 Próximo Envio';
-                
-                avisoPrazo.innerHTML = `
-                    📅 <strong style="color: #E65100; font-size: 1.1rem;">
-                    Envio programado: ${datas.envioStr}</strong><br><br>
-                    ⏰ <strong>Prazo para solicitar:</strong> Até ${datas.limiteStr}<br><br>
-                    📦 <span style="color: #2E7D32;">Faça sua solicitação até o prazo acima!</span><br><br>
-                    <small style="color: #666;">💡 Não precisa preencher novamente, só aguardar!</small>
-                `;
-            }
-            
-            // Adicionar badge visual de status
-            const container = document.querySelector('.aviso-prazo');
-            let badge = document.getElementById('status-badge');
-            if (!badge) {
-                badge = document.createElement('div');
-                badge.id = 'status-badge';
-                container.insertBefore(badge, container.children[1]);
-            }
-            
-            // Sempre mostra como "ABERTO" até passar do prazo
-            const agora = new Date();
-            if (agora <= datas.quartaPrazo) {
-                badge.textContent = '🟢 ABERTO - Prazo Ativo';
-                badge.style.background = '#C8E6C9';
-                badge.style.color = '#2E7D32';
-                badge.style.border = '2px solid #4CAF50';
-            } else {
-                badge.textContent = '🔴 FECHADO - Aguarde próximo ciclo';
-                badge.style.background = '#FFCDD2';
-                badge.style.color = '#C62828';
-                badge.style.border = '2px solid #EF5350';
-            }
-        }
-        
-        // ============ RESTO DO CÓDIGO ORIGINAL ============
-        
         // Controle de cópia do PIX
         let pixCopiado = false;
         let regiaoSelecionadaAtual = '';
@@ -542,6 +478,63 @@
             observacoes: document.getElementById('observacoes')
         };
         
+        // NOVO: Função para calcular e exibir informação sobre o próximo envio
+        function atualizarInfoEnvio() {
+            const agora = new Date();
+            const diaSemana = agora.getDay(); // 0=Domingo, 1=Segunda, 2=Terça, 3=Quarta, 4=Quinta, 5=Sexta, 6=Sábado
+            const hora = agora.getHours();
+            const minutos = agora.getMinutes();
+            
+            // Converte para minutos totais para facilitar comparação
+            const horaAtualEmMinutos = (hora * 60) + minutos;
+            const limiteQuarta = (17 * 60); // 17:00 = 1020 minutos
+            
+            const infoEnvioDiv = document.getElementById('infoEnvioDinamico');
+            
+            // Verifica se é quarta-feira antes das 17:00
+            if (diaSemana === 3 && horaAtualEmMinutos < limiteQuarta) {
+                // Quarta antes das 17h - envio na mesma semana (quinta e sexta)
+                infoEnvioDiv.className = 'info-envio-dinamico esta-semana';
+                infoEnvioDiv.innerHTML = `
+                    <span class="emoji-grande">🚀</span>
+                    <h3>🎉 Ótima notícia!</h3>
+                    <p>Sua sacola será enviada na <strong>Quinta e Sexta-feira desta semana!</strong><br>
+                    Faça sua solicitação até às <strong>17:00h de hoje</strong> (Quarta-feira).</p>
+                `;
+            } else {
+                // Qualquer outro dia ou quarta após 17h - envio na próxima semana
+                infoEnvioDiv.className = 'info-envio-dinamico proxima-semana';
+                
+                let mensagemDia = '';
+                if (diaSemana === 3) {
+                    mensagemDia = 'Hoje é Quarta-feira e já passou das 17:00h';
+                } else if (diaSemana === 4) {
+                    mensagemDia = 'Hoje é Quinta-feira';
+                } else if (diaSemana === 5) {
+                    mensagemDia = 'Hoje é Sexta-feira';
+                } else if (diaSemana === 6) {
+                    mensagemDia = 'Hoje é Sábado';
+                } else if (diaSemana === 0) {
+                    mensagemDia = 'Hoje é Domingo';
+                } else if (diaSemana === 1) {
+                    mensagemDia = 'Hoje é Segunda-feira';
+                } else if (diaSemana === 2) {
+                    mensagemDia = 'Hoje é Terça-feira';
+                }
+                
+                infoEnvioDiv.innerHTML = `
+                    <span class="emoji-grande">📅</span>
+                    <h3>⏰ Próximo Envio</h3>
+                    <p>${mensagemDia}.<br>
+                    Sua sacola será enviada na <strong>Quinta e Sexta-feira da próxima semana!</strong><br>
+                    <small>Solicitações abertas até Quarta-feira às 17:00h.</small></p>
+                `;
+            }
+        }
+        
+        // Executa ao carregar a página
+        document.addEventListener('DOMContentLoaded', atualizarInfoEnvio);
+        
         // Função para buscar dados por CPF
         function buscarPorCPF() {
             const cpf = camposFormulario.cpf.value.replace(/\D/g, '');
@@ -556,14 +549,18 @@
             const spinner = document.getElementById('loadingSpinner');
             const msgDados = document.getElementById('dadosCarregados');
             
+            // Mostra loading
             btnBuscar.disabled = true;
             spinner.style.display = 'block';
             msgDados.classList.remove('show');
             
+            // Usa JSONP para contornar CORS
             const callbackName = 'callback_' + Date.now();
             const script = document.createElement('script');
             
+            // Define a função callback global
             window[callbackName] = function(data) {
+                // Limpa
                 delete window[callbackName];
                 document.head.removeChild(script);
                 
@@ -585,6 +582,7 @@
                 }
             };
             
+            // Timeout de segurança
             setTimeout(() => {
                 if (window[callbackName]) {
                     delete window[callbackName];
@@ -595,10 +593,12 @@
                 }
             }, 10000);
             
+            // Adiciona o script JSONP
             script.src = `${SCRIPT_URL}?action=buscar&cpf=${cpf}&callback=${callbackName}`;
             document.head.appendChild(script);
         }
         
+        // Função para preencher campos
         function preencherCampos(dados) {
             camposFormulario.nome.value = dados.nome || '';
             camposFormulario.whatsapp.value = dados.whatsapp || '';
@@ -610,6 +610,7 @@
             camposFormulario.cidade.value = dados.cidade || '';
             camposFormulario.cep.value = dados.cep || '';
             
+            // Adiciona efeito visual nos campos preenchidos
             Object.values(camposFormulario).forEach(campo => {
                 if (campo && campo.value && campo.id !== 'cpf') {
                     campo.style.backgroundColor = '#E8F5E9';
@@ -622,6 +623,7 @@
             });
         }
         
+        // Função para limpar todos os campos exceto CPF
         function limparCamposExcetoCPF() {
             Object.keys(camposFormulario).forEach(key => {
                 if (key !== 'cpf' && camposFormulario[key]) {
@@ -630,6 +632,7 @@
             });
         }
         
+        // Função para limpar dados carregados
         function limparDados() {
             if (confirm('Tem certeza que deseja limpar todos os dados e preencher novo cadastro?')) {
                 Object.values(camposFormulario).forEach(campo => {
@@ -638,6 +641,7 @@
                 document.getElementById('dadosCarregados').classList.remove('show');
                 dadosClienteCarregados = false;
                 
+                // Reseta seleção de região
                 document.querySelectorAll('input[name="regiao"]').forEach(r => r.checked = false);
                 document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selecionado'));
                 pixContainer.classList.remove('mostrar');
@@ -647,6 +651,7 @@
             }
         }
         
+        // Função para aplicar seleção visual da região
         function aplicarSelecaoRegiao(regiao) {
             document.querySelectorAll('.price-card').forEach(c => {
                 c.classList.remove('selecionado', 'erro');
@@ -818,11 +823,8 @@
                 params.append(key, value);
             });
             
+            // Adiciona a região aos dados do formulário
             params.append('regiao', regiaoSelecionada.value);
-            
-            // Adicionar informação das datas de envio
-            const datas = calcularProximasEntregas();
-            params.append('data_envio_previsto', datas.envioStr);
             
             fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -841,39 +843,12 @@
                 console.log('Sucesso:', result);
                 document.getElementById('deliveryForm').style.display = 'none';
                 document.getElementById('successMsg').classList.add('show');
-                
-                // Mostrar mensagem de confirmação com datas
-                const successMsg = document.getElementById('successMsg');
-                successMsg.innerHTML = `
-                    <div class="check-icon">✓</div>
-                    <h2 style="color: #FF6B8A; margin-bottom: 10px;">Solicitação Enviada!</h2>
-                    <p style="margin-bottom: 15px;">Recebemos seus dados com sucesso.</p>
-                    <div style="background: #F0FFF4; border: 2px solid #4CAF50; border-radius: 10px; padding: 15px; margin-top: 10px;">
-                        <p style="color: #2E7D32; font-weight: bold; margin: 0;">
-                            📦 Seu pedido será enviado:<br>
-                            ${datas.envioCompleto}
-                        </p>
-                    </div>
-                    <p style="margin-top: 15px; font-size: 0.9rem; color: #666;">
-                        Não precisa preencher novamente, só aguardar! 😉
-                    </p>
-                `;
             })
             .catch(error => {
                 console.error('Erro:', error);
                 document.getElementById('deliveryForm').style.display = 'none';
                 document.getElementById('successMsg').classList.add('show');
             });
-        });
-        
-        // ============ INICIALIZAÇÃO ============
-        
-        // Atualizar datas ao carregar a página
-        document.addEventListener('DOMContentLoaded', function() {
-            atualizarDatasNoHTML();
-            
-            // Atualizar a cada minuto para manter preciso
-            setInterval(atualizarDatasNoHTML, 60000);
         });
     </script>
 </body>
