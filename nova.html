@@ -1068,16 +1068,26 @@
             document.getElementById('modalMedidas').classList.remove('ativo');
         }
 
-        async function salvarMedidas() {
+               async function salvarMedidas() {
             const index = document.getElementById('medidaIndex').value;
             const item = dadosCarregados[index];
             
+            // Pegar valores dos inputs
+            const pesoVal = document.getElementById('medidaPeso').value;
+            const alturaVal = document.getElementById('medidaAltura').value;
+            const larguraVal = document.getElementById('medidaLargura').value;
+            const comprimentoVal = document.getElementById('medidaComprimento').value;
+            
+            // Converter para número ou vazio
             const medidas = {
-                peso: parseFloat(document.getElementById('medidaPeso').value) || null,
-                altura: parseFloat(document.getElementById('medidaAltura').value) || null,
-                largura: parseFloat(document.getElementById('medidaLargura').value) || null,
-                comprimento: parseFloat(document.getElementById('medidaComprimento').value) || null
+                peso: pesoVal === '' ? '' : parseFloat(pesoVal),
+                altura: alturaVal === '' ? '' : parseFloat(alturaVal),
+                largura: larguraVal === '' ? '' : parseFloat(larguraVal),
+                comprimento: comprimentoVal === '' ? '' : parseFloat(comprimentoVal)
             };
+
+            console.log('Enviando medidas:', medidas);
+            console.log('Linha do item:', item.linha);
 
             const btnSalvar = document.querySelector('.btn-salvar');
             const textoOriginal = btnSalvar.innerHTML;
@@ -1087,14 +1097,15 @@
             try {
                 const callbackName = 'callback_medidas_' + Date.now();
                 
-                await new Promise((resolve, reject) => {
+                const resultado = await new Promise((resolve, reject) => {
                     const script = document.createElement('script');
                     const timeout = setTimeout(() => {
-                        reject(new Error('Timeout'));
+                        reject(new Error('Timeout - verifique se o script está implantado corretamente'));
                         cleanup();
-                    }, 10000);
+                    }, 20000); // Aumentado para 20 segundos
 
                     window[callbackName] = function(resposta) {
+                        console.log('Resposta do servidor:', resposta);
                         clearTimeout(timeout);
                         resolve(resposta);
                         cleanup();
@@ -1107,28 +1118,46 @@
                         }
                     }
 
-                    const params = new URLSearchParams({
-                        action: 'atualizarMedidas',
-                        linha: item.linha,
-                        peso: medidas.peso || '',
-                        altura: medidas.altura || '',
-                        largura: medidas.largura || '',
-                        comprimento: medidas.comprimento || '',
-                        callback: callbackName
-                    });
+                    // Construir URL com todos os parâmetros
+                    const url = SCRIPT_URL + 
+                        '?action=atualizarMedidas' +
+                        '&linha=' + encodeURIComponent(item.linha) +
+                        '&peso=' + encodeURIComponent(medidas.peso) +
+                        '&altura=' + encodeURIComponent(medidas.altura) +
+                        '&largura=' + encodeURIComponent(medidas.largura) +
+                        '&comprimento=' + encodeURIComponent(medidas.comprimento) +
+                        '&callback=' + callbackName;
 
-                    script.src = `${SCRIPT_URL}?${params.toString()}`;
+                    console.log('URL completa:', url);
+                    
+                    script.src = url;
+                    script.onerror = function() {
+                        reject(new Error('Erro ao carregar script - verifique a URL'));
+                    };
                     document.head.appendChild(script);
                 });
 
-                dadosCarregados[index] = { ...item, ...medidas };
-                renderizarTabela();
-                fecharModal();
-                mostrarNotificacao('✅ Medidas salvas com sucesso!');
+                if (resultado && resultado.sucesso) {
+                    // Atualizar dados locais
+                    dadosCarregados[index] = { 
+                        ...item, 
+                        peso: medidas.peso || null,
+                        altura: medidas.altura || null,
+                        largura: medidas.largura || null,
+                        comprimento: medidas.comprimento || null
+                    };
+                    
+                    renderizarTabela();
+                    fecharModal();
+                    mostrarNotificacao('✅ Medidas salvas com sucesso!');
+                } else {
+                    const erroMsg = resultado && resultado.erro ? resultado.erro : 'Erro desconhecido no servidor';
+                    throw new Error(erroMsg);
+                }
 
             } catch (erro) {
-                console.error('Erro ao salvar:', erro);
-                alert('❌ Erro ao salvar medidas. Tente novamente.');
+                console.error('Erro completo:', erro);
+                alert('❌ Erro ao salvar medidas:\n' + erro.message);
             } finally {
                 btnSalvar.innerHTML = textoOriginal;
                 btnSalvar.disabled = false;
