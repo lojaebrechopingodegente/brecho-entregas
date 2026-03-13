@@ -508,8 +508,8 @@
     </div>
 
     <script>
-        // URL do Web App do Google Sheets (mesma do formulário)
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzg-jLDk-4RXYIAxdQb-cYSzFvNJ8h2JFcgn6JA_Qxhoe_fYkeU2rfwXXUT636v0lwD/exec';
+        // ⚠️ IMPORTANTE: Substitua esta URL pela URL do seu Web App após implantar
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxcsmMtINrnn1pkQuxeiotZC8FzGf9gPNTfVBB33xjn6Bn_FWycwARoWv5jE9tD9OSv/exec';
         
         let dadosCarregados = [];
         let idsSelecionados = new Set();
@@ -536,23 +536,21 @@
 
         function formatarCPF(cpf) {
             if (!cpf) return '-';
-            cpf = cpf.replace(/\D/g, '');
+            cpf = cpf.toString().replace(/\D/g, '');
             if (cpf.length !== 11) return cpf;
             return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
         }
 
         function formatarCEP(cep) {
             if (!cep) return '-';
-            cep = cep.replace(/\D/g, '');
+            cep = cep.toString().replace(/\D/g, '');
             if (cep.length !== 8) return cep;
             return cep.replace(/(\d{5})(\d{3})/, '$1-$2');
         }
 
         function formatarWhatsApp(whatsapp) {
             if (!whatsapp) return '-';
-            // Remove caracteres não numéricos
-            let numero = whatsapp.replace(/\D/g, '');
-            // Adiciona 55 se não tiver
+            let numero = whatsapp.toString().replace(/\D/g, '');
             if (!numero.startsWith('55')) {
                 numero = '55' + numero;
             }
@@ -619,6 +617,8 @@
                 });
 
                 dadosCarregados = resultado.dados || [];
+                idsSelecionados.clear(); // Limpar seleções anteriores
+                
                 renderizarTabela();
                 atualizarEstatisticas();
                 
@@ -627,43 +627,12 @@
 
             } catch (erro) {
                 console.error('Erro:', erro);
-                alert('❌ Erro ao carregar dados. Tente novamente.');
+                alert('❌ Erro ao carregar dados. Verifique se a URL do Web App está correta e se o script foi implantado.');
                 
-                // Dados de exemplo para teste (remover em produção)
-                dadosCarregados = [
-                    {
-                        data: '2026-03-10',
-                        nome: 'Maria Silva',
-                        cpf: '12345678901',
-                        whatsapp: '(48) 99999-9999',
-                        instagram: '@mariasilva',
-                        regiao: 'Grande Florianópolis',
-                        cep: '88000-000',
-                        rua: 'Rua das Flores',
-                        numero: '123',
-                        complemento: 'Apto 45',
-                        bairro: 'Centro',
-                        cidade: 'Florianópolis',
-                        observacoes: 'Entregar pela manhã'
-                    },
-                    {
-                        data: '2026-03-11',
-                        nome: 'João Santos',
-                        cpf: '98765432100',
-                        whatsapp: '(11) 98888-8888',
-                        instagram: '@joaosantos',
-                        regiao: 'Santa Catarina',
-                        cep: '89000-000',
-                        rua: 'Av. Brasil',
-                        numero: '456',
-                        complemento: '',
-                        bairro: 'Vila Nova',
-                        cidade: 'Blumenau',
-                        observacoes: ''
-                    }
-                ];
-                renderizarTabela();
-                atualizarEstatisticas();
+                // Mostrar estado vazio em caso de erro
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('tabelaContainer').style.display = 'none';
+                document.getElementById('statsContainer').style.display = 'none';
             } finally {
                 document.getElementById('loading').style.display = 'none';
             }
@@ -813,6 +782,8 @@
             document.getElementById('emptyState').style.display = 'block';
             dadosCarregados = [];
             idsSelecionados.clear();
+            document.getElementById('checkboxHeader').checked = false;
+            document.getElementById('selecionarTodos').checked = false;
         }
 
         async function gerarPDF() {
@@ -878,17 +849,17 @@
                     fillColor: [255, 245, 247]
                 },
                 columnStyles: {
-                    0: { cellWidth: 20 }, // Data
-                    1: { cellWidth: 35 }, // Nome
-                    2: { cellWidth: 25 }, // CPF
-                    3: { cellWidth: 25 }, // WhatsApp
-                    4: { cellWidth: 25 }, // Instagram
-                    5: { cellWidth: 30 }, // Região
-                    6: { cellWidth: 20 }, // CEP
-                    7: { cellWidth: 35 }, // Endereço
-                    8: { cellWidth: 25 }, // Bairro
-                    9: { cellWidth: 25 }, // Cidade
-                    10: { cellWidth: 'auto' } // Observações
+                    0: { cellWidth: 20 },
+                    1: { cellWidth: 35 },
+                    2: { cellWidth: 25 },
+                    3: { cellWidth: 25 },
+                    4: { cellWidth: 25 },
+                    5: { cellWidth: 30 },
+                    6: { cellWidth: 20 },
+                    7: { cellWidth: 35 },
+                    8: { cellWidth: 25 },
+                    9: { cellWidth: 25 },
+                    10: { cellWidth: 'auto' }
                 },
                 margin: { top: 40 }
             });
