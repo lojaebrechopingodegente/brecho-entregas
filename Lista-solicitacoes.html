@@ -430,6 +430,10 @@
                     <input type="date" id="dataInicial" required>
                 </div>
                 <div class="campo-filtro">
+                    <label for="horaInicial">Horário Inicial</label>
+                    <input type="time" id="horaInicial" value="00:00" required>
+                </div>
+                <div class="campo-filtro">
                     <label for="dataFinal">Data Final</label>
                     <input type="date" id="dataFinal" required>
                 </div>
@@ -536,7 +540,7 @@
     (function() {
         const STORAGE_KEY = 'pingo_autenticado';
         const STORAGE_SENHA = 'pingo_senha_hash';
-        const SENHA_CORRETA = '770057'; // Mesma senha do login.html
+        const SENHA_CORRETA = 'pingo2024'; // Mesma senha do login.html
 
         // Função de hash simples (deve ser igual à do login.html)
         function criarHash(str) {
@@ -589,6 +593,7 @@
 
             document.getElementById('dataFinal').value = formatarDataInput(hoje);
             document.getElementById('dataInicial').value = formatarDataInput(seteDiasAtras);
+            document.getElementById('horaInicial').value = '00:00'; // Início do dia
             document.getElementById('horaFinal').value = '17:00'; // Horário padrão de cutoff
         });
 
@@ -639,6 +644,7 @@
 
         async function buscarSolicitacoes() {
             const dataInicial = document.getElementById('dataInicial').value;
+            const horaInicial = document.getElementById('horaInicial').value || '00:00';
             const dataFinal = document.getElementById('dataFinal').value;
             const horaFinal = document.getElementById('horaFinal').value || '23:59';
 
@@ -682,7 +688,7 @@
                         }
                     }
 
-                    script.src = `${SCRIPT_URL}?action=listar&dataInicial=${dataInicial}&dataFinal=${dataFinal}&horaFinal=${horaFinal}&callback=${callbackName}`;
+                    script.src = `${SCRIPT_URL}?action=listar&dataInicial=${dataInicial}&horaInicial=${horaInicial}&dataFinal=${dataFinal}&horaFinal=${horaFinal}&callback=${callbackName}`;
                     document.head.appendChild(script);
                 });
 
@@ -693,7 +699,7 @@
                 atualizarEstatisticas();
 
                 document.getElementById('periodoSelecionado').textContent = 
-                    `Período: ${formatarDataBr(dataInicial)} a ${formatarDataBr(dataFinal)} até ${horaFinal}`;
+                    `Período: ${formatarDataBr(dataInicial)} ${horaInicial} a ${formatarDataBr(dataFinal)} ${horaFinal}`;
 
             } catch (erro) {
                 console.error('Erro:', erro);
@@ -846,6 +852,7 @@
 
         function limparFiltros() {
             document.getElementById('dataInicial').value = '';
+            document.getElementById('horaInicial').value = '00:00';
             document.getElementById('dataFinal').value = '';
             document.getElementById('horaFinal').value = '17:00';
             document.getElementById('tabelaContainer').style.display = 'none';
