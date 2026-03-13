@@ -872,7 +872,7 @@
             const dataInicial = document.getElementById('dataInicial').value;
             const dataFinal = document.getElementById('dataFinal').value;
 
-            // Cabeçalho - SEM FUNDO PRETO (apenas texto preto em fundo branco)
+            // Cabeçalho - PRETO E BRANCO
             doc.setTextColor(0, 0, 0); // Preto
             doc.setFontSize(18);
             doc.setFont('helvetica', 'bold');
@@ -921,7 +921,7 @@
                     fillColor: [255, 255, 255] // Fundo branco
                 },
                 alternateRowStyles: {
-                    fillColor: [255, 255, 255] // Todas as linhas brancas (sem alternância de cor)
+                    fillColor: [255, 255, 255] // Todas as linhas brancas
                 },
                 columnStyles: {
                     0: { cellWidth: 25 },  // Data
@@ -953,9 +953,29 @@
                 );
             }
 
-            // Download
-            const nomeArquivo = `solicitacoes_${dataInicial}_${dataFinal}.pdf`;
-            doc.save(nomeArquivo);
+            // ABRIR EM NOVA ABA EM VEZ DE DOWNLOAD
+            const pdfDataUri = doc.output('datauristring');
+            const novaAba = window.open();
+            if (novaAba) {
+                novaAba.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Solicitações de Entrega - Pingo de Gente</title>
+                        <style>
+                            body { margin: 0; padding: 0; overflow: hidden; }
+                            iframe { width: 100vw; height: 100vh; border: none; }
+                        </style>
+                    </head>
+                    <body>
+                        <iframe src="${pdfDataUri}" type="application/pdf"></iframe>
+                    </body>
+                    </html>
+                `);
+                novaAba.document.close();
+            } else {
+                alert('❌ O navegador bloqueou a abertura de nova aba. Verifique as configurações de pop-up.');
+            }
         }
     
     // Função para logout
