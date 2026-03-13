@@ -395,12 +395,28 @@
         }
     </style>
 <base target="_blank">
-<base target="_blank">
 </head>
 <body>
     <div class="container">
         <!-- Header -->
-        <div class="header">
+        <div class="header" style="position: relative;">
+            <button onclick="fazerLogout()" style="
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: #ff6b6b;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 0.9rem;
+                font-weight: 600;
+                transition: all 0.3s;
+                z-index: 100;
+            " onmouseover="this.style.background='#ee5a6f'" onmouseout="this.style.background='#ff6b6b'">
+                🚪 Sair
+            </button>
             <h1>📦 Gerenciamento de Entregas</h1>
             <p>Loja e Brechó Pingo de Gente</p>
         </div>
@@ -514,9 +530,54 @@
     </div>
 
     <script>
+    // ============================================
+    // PROTEÇÃO DE ACESSO - BLOQUEIO DE ACESSO DIRETO
+    // ============================================
+    (function() {
+        const STORAGE_KEY = 'pingo_autenticado';
+        const STORAGE_SENHA = 'pingo_senha_hash';
+        const SENHA_CORRETA = 'pingo2024'; // Mesma senha do login.html
+
+        // Função de hash simples (deve ser igual à do login.html)
+        function criarHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString(16);
+        }
+
+        function verificarHash(str, hashArmazenado) {
+            return criarHash(str) === hashArmazenado;
+        }
+
+        // Verificar autenticação imediatamente
+        const autenticado = sessionStorage.getItem(STORAGE_KEY);
+        const senhaSalva = localStorage.getItem(STORAGE_SENHA);
+
+        let temAcesso = false;
+
+        if (autenticado === 'true') {
+            temAcesso = true;
+        } else if (senhaSalva && verificarHash(SENHA_CORRETA, senhaSalva)) {
+            temAcesso = true;
+            sessionStorage.setItem(STORAGE_KEY, 'true');
+        }
+
+        // Se não tem acesso, redirecionar imediatamente para o login
+        if (!temAcesso) {
+            window.location.replace('login.html');
+            throw new Error('Acesso não autorizado'); // Impede execução do resto do script
+        }
+    })();
+    // ============================================
+    // FIM DA PROTEÇÃO
+    // ============================================
+
         // ⚠️ IMPORTANTE: Substitua esta URL pela URL do seu Web App após implantar
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxDQYow8_YiKhFOW6SZuxm1WBqS_JKlDVoFfZrax1FCfAsQXTUO-hAJ8EIZr4LtBWaf/exec';
-        const SENHA_CORRETA = 'pingo2024'; // 🔑 Altere para sua senha
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyaev7QaAzKCxPzvuP2fspmmA8nvwtbnZeLMXNlwFyYzvuBSbw26zgfVPh0Nu35NBRE/exec';
 
         let dadosCarregados = [];
         let idsSelecionados = new Set();
@@ -574,16 +635,6 @@
             } else {
                 return '<span class="tag-regiao tag-outros">🇧🇷 Outros Estados</span>';
             }
-        }
-
-        // Função auxiliar para obter valor do objeto com fallback para diferentes nomes de propriedade
-        function getValor(item, ...propriedades) {
-            for (let prop of propriedades) {
-                if (item[prop] !== undefined && item[prop] !== null && item[prop] !== '') {
-                    return item[prop];
-                }
-            }
-            return '-';
         }
 
         async function buscarSolicitacoes() {
@@ -807,7 +858,7 @@
         }
 
         // ============================================
-        // FUNÇÃO PDF CORRIGIDA - ABRE EM NOVA ABA
+        // FUNÇÃO PDF ATUALIZADA - PRETO E BRANCO
         // ============================================
         async function gerarPDF() {
             if (idsSelecionados.size === 0) {
@@ -836,21 +887,17 @@
             doc.setLineWidth(0.5);
             doc.line(10, 25, 287, 25);
 
-            // Dados selecionados - CORRIGIDO: busca múltiplas variações de nomes de propriedades
+            // Dados selecionados - SEM CPF, WhatsApp, Endereço e Bairro
             const dadosSelecionados = Array.from(idsSelecionados).map(index => {
                 const item = dadosCarregados[index];
-                
-                // Log para debug (pode remover depois de confirmar que funciona)
-                console.log('Item completo:', item);
-                
                 return [
                     formatarDataBr(item.data),
-                    getValor(item, 'nome', 'Nome'),
-                    getValor(item, 'instagram', 'Instagram', 'insta'),
-                    getValor(item, 'regiao', 'Regiao', 'região', 'Região', 'local', 'Local', 'estado', 'Estado'),
-                    formatarCEP(getValor(item, 'cep', 'CEP', 'Cep')),
-                    getValor(item, 'cidade', 'Cidade', 'cidade', 'City'),
-                    getValor(item, 'observacoes', 'Observacoes', 'observações', 'Observações', 'obs', 'Obs', 'comentarios', 'Comentarios')
+                    item.nome || '-',
+                    item.instagram || '-',
+                    item.regiao || '-',
+                    formatarCEP(item.cep),
+                    item.cidade || '-',
+                    item.observacoes || '-'
                 ];
             });
 
@@ -906,14 +953,18 @@
                 );
             }
 
-            // ABRE EM NOVA ABA em vez de download
-            const pdfData = doc.output('blob');
-            const pdfUrl = URL.createObjectURL(pdfData);
-            window.open(pdfUrl, '_blank');
-            
-            // Libera o objeto URL após um tempo (opcional, mas recomendado)
-            setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
+            // Download
+            const nomeArquivo = `solicitacoes_${dataInicial}_${dataFinal}.pdf`;
+            doc.save(nomeArquivo);
         }
-    </script>
+    
+    // Função para logout
+    function fazerLogout() {
+        sessionStorage.removeItem('pingo_autenticado');
+        localStorage.removeItem('pingo_senha_hash');
+        window.location.replace('login.html');
+    }
+
+</script>
 </body>
 </html>
