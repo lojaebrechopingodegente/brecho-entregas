@@ -395,6 +395,7 @@
         }
     </style>
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
     <div class="container">
@@ -572,6 +573,16 @@
             } else {
                 return '<span class="tag-regiao tag-outros">🇧🇷 Outros Estados</span>';
             }
+        }
+
+        // Função auxiliar para obter valor do objeto com fallback para diferentes nomes de propriedade
+        function getValor(item, ...propriedades) {
+            for (let prop of propriedades) {
+                if (item[prop] !== undefined && item[prop] !== null && item[prop] !== '') {
+                    return item[prop];
+                }
+            }
+            return '-';
         }
 
         async function buscarSolicitacoes() {
@@ -795,7 +806,7 @@
         }
 
         // ============================================
-        // FUNÇÃO PDF ATUALIZADA - ABRE EM NOVA ABA
+        // FUNÇÃO PDF CORRIGIDA - ABRE EM NOVA ABA
         // ============================================
         async function gerarPDF() {
             if (idsSelecionados.size === 0) {
@@ -824,17 +835,21 @@
             doc.setLineWidth(0.5);
             doc.line(10, 25, 287, 25);
 
-            // Dados selecionados - SEM CPF, WhatsApp, Endereço e Bairro
+            // Dados selecionados - CORRIGIDO: busca múltiplas variações de nomes de propriedades
             const dadosSelecionados = Array.from(idsSelecionados).map(index => {
                 const item = dadosCarregados[index];
+                
+                // Log para debug (pode remover depois de confirmar que funciona)
+                console.log('Item completo:', item);
+                
                 return [
                     formatarDataBr(item.data),
-                    item.nome || '-',
-                    item.instagram || '-',
-                    item.regiao || '-',
-                    formatarCEP(item.cep),
-                    item.cidade || '-',
-                    item.observacoes || '-'
+                    getValor(item, 'nome', 'Nome'),
+                    getValor(item, 'instagram', 'Instagram', 'insta'),
+                    getValor(item, 'regiao', 'Regiao', 'região', 'Região', 'local', 'Local', 'estado', 'Estado'),
+                    formatarCEP(getValor(item, 'cep', 'CEP', 'Cep')),
+                    getValor(item, 'cidade', 'Cidade', 'cidade', 'City'),
+                    getValor(item, 'observacoes', 'Observacoes', 'observações', 'Observações', 'obs', 'Obs', 'comentarios', 'Comentarios')
                 ];
             });
 
