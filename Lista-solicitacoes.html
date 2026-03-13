@@ -154,6 +154,23 @@
             box-shadow: none;
         }
 
+        .btn-etiqueta {
+            background: linear-gradient(135deg, #4ECDC4, #44A08D);
+            color: white;
+        }
+
+        .btn-etiqueta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
+        }
+
+        .btn-etiqueta:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         /* Estatísticas */
         .stats-container {
             display: grid;
@@ -451,6 +468,9 @@
                 </button>
                 <button class="btn btn-pdf" id="btnGerarPDF" onclick="gerarPDF()" disabled>
                     📄 Gerar PDF
+                </button>
+                <button class="btn btn-etiqueta" id="btnGerarEtiquetas" onclick="gerarEtiquetas()" disabled>
+                    🏷️ Gerar Etiquetas
                 </button>
             </div>
         </div>
@@ -776,7 +796,7 @@
             document.getElementById('tabelaContainer').classList.add('fade-in');
             document.getElementById('statsContainer').style.display = 'grid';
 
-            atualizarBotaoPDF();
+            atualizarBotoes();
         }
 
         function toggleSelecao(index) {
@@ -792,7 +812,7 @@
             }
 
             atualizarContadores();
-            atualizarBotaoPDF();
+            atualizarBotoes();
         }
 
         function toggleSelecionarTodos() {
@@ -845,9 +865,12 @@
             atualizarContadores();
         }
 
-        function atualizarBotaoPDF() {
-            const btn = document.getElementById('btnGerarPDF');
-            btn.disabled = idsSelecionados.size === 0;
+        function atualizarBotoes() {
+            const btnPDF = document.getElementById('btnGerarPDF');
+            const btnEtiquetas = document.getElementById('btnGerarEtiquetas');
+            const habilitado = idsSelecionados.size > 0;
+            btnPDF.disabled = !habilitado;
+            btnEtiquetas.disabled = !habilitado;
         }
 
         function limparFiltros() {
@@ -969,6 +992,158 @@
                     <html>
                     <head>
                         <title>Solicitações de Entrega - Pingo de Gente</title>
+                        <style>
+                            body { margin: 0; padding: 0; overflow: hidden; }
+                            iframe { width: 100vw; height: 100vh; border: none; }
+                        </style>
+                    </head>
+                    <body>
+                        <iframe src="${pdfDataUri}" type="application/pdf"></iframe>
+                    </body>
+                    </html>
+                `);
+                novaAba.document.close();
+            } else {
+                alert('❌ O navegador bloqueou a abertura de nova aba. Verifique as configurações de pop-up.');
+            }
+        }
+
+        // ============================================
+        // FUNÇÃO PARA GERAR ETIQUETAS DE ENDEREÇO
+        // ============================================
+        async function gerarEtiquetas() {
+            if (idsSelecionados.size === 0) {
+                alert('⚠️ Selecione pelo menos uma solicitação para gerar as etiquetas.');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            
+            // Configuração da página A4 em modo retrato (para etiquetas)
+            const doc = new jsPDF('portrait', 'mm', 'a4');
+            
+            // Dimensões da etiqueta (tamanho padrão dos Correios: 100mm x 140mm)
+            // A4 = 210mm x 297mm
+            // Cabem 2 etiquetas por página (uma em cima, outra embaixo)
+            const etiquetaLargura = 100;
+            const etiquetaAltura = 140;
+            const margemX = (210 - etiquetaLargura) / 2; // Centralizado
+            const margemY = 8; // Margem superior
+            const espacoEntre = 10; // Espaço entre etiquetas
+
+            // Pegar dados selecionados
+            const dadosSelecionados = Array.from(idsSelecionados).map(index => dadosCarregados[index]);
+            
+            let etiquetaAtual = 0;
+            
+            dadosSelecionados.forEach((item, index) => {
+                // Se já desenhou 2 etiquetas, criar nova página
+                if (etiquetaAtual === 2) {
+                    doc.addPage();
+                    etiquetaAtual = 0;
+                }
+                
+                const posY = margemY + (etiquetaAtual * (etiquetaAltura + espacoEntre));
+                
+                // Desenhar borda da etiqueta
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.5);
+                doc.rect(margemX, posY, etiquetaLargura, etiquetaAltura);
+                
+                // Linha divisória superior (cabeçalho)
+                doc.line(margemX, posY + 20, margemX + etiquetaLargura, posY + 20);
+                
+                // Remetente (cabeçalho)
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'bold');
+                doc.text('REMETENTE:', margemX + 5, posY + 8);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.text('Loja e Brechó Pingo de Gente', margemX + 5, posY + 15);
+                
+                // Destinatário (título)
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'bold');
+                doc.text('DESTINATÁRIO:', margemX + 5, posY + 28);
+                
+                // Nome do destinatário
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                const nome = (item.nome || 'NÃO INFORMADO').toUpperCase();
+                doc.text(nome, margemX + 5, posY + 40);
+                
+                // Endereço
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                
+                let enderecoY = posY + 52;
+                
+                // Rua e número
+                const rua = item.rua || '';
+                const numero = item.numero || 'S/N';
+                const complemento = item.complemento || '';
+                let linhaEndereco = `${rua}, ${numero}`;
+                if (complemento) {
+                    linhaEndereco += ` - ${complemento}`;
+                }
+                
+                // Quebrar linha se for muito longo
+                const linhasEndereco = doc.splitTextToSize(linhaEndereco, etiquetaLargura - 10);
+                doc.text(linhasEndereco, margemX + 5, enderecoY);
+                enderecoY += (linhasEndereco.length * 5);
+                
+                // Bairro
+                const bairro = item.bairro || '';
+                if (bairro) {
+                    doc.text(`Bairro: ${bairro}`, margemX + 5, enderecoY);
+                    enderecoY += 6;
+                }
+                
+                // Cidade e Estado
+                const cidade = item.cidade || '';
+                const estado = item.estado || 'SC';
+                doc.setFont('helvetica', 'bold');
+                doc.text(`${cidade} - ${estado}`, margemX + 5, enderecoY);
+                enderecoY += 8;
+                
+                // CEP destacado
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                const cep = formatarCEP(item.cep);
+                doc.text(`CEP: ${cep}`, margemX + 5, enderecoY);
+                
+                // Linha divisória inferior
+                const linhaObsY = posY + etiquetaAltura - 25;
+                doc.setLineWidth(0.3);
+                doc.line(margemX, linhaObsY, margemX + etiquetaLargura, linhaObsY);
+                
+                // Observações
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Observações:', margemX + 5, linhaObsY + 5);
+                doc.setFontSize(9);
+                const obs = item.observacoes || 'Nenhuma observação';
+                const linhasObs = doc.splitTextToSize(obs, etiquetaLargura - 10);
+                doc.text(linhasObs, margemX + 5, linhaObsY + 11);
+                
+                // Contador de etiquetas
+                doc.setFontSize(7);
+                doc.setTextColor(128, 128, 128);
+                doc.text(`Etiqueta ${index + 1} de ${dadosSelecionados.length}`, margemX + etiquetaLargura - 2, posY + etiquetaAltura - 2, { align: 'right' });
+                doc.setTextColor(0, 0, 0);
+                
+                etiquetaAtual++;
+            });
+
+            // ABRIR EM NOVA ABA
+            const pdfDataUri = doc.output('datauristring');
+            const novaAba = window.open();
+            if (novaAba) {
+                novaAba.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Etiquetas de Entrega - Pingo de Gente</title>
                         <style>
                             body { margin: 0; padding: 0; overflow: hidden; }
                             iframe { width: 100vw; height: 100vh; border: none; }
