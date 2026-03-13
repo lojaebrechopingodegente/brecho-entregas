@@ -14,76 +14,63 @@
         }
         .container { max-width: 700px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 30px; }
-        
+
         .logo-container { text-align: center; margin-bottom: 20px; }
         .logo-img { max-width: 300px; width: 90%; height: auto; display: block; margin: 0 auto; }
-        
+
         h1 { color: #FF6B8A; font-size: 1.8rem; margin-bottom: 10px; }
-        
-        /* NOVO: Estilos para informação dinâmica de envio */
-        .info-envio-dinamico {
-            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-            border: 3px solid #2196F3;
+
+        /* MENSAGEM UNIFICADA DE ENVIO */
+        .info-envio-unificado {
+            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+            border: 3px solid #FF9800;
             border-radius: 15px;
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 20px;
             text-align: center;
-            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.2);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-        .info-envio-dinamico.esta-semana {
-            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
-            border-color: #4CAF50;
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.2);
-        }
-        .info-envio-dinamico.proxima-semana {
-            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
-            border-color: #FF9800;
             box-shadow: 0 5px 15px rgba(255, 152, 0, 0.2);
         }
-        .info-envio-dinamico h3 {
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            color: #1565C0;
-        }
-        .info-envio-dinamico.esta-semana h3 {
-            color: #2E7D32;
-        }
-        .info-envio-dinamico.proxima-semana h3 {
+        .info-envio-unificado h2 {
             color: #E65100;
-        }
-        .info-envio-dinamico p {
-            font-size: 1rem;
-            line-height: 1.5;
-            margin: 0;
-            color: #424242;
-        }
-        .info-envio-dinamico strong {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
             font-weight: 700;
+        }
+        .info-envio-unificado .data-atual {
+            font-size: 1.1rem;
+            color: #424242;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .info-envio-unificado .envio-info {
+            font-size: 1rem;
+            color: #2E7D32;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        .info-envio-unificado .prazo-info {
+            font-size: 0.95rem;
+            color: #BF360C;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .info-envio-unificado .regra {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+            border-top: 2px dashed #FFCC80;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        .info-envio-unificado .regra strong {
+            color: #E65100;
         }
         .emoji-grande {
             font-size: 2.5rem;
             margin-bottom: 10px;
             display: block;
         }
-        
-        .aviso-prazo {
-            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
-            border: 3px solid #FF9800;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.2);
-        }
-        .aviso-prazo h2 { color: #E65100; font-size: 1.1rem; margin-bottom: 10px; font-weight: 700; }
-        .aviso-prazo p { color: #BF360C; font-size: 0.95rem; line-height: 1.5; margin: 0; }
-        .aviso-prazo strong { color: #E65100; font-weight: 700; }
-        
+
         .confirmacao-container {
             background: white;
             border: 2px solid #E0E0E0;
@@ -96,7 +83,7 @@
         .checkbox-wrapper { display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
         .checkbox-wrapper input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: #FF6B8A; }
         .checkbox-wrapper label { margin: 0; cursor: pointer; font-size: 1rem; color: #2D3436; font-weight: 600; }
-        
+
         .form-box.desabilitado { opacity: 0.5; pointer-events: none; filter: grayscale(0.5); }
         .form-box.desabilitado::after {
             content: "👆 Marque a caixa acima para começar";
@@ -106,7 +93,7 @@
             white-space: nowrap; z-index: 10;
         }
         .form-box { position: relative; background: white; padding: 35px; border-radius: 25px; box-shadow: 0 10px 40px rgba(255, 139, 167, 0.15); }
-        
+
         /* Estilos para busca de CPF */
         .cpf-busca-container {
             position: relative;
@@ -184,7 +171,7 @@
             box-shadow: none !important;
             transform: none !important;
         }
-        
+
         /* Cards de preço */
         .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .price-card {
@@ -198,7 +185,7 @@
         .price-card h3 { color: #FF6B8A; font-size: 0.85rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         .price { font-size: 1.8rem; font-weight: bold; color: #FF6B8A; margin: 10px 0; }
         .price-desc { font-size: 0.85rem; color: #636E72; margin-top: 5px; }
-        
+
         /* ERRO - quando não seleciona região */
         .price-card.erro { border-color: #ff4444; animation: shake 0.5s; }
         @keyframes shake {
@@ -206,7 +193,7 @@
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
         }
-        
+
         .form-group { margin-bottom: 20px; }
         label { display: block; font-weight: 600; margin-bottom: 8px; color: #2D3436; }
         .required::after { content: " *"; color: #FF6B8A; }
@@ -217,17 +204,17 @@
         input:focus, select:focus, textarea:focus { outline: none; border-color: #FF8BA7; box-shadow: 0 0 0 4px rgba(255, 139, 167, 0.1); }
         textarea { resize: vertical; min-height: 100px; }
         .hint { font-size: 0.8rem; color: #636E72; margin-top: 5px; font-weight: 400; }
-        
+
         /* GRID PARA ENDEREÇO - 2 COLUNAS */
         .endereco-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         @media (max-width: 600px) { .endereco-grid { grid-template-columns: 1fr; } }
-        
+
         .aviso { background: #FFF3E0; border-left: 4px solid #FFD93D; padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; font-size: 0.9rem; display: none; }
         .aviso.show { display: block; }
-        
+
         button { width: 100%; padding: 18px; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
         button:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255, 107, 138, 0.4); }
-        
+
         /* PIX - estilos */
         .pix-info { background: #F8F9FA; padding: 20px; border-radius: 15px; margin-top: 20px; text-align: center; display: none; }
         .pix-info.mostrar { display: block; }
@@ -245,7 +232,7 @@
         }
         .btn-copiar { width: auto; padding: 10px 20px; background: linear-gradient(135deg, #A8E6CF, #7FCDCD); color: #2D3436; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
         .btn-copiar.copiado { background: linear-gradient(135deg, #81C784, #66BB6A); color: white; }
-        
+
         /* Mensagem de aguardar frete */
         .mensagem-frete {
             background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
@@ -260,7 +247,7 @@
             display: none;
         }
         .mensagem-frete.mostrar { display: block; }
-        
+
         .success {
             display: none;
             text-align: center;
@@ -271,6 +258,7 @@
         }
         .check-icon { width: 80px; height: 80px; background: #A8E6CF; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="container">
@@ -284,20 +272,9 @@
             <h1>Solicitação de Entrega</h1>
         </div>
 
-        <!-- NOVO: Informação dinâmica sobre próximo envio -->
-        <div id="infoEnvioDinamico" class="info-envio-dinamico">
+        <!-- MENSAGEM UNIFICADA -->
+        <div id="infoEnvioUnificado" class="info-envio-unificado">
             <!-- Conteúdo será preenchido pelo JavaScript -->
-        </div>
-
-        <div class="aviso-prazo">
-            <div style="font-size: 2rem; margin-bottom: 10px;">📅</div>
-            <h2>⏰ Prazo para solicitações semanais!</h2>
-            <p>
-                As solicitações recebidas até às <strong>17:00hs de Quarta-feira</strong> serão enviadas na 
-                <strong>Quinta e Sexta-feira</strong> da mesma semana.<br><br>
-                Após essa data serão enviadas na <strong>Quinta e Sexta-feira</strong> da próxima semana.<br>
-                <strong>Não precisa preencher novamente</strong> a solicitação, só aguardar!
-            </p>
         </div>
 
         <div class="confirmacao-container" id="confirmacaoBox">
@@ -350,28 +327,28 @@
                     </div>
                     <p class="hint">💡 Digite seu CPF (Caso você já tenha realizado solicitações anteriormente, basta clicar em buscar para carregar seus dados automaticamente)</p>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="required">Nome completo</label>
                     <input type="text" name="nome" id="nome" required placeholder="Digite seu nome completo">
                 </div>
-                
+
                 <div class="form-group">
                     <label class="required">WhatsApp</label>
                     <input type="tel" name="whatsapp" id="whatsapp" required placeholder="(48) 99999-9999">
                 </div>
-                
+
                 <div class="form-group">
                     <label>Instagram</label>
                     <input type="text" name="instagram" id="instagram" placeholder="@maria.silva">
                     <p class="hint">💡 Isto irá facilitar a localização da sua sacolinha</p>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="required">Rua / Avenida</label>
                     <input type="text" name="rua" id="rua" required placeholder="Nome da rua ou avenida">
                 </div>
-                
+
                 <div class="endereco-grid">
                     <div class="form-group">
                         <label class="required">Nº</label>
@@ -382,7 +359,7 @@
                         <input type="text" name="complemento" id="complemento" placeholder="Apto, bloco...">
                     </div>
                 </div>
-                
+
                 <div class="endereco-grid">
                     <div class="form-group">
                         <label class="required">Bairro</label>
@@ -393,7 +370,7 @@
                         <input type="text" name="cidade" id="cidade" required placeholder="Cidade">
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="required">CEP</label>
                     <input type="text" name="cep" id="cepEndereco" required placeholder="00000-000" maxlength="9">
@@ -401,7 +378,7 @@
                         ⚠️ Para outros estados, aguarde nosso contato com o valor do frete após a solicitação.
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label>Observações</label>
                     <textarea name="observacoes" id="observacoes" placeholder="Informações adicionais..."></textarea>
@@ -433,7 +410,7 @@
             <div class="success" id="successMsg">
                 <div class="check-icon">✓</div>
                 <h2 style="color: #FF6B8A; margin-bottom: 10px;">Solicitação Enviada!</h2>
-                <p>Recebemos seus dados e entraremos em contato em breve.</p>
+                <p>Não esqueça de enviar o comprovante do pix no Instagram no Brechó</p>
             </div>
         </div>
     </div>
@@ -441,18 +418,18 @@
     <script>
         // URL do Web App do Google Sheets
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzW4NZ4wuSdH7g3loqnzCOo2vA-s5KcmZ2OwsaSu7aSp4kin0YOHnvn1r6rVv4xvlyN/exec';
-        
+
         // Chaves PIX
         const PIX_FLORIPA = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540515.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520ophK0ykzx2lDITMziipn63043247';
         const PIX_SC = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540521.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520QgJHXgWYnawohEmziipn63041785';
-        
+
         // Controle de cópia do PIX
         let pixCopiado = false;
         let regiaoSelecionadaAtual = '';
         let alertaExibido = false;
         let regiaoPendente = null;
         let dadosClienteCarregados = false;
-        
+
         // Referências aos elementos
         const checkbox = document.getElementById('confirmarPrazo');
         const formBox = document.getElementById('formBox');
@@ -462,7 +439,7 @@
         const pixKey = document.getElementById('pixKey');
         const avisoOutros = document.getElementById('avisoOutros');
         const regiaoContainer = document.getElementById('regiaoContainer');
-        
+
         // Referências dos campos do formulário
         const camposFormulario = {
             cpf: document.getElementById('cpf'),
@@ -477,101 +454,124 @@
             cep: document.getElementById('cepEndereco'),
             observacoes: document.getElementById('observacoes')
         };
-        
-        // NOVO: Função para calcular e exibir informação sobre o próximo envio
+
+        // Função para formatar data no padrão brasileiro
+        function formatarData(data) {
+            const dia = data.getDate().toString().padStart(2, '0');
+            const mes = (data.getMonth() + 1).toString().padStart(2, '0');
+            const ano = data.getFullYear();
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        function obterNomeDiaSemana(dia) {
+            const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+            return dias[dia];
+        }
+
+        // Função unificada para exibir informação de envio
         function atualizarInfoEnvio() {
             const agora = new Date();
             const diaSemana = agora.getDay(); // 0=Domingo, 1=Segunda, 2=Terça, 3=Quarta, 4=Quinta, 5=Sexta, 6=Sábado
             const hora = agora.getHours();
             const minutos = agora.getMinutes();
-            
+
             // Converte para minutos totais para facilitar comparação
             const horaAtualEmMinutos = (hora * 60) + minutos;
             const limiteQuarta = (17 * 60); // 17:00 = 1020 minutos
-            
-            const infoEnvioDiv = document.getElementById('infoEnvioDinamico');
-            
+
+            const infoDiv = document.getElementById('infoEnvioUnificado');
+
+            // Data atual formatada
+            const dataAtualStr = formatarData(agora);
+            const nomeDiaAtual = obterNomeDiaSemana(diaSemana);
+
+            let html = `<span class="emoji-grande">⏰</span>`;
+            html += `<h2>Próximo Envio</h2>`;
+            html += `<p class="data-atual">Hoje é ${nomeDiaAtual} dia ${dataAtualStr}.</p>`;
+
             // Verifica se é quarta-feira antes das 17:00
             if (diaSemana === 3 && horaAtualEmMinutos < limiteQuarta) {
                 // Quarta antes das 17h - envio na mesma semana (quinta e sexta)
-                infoEnvioDiv.className = 'info-envio-dinamico esta-semana';
-                infoEnvioDiv.innerHTML = `
-                    <span class="emoji-grande">🚀</span>
-                    <h3>🎉 Ótima notícia!</h3>
-                    <p>Sua sacola será enviada na <strong>Quinta e Sexta-feira desta semana!</strong><br>
-                    Faça sua solicitação até às <strong>17:00h de hoje</strong> (Quarta-feira).</p>
-                `;
+                const quintaEnvio = new Date(agora);
+                quintaEnvio.setDate(agora.getDate() + 1);
+
+                const sextaEnvio = new Date(agora);
+                sextaEnvio.setDate(agora.getDate() + 2);
+
+                html += `<p class="envio-info">Sua sacola será enviada na <strong>Quinta e Sexta-feira desta semana</strong><br>(${formatarData(quintaEnvio)} e ${formatarData(sextaEnvio)})</p>`;
+                html += `<p class="prazo-info">Solicitações abertas até <strong>Quarta-feira ${dataAtualStr} às 17:00h</strong></p>`;
             } else {
                 // Qualquer outro dia ou quarta após 17h - envio na próxima semana
-                infoEnvioDiv.className = 'info-envio-dinamico proxima-semana';
-                
-                let mensagemDia = '';
-                if (diaSemana === 3) {
-                    mensagemDia = 'Hoje é Quarta-feira e já passou das 17:00h';
-                } else if (diaSemana === 4) {
-                    mensagemDia = 'Hoje é Quinta-feira';
-                } else if (diaSemana === 5) {
-                    mensagemDia = 'Hoje é Sexta-feira';
-                } else if (diaSemana === 6) {
-                    mensagemDia = 'Hoje é Sábado';
-                } else if (diaSemana === 0) {
-                    mensagemDia = 'Hoje é Domingo';
-                } else if (diaSemana === 1) {
-                    mensagemDia = 'Hoje é Segunda-feira';
-                } else if (diaSemana === 2) {
-                    mensagemDia = 'Hoje é Terça-feira';
+                // Calcular próxima quarta-feira
+                let diasAteQuarta = (3 - diaSemana + 7) % 7;
+                if (diasAteQuarta === 0 && (diaSemana !== 3 || horaAtualEmMinutos >= limiteQuarta)) {
+                    diasAteQuarta = 7;
                 }
-                
-                infoEnvioDiv.innerHTML = `
-                    <span class="emoji-grande">📅</span>
-                    <h3>⏰ Próximo Envio</h3>
-                    <p>${mensagemDia}.<br>
-                    Sua sacola será enviada na <strong>Quinta e Sexta-feira da próxima semana!</strong><br>
-                    <small>Solicitações abertas até Quarta-feira às 17:00h.</small></p>
-                `;
+
+                const proximaQuarta = new Date(agora);
+                proximaQuarta.setDate(agora.getDate() + diasAteQuarta);
+
+                const quintaEnvio = new Date(proximaQuarta);
+                quintaEnvio.setDate(proximaQuarta.getDate() + 1);
+
+                const sextaEnvio = new Date(proximaQuarta);
+                sextaEnvio.setDate(proximaQuarta.getDate() + 2);
+
+                html += `<p class="envio-info">Sua sacola será enviada na <strong>Quinta e Sexta-feira da próxima semana</strong><br>(${formatarData(quintaEnvio)} e ${formatarData(sextaEnvio)})</p>`;
+                html += `<p class="prazo-info">Solicitações abertas até <strong>Quarta-feira ${formatarData(proximaQuarta)} às 17:00h</strong></p>`;
             }
+
+            // Adicionar regra com correções solicitadas
+            html += `<p class="regra">`;
+            html += `<strong>Regra:</strong><br>`;
+            html += `As solicitações recebidas até às <strong>17:00hs de Quarta-feira</strong> serão enviadas na <strong>Quinta e Sexta-feira da mesma semana</strong>.<br>`;
+            html += `Após essa data serão enviadas <strong>entre Quinta e Sexta-feira da próxima semana</strong>.<br>`;
+            html += `<strong>Não precisa preencher novamente</strong> a solicitação, só aguardar!`;
+            html += `</p>`;
+
+            infoDiv.innerHTML = html;
         }
-        
+
         // Executa ao carregar a página
         document.addEventListener('DOMContentLoaded', atualizarInfoEnvio);
-        
+
         // Função para buscar dados por CPF
         function buscarPorCPF() {
             const cpf = camposFormulario.cpf.value.replace(/\D/g, '');
-            
+
             if (cpf.length !== 11) {
                 alert('⚠️ Por favor, digite um CPF válido com 11 dígitos.');
                 camposFormulario.cpf.focus();
                 return;
             }
-            
+
             const btnBuscar = document.getElementById('btnBuscarCPF');
             const spinner = document.getElementById('loadingSpinner');
             const msgDados = document.getElementById('dadosCarregados');
-            
+
             // Mostra loading
             btnBuscar.disabled = true;
             spinner.style.display = 'block';
             msgDados.classList.remove('show');
-            
+
             // Usa JSONP para contornar CORS
             const callbackName = 'callback_' + Date.now();
             const script = document.createElement('script');
-            
+
             // Define a função callback global
             window[callbackName] = function(data) {
                 // Limpa
                 delete window[callbackName];
                 document.head.removeChild(script);
-                
+
                 spinner.style.display = 'none';
                 btnBuscar.disabled = false;
-                
+
                 if (data.encontrado) {
                     preencherCampos(data.dados);
                     dadosClienteCarregados = true;
                     msgDados.classList.add('show');
-                    
+
                     setTimeout(() => {
                         regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }, 500);
@@ -581,7 +581,7 @@
                     limparCamposExcetoCPF();
                 }
             };
-            
+
             // Timeout de segurança
             setTimeout(() => {
                 if (window[callbackName]) {
@@ -592,12 +592,12 @@
                     alert('❌ Erro ao buscar dados. Tente novamente ou preencha manualmente.');
                 }
             }, 10000);
-            
+
             // Adiciona o script JSONP
             script.src = `${SCRIPT_URL}?action=buscar&cpf=${cpf}&callback=${callbackName}`;
             document.head.appendChild(script);
         }
-        
+
         // Função para preencher campos
         function preencherCampos(dados) {
             camposFormulario.nome.value = dados.nome || '';
@@ -609,7 +609,7 @@
             camposFormulario.bairro.value = dados.bairro || '';
             camposFormulario.cidade.value = dados.cidade || '';
             camposFormulario.cep.value = dados.cep || '';
-            
+
             // Adiciona efeito visual nos campos preenchidos
             Object.values(camposFormulario).forEach(campo => {
                 if (campo && campo.value && campo.id !== 'cpf') {
@@ -622,7 +622,7 @@
                 }
             });
         }
-        
+
         // Função para limpar todos os campos exceto CPF
         function limparCamposExcetoCPF() {
             Object.keys(camposFormulario).forEach(key => {
@@ -631,7 +631,7 @@
                 }
             });
         }
-        
+
         // Função para limpar dados carregados
         function limparDados() {
             if (confirm('Tem certeza que deseja limpar todos os dados e preencher novo cadastro?')) {
@@ -640,7 +640,7 @@
                 });
                 document.getElementById('dadosCarregados').classList.remove('show');
                 dadosClienteCarregados = false;
-                
+
                 // Reseta seleção de região
                 document.querySelectorAll('input[name="regiao"]').forEach(r => r.checked = false);
                 document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selecionado'));
@@ -650,22 +650,22 @@
                 pixCopiado = false;
             }
         }
-        
+
         // Função para aplicar seleção visual da região
         function aplicarSelecaoRegiao(regiao) {
             document.querySelectorAll('.price-card').forEach(c => {
                 c.classList.remove('selecionado', 'erro');
             });
-            
+
             const card = document.querySelector(`.price-card[data-regiao="${regiao}"]`);
             if (card) {
                 const radio = card.querySelector('input[type="radio"]');
                 card.classList.add('selecionado');
                 radio.checked = true;
-                
+
                 regiaoSelecionadaAtual = regiao;
                 pixCopiado = false;
-                
+
                 if (regiao === 'floripa') {
                     pixContainer.classList.add('mostrar');
                     mensagemFrete.classList.remove('mostrar');
@@ -683,18 +683,18 @@
                 }
             }
         }
-        
+
         // Evento do checkbox
         checkbox.addEventListener('change', function() {
             if (this.checked) {
                 formBox.classList.remove('desabilitado');
                 confirmacaoBox.classList.add('ativo');
-                
+
                 if (regiaoPendente) {
                     aplicarSelecaoRegiao(regiaoPendente);
                     regiaoPendente = null;
                 }
-                
+
                 regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
                 formBox.classList.add('desabilitado');
@@ -708,19 +708,19 @@
                 pixCopiado = false;
             }
         });
-        
+
         // Eventos dos cards de região
         regiaoContainer.addEventListener('click', function(e) {
             e.stopPropagation();
-            
+
             const card = e.target.closest('.price-card');
             if (!card) return;
-            
+
             const regiao = card.dataset.regiao;
-            
+
             if (!checkbox.checked) {
                 regiaoPendente = regiao;
-                
+
                 if (!alertaExibido) {
                     alertaExibido = true;
                     alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo para solicitações semanais" acima para continuar.');
@@ -728,20 +728,20 @@
                 }
                 return;
             }
-            
+
             aplicarSelecaoRegiao(regiao);
         });
-        
+
         // Evento do botão copiar PIX
         document.getElementById('btnCopiar').addEventListener('click', function() {
             const btn = this;
             const key = pixKey.innerText;
-            
+
             navigator.clipboard.writeText(key).then(function() {
                 btn.innerHTML = '✓ Copiado!';
                 btn.classList.add('copiado');
                 pixCopiado = true;
-                
+
                 setTimeout(function() {
                     btn.innerHTML = '📋 Copiar';
                     btn.classList.remove('copiado');
@@ -753,11 +753,11 @@
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                
+
                 btn.innerHTML = '✓ Copiado!';
                 btn.classList.add('copiado');
                 pixCopiado = true;
-                
+
                 setTimeout(function() {
                     btn.innerHTML = '📋 Copiar';
                     btn.classList.remove('copiado');
@@ -769,7 +769,7 @@
         document.getElementById('cpf').addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length > 11) value = value.substring(0, 11);
-            
+
             if (value.length > 9) {
                 value = value.substring(0, 3) + '.' + value.substring(3, 6) + '.' + value.substring(6, 9) + '-' + value.substring(9);
             } else if (value.length > 6) {
@@ -792,40 +792,40 @@
         // Envio do formulário
         document.getElementById('deliveryForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const regiaoSelecionada = document.querySelector('input[name="regiao"]:checked');
             if (!regiaoSelecionada) {
                 alert('⚠️ Por favor, selecione uma região de entrega (Grande Florianópolis, Santa Catarina ou Outros Estados).');
-                
+
                 document.querySelectorAll('.price-card').forEach(card => {
                     card.classList.add('erro');
                     setTimeout(() => card.classList.remove('erro'), 500);
                 });
-                
+
                 regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
-            
+
             if ((regiaoSelecionadaAtual === 'floripa' || regiaoSelecionadaAtual === 'sc') && !pixCopiado) {
                 alert('⚠️ Você não copiou a chave PIX para efetuar o pagamento. Por favor, clique no botão "Copiar" antes de enviar.');
                 pixContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
-            
+
             const btn = document.querySelector('button[type="submit"]');
             btn.innerText = '⏳ Enviando...';
             btn.disabled = true;
-            
+
             const formData = new FormData(this);
             const params = new URLSearchParams();
-            
+
             formData.forEach((value, key) => {
                 params.append(key, value);
             });
-            
+
             // Adiciona a região aos dados do formulário
             params.append('regiao', regiaoSelecionada.value);
-            
+
             fetch(SCRIPT_URL, {
                 method: 'POST',
                 body: params,
