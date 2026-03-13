@@ -603,6 +603,16 @@
         // ⚠️ IMPORTANTE: Substitua esta URL pela URL do seu Web App após implantar
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwBSHGS319a0cENdCJXoTExkQACnljKZANBvN3TMg452CN6_6IZLroxqSPnUSkJT3tl/exec';
 
+        // Dados do remetente fixos
+        const REMETENTE = {
+            nome: 'Amanda Marcelino',
+            endereco: 'Rua Arnoldo Silveira de Souza, 50 - Casa',
+            bairro: 'Distrito Industrial',
+            cidade: 'São José',
+            estado: 'SC',
+            cep: '88104-740'
+        };
+
         let dadosCarregados = [];
         let idsSelecionados = new Set();
 
@@ -1009,7 +1019,7 @@
         }
 
         // ============================================
-        // FUNÇÃO PARA GERAR ETIQUETAS DE ENDEREÇO
+        // FUNÇÃO PARA GERAR ETIQUETAS DE ENDEREÇO - 4 POR PÁGINA
         // ============================================
         async function gerarEtiquetas() {
             if (idsSelecionados.size === 0) {
@@ -1019,17 +1029,24 @@
 
             const { jsPDF } = window.jspdf;
             
-            // Configuração da página A4 em modo retrato (para etiquetas)
+            // Configuração da página A4 em modo retrato
             const doc = new jsPDF('portrait', 'mm', 'a4');
             
-            // Dimensões da etiqueta (tamanho padrão dos Correios: 100mm x 140mm)
+            // Configuração para 4 etiquetas por página (layout 2x2)
             // A4 = 210mm x 297mm
-            // Cabem 2 etiquetas por página (uma em cima, outra embaixo)
-            const etiquetaLargura = 100;
-            const etiquetaAltura = 140;
-            const margemX = (210 - etiquetaLargura) / 2; // Centralizado
-            const margemY = 8; // Margem superior
-            const espacoEntre = 10; // Espaço entre etiquetas
+            const margemX = 10;      // Margem lateral
+            const margemY = 10;      // Margem superior/inferior
+            const gapX = 5;          // Espaço entre colunas
+            const gapY = 5;          // Espaço entre linhas
+            
+            // Dimensões calculadas para 2 colunas x 2 linhas
+            const etiquetaLargura = 92.5;   // (210 - 20 - 5) / 2
+            const etiquetaAltura = 136;     // (297 - 20 - 5) / 2
+            
+            // Posições X das colunas
+            const posicoesX = [margemX, margemX + etiquetaLargura + gapX];
+            // Posições Y das linhas
+            const posicoesY = [margemY, margemY + etiquetaAltura + gapY];
 
             // Pegar dados selecionados
             const dadosSelecionados = Array.from(idsSelecionados).map(index => dadosCarregados[index]);
@@ -1037,48 +1054,74 @@
             let etiquetaAtual = 0;
             
             dadosSelecionados.forEach((item, index) => {
-                // Se já desenhou 2 etiquetas, criar nova página
-                if (etiquetaAtual === 2) {
+                // Calcular posição na página (0 a 3)
+                const posicaoNaPagina = etiquetaAtual % 4;
+                const coluna = posicaoNaPagina % 2;  // 0 ou 1
+                const linha = Math.floor(posicaoNaPagina / 2);  // 0 ou 1
+                
+                // Se completou 4 etiquetas, criar nova página
+                if (posicaoNaPagina === 0 && index > 0) {
                     doc.addPage();
-                    etiquetaAtual = 0;
                 }
                 
-                const posY = margemY + (etiquetaAtual * (etiquetaAltura + espacoEntre));
+                const posX = posicoesX[coluna];
+                const posY = posicoesY[linha];
                 
                 // Desenhar borda da etiqueta
                 doc.setDrawColor(0, 0, 0);
                 doc.setLineWidth(0.5);
-                doc.rect(margemX, posY, etiquetaLargura, etiquetaAltura);
+                doc.rect(posX, posY, etiquetaLargura, etiquetaAltura);
                 
-                // Linha divisória superior (cabeçalho)
-                doc.line(margemX, posY + 20, margemX + etiquetaLargura, posY + 20);
+                // === CABEÇALHO - REMETENTE ===
+                // Fundo cinza claro para destacar
+                doc.setFillColor(240, 240, 240);
+                doc.rect(posX, posY, etiquetaLargura, 28, 'F');
                 
-                // Remetente (cabeçalho)
-                doc.setFontSize(8);
+                // Linha divisória abaixo do cabeçalho
+                doc.setDrawColor(0, 0, 0);
+                doc.line(posX, posY + 28, posX + etiquetaLargura, posY + 28);
+                
+                // Título "REMETENTE"
+                doc.setFontSize(7);
                 doc.setFont('helvetica', 'bold');
-                doc.text('REMETENTE:', margemX + 5, posY + 8);
-                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(100, 100, 100);
+                doc.text('REMETENTE:', posX + 3, posY + 6);
+                
+                // Dados do remetente
                 doc.setFontSize(9);
-                doc.text('Loja e Brechó Pingo de Gente', margemX + 5, posY + 15);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(0, 0, 0);
+                doc.text(REMETENTE.nome, posX + 3, posY + 13);
                 
-                // Destinatário (título)
                 doc.setFontSize(8);
-                doc.setFont('helvetica', 'bold');
-                doc.text('DESTINATÁRIO:', margemX + 5, posY + 28);
+                doc.setFont('helvetica', 'normal');
+                doc.text(REMETENTE.endereco, posX + 3, posY + 19);
+                doc.text(`${REMETENTE.bairro} - ${REMETENTE.cidade} - ${REMETENTE.estado}`, posX + 3, posY + 24);
                 
-                // Nome do destinatário
-                doc.setFontSize(12);
+                // === DESTINATÁRIO ===
+                const destY = posY + 35;
+                
+                // Título "DESTINATÁRIO"
+                doc.setFontSize(7);
                 doc.setFont('helvetica', 'bold');
+                doc.setTextColor(100, 100, 100);
+                doc.text('DESTINATÁRIO:', posX + 3, destY);
+                
+                // Nome do destinatário (destaque)
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(0, 0, 0);
                 const nome = (item.nome || 'NÃO INFORMADO').toUpperCase();
-                doc.text(nome, margemX + 5, posY + 40);
+                // Quebrar nome se for muito longo
+                const nomeLinhas = doc.splitTextToSize(nome, etiquetaLargura - 6);
+                doc.text(nomeLinhas, posX + 3, destY + 8);
+                
+                let currentY = destY + 8 + (nomeLinhas.length * 5);
                 
                 // Endereço
-                doc.setFontSize(10);
+                doc.setFontSize(9);
                 doc.setFont('helvetica', 'normal');
                 
-                let enderecoY = posY + 52;
-                
-                // Rua e número
                 const rua = item.rua || '';
                 const numero = item.numero || 'S/N';
                 const complemento = item.complemento || '';
@@ -1088,49 +1131,59 @@
                 }
                 
                 // Quebrar linha se for muito longo
-                const linhasEndereco = doc.splitTextToSize(linhaEndereco, etiquetaLargura - 10);
-                doc.text(linhasEndereco, margemX + 5, enderecoY);
-                enderecoY += (linhasEndereco.length * 5);
+                const linhasEndereco = doc.splitTextToSize(linhaEndereco, etiquetaLargura - 6);
+                doc.text(linhasEndereco, posX + 3, currentY);
+                currentY += (linhasEndereco.length * 4.5) + 2;
                 
                 // Bairro
                 const bairro = item.bairro || '';
                 if (bairro) {
-                    doc.text(`Bairro: ${bairro}`, margemX + 5, enderecoY);
-                    enderecoY += 6;
+                    doc.text(`Bairro: ${bairro}`, posX + 3, currentY);
+                    currentY += 5;
                 }
                 
                 // Cidade e Estado
                 const cidade = item.cidade || '';
                 const estado = item.estado || 'SC';
                 doc.setFont('helvetica', 'bold');
-                doc.text(`${cidade} - ${estado}`, margemX + 5, enderecoY);
-                enderecoY += 8;
+                doc.text(`${cidade} - ${estado}`, posX + 3, currentY);
+                currentY += 8;
                 
-                // CEP destacado
-                doc.setFontSize(14);
-                doc.setFont('helvetica', 'bold');
+                // CEP destacado em caixa
                 const cep = formatarCEP(item.cep);
-                doc.text(`CEP: ${cep}`, margemX + 5, enderecoY);
+                doc.setFillColor(230, 230, 230);
+                doc.rect(posX + 3, currentY - 4, 50, 8, 'F');
+                doc.setFontSize(11);
+                doc.text(`CEP: ${cep}`, posX + 5, currentY + 1);
                 
-                // Linha divisória inferior
-                const linhaObsY = posY + etiquetaAltura - 25;
+                // === RODAPÉ - OBSERVAÇÕES ===
+                const obsY = posY + etiquetaAltura - 20;
+                
+                // Linha divisória
+                doc.setDrawColor(150, 150, 150);
                 doc.setLineWidth(0.3);
-                doc.line(margemX, linhaObsY, margemX + etiquetaLargura, linhaObsY);
+                doc.line(posX + 3, obsY, posX + etiquetaLargura - 3, obsY);
                 
-                // Observações
+                // Título observações
+                doc.setFontSize(7);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(100, 100, 100);
+                doc.text('OBSERVAÇÕES:', posX + 3, obsY + 5);
+                
+                // Conteúdo observações
                 doc.setFontSize(8);
                 doc.setFont('helvetica', 'normal');
-                doc.text('Observações:', margemX + 5, linhaObsY + 5);
-                doc.setFontSize(9);
-                const obs = item.observacoes || 'Nenhuma observação';
-                const linhasObs = doc.splitTextToSize(obs, etiquetaLargura - 10);
-                doc.text(linhasObs, margemX + 5, linhaObsY + 11);
-                
-                // Contador de etiquetas
-                doc.setFontSize(7);
-                doc.setTextColor(128, 128, 128);
-                doc.text(`Etiqueta ${index + 1} de ${dadosSelecionados.length}`, margemX + etiquetaLargura - 2, posY + etiquetaAltura - 2, { align: 'right' });
                 doc.setTextColor(0, 0, 0);
+                const obs = item.observacoes || 'Nenhuma observação';
+                const linhasObs = doc.splitTextToSize(obs, etiquetaLargura - 6);
+                // Limitar a 2 linhas para não ultrapassar
+                const linhasLimitadas = linhasObs.slice(0, 2);
+                doc.text(linhasLimitadas, posX + 3, obsY + 10);
+                
+                // Contador de etiquetas no canto inferior direito
+                doc.setFontSize(6);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`${index + 1}/${dadosSelecionados.length}`, posX + etiquetaLargura - 2, posY + etiquetaAltura - 2, { align: 'right' });
                 
                 etiquetaAtual++;
             });
