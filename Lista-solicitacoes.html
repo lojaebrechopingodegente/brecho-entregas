@@ -1018,7 +1018,7 @@
             }
         }
 
-        // ============================================
+              // ============================================
         // FUNÇÃO PARA GERAR ETIQUETAS DE ENDEREÇO - 4 POR PÁGINA
         // ============================================
         async function gerarEtiquetas() {
@@ -1073,12 +1073,7 @@
                 doc.rect(posX, posY, etiquetaLargura, etiquetaAltura);
                 
                 // === CABEÇALHO - REMETENTE ===
-                // Fundo cinza claro para destacar
-                doc.setFillColor(240, 240, 240);
-                doc.rect(posX, posY, etiquetaLargura, 28, 'F');
-                
                 // Linha divisória abaixo do cabeçalho
-                doc.setDrawColor(0, 0, 0);
                 doc.line(posX, posY + 28, posX + etiquetaLargura, posY + 28);
                 
                 // Título "REMETENTE"
@@ -1149,12 +1144,10 @@
                 doc.text(`${cidade} - ${estado}`, posX + 3, currentY);
                 currentY += 8;
                 
-                // CEP destacado em caixa
+                // CEP destacado
                 const cep = formatarCEP(item.cep);
-                doc.setFillColor(230, 230, 230);
-                doc.rect(posX + 3, currentY - 4, 50, 8, 'F');
                 doc.setFontSize(11);
-                doc.text(`CEP: ${cep}`, posX + 5, currentY + 1);
+                doc.text(`CEP: ${cep}`, posX + 3, currentY + 1);
                 
                 // === RODAPÉ - OBSERVAÇÕES ===
                 const obsY = posY + etiquetaAltura - 20;
@@ -1211,7 +1204,7 @@
             } else {
                 alert('❌ O navegador bloqueou a abertura de nova aba. Verifique as configurações de pop-up.');
             }
-        }
+        }  
     
     // Função para logout
     function fazerLogout() {
