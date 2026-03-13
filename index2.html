@@ -51,19 +51,8 @@
         .info-envio-unificado .prazo-info {
             font-size: 0.95rem;
             color: #BF360C;
-            margin-bottom: 15px;
+            margin-bottom: 0;
             font-weight: 600;
-        }
-        .info-envio-unificado .regra {
-            font-size: 0.9rem;
-            color: #666;
-            line-height: 1.5;
-            border-top: 2px dashed #FFCC80;
-            padding-top: 15px;
-            margin-top: 15px;
-        }
-        .info-envio-unificado .regra strong {
-            color: #E65100;
         }
         .emoji-grande {
             font-size: 2.5rem;
@@ -498,7 +487,7 @@
                 const sextaEnvio = new Date(agora);
                 sextaEnvio.setDate(agora.getDate() + 2);
 
-                html += `<p class="envio-info">Sua sacola será enviada na <strong>Quinta e Sexta-feira desta semana</strong><br>(${formatarData(quintaEnvio)} e ${formatarData(sextaEnvio)})</p>`;
+                html += `<p class="envio-info">Sua sacola será enviada entre <strong>Quinta e Sexta-feira desta semana</strong><br>(${formatarData(quintaEnvio)} e ${formatarData(sextaEnvio)})</p>`;
                 html += `<p class="prazo-info">Solicitações abertas até <strong>Quarta-feira ${dataAtualStr} às 17:00h</strong></p>`;
             } else {
                 // Qualquer outro dia ou quarta após 17h - envio na próxima semana
@@ -517,17 +506,9 @@
                 const sextaEnvio = new Date(proximaQuarta);
                 sextaEnvio.setDate(proximaQuarta.getDate() + 2);
 
-                html += `<p class="envio-info">Sua sacola será enviada na <strong>Quinta e Sexta-feira da próxima semana</strong><br>(${formatarData(quintaEnvio)} e ${formatarData(sextaEnvio)})</p>`;
+                html += `<p class="envio-info">Sua sacola será enviada entre <strong>Quinta e Sexta-feira da próxima semana</strong><br>(${formatarData(quintaEnvio)} e ${formatarData(sextaEnvio)})</p>`;
                 html += `<p class="prazo-info">Solicitações abertas até <strong>Quarta-feira ${formatarData(proximaQuarta)} às 17:00h</strong></p>`;
             }
-
-            // Adicionar regra com correções solicitadas
-            html += `<p class="regra">`;
-            html += `<strong>Regra:</strong><br>`;
-            html += `As solicitações recebidas até às <strong>17:00hs de Quarta-feira</strong> serão enviadas na <strong>Quinta e Sexta-feira da mesma semana</strong>.<br>`;
-            html += `Após essa data serão enviadas <strong>entre Quinta e Sexta-feira da próxima semana</strong>.<br>`;
-            html += `<strong>Não precisa preencher novamente</strong> a solicitação, só aguardar!`;
-            html += `</p>`;
 
             infoDiv.innerHTML = html;
         }
