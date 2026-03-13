@@ -416,6 +416,10 @@
                     <label for="dataFinal">Data Final</label>
                     <input type="date" id="dataFinal" required>
                 </div>
+                <div class="campo-filtro">
+                    <label for="horaFinal">Horário Final</label>
+                    <input type="time" id="horaFinal" value="17:00" required>
+                </div>
             </div>
             <div class="botoes-filtro">
                 <button class="btn btn-primary" onclick="buscarSolicitacoes()">
@@ -522,6 +526,7 @@
 
             document.getElementById('dataFinal').value = formatarDataInput(hoje);
             document.getElementById('dataInicial').value = formatarDataInput(seteDiasAtras);
+            document.getElementById('horaFinal').value = '17:00'; // Horário padrão de cutoff
         });
 
         function formatarDataInput(data) {
@@ -572,6 +577,7 @@
         async function buscarSolicitacoes() {
             const dataInicial = document.getElementById('dataInicial').value;
             const dataFinal = document.getElementById('dataFinal').value;
+            const horaFinal = document.getElementById('horaFinal').value || '23:59';
 
             if (!dataInicial || !dataFinal) {
                 alert('⚠️ Por favor, selecione a data inicial e final.');
@@ -613,7 +619,7 @@
                         }
                     }
 
-                    script.src = `${SCRIPT_URL}?action=listar&dataInicial=${dataInicial}&dataFinal=${dataFinal}&callback=${callbackName}`;
+                    script.src = `${SCRIPT_URL}?action=listar&dataInicial=${dataInicial}&dataFinal=${dataFinal}&horaFinal=${horaFinal}&callback=${callbackName}`;
                     document.head.appendChild(script);
                 });
 
@@ -624,7 +630,7 @@
                 atualizarEstatisticas();
 
                 document.getElementById('periodoSelecionado').textContent = 
-                    `Período: ${formatarDataBr(dataInicial)} a ${formatarDataBr(dataFinal)}`;
+                    `Período: ${formatarDataBr(dataInicial)} a ${formatarDataBr(dataFinal)} até ${horaFinal}`;
 
             } catch (erro) {
                 console.error('Erro:', erro);
@@ -778,6 +784,7 @@
         function limparFiltros() {
             document.getElementById('dataInicial').value = '';
             document.getElementById('dataFinal').value = '';
+            document.getElementById('horaFinal').value = '17:00';
             document.getElementById('tabelaContainer').style.display = 'none';
             document.getElementById('statsContainer').style.display = 'none';
             document.getElementById('emptyState').style.display = 'block';
