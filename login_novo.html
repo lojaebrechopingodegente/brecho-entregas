@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Pingo de Gente</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo-container {
+            width: 200px;
+            height: 80px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-fallback {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #FF8BA7, #FF6B8A);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            display: none;
+        }
+
+        h1 {
+            color: #2D3436;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #636E72;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            color: #2D3436;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        input[type="password"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            color: #636E72;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .hint {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #b2bec3;
+        }
+
+        /* Animação de shake para erro */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo-container">
+            <img src="https://raw.githubusercontent.com/lojaebrechopingodegente/brecho-entregas/main/logo.png" 
+                 alt="Pingo de Gente" class="logo-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="logo-fallback">👶</div>
+        </div>
+        <h1>Pingo de Gente</h1>
+        <p class="subtitle">Gerenciamento de Entregas</p>
+
+        <div class="error-message" id="errorMessage">
+            ⚠️ Senha incorreta. Tente novamente.
+        </div>
+
+        <form id="loginForm" onsubmit="return fazerLogin(event)">
+            <div class="form-group">
+                <label for="senha">Senha de Acesso</label>
+                <input 
+                    type="password" 
+                    id="senha" 
+                    placeholder="Digite a senha..."
+                    required
+                    autocomplete="off"
+                >
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="mostrarSenha" onchange="toggleSenha()">
+                <label for="mostrarSenha" style="margin:0; font-weight:normal; cursor:pointer;">
+                    Mostrar senha
+                </label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="lembrarSenha">
+                <label for="lembrarSenha" style="margin:0; font-weight:normal; cursor:pointer;">
+                    Lembrar senha neste dispositivo
+                </label>
+            </div>
+
+            <button type="submit" id="btnEntrar">
+                <span id="btnTexto">🔐 Entrar</span>
+                <div class="spinner" id="spinner"></div>
+            </button>
+        </form>
+
+        <p class="hint">
+            💡 Dica: A senha é fornecida pela administradora da loja
+        </p>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURAÇÃO - ALTERE AQUI A SENHA DESEJADA
+        // ============================================
+        const SENHA_CORRETA = '770057'; // 🔑 Mude para sua senha
+
+        // Nome da página principal (ajuste se necessário)
+        const PAGINA_PRINCIPAL = 'nova_gerenciamento.html';
+
+        // Chave para localStorage
+        const STORAGE_KEY = 'pingo_autenticado';
+        const STORAGE_SENHA = 'pingo_senha_hash';
+
+        // Verificar se já está autenticado ao carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            verificarAutenticacao();
+        });
+
+        function verificarAutenticacao() {
+            // Verificar se tem senha salva (lembrar senha)
+            const senhaSalva = localStorage.getItem(STORAGE_SENHA);
+            if (senhaSalva) {
+                // Verificar se a senha salva está correta (hash simples)
+                if (verificarHash(SENHA_CORRETA, senhaSalva)) {
+                    redirecionar();
+                    return;
+                }
+            }
+
+            // Verificar se tem sessão ativa
+            const autenticado = sessionStorage.getItem(STORAGE_KEY);
+            if (autenticado === 'true') {
+                redirecionar();
+            }
+        }
+
+        function fazerLogin(event) {
+            event.preventDefault();
+
+            const senhaInput = document.getElementById('senha');
+            const btnTexto = document.getElementById('btnTexto');
+            const spinner = document.getElementById('spinner');
+            const btn = document.getElementById('btnEntrar');
+            const errorDiv = document.getElementById('errorMessage');
+            const container = document.querySelector('.login-container');
+
+            const senhaDigitada = senhaInput.value.trim();
+
+            // Mostrar loading
+            btnTexto.style.display = 'none';
+            spinner.style.display = 'block';
+            btn.disabled = true;
+            errorDiv.classList.remove('show');
+
+            // Simular delay para UX (opcional)
+            setTimeout(() => {
+                if (senhaDigitada === SENHA_CORRETA) {
+                    // Sucesso!
+
+                    // Verificar se quer lembrar senha
+                    const lembrar = document.getElementById('lembrarSenha').checked;
+                    if (lembrar) {
+                        // Salvar hash da senha (não a senha em si)
+                        localStorage.setItem(STORAGE_SENHA, criarHash(SENHA_CORRETA));
+                    }
+
+                    // Marcar sessão como autenticada
+                    sessionStorage.setItem(STORAGE_KEY, 'true');
+
+                    // Redirecionar
+                    redirecionar();
+                } else {
+                    // Erro
+                    btnTexto.style.display = 'inline';
+                    spinner.style.display = 'none';
+                    btn.disabled = false;
+
+                    errorDiv.classList.add('show');
+                    container.classList.add('shake');
+
+                    setTimeout(() => {
+                        container.classList.remove('shake');
+                    }, 500);
+
+                    senhaInput.value = '';
+                    senhaInput.focus();
+                }
+            }, 500);
+
+            return false;
+        }
+
+        function redirecionar() {
+            // Redirecionar para a página principal
+            window.location.href = PAGINA_PRINCIPAL;
+        }
+
+        function toggleSenha() {
+            const senhaInput = document.getElementById('senha');
+            const mostrar = document.getElementById('mostrarSenha').checked;
+
+            senhaInput.type = mostrar ? 'text' : 'password';
+        }
+
+        // Funções simples de hash (para não armazenar senha em texto plano)
+        function criarHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString(16);
+        }
+
+        function verificarHash(str, hashArmazenado) {
+            return criarHash(str) === hashArmazenado;
+        }
+
+        // Permitir pressionar Enter no input
+        document.getElementById('senha').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                fazerLogin(e);
+            }
+        });
+    </script>
+</body>
+</html>
