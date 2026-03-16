@@ -418,10 +418,19 @@
         // CONFIGURAÇÃO DO SUPABASE
         // ============================================
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
-        const SUPABASE_ANON_KEY = 'ytnfjzngalfapfnbobfm'; // Substitua pela sua chave anônima do Supabase
+        // ⚠️ IMPORTANTE: Substitua pela sua chave anônima real do Supabase!
+        // Acesse: Project Settings → API → anon public
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUwOTgyOSwiZXhwIjoyMDg5MDg1ODI5fQ.OAncCiV4qtdhCTDaVFqjWFh6llf5qSkNN8ZQV4dLaxs'; // COLE SUA CHAVE AQUI
         
         // Inicializa o cliente Supabase
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('✅ Supabase conectado com sucesso');
+        } catch (e) {
+            console.error('❌ Erro ao conectar Supabase:', e);
+            alert('Erro ao inicializar conexão com o banco de dados. Recarregue a página.');
+        }
 
         // Chaves PIX
         const PIX_FLORIPA = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540515.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520ophK0ykzx2lDITMziipn63043247';
@@ -560,12 +569,12 @@
                     .eq('cpf', cpf)
                     .order('created_at', { ascending: false })
                     .limit(1)
-                    .single();
+                    .maybeSingle(); // ✅ CORREÇÃO: maybeSingle() em vez de single()
 
                 spinner.style.display = 'none';
                 btnBuscar.disabled = false;
 
-                if (error && error.code !== 'PGRST116') { // PGRST116 = nenhum resultado encontrado
+                if (error) {
                     throw error;
                 }
 
@@ -586,7 +595,7 @@
                 console.error('Erro ao buscar:', error);
                 spinner.style.display = 'none';
                 btnBuscar.disabled = false;
-                alert('❌ Erro ao buscar dados. Tente novamente ou preencha manualmente.');
+                alert('❌ Erro ao buscar dados: ' + (error.message || 'Tente novamente ou preencha manualmente.'));
             }
         }
 
@@ -838,13 +847,13 @@
                     throw error;
                 }
 
-                console.log('Sucesso:', data);
+                console.log('✅ Sucesso:', data);
                 document.getElementById('deliveryForm').style.display = 'none';
                 document.getElementById('successMsg').classList.add('show');
                 
             } catch (error) {
-                console.error('Erro:', error);
-                alert('❌ Erro ao enviar solicitação. Por favor, tente novamente.');
+                console.error('❌ Erro:', error);
+                alert('❌ Erro ao enviar solicitação: ' + (error.message || 'Verifique sua conexão e tente novamente.'));
                 btn.innerText = '📦 ENVIAR SOLICITAÇÃO';
                 btn.disabled = false;
             }
