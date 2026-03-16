@@ -970,17 +970,11 @@
             }
         }
 
-        // Carrega configuração salva
+              // Carrega configuração salva
         window.addEventListener('DOMContentLoaded', function() {
-            const urlSalva = localStorage.getItem('supabase_url');
-            const keySalva = localStorage.getItem('supabase_key');
-
-            if (urlSalva && keySalva) {
-                document.getElementById('supabaseUrl').value = urlSalva;
-                document.getElementById('supabaseKey').value = keySalva;
-                conectarSupabase();
-            }
-
+            // Auto-conecta ao carregar a página (dados hardcoded)
+            conectarSupabase();
+            
             // Inicializa datas padrão
             const hoje = new Date();
             const seteDiasAtras = new Date(hoje.getTime() - (7 * 24 * 60 * 60 * 1000));
@@ -997,7 +991,6 @@
                 }
             });
         });
-
         // ============================================
         // FUNÇÕES UTILITÁRIAS
         // ============================================
