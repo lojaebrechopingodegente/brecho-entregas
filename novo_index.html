@@ -70,7 +70,7 @@
         .loading-spinner {
             display: none; width: 20px; height: 20px;
             border: 3px solid #f3f3f3; border-top: 3px solid #FF6B8A;
-            border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;
+            border-radius: 50%; animation: spin 1s linear infinite; margin: 10px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
@@ -158,6 +158,18 @@
         }
         .success.show { display: block !important; }
         .check-icon { width: 80px; height: 80px; background: #A8E6CF; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+        
+        .erro-conexao {
+            background: #ffebee;
+            border: 2px solid #f44336;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+        .erro-conexao.show { display: block; }
     </style>
 </head>
 <body>
@@ -172,7 +184,15 @@
             <h1>Solicitação de Entrega</h1>
         </div>
 
-        <div id="infoEnvioUnificado" class="info-envio-unificado"></div>
+        <div id="erroConexao" class="erro-conexao">
+            ⚠️ Erro ao conectar com o banco de dados. Verifique sua conexão ou tente recarregar a página.
+        </div>
+
+        <div id="infoEnvioUnificado" class="info-envio-unificado">
+            <span class="emoji-grande">⏰</span>
+            <h2>Carregando...</h2>
+            <p class="data-atual">Aguarde um momento</p>
+        </div>
 
         <div class="confirmacao-container" id="confirmacaoBox">
             <div class="checkbox-wrapper">
@@ -206,19 +226,18 @@
 
         <div class="form-box desabilitado" id="formBox">
             <form id="deliveryForm">
-                <!-- Campo CPF com busca -->
                 <div class="form-group">
                     <label class="required">CPF</label>
                     <div class="cpf-busca-container">
                         <input type="text" name="cpf" id="cpf" required placeholder="000.000.000-00" maxlength="14">
-                        <button type="button" class="btn-buscar" id="btnBuscarCPF" onclick="buscarPorCPF()">
+                        <button type="button" class="btn-buscar" id="btnBuscarCPF">
                             🔍 Buscar
                         </button>
                     </div>
                     <div class="loading-spinner" id="loadingSpinner"></div>
                     <div class="dados-carregados" id="dadosCarregados">
                         <p>✅ <strong>Dados encontrados!</strong> Formulário preenchido com seu cadastro anterior.</p>
-                        <button type="button" class="limpar-dados" onclick="limparDados()">
+                        <button type="button" class="limpar-dados" id="btnLimparDados">
                             🗑️ Limpar dados e preencher novo cadastro
                         </button>
                     </div>
@@ -281,7 +300,6 @@
                     <textarea name="observacoes" id="observacoes" placeholder="Informações adicionais..."></textarea>
                 </div>
 
-                <!-- PIX - Grande Florianópolis e SC -->
                 <div class="pix-info" id="pixContainer">
                     <p><strong>💳 Pagamento via PIX</strong></p>
                     <p style="font-size: 0.85rem; color: #636E72; margin-bottom: 10px;">Amanda Marcelino</p>
@@ -294,7 +312,6 @@
                     </p>
                 </div>
 
-                <!-- Mensagem para Outros Estados -->
                 <div class="mensagem-frete" id="mensagemFrete">
                     <strong>📦 Cálculo de Frete</strong><br><br>
                     Só aguardar que iremos pesar seu pacote e retornaremos com os menores valores 
@@ -321,19 +338,13 @@
 
     <script>
         // ============================================
-        // CONFIGURAÇÃO DO SUPABASE
+        // CONFIGURAÇÃO E INICIALIZAÇÃO
         // ============================================
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
         
-        let supabase;
-        try {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('✅ Supabase conectado');
-        } catch (e) {
-            console.error('❌ Erro ao conectar Supabase:', e);
-            alert('Erro ao inicializar conexão com o banco de dados.');
-        }
+        let supabase = null;
+        let supabaseConectado = false;
 
         // Chaves PIX
         const PIX_FLORIPA = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540515.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520ophK0ykzx2lDITMziipn63043247';
@@ -348,29 +359,49 @@
         let clienteIdAtual = null;
         let enderecoIdAtual = null;
 
-        // Referências aos elementos
-        const checkbox = document.getElementById('confirmarPrazo');
-        const formBox = document.getElementById('formBox');
-        const confirmacaoBox = document.getElementById('confirmacaoBox');
-        const pixContainer = document.getElementById('pixContainer');
-        const mensagemFrete = document.getElementById('mensagemFrete');
-        const pixKey = document.getElementById('pixKey');
-        const avisoOutros = document.getElementById('avisoOutros');
-        const regiaoContainer = document.getElementById('regiaoContainer');
+        // Inicialização quando DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM carregado, iniciando...');
+            inicializarSupabase();
+            configurarEventos();
+            atualizarInfoEnvio();
+        });
 
-        const camposFormulario = {
-            cpf: document.getElementById('cpf'),
-            nome: document.getElementById('nome'),
-            whatsapp: document.getElementById('whatsapp'),
-            instagram: document.getElementById('instagram'),
-            rua: document.getElementById('rua'),
-            numero: document.getElementById('numero'),
-            complemento: document.getElementById('complemento'),
-            bairro: document.getElementById('bairro'),
-            cidade: document.getElementById('cidade'),
-            cep: document.getElementById('cepEndereco'),
-            observacoes: document.getElementById('observacoes')
-        };
+        function inicializarSupabase() {
+            try {
+                if (typeof window.supabase === 'undefined') {
+                    console.error('SDK do Supabase não carregado');
+                    mostrarErroConexao();
+                    return;
+                }
+                
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                supabaseConectado = true;
+                console.log('✅ Supabase inicializado com sucesso');
+                
+                // Testa conexão
+                testarConexao();
+                
+            } catch (e) {
+                console.error('❌ Erro ao inicializar Supabase:', e);
+                mostrarErroConexao();
+            }
+        }
+
+        async function testarConexao() {
+            try {
+                const { data, error } = await supabase.from('clientes_pg').select('count').limit(1);
+                if (error) throw error;
+                console.log('✅ Conexão com banco de dados OK');
+            } catch (e) {
+                console.warn('⚠️ Teste de conexão falhou:', e);
+                // Não mostra erro visual pois pode ser apenas falta de permissão na tabela
+            }
+        }
+
+        function mostrarErroConexao() {
+            document.getElementById('erroConexao').classList.add('show');
+        }
 
         // ============================================
         // FUNÇÕES DE DATA E ENVIO
@@ -388,6 +419,7 @@
         }
 
         function atualizarInfoEnvio() {
+            console.log('Atualizando info de envio...');
             const agora = new Date();
             const diaSemana = agora.getDay();
             const hora = agora.getHours();
@@ -429,142 +461,103 @@
             }
 
             infoDiv.innerHTML = html;
+            console.log('Info de envio atualizada');
         }
 
-        document.addEventListener('DOMContentLoaded', atualizarInfoEnvio);
-
         // ============================================
-        // BUSCA POR CPF - ADAPTADO PARA 3 TABELAS
+        // CONFIGURAÇÃO DE EVENTOS
         // ============================================
-        async function buscarPorCPF() {
-            const cpf = camposFormulario.cpf.value.replace(/\D/g, '');
-
-            if (cpf.length !== 11) {
-                alert('⚠️ Por favor, digite um CPF válido com 11 dígitos.');
-                camposFormulario.cpf.focus();
-                return;
-            }
-
-            const btnBuscar = document.getElementById('btnBuscarCPF');
-            const spinner = document.getElementById('loadingSpinner');
-            const msgDados = document.getElementById('dadosCarregados');
-
-            btnBuscar.disabled = true;
-            spinner.style.display = 'block';
-            msgDados.classList.remove('show');
-
-            try {
-                // Busca cliente na tabela clientes_pg pelo CPF
-                // Ignora CPFs repetidos - pega o primeiro encontrado
-                const { data: cliente, error: erroCliente } = await supabase
-                    .from('clientes_pg')
-                    .select('*')
-                    .eq('cpf', cpf)
-                    .limit(1)
-                    .maybeSingle();
-
-                if (erroCliente) throw erroCliente;
-
-                if (cliente) {
-                    // Cliente encontrado - busca endereço associado
-                    const { data: endereco, error: erroEndereco } = await supabase
-                        .from('enderecos_pg')
-                        .select('*')
-                        .eq('cliente_id', cliente.id)
-                        .eq('ativo', true)
-                        .order('criado_em', { ascending: false })
-                        .limit(1)
-                        .maybeSingle();
-
-                    if (erroEndereco) console.warn('Erro ao buscar endereço:', erroEndereco);
-
-                    // Preenche dados do cliente
-                    camposFormulario.nome.value = cliente.nome || '';
-                    camposFormulario.whatsapp.value = cliente.whatsapp || '';
-                    camposFormulario.instagram.value = cliente.instagram || '';
+        function configurarEventos() {
+            console.log('Configurando eventos...');
+            
+            // Checkbox
+            const checkbox = document.getElementById('confirmarPrazo');
+            checkbox.addEventListener('change', function() {
+                const formBox = document.getElementById('formBox');
+                const confirmacaoBox = document.getElementById('confirmacaoBox');
+                
+                if (this.checked) {
+                    formBox.classList.remove('desabilitado');
+                    confirmacaoBox.classList.add('ativo');
                     
-                    clienteIdAtual = cliente.id;
-
-                    // Preenche dados do endereço se existir
-                    if (endereco) {
-                        camposFormulario.rua.value = endereco.rua || '';
-                        camposFormulario.numero.value = endereco.numero || '';
-                        camposFormulario.complemento.value = endereco.complemento || '';
-                        camposFormulario.bairro.value = endereco.bairro || '';
-                        camposFormulario.cidade.value = endereco.cidade || '';
-                        camposFormulario.cep.value = endereco.cep || '';
-                        enderecoIdAtual = endereco.id;
+                    if (regiaoPendente) {
+                        aplicarSelecaoRegiao(regiaoPendente);
+                        regiaoPendente = null;
                     }
-
-                    dadosClienteCarregados = true;
-                    msgDados.classList.add('show');
-
-                    // Efeito visual nos campos preenchidos
-                    Object.values(camposFormulario).forEach(campo => {
-                        if (campo && campo.value && campo.id !== 'cpf') {
-                            campo.style.backgroundColor = '#E8F5E9';
-                            campo.style.borderColor = '#4CAF50';
-                            setTimeout(() => {
-                                campo.style.backgroundColor = '';
-                                campo.style.borderColor = '';
-                            }, 2000);
-                        }
-                    });
-
-                    setTimeout(() => {
-                        regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 500);
-
+                    
+                    document.getElementById('regiaoContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } else {
-                    // Cliente não encontrado
-                    alert('ℹ️ CPF não encontrado em nossa base. Prossiga com o preenchimento manual.');
-                    dadosClienteCarregados = false;
-                    clienteIdAtual = null;
-                    enderecoIdAtual = null;
-                    limparCamposExcetoCPF();
-                }
-
-            } catch (error) {
-                console.error('Erro ao buscar:', error);
-                alert('❌ Erro ao buscar dados: ' + (error.message || 'Tente novamente ou preencha manualmente.'));
-            } finally {
-                spinner.style.display = 'none';
-                btnBuscar.disabled = false;
-            }
-        }
-
-        function preencherCampos(dados) {
-            // Mantido para compatibilidade, mas lógica movida para buscarPorCPF
-        }
-
-        function limparCamposExcetoCPF() {
-            Object.keys(camposFormulario).forEach(key => {
-                if (key !== 'cpf' && camposFormulario[key]) {
-                    camposFormulario[key].value = '';
+                    formBox.classList.add('desabilitado');
+                    confirmacaoBox.classList.remove('ativo');
+                    document.querySelectorAll('input[name="regiao"]').forEach(r => r.checked = false);
+                    document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selecionado'));
+                    document.getElementById('pixContainer').classList.remove('mostrar');
+                    document.getElementById('mensagemFrete').classList.remove('mostrar');
+                    regiaoSelecionadaAtual = '';
+                    regiaoPendente = null;
+                    pixCopiado = false;
                 }
             });
-            clienteIdAtual = null;
-            enderecoIdAtual = null;
-        }
 
-        function limparDados() {
-            if (confirm('Tem certeza que deseja limpar todos os dados e preencher novo cadastro?')) {
-                Object.values(camposFormulario).forEach(campo => {
-                    if (campo) campo.value = '';
-                });
-                document.getElementById('dadosCarregados').classList.remove('show');
-                dadosClienteCarregados = false;
-                clienteIdAtual = null;
-                enderecoIdAtual = null;
+            // Cards de região
+            const regiaoContainer = document.getElementById('regiaoContainer');
+            regiaoContainer.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const card = e.target.closest('.price-card');
+                if (!card) return;
 
-                // Reseta seleção de região
-                document.querySelectorAll('input[name="regiao"]').forEach(r => r.checked = false);
-                document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selecionado'));
-                pixContainer.classList.remove('mostrar');
-                mensagemFrete.classList.remove('mostrar');
-                regiaoSelecionadaAtual = '';
-                pixCopiado = false;
-            }
+                const regiao = card.dataset.regiao;
+                const checkbox = document.getElementById('confirmarPrazo');
+
+                if (!checkbox.checked) {
+                    regiaoPendente = regiao;
+                    if (!alertaExibido) {
+                        alertaExibido = true;
+                        alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo para solicitações semanais" acima para continuar.');
+                        setTimeout(() => { alertaExibido = false; }, 100);
+                    }
+                    return;
+                }
+
+                aplicarSelecaoRegiao(regiao);
+            });
+
+            // Botão buscar CPF
+            document.getElementById('btnBuscarCPF').addEventListener('click', buscarPorCPF);
+            
+            // Botão limpar dados
+            document.getElementById('btnLimparDados').addEventListener('click', limparDados);
+            
+            // Botão copiar PIX
+            document.getElementById('btnCopiar').addEventListener('click', copiarPix);
+            
+            // Máscara CPF
+            document.getElementById('cpf').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.substring(0, 11);
+                if (value.length > 9) {
+                    value = value.substring(0, 3) + '.' + value.substring(3, 6) + '.' + value.substring(6, 9) + '-' + value.substring(9);
+                } else if (value.length > 6) {
+                    value = value.substring(0, 3) + '.' + value.substring(3, 6) + '.' + value.substring(6);
+                } else if (value.length > 3) {
+                    value = value.substring(0, 3) + '.' + value.substring(3);
+                }
+                e.target.value = value;
+            });
+
+            // Máscara CEP
+            document.getElementById('cepEndereco').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 5) {
+                    value = value.substring(0, 5) + '-' + value.substring(5, 8);
+                }
+                e.target.value = value;
+            });
+
+            // Submit do formulário
+            document.getElementById('deliveryForm').addEventListener('submit', enviarFormulario);
+            
+            console.log('Eventos configurados');
         }
 
         function aplicarSelecaoRegiao(regiao) {
@@ -580,6 +573,11 @@
 
                 regiaoSelecionadaAtual = regiao;
                 pixCopiado = false;
+
+                const pixContainer = document.getElementById('pixContainer');
+                const mensagemFrete = document.getElementById('mensagemFrete');
+                const pixKey = document.getElementById('pixKey');
+                const avisoOutros = document.getElementById('avisoOutros');
 
                 if (regiao === 'floripa') {
                     pixContainer.classList.add('mostrar');
@@ -599,69 +597,169 @@
             }
         }
 
-        // Evento do checkbox
-        checkbox.addEventListener('change', function() {
-            if (this.checked) {
-                formBox.classList.remove('desabilitado');
-                confirmacaoBox.classList.add('ativo');
-
-                if (regiaoPendente) {
-                    aplicarSelecaoRegiao(regiaoPendente);
-                    regiaoPendente = null;
-                }
-
-                regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            } else {
-                formBox.classList.add('desabilitado');
-                confirmacaoBox.classList.remove('ativo');
-                document.querySelectorAll('input[name="regiao"]').forEach(r => r.checked = false);
-                document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selecionado'));
-                pixContainer.classList.remove('mostrar');
-                mensagemFrete.classList.remove('mostrar');
-                regiaoSelecionadaAtual = '';
-                regiaoPendente = null;
-                pixCopiado = false;
-            }
-        });
-
-        // Eventos dos cards de região
-        regiaoContainer.addEventListener('click', function(e) {
-            e.stopPropagation();
-
-            const card = e.target.closest('.price-card');
-            if (!card) return;
-
-            const regiao = card.dataset.regiao;
-
-            if (!checkbox.checked) {
-                regiaoPendente = regiao;
-
-                if (!alertaExibido) {
-                    alertaExibido = true;
-                    alert('⚠️ Por favor, marque a caixa "Li e entendi o prazo para solicitações semanais" acima para continuar.');
-                    setTimeout(() => { alertaExibido = false; }, 100);
-                }
+        // ============================================
+        // BUSCA POR CPF
+        // ============================================
+        async function buscarPorCPF() {
+            console.log('Iniciando busca por CPF...');
+            
+            if (!supabaseConectado) {
+                alert('❌ Sistema não conectado ao banco de dados. Recarregue a página.');
                 return;
             }
 
-            aplicarSelecaoRegiao(regiao);
-        });
+            const cpfInput = document.getElementById('cpf');
+            const cpf = cpfInput.value.replace(/\D/g, '');
 
-        // Botão copiar PIX
-        document.getElementById('btnCopiar').addEventListener('click', function() {
-            const btn = this;
-            const key = pixKey.innerText;
+            if (cpf.length !== 11) {
+                alert('⚠️ Por favor, digite um CPF válido com 11 dígitos.');
+                cpfInput.focus();
+                return;
+            }
+
+            const btnBuscar = document.getElementById('btnBuscarCPF');
+            const spinner = document.getElementById('loadingSpinner');
+            const msgDados = document.getElementById('dadosCarregados');
+
+            btnBuscar.disabled = true;
+            spinner.style.display = 'block';
+            msgDados.classList.remove('show');
+
+            try {
+                console.log('Buscando cliente com CPF:', cpf);
+                
+                // Busca cliente - IGNORA REPETIDOS (pega o primeiro)
+                const { data: cliente, error: erroCliente } = await supabase
+                    .from('clientes_pg')
+                    .select('*')
+                    .eq('cpf', cpf)
+                    .limit(1)
+                    .maybeSingle();
+
+                if (erroCliente) {
+                    console.error('Erro na busca:', erroCliente);
+                    throw erroCliente;
+                }
+
+                console.log('Resultado busca cliente:', cliente);
+
+                if (cliente) {
+                    console.log('Cliente encontrado:', cliente.id);
+                    
+                    // Busca endereço
+                    const { data: endereco, error: erroEndereco } = await supabase
+                        .from('enderecos_pg')
+                        .select('*')
+                        .eq('cliente_id', cliente.id)
+                        .eq('ativo', true)
+                        .order('criado_em', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (erroEndereco) {
+                        console.warn('Erro ao buscar endereço:', erroEndereco);
+                    }
+
+                    console.log('Endereço encontrado:', endereco);
+
+                    // Preenche campos
+                    document.getElementById('nome').value = cliente.nome || '';
+                    document.getElementById('whatsapp').value = cliente.whatsapp || '';
+                    document.getElementById('instagram').value = cliente.instagram || '';
+                    
+                    clienteIdAtual = cliente.id;
+
+                    if (endereco) {
+                        document.getElementById('rua').value = endereco.rua || '';
+                        document.getElementById('numero').value = endereco.numero || '';
+                        document.getElementById('complemento').value = endereco.complemento || '';
+                        document.getElementById('bairro').value = endereco.bairro || '';
+                        document.getElementById('cidade').value = endereco.cidade || '';
+                        document.getElementById('cepEndereco').value = endereco.cep || '';
+                        enderecoIdAtual = endereco.id;
+                    }
+
+                    dadosClienteCarregados = true;
+                    msgDados.classList.add('show');
+
+                    // Efeito visual
+                    ['nome', 'whatsapp', 'instagram', 'rua', 'numero', 'bairro', 'cidade', 'cepEndereco'].forEach(id => {
+                        const campo = document.getElementById(id);
+                        if (campo && campo.value) {
+                            campo.style.backgroundColor = '#E8F5E9';
+                            campo.style.borderColor = '#4CAF50';
+                            setTimeout(() => {
+                                campo.style.backgroundColor = '';
+                                campo.style.borderColor = '';
+                            }, 2000);
+                        }
+                    });
+
+                    setTimeout(() => {
+                        document.getElementById('regiaoContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 500);
+
+                } else {
+                    console.log('Cliente não encontrado');
+                    alert('ℹ️ CPF não encontrado em nossa base. Prossiga com o preenchimento manual.');
+                    dadosClienteCarregados = false;
+                    clienteIdAtual = null;
+                    enderecoIdAtual = null;
+                    limparCamposExcetoCPF();
+                }
+
+            } catch (error) {
+                console.error('Erro completo:', error);
+                alert('❌ Erro ao buscar dados: ' + (error.message || 'Verifique a conexão e tente novamente.'));
+            } finally {
+                spinner.style.display = 'none';
+                btnBuscar.disabled = false;
+            }
+        }
+
+        function limparCamposExcetoCPF() {
+            ['nome', 'whatsapp', 'instagram', 'rua', 'numero', 'complemento', 'bairro', 'cidade', 'cepEndereco', 'observacoes'].forEach(id => {
+                const campo = document.getElementById(id);
+                if (campo) campo.value = '';
+            });
+            clienteIdAtual = null;
+            enderecoIdAtual = null;
+        }
+
+        function limparDados() {
+            if (confirm('Tem certeza que deseja limpar todos os dados e preencher novo cadastro?')) {
+                ['cpf', 'nome', 'whatsapp', 'instagram', 'rua', 'numero', 'complemento', 'bairro', 'cidade', 'cepEndereco', 'observacoes'].forEach(id => {
+                    const campo = document.getElementById(id);
+                    if (campo) campo.value = '';
+                });
+                document.getElementById('dadosCarregados').classList.remove('show');
+                dadosClienteCarregados = false;
+                clienteIdAtual = null;
+                enderecoIdAtual = null;
+
+                document.querySelectorAll('input[name="regiao"]').forEach(r => r.checked = false);
+                document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selecionado'));
+                document.getElementById('pixContainer').classList.remove('mostrar');
+                document.getElementById('mensagemFrete').classList.remove('mostrar');
+                regiaoSelecionadaAtual = '';
+                pixCopiado = false;
+            }
+        }
+
+        function copiarPix() {
+            const btn = document.getElementById('btnCopiar');
+            const key = document.getElementById('pixKey').innerText;
 
             navigator.clipboard.writeText(key).then(function() {
                 btn.innerHTML = '✓ Copiado!';
                 btn.classList.add('copiado');
                 pixCopiado = true;
-
                 setTimeout(function() {
                     btn.innerHTML = '📋 Copiar';
                     btn.classList.remove('copiado');
                 }, 2000);
-            }).catch(function() {
+            }).catch(function(err) {
+                console.error('Erro ao copiar:', err);
                 // Fallback
                 const textArea = document.createElement('textarea');
                 textArea.value = key;
@@ -669,63 +767,43 @@
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-
+                
                 btn.innerHTML = '✓ Copiado!';
                 btn.classList.add('copiado');
                 pixCopiado = true;
-
                 setTimeout(function() {
                     btn.innerHTML = '📋 Copiar';
                     btn.classList.remove('copiado');
                 }, 2000);
             });
-        });
-
-        // Máscaras
-        document.getElementById('cpf').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.substring(0, 11);
-
-            if (value.length > 9) {
-                value = value.substring(0, 3) + '.' + value.substring(3, 6) + '.' + value.substring(6, 9) + '-' + value.substring(9);
-            } else if (value.length > 6) {
-                value = value.substring(0, 3) + '.' + value.substring(3, 6) + '.' + value.substring(6);
-            } else if (value.length > 3) {
-                value = value.substring(0, 3) + '.' + value.substring(3);
-            }
-            e.target.value = value;
-        });
-
-        document.getElementById('cepEndereco').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 5) {
-                value = value.substring(0, 5) + '-' + value.substring(5, 8);
-            }
-            e.target.value = value;
-        });
+        }
 
         // ============================================
-        // ENVIO DO FORMULÁRIO - ADAPTADO PARA 3 TABELAS
+        // ENVIO DO FORMULÁRIO
         // ============================================
-        document.getElementById('deliveryForm').addEventListener('submit', async function(e) {
+        async function enviarFormulario(e) {
             e.preventDefault();
+            console.log('Iniciando envio do formulário...');
+
+            if (!supabaseConectado) {
+                alert('❌ Sistema não conectado ao banco de dados.');
+                return;
+            }
 
             const regiaoSelecionada = document.querySelector('input[name="regiao"]:checked');
             if (!regiaoSelecionada) {
                 alert('⚠️ Por favor, selecione uma região de entrega.');
-
                 document.querySelectorAll('.price-card').forEach(card => {
                     card.classList.add('erro');
                     setTimeout(() => card.classList.remove('erro'), 500);
                 });
-
-                regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                document.getElementById('regiaoContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
 
             if ((regiaoSelecionadaAtual === 'floripa' || regiaoSelecionadaAtual === 'sc') && !pixCopiado) {
-                alert('⚠️ Você não copiou a chave PIX para efetuar o pagamento. Por favor, clique no botão "Copiar" antes de enviar.');
-                pixContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                alert('⚠️ Você não copiou a chave PIX. Por favor, clique no botão "Copiar" antes de enviar.');
+                document.getElementById('pixContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
 
@@ -734,16 +812,27 @@
             btn.disabled = true;
 
             try {
-                const cpfLimpo = camposFormulario.cpf.value.replace(/\D/g, '');
-                const cepLimpo = camposFormulario.cep.value.replace(/\D/g, '');
+                const cpfLimpo = document.getElementById('cpf').value.replace(/\D/g, '');
+                const cepLimpo = document.getElementById('cepEndereco').value.replace(/\D/g, '');
                 const regiaoValor = regiaoSelecionada.value;
+                const nome = document.getElementById('nome').value;
+                const whatsapp = document.getElementById('whatsapp').value;
+                const instagram = document.getElementById('instagram').value;
+                const rua = document.getElementById('rua').value;
+                const numero = document.getElementById('numero').value;
+                const complemento = document.getElementById('complemento').value;
+                const bairro = document.getElementById('bairro').value;
+                const cidade = document.getElementById('cidade').value;
+                const observacoes = document.getElementById('observacoes').value;
 
-                // 1. VERIFICA/INSERE CLIENTE (ignora CPFs repetidos conforme solicitado)
+                console.log('Processando cliente...');
+                
+                // 1. CLIENTE
                 let clienteId = clienteIdAtual;
                 
                 if (!clienteId) {
-                    // Verifica se CPF já existe (duplicado)
-                    const { data: clienteExistente, error: erroBusca } = await supabase
+                    // Verifica se CPF já existe
+                    const { data: existente, error: erroBusca } = await supabase
                         .from('clientes_pg')
                         .select('id')
                         .eq('cpf', cpfLimpo)
@@ -752,58 +841,58 @@
 
                     if (erroBusca) throw erroBusca;
 
-                    if (clienteExistente) {
-                        // CPF já existe - usa o existente (ignora duplicado)
-                        clienteId = clienteExistente.id;
-                        console.log('CPF já existe, usando cliente existente:', clienteId);
+                    if (existente) {
+                        clienteId = existente.id;
+                        console.log('Usando cliente existente:', clienteId);
                     } else {
-                        // Insere novo cliente
-                        const { data: novoCliente, error: erroInsertCliente } = await supabase
+                        const { data: novo, error: erroInsert } = await supabase
                             .from('clientes_pg')
                             .insert([{
-                                nome: camposFormulario.nome.value,
+                                nome: nome,
                                 cpf: cpfLimpo,
-                                whatsapp: camposFormulario.whatsapp.value,
-                                instagram: camposFormulario.instagram.value || null
+                                whatsapp: whatsapp,
+                                instagram: instagram || null
                             }])
                             .select()
                             .single();
 
-                        if (erroInsertCliente) throw erroInsertCliente;
-                        clienteId = novoCliente.id;
-                        console.log('Novo cliente inserido:', clienteId);
+                        if (erroInsert) throw erroInsert;
+                        clienteId = novo.id;
+                        console.log('Novo cliente:', clienteId);
                     }
                 }
 
-                // 2. VERIFICA/INSERE ENDEREÇO
+                console.log('Processando endereço...');
+                
+                // 2. ENDEREÇO
                 let enderecoId = enderecoIdAtual;
                 
                 if (!enderecoId) {
-                    // Insere novo endereço vinculado ao cliente
-                    const { data: novoEndereco, error: erroInsertEndereco } = await supabase
+                    const { data: novoEnd, error: erroEnd } = await supabase
                         .from('enderecos_pg')
                         .insert([{
                             cliente_id: clienteId,
                             cep: cepLimpo,
-                            rua: camposFormulario.rua.value,
-                            numero: camposFormulario.numero.value,
-                            complemento: camposFormulario.complemento.value || null,
-                            bairro: camposFormulario.bairro.value,
-                            cidade: camposFormulario.cidade.value,
-                            estado: 'SC', // Default, pode ajustar conforme necessidade
+                            rua: rua,
+                            numero: numero,
+                            complemento: complemento || null,
+                            bairro: bairro,
+                            cidade: cidade,
+                            estado: 'SC',
                             regiao: regiaoValor,
                             ativo: true
                         }])
                         .select()
                         .single();
 
-                    if (erroInsertEndereco) throw erroInsertEndereco;
-                    enderecoId = novoEndereco.id;
-                    console.log('Novo endereço inserido:', enderecoId);
+                    if (erroEnd) throw erroEnd;
+                    enderecoId = novoEnd.id;
+                    console.log('Novo endereço:', enderecoId);
                 }
 
-                // 3. INSERE SOLICITAÇÃO
-                // Calcula datas da semana de envio
+                console.log('Processando solicitação...');
+                
+                // 3. SOLICITAÇÃO
                 const agora = new Date();
                 const diaSemana = agora.getDay();
                 const hora = agora.getHours();
@@ -815,22 +904,20 @@
                 let semanaEnvio;
 
                 if (diaSemana === 3 && horaAtualEmMinutos < limiteQuarta) {
-                    // Mesma semana
                     dataCorteSemanal = new Date(agora);
-                    dataCorteSemanal.setDate(agora.getDate() + (3 - diaSemana)); // Quarta
+                    dataCorteSemanal.setDate(agora.getDate() + (3 - diaSemana));
                     dataCorteSemanal.setHours(17, 0, 0, 0);
-                    semanaEnvio = Math.ceil((agora.getDate()) / 7); // Simplificado
+                    semanaEnvio = getWeekNumber(agora);
                 } else {
-                    // Próxima semana
                     let diasAteQuarta = (3 - diaSemana + 7) % 7;
                     if (diasAteQuarta === 0) diasAteQuarta = 7;
                     dataCorteSemanal = new Date(agora);
                     dataCorteSemanal.setDate(agora.getDate() + diasAteQuarta);
                     dataCorteSemanal.setHours(17, 0, 0, 0);
-                    semanaEnvio = Math.ceil((agora.getDate() + diasAteQuarta) / 7);
+                    semanaEnvio = getWeekNumber(new Date(agora.getTime() + diasAteQuarta * 24 * 60 * 60 * 1000));
                 }
 
-                const { data: solicitacao, error: erroSolicitacao } = await supabase
+                const { data: solicitacao, error: erroSol } = await supabase
                     .from('solicitacoes_pg')
                     .insert([{
                         cliente_id: clienteId,
@@ -839,26 +926,33 @@
                         data_corte_semanal: dataCorteSemanal.toISOString(),
                         semana_envio: semanaEnvio,
                         status: 'pendente',
-                        observacoes: camposFormulario.observacoes.value || null,
+                        observacoes: observacoes || null,
                         forma_envio: regiaoValor
                     }])
                     .select();
 
-                if (erroSolicitacao) throw erroSolicitacao;
+                if (erroSol) throw erroSol;
 
                 console.log('✅ Solicitação criada:', solicitacao);
                 
-                // Mostra mensagem de sucesso
                 document.getElementById('deliveryForm').style.display = 'none';
                 document.getElementById('successMsg').classList.add('show');
 
             } catch (error) {
                 console.error('❌ Erro no envio:', error);
-                alert('❌ Erro ao enviar solicitação: ' + (error.message || 'Verifique sua conexão e tente novamente.'));
+                alert('❌ Erro ao enviar: ' + (error.message || 'Tente novamente.'));
                 btn.innerText = '📦 ENVIAR SOLICITAÇÃO';
                 btn.disabled = false;
             }
-        });
+        }
+
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+            return weekNo;
+        }
     </script>
 </body>
 </html>
