@@ -415,18 +415,19 @@
 
     <script>
         // ============================================
-        // CONFIGURAÇÃO DO SUPABASE
+        // CONFIGURAÇÃO DO SUPABASE - CHAVE ANON (SEGURA)
         // ============================================
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
-        // ⚠️ IMPORTANTE: Substitua pela sua chave anônima real do Supabase!
-        // Acesse: Project Settings → API → anon public
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls'; // COLE SUA CHAVE AQUI
+        
+        // ✅ CHAVE ANON (pública e segura para frontend)
+        // role: "anon" - tem permissões limitadas conforme políticas RLS
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
         
         // Inicializa o cliente Supabase
         let supabase;
         try {
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('✅ Supabase conectado com sucesso');
+            console.log('✅ Supabase conectado com sucesso (chave anon)');
         } catch (e) {
             console.error('❌ Erro ao conectar Supabase:', e);
             alert('Erro ao inicializar conexão com o banco de dados. Recarregue a página.');
@@ -569,7 +570,7 @@
                     .eq('cpf', cpf)
                     .order('created_at', { ascending: false })
                     .limit(1)
-                    .maybeSingle(); // ✅ CORREÇÃO: maybeSingle() em vez de single()
+                    .maybeSingle();
 
                 spinner.style.display = 'none';
                 btnBuscar.disabled = false;
