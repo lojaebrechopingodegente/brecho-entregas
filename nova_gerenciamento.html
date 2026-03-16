@@ -922,17 +922,21 @@
         // CONEXÃO COM SUPABASE
         // ============================================
         
-        function conectarSupabase() {
-            const url = document.getElementById('https://ytnfjzngalfapfnbobfm.supabase.co').value.trim();
-            const key = document.getElementById('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls').value.trim();
+      function conectarSupabase() {
+    // Dados fixos no código - já preenchidos
+    const url = 'https://ytnfjzngalfapfnbobfm.supabase.co';
+    const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
 
-            if (!url || !key) {
-                alert('⚠️ Por favor, preencha a URL e a chave do Supabase.');
-                return;
-            }
-
-            try {
-                // Inicializa o cliente Supabase
+    try {
+        supabaseClient = supabase.createClient(url, key);
+        testarConexao();
+    } catch (erro) {
+        console.error('Erro ao conectar:', erro);
+        alert('❌ Erro ao inicializar o Supabase.');
+    }
+}
+        
+        // Inicializa o cliente Supabase
                 supabaseClient = supabase.createClient(url, key);
                 
                 // Testa a conexão
