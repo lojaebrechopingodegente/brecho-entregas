@@ -338,26 +338,27 @@
 
     <script>
         // ============================================
-        // CONFIGURAÇÃO E INICIALIZAÇÃO
+        // CONFIGURAÇÃO E INICIALIZAÇÃO - VARIÁVEIS GLOBAIS ÚNICAS
         // ============================================
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
         
-        let supabase = null;
-        let supabaseConectado = false;
+        // Declaração ÚNICA da variável supabase no escopo global
+        var supabaseClient = null;
+        var supabaseConectado = false;
 
         // Chaves PIX
         const PIX_FLORIPA = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540515.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520ophK0ykzx2lDITMziipn63043247';
         const PIX_SC = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540521.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520QgJHXgWYnawohEmziipn63041785';
 
-        // Variáveis de controle
-        let pixCopiado = false;
-        let regiaoSelecionadaAtual = '';
-        let alertaExibido = false;
-        let regiaoPendente = null;
-        let dadosClienteCarregados = false;
-        let clienteIdAtual = null;
-        let enderecoIdAtual = null;
+        // Variáveis de controle da aplicação
+        var pixCopiado = false;
+        var regiaoSelecionadaAtual = '';
+        var alertaExibido = false;
+        var regiaoPendente = null;
+        var dadosClienteCarregados = false;
+        var clienteIdAtual = null;
+        var enderecoIdAtual = null;
 
         // Inicialização quando DOM estiver pronto
         document.addEventListener('DOMContentLoaded', function() {
@@ -375,11 +376,11 @@
                     return;
                 }
                 
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                // Usa a variável global já declarada, não declara novamente
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 supabaseConectado = true;
                 console.log('✅ Supabase inicializado com sucesso');
                 
-                // Testa conexão
                 testarConexao();
                 
             } catch (e) {
@@ -390,12 +391,11 @@
 
         async function testarConexao() {
             try {
-                const { data, error } = await supabase.from('clientes_pg').select('count').limit(1);
+                const { data, error } = await supabaseClient.from('clientes_pg').select('count').limit(1);
                 if (error) throw error;
                 console.log('✅ Conexão com banco de dados OK');
             } catch (e) {
                 console.warn('⚠️ Teste de conexão falhou:', e);
-                // Não mostra erro visual pois pode ser apenas falta de permissão na tabela
             }
         }
 
@@ -628,8 +628,8 @@
             try {
                 console.log('Buscando cliente com CPF:', cpf);
                 
-                // Busca cliente - IGNORA REPETIDOS (pega o primeiro)
-                const { data: cliente, error: erroCliente } = await supabase
+                // Usa supabaseClient (variável global única)
+                const { data: cliente, error: erroCliente } = await supabaseClient
                     .from('clientes_pg')
                     .select('*')
                     .eq('cpf', cpf)
@@ -646,8 +646,7 @@
                 if (cliente) {
                     console.log('Cliente encontrado:', cliente.id);
                     
-                    // Busca endereço
-                    const { data: endereco, error: erroEndereco } = await supabase
+                    const { data: endereco, error: erroEndereco } = await supabaseClient
                         .from('enderecos_pg')
                         .select('*')
                         .eq('cliente_id', cliente.id)
@@ -662,7 +661,6 @@
 
                     console.log('Endereço encontrado:', endereco);
 
-                    // Preenche campos
                     document.getElementById('nome').value = cliente.nome || '';
                     document.getElementById('whatsapp').value = cliente.whatsapp || '';
                     document.getElementById('instagram').value = cliente.instagram || '';
@@ -682,7 +680,6 @@
                     dadosClienteCarregados = true;
                     msgDados.classList.add('show');
 
-                    // Efeito visual
                     ['nome', 'whatsapp', 'instagram', 'rua', 'numero', 'bairro', 'cidade', 'cepEndereco'].forEach(id => {
                         const campo = document.getElementById(id);
                         if (campo && campo.value) {
@@ -760,7 +757,6 @@
                 }, 2000);
             }).catch(function(err) {
                 console.error('Erro ao copiar:', err);
-                // Fallback
                 const textArea = document.createElement('textarea');
                 textArea.value = key;
                 document.body.appendChild(textArea);
@@ -831,8 +827,7 @@
                 let clienteId = clienteIdAtual;
                 
                 if (!clienteId) {
-                    // Verifica se CPF já existe
-                    const { data: existente, error: erroBusca } = await supabase
+                    const { data: existente, error: erroBusca } = await supabaseClient
                         .from('clientes_pg')
                         .select('id')
                         .eq('cpf', cpfLimpo)
@@ -845,7 +840,7 @@
                         clienteId = existente.id;
                         console.log('Usando cliente existente:', clienteId);
                     } else {
-                        const { data: novo, error: erroInsert } = await supabase
+                        const { data: novo, error: erroInsert } = await supabaseClient
                             .from('clientes_pg')
                             .insert([{
                                 nome: nome,
@@ -868,7 +863,7 @@
                 let enderecoId = enderecoIdAtual;
                 
                 if (!enderecoId) {
-                    const { data: novoEnd, error: erroEnd } = await supabase
+                    const { data: novoEnd, error: erroEnd } = await supabaseClient
                         .from('enderecos_pg')
                         .insert([{
                             cliente_id: clienteId,
@@ -917,7 +912,7 @@
                     semanaEnvio = getWeekNumber(new Date(agora.getTime() + diasAteQuarta * 24 * 60 * 60 * 1000));
                 }
 
-                const { data: solicitacao, error: erroSol } = await supabase
+                const { data: solicitacao, error: erroSol } = await supabaseClient
                     .from('solicitacoes_pg')
                     .insert([{
                         cliente_id: clienteId,
