@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitação de Entrega - Loja e Brechó Pingo de Gente</title>
-    <!-- SDK do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -16,13 +15,10 @@
         }
         .container { max-width: 700px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 30px; }
-
         .logo-container { text-align: center; margin-bottom: 20px; }
         .logo-img { max-width: 300px; width: 90%; height: auto; display: block; margin: 0 auto; }
-
         h1 { color: #FF6B8A; font-size: 1.8rem; margin-bottom: 10px; }
 
-        /* MENSAGEM UNIFICADA DE ENVIO */
         .info-envio-unificado {
             background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
             border: 3px solid #FF9800;
@@ -32,35 +28,11 @@
             text-align: center;
             box-shadow: 0 5px 15px rgba(255, 152, 0, 0.2);
         }
-        .info-envio-unificado h2 {
-            color: #E65100;
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            font-weight: 700;
-        }
-        .info-envio-unificado .data-atual {
-            font-size: 1.1rem;
-            color: #424242;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-        .info-envio-unificado .envio-info {
-            font-size: 1rem;
-            color: #2E7D32;
-            margin-bottom: 10px;
-            line-height: 1.6;
-        }
-        .info-envio-unificado .prazo-info {
-            font-size: 0.95rem;
-            color: #BF360C;
-            margin-bottom: 0;
-            font-weight: 600;
-        }
-        .emoji-grande {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            display: block;
-        }
+        .info-envio-unificado h2 { color: #E65100; font-size: 1.3rem; margin-bottom: 15px; font-weight: 700; }
+        .info-envio-unificado .data-atual { font-size: 1.1rem; color: #424242; margin-bottom: 15px; font-weight: 600; }
+        .info-envio-unificado .envio-info { font-size: 1rem; color: #2E7D32; margin-bottom: 10px; line-height: 1.6; }
+        .info-envio-unificado .prazo-info { font-size: 0.95rem; color: #BF360C; margin-bottom: 0; font-weight: 600; }
+        .emoji-grande { font-size: 2.5rem; margin-bottom: 10px; display: block; }
 
         .confirmacao-container {
             background: white;
@@ -85,16 +57,8 @@
         }
         .form-box { position: relative; background: white; padding: 35px; border-radius: 25px; box-shadow: 0 10px 40px rgba(255, 139, 167, 0.15); }
 
-        /* Estilos para busca de CPF */
-        .cpf-busca-container {
-            position: relative;
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-        }
-        .cpf-busca-container input {
-            flex: 1;
-        }
+        .cpf-busca-container { position: relative; display: flex; gap: 10px; align-items: flex-start; }
+        .cpf-busca-container input { flex: 1; }
         .btn-buscar {
             width: auto !important;
             padding: 14px 20px !important;
@@ -102,72 +66,39 @@
             font-size: 0.9rem !important;
             white-space: nowrap;
         }
-        .btn-buscar:disabled {
-            background: #ccc !important;
-            cursor: not-allowed;
-        }
+        .btn-buscar:disabled { background: #ccc !important; cursor: not-allowed; }
         .loading-spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #FF6B8A;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
+            display: none; width: 20px; height: 20px;
+            border: 3px solid #f3f3f3; border-top: 3px solid #FF6B8A;
+            border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
         .dados-carregados {
             background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
-            border: 2px solid #4CAF50;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 10px;
-            display: none;
+            border: 2px solid #4CAF50; border-radius: 10px;
+            padding: 15px; margin-top: 10px; display: none;
             animation: slideDown 0.3s ease;
         }
-        .dados-carregados.show {
-            display: block;
-        }
+        .dados-carregados.show { display: block; }
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .dados-carregados p {
-            margin: 0;
-            color: #2E7D32;
-            font-size: 0.9rem;
-        }
-        .dados-carregados strong {
-            color: #1B5E20;
-        }
+        .dados-carregados p { margin: 0; color: #2E7D32; font-size: 0.9rem; }
+        .dados-carregados strong { color: #1B5E20; }
         .limpar-dados {
-            background: none;
-            border: none;
-            color: #666;
-            text-decoration: underline;
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin-top: 8px;
-            padding: 0 !important;
-            width: auto !important;
-            text-align: left;
+            background: none; border: none; color: #666; text-decoration: underline;
+            cursor: pointer; font-size: 0.8rem; margin-top: 8px; padding: 0 !important;
+            width: auto !important; text-align: left;
         }
-        .limpar-dados:hover {
-            color: #FF6B8A;
-            background: none !important;
-            box-shadow: none !important;
-            transform: none !important;
-        }
+        .limpar-dados:hover { color: #FF6B8A; background: none !important; box-shadow: none !important; transform: none !important; }
 
-        /* Cards de preço */
         .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .price-card {
-            background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            text-align: center; border: 3px solid transparent; transition: all 0.3s ease;
+            background: white; padding: 20px; border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); text-align: center;
+            border: 3px solid transparent; transition: all 0.3s ease;
             cursor: pointer; position: relative;
         }
         .price-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(255, 139, 167, 0.2); }
@@ -176,8 +107,6 @@
         .price-card h3 { color: #FF6B8A; font-size: 0.85rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         .price { font-size: 1.8rem; font-weight: bold; color: #FF6B8A; margin: 10px 0; }
         .price-desc { font-size: 0.85rem; color: #636E72; margin-top: 5px; }
-
-        /* ERRO - quando não seleciona região */
         .price-card.erro { border-color: #ff4444; animation: shake 0.5s; }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -196,7 +125,6 @@
         textarea { resize: vertical; min-height: 100px; }
         .hint { font-size: 0.8rem; color: #636E72; margin-top: 5px; font-weight: 400; }
 
-        /* GRID PARA ENDEREÇO - 2 COLUNAS */
         .endereco-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         @media (max-width: 600px) { .endereco-grid { grid-template-columns: 1fr; } }
 
@@ -206,50 +134,31 @@
         button { width: 100%; padding: 18px; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
         button:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255, 107, 138, 0.4); }
 
-        /* PIX - estilos */
         .pix-info { background: #F8F9FA; padding: 20px; border-radius: 15px; margin-top: 20px; text-align: center; display: none; }
         .pix-info.mostrar { display: block; }
         .pix-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
         .pix-key { 
-            font-family: monospace; 
-            background: white; 
-            padding: 10px 15px; 
-            border-radius: 8px; 
-            border: 2px solid #E0E0E0; 
-            font-size: 0.85rem; 
-            letter-spacing: 0.5px; 
-            word-break: break-all;
-            max-width: 100%;
+            font-family: monospace; background: white; padding: 10px 15px; 
+            border-radius: 8px; border: 2px solid #E0E0E0; 
+            font-size: 0.85rem; letter-spacing: 0.5px; word-break: break-all; max-width: 100%;
         }
         .btn-copiar { width: auto; padding: 10px 20px; background: linear-gradient(135deg, #A8E6CF, #7FCDCD); color: #2D3436; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
         .btn-copiar.copiado { background: linear-gradient(135deg, #81C784, #66BB6A); color: white; }
 
-        /* Mensagem de aguardar frete */
         .mensagem-frete {
             background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-            border: 2px solid #2196F3;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-            text-align: center;
-            color: #1565C0;
-            font-size: 1rem;
-            line-height: 1.5;
-            display: none;
+            border: 2px solid #2196F3; border-radius: 12px;
+            padding: 20px; margin-top: 20px; text-align: center;
+            color: #1565C0; font-size: 1rem; line-height: 1.5; display: none;
         }
         .mensagem-frete.mostrar { display: block; }
 
         .success {
-            display: none;
-            text-align: center;
-            padding: 40px;
+            display: none; text-align: center; padding: 40px;
         }
-        .success.show { 
-            display: block !important;
-        }
+        .success.show { display: block !important; }
         .check-icon { width: 80px; height: 80px; background: #A8E6CF; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
     </style>
-<base target="_blank">
 </head>
 <body>
     <div class="container">
@@ -263,10 +172,7 @@
             <h1>Solicitação de Entrega</h1>
         </div>
 
-        <!-- MENSAGEM UNIFICADA -->
-        <div id="infoEnvioUnificado" class="info-envio-unificado">
-            <!-- Conteúdo será preenchido pelo JavaScript -->
-        </div>
+        <div id="infoEnvioUnificado" class="info-envio-unificado"></div>
 
         <div class="confirmacao-container" id="confirmacaoBox">
             <div class="checkbox-wrapper">
@@ -375,7 +281,7 @@
                     <textarea name="observacoes" id="observacoes" placeholder="Informações adicionais..."></textarea>
                 </div>
 
-                <!-- PIX - Grande Florianópolis e SC (inicialmente oculto) -->
+                <!-- PIX - Grande Florianópolis e SC -->
                 <div class="pix-info" id="pixContainer">
                     <p><strong>💳 Pagamento via PIX</strong></p>
                     <p style="font-size: 0.85rem; color: #636E72; margin-bottom: 10px;">Amanda Marcelino</p>
@@ -388,7 +294,7 @@
                     </p>
                 </div>
 
-                <!-- Mensagem para Outros Estados (inicialmente oculto) -->
+                <!-- Mensagem para Outros Estados -->
                 <div class="mensagem-frete" id="mensagemFrete">
                     <strong>📦 Cálculo de Frete</strong><br><br>
                     Só aguardar que iremos pesar seu pacote e retornaremos com os menores valores 
@@ -398,51 +304,49 @@
                 <button type="submit" style="margin-top: 20px;">📦 ENVIAR SOLICITAÇÃO</button>
             </form>
 
-         <div class="success" id="successMsg">
-    <div class="check-icon">✓</div>
-    <h2 style="color: #FF6B8A; margin-bottom: 10px;">Solicitação Enviada!</h2>
-    <p>Não esqueça de enviar o comprovante do PIX no Instagram do Brechó</p>
-    <p style="margin-top: 15px;">
-        <a href="https://www.instagram.com/pingodegentelojaebrecho/" 
-           target="_blank" 
-           style="display: inline-block; background: linear-gradient(135deg, #833AB4, #FD1D1D, #F77737); color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(131, 58, 180, 0.3); transition: transform 0.2s;">
-            📱 Abrir Instagram @pingodegentelojaebrecho
-        </a>
-    </p>
-</div>
+            <div class="success" id="successMsg">
+                <div class="check-icon">✓</div>
+                <h2 style="color: #FF6B8A; margin-bottom: 10px;">Solicitação Enviada!</h2>
+                <p>Não esqueça de enviar o comprovante do PIX no Instagram do Brechó</p>
+                <p style="margin-top: 15px;">
+                    <a href="https://www.instagram.com/pingodegentelojaebrecho/" 
+                       target="_blank" 
+                       style="display: inline-block; background: linear-gradient(135deg, #833AB4, #FD1D1D, #F77737); color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(131, 58, 180, 0.3);">
+                        📱 Abrir Instagram @pingodegentelojaebrecho
+                    </a>
+                </p>
+            </div>
         </div>
     </div>
 
     <script>
         // ============================================
-        // CONFIGURAÇÃO DO SUPABASE - CHAVE ANON (SEGURA)
+        // CONFIGURAÇÃO DO SUPABASE
         // ============================================
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
-        
-        // ✅ CHAVE ANON (pública e segura para frontend)
-        // role: "anon" - tem permissões limitadas conforme políticas RLS
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
         
-        // Inicializa o cliente Supabase
         let supabase;
         try {
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('✅ Supabase conectado com sucesso (chave anon)');
+            console.log('✅ Supabase conectado');
         } catch (e) {
             console.error('❌ Erro ao conectar Supabase:', e);
-            alert('Erro ao inicializar conexão com o banco de dados. Recarregue a página.');
+            alert('Erro ao inicializar conexão com o banco de dados.');
         }
 
         // Chaves PIX
         const PIX_FLORIPA = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540515.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520ophK0ykzx2lDITMziipn63043247';
         const PIX_SC = '00020126580014BR.GOV.BCB.PIX0136eae138a5-64fc-428e-99d2-62b621971892520400005303986540521.005802BR592550.403.919 AMANDA MARCELI6009SAO PAULO61080540900062240520QgJHXgWYnawohEmziipn63041785';
 
-        // Controle de cópia do PIX
+        // Variáveis de controle
         let pixCopiado = false;
         let regiaoSelecionadaAtual = '';
         let alertaExibido = false;
         let regiaoPendente = null;
         let dadosClienteCarregados = false;
+        let clienteIdAtual = null;
+        let enderecoIdAtual = null;
 
         // Referências aos elementos
         const checkbox = document.getElementById('confirmarPrazo');
@@ -454,7 +358,6 @@
         const avisoOutros = document.getElementById('avisoOutros');
         const regiaoContainer = document.getElementById('regiaoContainer');
 
-        // Referências dos campos do formulário
         const camposFormulario = {
             cpf: document.getElementById('cpf'),
             nome: document.getElementById('nome'),
@@ -469,7 +372,9 @@
             observacoes: document.getElementById('observacoes')
         };
 
-        // Função para formatar data no padrão brasileiro
+        // ============================================
+        // FUNÇÕES DE DATA E ENVIO
+        // ============================================
         function formatarData(data) {
             const dia = data.getDate().toString().padStart(2, '0');
             const mes = (data.getMonth() + 1).toString().padStart(2, '0');
@@ -482,20 +387,15 @@
             return dias[dia];
         }
 
-        // Função unificada para exibir informação de envio
         function atualizarInfoEnvio() {
             const agora = new Date();
-            const diaSemana = agora.getDay(); // 0=Domingo, 1=Segunda, 2=Terça, 3=Quarta, 4=Quinta, 5=Sexta, 6=Sábado
+            const diaSemana = agora.getDay();
             const hora = agora.getHours();
             const minutos = agora.getMinutes();
-
-            // Converte para minutos totais para facilitar comparação
             const horaAtualEmMinutos = (hora * 60) + minutos;
-            const limiteQuarta = (17 * 60); // 17:00 = 1020 minutos
+            const limiteQuarta = (17 * 60);
 
             const infoDiv = document.getElementById('infoEnvioUnificado');
-
-            // Data atual formatada
             const dataAtualStr = formatarData(agora);
             const nomeDiaAtual = obterNomeDiaSemana(diaSemana);
 
@@ -503,20 +403,15 @@
             html += `<h2>Próximo Envio</h2>`;
             html += `<p class="data-atual">Hoje é ${nomeDiaAtual} dia ${dataAtualStr}.</p>`;
 
-            // Verifica se é quarta-feira antes das 17:00
             if (diaSemana === 3 && horaAtualEmMinutos < limiteQuarta) {
-                // Quarta antes das 17h - envio na mesma semana (quinta e sexta)
                 const quintaEnvio = new Date(agora);
                 quintaEnvio.setDate(agora.getDate() + 1);
-
                 const sextaEnvio = new Date(agora);
                 sextaEnvio.setDate(agora.getDate() + 2);
 
                 html += `<p class="envio-info">Sua sacola será enviada entre <strong>Quinta e Sexta-feira desta semana</strong><br>(${formatarData(quintaEnvio)} e ${formatarData(sextaEnvio)})</p>`;
                 html += `<p class="prazo-info">Solicitações abertas até <strong>Quarta-feira ${dataAtualStr} às 17:00h</strong></p>`;
             } else {
-                // Qualquer outro dia ou quarta após 17h - envio na próxima semana
-                // Calcular próxima quarta-feira
                 let diasAteQuarta = (3 - diaSemana + 7) % 7;
                 if (diasAteQuarta === 0 && (diaSemana !== 3 || horaAtualEmMinutos >= limiteQuarta)) {
                     diasAteQuarta = 7;
@@ -524,10 +419,8 @@
 
                 const proximaQuarta = new Date(agora);
                 proximaQuarta.setDate(agora.getDate() + diasAteQuarta);
-
                 const quintaEnvio = new Date(proximaQuarta);
                 quintaEnvio.setDate(proximaQuarta.getDate() + 1);
-
                 const sextaEnvio = new Date(proximaQuarta);
                 sextaEnvio.setDate(proximaQuarta.getDate() + 2);
 
@@ -538,11 +431,10 @@
             infoDiv.innerHTML = html;
         }
 
-        // Executa ao carregar a página
         document.addEventListener('DOMContentLoaded', atualizarInfoEnvio);
 
         // ============================================
-        // FUNÇÃO PARA BUSCAR DADOS POR CPF NO SUPABASE
+        // BUSCA POR CPF - ADAPTADO PARA 3 TABELAS
         // ============================================
         async function buscarPorCPF() {
             const cpf = camposFormulario.cpf.value.replace(/\D/g, '');
@@ -557,85 +449,104 @@
             const spinner = document.getElementById('loadingSpinner');
             const msgDados = document.getElementById('dadosCarregados');
 
-            // Mostra loading
             btnBuscar.disabled = true;
             spinner.style.display = 'block';
             msgDados.classList.remove('show');
 
             try {
-                // Busca o registro mais recente com este CPF
-                const { data, error } = await supabase
-                    .from('solicitacoes')
+                // Busca cliente na tabela clientes_pg pelo CPF
+                // Ignora CPFs repetidos - pega o primeiro encontrado
+                const { data: cliente, error: erroCliente } = await supabase
+                    .from('clientes_pg')
                     .select('*')
                     .eq('cpf', cpf)
-                    .order('created_at', { ascending: false })
                     .limit(1)
                     .maybeSingle();
 
-                spinner.style.display = 'none';
-                btnBuscar.disabled = false;
+                if (erroCliente) throw erroCliente;
 
-                if (error) {
-                    throw error;
-                }
+                if (cliente) {
+                    // Cliente encontrado - busca endereço associado
+                    const { data: endereco, error: erroEndereco } = await supabase
+                        .from('enderecos_pg')
+                        .select('*')
+                        .eq('cliente_id', cliente.id)
+                        .eq('ativo', true)
+                        .order('criado_em', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
 
-                if (data) {
-                    preencherCampos(data);
+                    if (erroEndereco) console.warn('Erro ao buscar endereço:', erroEndereco);
+
+                    // Preenche dados do cliente
+                    camposFormulario.nome.value = cliente.nome || '';
+                    camposFormulario.whatsapp.value = cliente.whatsapp || '';
+                    camposFormulario.instagram.value = cliente.instagram || '';
+                    
+                    clienteIdAtual = cliente.id;
+
+                    // Preenche dados do endereço se existir
+                    if (endereco) {
+                        camposFormulario.rua.value = endereco.rua || '';
+                        camposFormulario.numero.value = endereco.numero || '';
+                        camposFormulario.complemento.value = endereco.complemento || '';
+                        camposFormulario.bairro.value = endereco.bairro || '';
+                        camposFormulario.cidade.value = endereco.cidade || '';
+                        camposFormulario.cep.value = endereco.cep || '';
+                        enderecoIdAtual = endereco.id;
+                    }
+
                     dadosClienteCarregados = true;
                     msgDados.classList.add('show');
+
+                    // Efeito visual nos campos preenchidos
+                    Object.values(camposFormulario).forEach(campo => {
+                        if (campo && campo.value && campo.id !== 'cpf') {
+                            campo.style.backgroundColor = '#E8F5E9';
+                            campo.style.borderColor = '#4CAF50';
+                            setTimeout(() => {
+                                campo.style.backgroundColor = '';
+                                campo.style.borderColor = '';
+                            }, 2000);
+                        }
+                    });
 
                     setTimeout(() => {
                         regiaoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }, 500);
+
                 } else {
+                    // Cliente não encontrado
                     alert('ℹ️ CPF não encontrado em nossa base. Prossiga com o preenchimento manual.');
                     dadosClienteCarregados = false;
+                    clienteIdAtual = null;
+                    enderecoIdAtual = null;
                     limparCamposExcetoCPF();
                 }
+
             } catch (error) {
                 console.error('Erro ao buscar:', error);
+                alert('❌ Erro ao buscar dados: ' + (error.message || 'Tente novamente ou preencha manualmente.'));
+            } finally {
                 spinner.style.display = 'none';
                 btnBuscar.disabled = false;
-                alert('❌ Erro ao buscar dados: ' + (error.message || 'Tente novamente ou preencha manualmente.'));
             }
         }
 
-        // Função para preencher campos
         function preencherCampos(dados) {
-            camposFormulario.nome.value = dados.nome || '';
-            camposFormulario.whatsapp.value = dados.whatsapp || '';
-            camposFormulario.instagram.value = dados.instagram || '';
-            camposFormulario.rua.value = dados.rua || '';
-            camposFormulario.numero.value = dados.numero || '';
-            camposFormulario.complemento.value = dados.complemento || '';
-            camposFormulario.bairro.value = dados.bairro || '';
-            camposFormulario.cidade.value = dados.cidade || '';
-            camposFormulario.cep.value = dados.cep || '';
-            camposFormulario.observacoes.value = dados.observacoes || '';
-
-            // Adiciona efeito visual nos campos preenchidos
-            Object.values(camposFormulario).forEach(campo => {
-                if (campo && campo.value && campo.id !== 'cpf') {
-                    campo.style.backgroundColor = '#E8F5E9';
-                    campo.style.borderColor = '#4CAF50';
-                    setTimeout(() => {
-                        campo.style.backgroundColor = '';
-                        campo.style.borderColor = '';
-                    }, 2000);
-                }
-            });
+            // Mantido para compatibilidade, mas lógica movida para buscarPorCPF
         }
 
-        // Função para limpar todos os campos exceto CPF
         function limparCamposExcetoCPF() {
             Object.keys(camposFormulario).forEach(key => {
                 if (key !== 'cpf' && camposFormulario[key]) {
                     camposFormulario[key].value = '';
                 }
             });
+            clienteIdAtual = null;
+            enderecoIdAtual = null;
         }
 
-        // Função para limpar dados carregados
         function limparDados() {
             if (confirm('Tem certeza que deseja limpar todos os dados e preencher novo cadastro?')) {
                 Object.values(camposFormulario).forEach(campo => {
@@ -643,6 +554,8 @@
                 });
                 document.getElementById('dadosCarregados').classList.remove('show');
                 dadosClienteCarregados = false;
+                clienteIdAtual = null;
+                enderecoIdAtual = null;
 
                 // Reseta seleção de região
                 document.querySelectorAll('input[name="regiao"]').forEach(r => r.checked = false);
@@ -654,7 +567,6 @@
             }
         }
 
-        // Função para aplicar seleção visual da região
         function aplicarSelecaoRegiao(regiao) {
             document.querySelectorAll('.price-card').forEach(c => {
                 c.classList.remove('selecionado', 'erro');
@@ -735,7 +647,7 @@
             aplicarSelecaoRegiao(regiao);
         });
 
-        // Evento do botão copiar PIX
+        // Botão copiar PIX
         document.getElementById('btnCopiar').addEventListener('click', function() {
             const btn = this;
             const key = pixKey.innerText;
@@ -750,6 +662,7 @@
                     btn.classList.remove('copiado');
                 }, 2000);
             }).catch(function() {
+                // Fallback
                 const textArea = document.createElement('textarea');
                 textArea.value = key;
                 document.body.appendChild(textArea);
@@ -768,7 +681,7 @@
             });
         });
 
-        // Máscara para CPF
+        // Máscaras
         document.getElementById('cpf').addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length > 11) value = value.substring(0, 11);
@@ -783,7 +696,6 @@
             e.target.value = value;
         });
 
-        // Máscara para CEP
         document.getElementById('cepEndereco').addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length > 5) {
@@ -793,14 +705,14 @@
         });
 
         // ============================================
-        // ENVIO DO FORMULÁRIO PARA O SUPABASE
+        // ENVIO DO FORMULÁRIO - ADAPTADO PARA 3 TABELAS
         // ============================================
         document.getElementById('deliveryForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const regiaoSelecionada = document.querySelector('input[name="regiao"]:checked');
             if (!regiaoSelecionada) {
-                alert('⚠️ Por favor, selecione uma região de entrega (Grande Florianópolis, Santa Catarina ou Outros Estados).');
+                alert('⚠️ Por favor, selecione uma região de entrega.');
 
                 document.querySelectorAll('.price-card').forEach(card => {
                     card.classList.add('erro');
@@ -821,39 +733,127 @@
             btn.innerText = '⏳ Enviando...';
             btn.disabled = true;
 
-            // Prepara os dados para inserção
-            const formData = {
-                cpf: camposFormulario.cpf.value.replace(/\D/g, ''),
-                nome: camposFormulario.nome.value,
-                whatsapp: camposFormulario.whatsapp.value,
-                instagram: camposFormulario.instagram.value || null,
-                rua: camposFormulario.rua.value,
-                numero: camposFormulario.numero.value,
-                complemento: camposFormulario.complemento.value || null,
-                bairro: camposFormulario.bairro.value,
-                cidade: camposFormulario.cidade.value,
-                cep: camposFormulario.cep.value.replace(/\D/g, ''),
-                regiao: regiaoSelecionada.value,
-                observacoes: camposFormulario.observacoes.value || null,
-                status: 'pendente'
-            };
-
             try {
-                const { data, error } = await supabase
-                    .from('solicitacoes')
-                    .insert([formData])
-                    .select();
+                const cpfLimpo = camposFormulario.cpf.value.replace(/\D/g, '');
+                const cepLimpo = camposFormulario.cep.value.replace(/\D/g, '');
+                const regiaoValor = regiaoSelecionada.value;
 
-                if (error) {
-                    throw error;
+                // 1. VERIFICA/INSERE CLIENTE (ignora CPFs repetidos conforme solicitado)
+                let clienteId = clienteIdAtual;
+                
+                if (!clienteId) {
+                    // Verifica se CPF já existe (duplicado)
+                    const { data: clienteExistente, error: erroBusca } = await supabase
+                        .from('clientes_pg')
+                        .select('id')
+                        .eq('cpf', cpfLimpo)
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (erroBusca) throw erroBusca;
+
+                    if (clienteExistente) {
+                        // CPF já existe - usa o existente (ignora duplicado)
+                        clienteId = clienteExistente.id;
+                        console.log('CPF já existe, usando cliente existente:', clienteId);
+                    } else {
+                        // Insere novo cliente
+                        const { data: novoCliente, error: erroInsertCliente } = await supabase
+                            .from('clientes_pg')
+                            .insert([{
+                                nome: camposFormulario.nome.value,
+                                cpf: cpfLimpo,
+                                whatsapp: camposFormulario.whatsapp.value,
+                                instagram: camposFormulario.instagram.value || null
+                            }])
+                            .select()
+                            .single();
+
+                        if (erroInsertCliente) throw erroInsertCliente;
+                        clienteId = novoCliente.id;
+                        console.log('Novo cliente inserido:', clienteId);
+                    }
                 }
 
-                console.log('✅ Sucesso:', data);
+                // 2. VERIFICA/INSERE ENDEREÇO
+                let enderecoId = enderecoIdAtual;
+                
+                if (!enderecoId) {
+                    // Insere novo endereço vinculado ao cliente
+                    const { data: novoEndereco, error: erroInsertEndereco } = await supabase
+                        .from('enderecos_pg')
+                        .insert([{
+                            cliente_id: clienteId,
+                            cep: cepLimpo,
+                            rua: camposFormulario.rua.value,
+                            numero: camposFormulario.numero.value,
+                            complemento: camposFormulario.complemento.value || null,
+                            bairro: camposFormulario.bairro.value,
+                            cidade: camposFormulario.cidade.value,
+                            estado: 'SC', // Default, pode ajustar conforme necessidade
+                            regiao: regiaoValor,
+                            ativo: true
+                        }])
+                        .select()
+                        .single();
+
+                    if (erroInsertEndereco) throw erroInsertEndereco;
+                    enderecoId = novoEndereco.id;
+                    console.log('Novo endereço inserido:', enderecoId);
+                }
+
+                // 3. INSERE SOLICITAÇÃO
+                // Calcula datas da semana de envio
+                const agora = new Date();
+                const diaSemana = agora.getDay();
+                const hora = agora.getHours();
+                const minutos = agora.getMinutes();
+                const horaAtualEmMinutos = (hora * 60) + minutos;
+                const limiteQuarta = (17 * 60);
+
+                let dataCorteSemanal;
+                let semanaEnvio;
+
+                if (diaSemana === 3 && horaAtualEmMinutos < limiteQuarta) {
+                    // Mesma semana
+                    dataCorteSemanal = new Date(agora);
+                    dataCorteSemanal.setDate(agora.getDate() + (3 - diaSemana)); // Quarta
+                    dataCorteSemanal.setHours(17, 0, 0, 0);
+                    semanaEnvio = Math.ceil((agora.getDate()) / 7); // Simplificado
+                } else {
+                    // Próxima semana
+                    let diasAteQuarta = (3 - diaSemana + 7) % 7;
+                    if (diasAteQuarta === 0) diasAteQuarta = 7;
+                    dataCorteSemanal = new Date(agora);
+                    dataCorteSemanal.setDate(agora.getDate() + diasAteQuarta);
+                    dataCorteSemanal.setHours(17, 0, 0, 0);
+                    semanaEnvio = Math.ceil((agora.getDate() + diasAteQuarta) / 7);
+                }
+
+                const { data: solicitacao, error: erroSolicitacao } = await supabase
+                    .from('solicitacoes_pg')
+                    .insert([{
+                        cliente_id: clienteId,
+                        endereco_id: enderecoId,
+                        data_solicitacao: agora.toISOString(),
+                        data_corte_semanal: dataCorteSemanal.toISOString(),
+                        semana_envio: semanaEnvio,
+                        status: 'pendente',
+                        observacoes: camposFormulario.observacoes.value || null,
+                        forma_envio: regiaoValor
+                    }])
+                    .select();
+
+                if (erroSolicitacao) throw erroSolicitacao;
+
+                console.log('✅ Solicitação criada:', solicitacao);
+                
+                // Mostra mensagem de sucesso
                 document.getElementById('deliveryForm').style.display = 'none';
                 document.getElementById('successMsg').classList.add('show');
-                
+
             } catch (error) {
-                console.error('❌ Erro:', error);
+                console.error('❌ Erro no envio:', error);
                 alert('❌ Erro ao enviar solicitação: ' + (error.message || 'Verifique sua conexão e tente novamente.'));
                 btn.innerText = '📦 ENVIAR SOLICITAÇÃO';
                 btn.disabled = false;
