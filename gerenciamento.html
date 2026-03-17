@@ -686,24 +686,155 @@
         // ============================================
         // PDF E ETIQUETAS
         // ============================================
+             // ============================================
+        // PDF E ETIQUETAS - CORRIGIDAS
+        // ============================================
         async function gerarPDF() {
-            if (idsSelecionados.size === 0) { alert('⚠️ Selecione pelo menos uma'); return; }
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('landscape');
-            const dataInicial = document.getElementById('dataInicial').value;
-            const dataFinal = document.getElementById('dataFinal').value;
-            doc.setFontSize(18); doc.text('Loja e Brechó Pingo de Gente - Solicitações', 15, 15);
-            doc.setFontSize(11); doc.text(`Período: ${formatarDataBr(dataInicial)} a ${formatarDataBr(dataFinal)}`, 15, 22);
+            if (idsSelecionados.size === 0) { 
+                alert('⚠️ Selecione pelo menos uma solicitação'); 
+                return; 
+            }
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                if (!jsPDF) {
+                    alert('❌ Biblioteca jsPDF não carregada. Recarregue a página.');
+                    return;
+                }
 
-            const dadosSelecionados = Array.from(idsSelecionados).map(index => {
-                const item = dadosCarregados.find(d => d.index === index);
-                return [formatarDataBr(item.data_solicitacao), item.nome || '-', item.instagram || '-', item.regiao || '-', formatarCEP(item.cep), item.cidade || '-', item.observacoes || '-'];
-            });
+                const doc = new jsPDF('landscape');
+                const dataInicial = document.getElementById('dataInicial').value;
+                const dataFinal = document.getElementById('dataFinal').value;
+                
+                // Cabeçalho
+                doc.setFontSize(18); 
+                doc.text('Loja e Brechó Pingo de Gente - Solicitações', 15, 15);
+                doc.setFontSize(11); 
+                doc.text(`Período: ${formatarDataBr(dataInicial)} a ${formatarDataBr(dataFinal)}`, 15, 22);
 
-            doc.autoTable({ head: [['Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Obs']], body: dadosSelecionados, startY: 30, theme: 'grid' });
-            window.open(doc.output('datauristring'), '_blank');
+                // Preparar dados
+                const dadosSelecionados = [];
+                idsSelecionados.forEach(index => {
+                    const item = dadosCarregados.find(d => d.index === index);
+                    if (item) {
+                        dadosSelecionados.push([
+                            formatarDataBr(item.data_solicitacao), 
+                            (item.nome || '-').substring(0, 25), 
+                            item.instagram || '-', 
+                            item.regiao || '-', 
+                            formatarCEP(item.cep), 
+                            item.cidade || '-', 
+                            (item.observacoes || '-').substring(0, 30)
+                        ]);
+                    }
+                });
+
+                // Verificar se autoTable está disponível
+                if (typeof doc.autoTable === 'function') {
+                    doc.autoTable({ 
+                        head: [['Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Obs']], 
+                        body: dadosSelecionados, 
+                        startY: 30, 
+                        theme: 'grid',
+                        styles: { fontSize: 9, cellPadding: 2 },
+                        headStyles: { fillColor: [255, 107, 138] }
+                    });
+                } else {
+                    // Fallback se autoTable não carregar
+                    let y = 30;
+                    doc.setFontSize(10);
+                    dadosSelecionados.forEach((row, i) => {
+                        if (y > 180) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        doc.text(row.join(' | '), 15, y);
+                        y += 7;
+                    });
+                }
+
+                // Salvar em vez de abrir em nova aba (evita bloqueador de pop-up)
+                const fileName = `Solicitacoes_${dataInicial}_${dataFinal}.pdf`;
+                doc.save(fileName);
+                
+            } catch (erro) {
+                console.error('Erro ao gerar PDF:', erro);
+                alert('❌ Erro ao gerar PDF: ' + erro.message);
+            }
         }
 
+        async function gerarEtiquetas() {
+            if (idsSelecionados.size === 0) { 
+                alert('⚠️ Selecione pelo menos uma solicitação'); 
+                return; 
+            }
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                if (!jsPDF) {
+                    alert('❌ Biblioteca jsPDF não carregada. Recarregue a página.');
+                    return;
+                }
+
+                const doc = new jsPDF('portrait', 'mm', 'a4');
+                
+                // Coletar dados selecionados
+                const dadosSelecionados = [];
+                idsSelecionados.forEach(index => {
+                    const item = dadosCarregados.find(d => d.index === index);
+                    if (item) dadosSelecionados.push(item);
+                });
+
+                dadosSelecionados.forEach((item, i) => {
+                    if (i > 0) doc.addPage();
+                    
+                    // Remetente
+                    doc.setFontSize(12); 
+                    doc.setFont(undefined, 'bold');
+                    doc.text('REMETENTE:', 10, 20); 
+                    doc.setFont(undefined, 'normal');
+                    doc.text(REMETENTE.nome, 10, 30);
+                    doc.setFontSize(10);
+                    doc.text(REMETENTE.endereco, 10, 38);
+                    doc.text(`${REMETENTE.bairro} - ${REMETENTE.cidade}/${REMETENTE.estado}`, 10, 46);
+                    doc.text(`CEP: ${REMETENTE.cep}`, 10, 54);
+
+                    // Linha divisória
+                    doc.setDrawColor(200, 200, 200);
+                    doc.line(10, 65, 200, 65);
+
+                    // Destinatário
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('DESTINATÁRIO:', 10, 80); 
+                    doc.setFontSize(14);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(String(item.nome || 'N/A').toUpperCase(), 10, 95);
+                    
+                    doc.setFont(undefined, 'normal');
+                    doc.setFontSize(11);
+                    const endereco = `${item.rua || ''}, ${item.numero || ''}${item.complemento ? ' - ' + item.complemento : ''}`;
+                    doc.text(endereco, 10, 110);
+                    doc.text(`${item.bairro || ''} - ${item.cidade || ''}/${item.estado || 'SC'}`, 10, 125);
+                    doc.text(`CEP: ${formatarCEP(item.cep)}`, 10, 140);
+                    
+                    // Informações adicionais se houver
+                    if (item.observacoes) {
+                        doc.setFontSize(9);
+                        doc.setTextColor(100, 100, 100);
+                        doc.text(`Obs: ${String(item.observacoes).substring(0, 100)}`, 10, 155);
+                        doc.setTextColor(0, 0, 0);
+                    }
+                });
+
+                const fileName = `Etiquetas_${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(fileName);
+                
+            } catch (erro) {
+                console.error('Erro ao gerar etiquetas:', erro);
+                alert('❌ Erro ao gerar etiquetas: ' + erro.message);
+            }
+        }
         async function gerarEtiquetas() {
             if (idsSelecionados.size === 0) { alert('⚠️ Selecione pelo menos uma'); return; }
             const { jsPDF } = window.jspdf;
