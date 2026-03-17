@@ -682,11 +682,7 @@
             document.getElementById('selecionarTodos').checked = false;
             removerFiltroCliente();
         }
-
         // ============================================
-        // PDF E ETIQUETAS
-        // ============================================
-             // ============================================
         // PDF E ETIQUETAS - CORRIGIDAS
         // ============================================
         async function gerarPDF() {
@@ -753,17 +749,15 @@
                     });
                 }
 
-                // Salvar em vez de abrir em nova aba (evita bloqueador de pop-up)
-                const fileName = `Solicitacoes_${dataInicial}_${dataFinal}.pdf`;
-                // Para abrir em nova aba (pode ser bloqueado pelo navegador)
-const pdfOutput = doc.output('datauristring');
-const newWindow = window.open();
-if (newWindow) {
-    newWindow.document.write('<iframe width="100%" height="100%" src="' + pdfOutput + '"></iframe>');
-} else {
-    // Fallback se bloqueado
-    doc.save(fileName);
-}
+                // Abrir em nova aba com fallback para download
+                const pdfOutput = doc.output('datauristring');
+                const newWindow = window.open();
+                if (newWindow) {
+                    newWindow.document.write('<iframe width="100%" height="100%" src="' + pdfOutput + '"></iframe>');
+                } else {
+                    // Fallback se bloqueado
+                    doc.save(`Solicitacoes_${dataInicial}_${dataFinal}.pdf`);
+                }
                 
             } catch (erro) {
                 console.error('Erro ao gerar PDF:', erro);
@@ -835,37 +829,20 @@ if (newWindow) {
                     }
                 });
 
-                const fileName = `Etiquetas_${new Date().toISOString().split('T')[0]}.pdf`;
-              // Para abrir em nova aba (pode ser bloqueado pelo navegador)
-const pdfOutput = doc.output('datauristring');
-const newWindow = window.open();
-if (newWindow) {
-    newWindow.document.write('<iframe width="100%" height="100%" src="' + pdfOutput + '"></iframe>');
-} else {
-    // Fallback se bloqueado
-    doc.save(fileName);
-}
+                // Abrir em nova aba com fallback para download
+                const pdfOutput = doc.output('datauristring');
+                const newWindow = window.open();
+                if (newWindow) {
+                    newWindow.document.write('<iframe width="100%" height="100%" src="' + pdfOutput + '"></iframe>');
+                } else {
+                    // Fallback se bloqueado
+                    doc.save(`Etiquetas_${new Date().toISOString().split('T')[0]}.pdf`);
+                }
                 
             } catch (erro) {
                 console.error('Erro ao gerar etiquetas:', erro);
                 alert('❌ Erro ao gerar etiquetas: ' + erro.message);
             }
-        }
-        async function gerarEtiquetas() {
-            if (idsSelecionados.size === 0) { alert('⚠️ Selecione pelo menos uma'); return; }
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('portrait', 'mm', 'a4');
-            const dadosSelecionados = Array.from(idsSelecionados).map(index => dadosCarregados.find(d => d.index === index)).filter(Boolean);
-
-            dadosSelecionados.forEach((item, i) => {
-                if (i > 0) doc.addPage();
-                doc.setFontSize(12); doc.text('REMETENTE:', 10, 20); doc.text(REMETENTE.nome, 10, 30);
-                doc.text('DESTINATÁRIO:', 10, 60); doc.setFontSize(14); doc.text((item.nome || '').toUpperCase(), 10, 75);
-                doc.setFontSize(12); doc.text(`${item.rua || ''}, ${item.numero || ''}`, 10, 90);
-                doc.text(`${item.cidade || ''} - ${item.estado || 'SC'}`, 10, 105);
-                doc.text(`CEP: ${formatarCEP(item.cep)}`, 10, 120);
-            });
-            window.open(doc.output('datauristring'), '_blank');
         }
 
         function fazerLogout() {
@@ -876,3 +853,4 @@ if (newWindow) {
     </script>
 </body>
 </html>
+    
