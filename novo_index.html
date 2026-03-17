@@ -94,17 +94,55 @@
         }
         .limpar-dados:hover { color: #FF6B8A; background: none !important; box-shadow: none !important; transform: none !important; }
 
+        .btn-toggle-debug {
+            width: auto !important;
+            padding: 8px 15px !important;
+            font-size: 0.85rem !important;
+            background: linear-gradient(135deg, #607d8b, #546e7a) !important;
+            margin-top: 10px !important;
+            border-radius: 8px !important;
+        }
+        .btn-toggle-debug:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(96, 125, 139, 0.3) !important;
+        }
+
         .debug-info {
             background: #e3f2fd;
             border: 1px solid #2196f3;
             border-radius: 8px;
-            padding: 10px;
+            padding: 15px;
             margin-top: 10px;
             font-size: 0.8rem;
             color: #1565c0;
             display: none;
+            animation: slideDown 0.3s ease;
         }
         .debug-info.show { display: block; }
+        .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #bbdefb;
+        }
+        .btn-limpar-debug {
+            width: auto !important;
+            padding: 5px 12px !important;
+            font-size: 0.75rem !important;
+            background: #e53935 !important;
+            border-radius: 6px !important;
+        }
+        .btn-limpar-debug:hover {
+            background: #c62828 !important;
+        }
+        #debugContent {
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            line-height: 1.4;
+        }
 
         .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .price-card {
@@ -253,7 +291,21 @@
                             🗑️ Limpar dados e preencher novo cadastro
                         </button>
                     </div>
-                    <div class="debug-info" id="debugInfo"></div>
+                    
+                    <!-- Botão de detalhes -->
+                    <button type="button" class="btn-toggle-debug" id="btnToggleDebug">
+                        🔍 Mostrar Detalhes da Busca
+                    </button>
+                    
+                    <!-- Quadro de debug (inicialmente oculto) -->
+                    <div class="debug-info" id="debugInfo">
+                        <div class="debug-header">
+                            <strong>🔧 Informações de Debug</strong>
+                            <button type="button" class="btn-limpar-debug" id="btnLimparDebug">Limpar</button>
+                        </div>
+                        <div id="debugContent"></div>
+                    </div>
+                    
                     <p class="hint">💡 Digite seu CPF (Caso você já tenha realizado solicitações anteriormente, basta clicar em buscar para carregar seus dados automaticamente)</p>
                 </div>
 
@@ -412,10 +464,27 @@
         }
 
         function mostrarDebug(mensagem) {
-            const debugDiv = document.getElementById('debugInfo');
-            debugDiv.innerHTML += mensagem + '<br>';
-            debugDiv.classList.add('show');
+            const debugContent = document.getElementById('debugContent');
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            debugContent.innerHTML += `[${timestamp}] ${mensagem}<br>`;
             console.log(mensagem);
+        }
+
+        function toggleDebug() {
+            const debugDiv = document.getElementById('debugInfo');
+            const btn = document.getElementById('btnToggleDebug');
+            
+            if (debugDiv.style.display === 'none' || !debugDiv.style.display) {
+                debugDiv.style.display = 'block';
+                btn.innerHTML = '🔍 Ocultar Detalhes da Busca';
+            } else {
+                debugDiv.style.display = 'none';
+                btn.innerHTML = '🔍 Mostrar Detalhes da Busca';
+            }
+        }
+
+        function limparDebug() {
+            document.getElementById('debugContent').innerHTML = '';
         }
 
         // ============================================
@@ -534,6 +603,8 @@
             document.getElementById('btnBuscarCPF').addEventListener('click', buscarPorCPF);
             document.getElementById('btnLimparDados').addEventListener('click', limparDados);
             document.getElementById('btnCopiar').addEventListener('click', copiarPix);
+            document.getElementById('btnToggleDebug').addEventListener('click', toggleDebug);
+            document.getElementById('btnLimparDebug').addEventListener('click', limparDebug);
             
             document.getElementById('cpf').addEventListener('input', function(e) {
                 let value = e.target.value.replace(/\D/g, '');
@@ -601,7 +672,6 @@
         // ============================================
         async function buscarPorCPF() {
             console.log('Iniciando busca por CPF...');
-            document.getElementById('debugInfo').innerHTML = '';
             
             if (!supabaseConectado) {
                 alert('❌ Sistema não conectado ao banco de dados.');
@@ -766,7 +836,7 @@
                     if (campo) campo.value = '';
                 });
                 document.getElementById('dadosCarregados').classList.remove('show');
-                document.getElementById('debugInfo').innerHTML = '';
+                limparDebug();
                 dadosClienteCarregados = false;
                 clienteIdAtual = null;
                 enderecoIdAtual = null;
