@@ -85,7 +85,10 @@
         }
 
         .campo-filtro input[type="date"],
-        .campo-filtro input[type="time"] {
+        .campo-filtro input[type="time"],
+        .campo-filtro input[type="text"],
+        .campo-filtro input[type="search"],
+        .campo-filtro select {
             padding: 12px 15px;
             border: 2px solid #E0E0E0;
             border-radius: 12px;
@@ -94,7 +97,8 @@
             cursor: pointer;
         }
 
-        .campo-filtro input:focus {
+        .campo-filtro input:focus,
+        .campo-filtro select:focus {
             outline: none;
             border-color: #FF8BA7;
             box-shadow: 0 0 0 4px rgba(255, 139, 167, 0.1);
@@ -172,6 +176,26 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #FF6B6B, #EE5A6F);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(238, 90, 111, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #FFA726, #FF9800);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 167, 38, 0.4);
         }
 
         /* Estatísticas */
@@ -326,6 +350,40 @@
             text-decoration: underline;
         }
 
+        /* Botões de ação na tabela */
+        .acoes-container {
+            display: flex;
+            gap: 5px;
+            flex-wrap: nowrap;
+        }
+
+        .btn-acao {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-acao:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-editar {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-excluir {
+            background: linear-gradient(135deg, #FF6B6B, #EE5A6F);
+            color: white;
+        }
+
         /* Botão medidas na tabela */
         .btn-medidas {
             background: linear-gradient(135deg, #667eea, #764ba2);
@@ -361,7 +419,7 @@
             margin-bottom: 5px;
         }
 
-        /* Modal de medidas */
+        /* Modais */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -373,6 +431,7 @@
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            overflow-y: auto;
         }
 
         .modal-overlay.ativo {
@@ -387,6 +446,20 @@
             max-width: 500px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             animation: slideIn 0.3s ease;
+            margin: 20px auto;
+        }
+
+        .modal-completo {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 95%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+            margin: 20px auto;
         }
 
         @keyframes slideIn {
@@ -421,6 +494,10 @@
             margin-bottom: 20px;
         }
 
+        .modal-body.full-width {
+            grid-template-columns: 1fr;
+        }
+
         .campo-medida {
             display: flex;
             flex-direction: column;
@@ -433,18 +510,28 @@
             color: #2D3436;
         }
 
-        .campo-medida input {
+        .campo-medida input,
+        .campo-medida select,
+        .campo-medida textarea {
             padding: 12px;
             border: 2px solid #E0E0E0;
             border-radius: 10px;
             font-size: 1rem;
             transition: all 0.3s;
+            font-family: inherit;
         }
 
-        .campo-medida input:focus {
+        .campo-medida input:focus,
+        .campo-medida select:focus,
+        .campo-medida textarea:focus {
             outline: none;
             border-color: #FF8BA7;
             box-shadow: 0 0 0 4px rgba(255, 139, 167, 0.1);
+        }
+
+        .campo-medida textarea {
+            resize: vertical;
+            min-height: 80px;
         }
 
         .campo-medida .unidade {
@@ -488,6 +575,33 @@
 
         .btn-cancelar:hover {
             background: #D0D0D0;
+        }
+
+        /* Modal de confirmação */
+        .modal-confirmacao {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+            text-align: center;
+        }
+
+        .modal-confirmacao .icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .modal-confirmacao h3 {
+            color: #2D3436;
+            margin-bottom: 10px;
+        }
+
+        .modal-confirmacao p {
+            color: #636E72;
+            margin-bottom: 25px;
         }
 
         /* Estado vazio */
@@ -581,6 +695,10 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            .acoes-container {
+                flex-direction: column;
+            }
         }
 
         /* Animações */
@@ -662,6 +780,55 @@
             background: #FFEBEE;
             color: #C62828;
         }
+
+        /* Seção de busca por cliente */
+        .busca-cliente {
+            background: #FFF5F7;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #FF8BA7;
+            margin-bottom: 20px;
+        }
+
+        .busca-cliente h3 {
+            color: #FF6B8A;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .resultados-busca {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border: 1px solid #E0E0E0;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .item-resultado {
+            padding: 15px;
+            border-bottom: 1px solid #E0E0E0;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .item-resultado:hover {
+            background: #FFF5F7;
+        }
+
+        .item-resultado:last-child {
+            border-bottom: none;
+        }
+
+        .item-resultado strong {
+            color: #2D3436;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .item-resultado small {
+            color: #636E72;
+        }
     </style>
 <base target="_blank">
 </head>
@@ -707,7 +874,35 @@
 
         <!-- Filtros -->
         <div class="filtros-container" id="filtrosContainer" style="opacity: 0.5; pointer-events: none;">
-            <h2 class="filtros-titulo">📅 Filtros por Período</h2>
+            <h2 class="filtros-titulo">📅 Filtros por Período e Cliente</h2>
+            
+            <!-- Busca por Cliente -->
+            <div class="busca-cliente">
+                <h3>🔍 Buscar por Cliente</h3>
+                <div class="filtros-grid">
+                    <div class="campo-filtro">
+                        <label for="buscaNome">Nome do Cliente</label>
+                        <input type="search" id="buscaNome" placeholder="Digite o nome..." oninput="buscarClientes()">
+                    </div>
+                    <div class="campo-filtro">
+                        <label for="buscaCPF">CPF</label>
+                        <input type="search" id="buscaCPF" placeholder="000.000.000-00" oninput="buscarClientes()">
+                    </div>
+                    <div class="campo-filtro">
+                        <label for="buscaInstagram">Instagram</label>
+                        <input type="search" id="buscaInstagram" placeholder="@usuario" oninput="buscarClientes()">
+                    </div>
+                    <div class="campo-filtro">
+                        <label for="buscaWhatsApp">WhatsApp</label>
+                        <input type="search" id="buscaWhatsApp" placeholder="(00) 00000-0000" oninput="buscarClientes()">
+                    </div>
+                </div>
+                <div id="resultadosBusca" class="resultados-busca" style="display: none;"></div>
+                <button class="btn btn-secondary" onclick="limparBuscaCliente()" style="margin-top: 10px;">
+                    🧹 Limpar Busca
+                </button>
+            </div>
+
             <div class="filtros-grid">
                 <div class="campo-filtro">
                     <label for="dataInicial">Data Inicial</label>
@@ -800,6 +995,7 @@
                             <th>Status</th>
                             <th>Observações</th>
                             <th>Medidas</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaBody">
@@ -882,46 +1078,118 @@
         </div>
     </div>
 
+    <!-- Modal de Edição Completa -->
+    <div class="modal-overlay" id="modalEdicao">
+        <div class="modal-completo">
+            <div class="modal-header">
+                <h3>✏️ Editar Solicitação Completa</h3>
+                <button class="btn-fechar" onclick="fecharModalEdicao()">&times;</button>
+            </div>
+            <div class="modal-body" style="grid-template-columns: 1fr 1fr;">
+                <div class="campo-medida">
+                    <label>Nome do Cliente</label>
+                    <input type="text" id="editNome" readonly style="background: #f5f5f5;">
+                </div>
+                <div class="campo-medida">
+                    <label>CPF</label>
+                    <input type="text" id="editCPF" readonly style="background: #f5f5f5;">
+                </div>
+                <div class="campo-medida">
+                    <label>Data de Solicitação</label>
+                    <input type="datetime-local" id="editDataSolicitacao">
+                </div>
+                <div class="campo-medida">
+                    <label>Data de Envio</label>
+                    <input type="date" id="editDataEnvio">
+                </div>
+                <div class="campo-medida">
+                    <label>Status</label>
+                    <select id="editStatus">
+                        <option value="pendente">Pendente</option>
+                        <option value="enviada">Enviada</option>
+                        <option value="entregue">Entregue</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="campo-medida">
+                    <label>Forma de Envio</label>
+                    <input type="text" id="editFormaEnvio" placeholder="Ex: Correios, Motoboy, etc.">
+                </div>
+                <div class="campo-medida">
+                    <label>Código de Rastreio</label>
+                    <input type="text" id="editCodigoRastreio" placeholder="Código de rastreamento">
+                </div>
+                <div class="campo-medida">
+                    <label>Valor do Frete (R$)</label>
+                    <input type="number" id="editValorFrete" step="0.01" min="0" placeholder="0,00">
+                </div>
+                <div class="campo-medida" style="grid-column: 1 / -1;">
+                    <label>Observações</label>
+                    <textarea id="editObservacoes" placeholder="Observações sobre a entrega..."></textarea>
+                </div>
+            </div>
+            <input type="hidden" id="editSolicitacaoId">
+            <div class="modal-footer">
+                <button class="btn-cancelar" onclick="fecharModalEdicao()">Cancelar</button>
+                <button class="btn-salvar" onclick="salvarEdicaoCompleta()">💾 Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal-overlay" id="modalExclusao">
+        <div class="modal-confirmacao">
+            <div class="icon">⚠️</div>
+            <h3>Confirmar Exclusão</h3>
+            <p>Tem certeza que deseja excluir esta solicitação? Esta ação não pode ser desfeita.</p>
+            <input type="hidden" id="excluirSolicitacaoId">
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="btn-cancelar" onclick="fecharModalExclusao()">Cancelar</button>
+                <button class="btn-danger" onclick="confirmarExclusao()">🗑️ Sim, Excluir</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-    // ============================================
-    // PROTEÇÃO DE ACESSO - BLOQUEIO DE ACESSO DIRETO
-    // ============================================
-    (function() {
-        const STORAGE_KEY = 'pingo_autenticado';
-        const STORAGE_SENHA = 'pingo_senha_hash';
-        const SENHA_CORRETA = '770057';
+        // ============================================
+        // PROTEÇÃO DE ACESSO - BLOQUEIO DE ACESSO DIRETO
+        // ============================================
+        (function() {
+            const STORAGE_KEY = 'pingo_autenticado';
+            const STORAGE_SENHA = 'pingo_senha_hash';
+            const SENHA_CORRETA = '770057';
 
-        function criarHash(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
+            function criarHash(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString(16);
             }
-            return hash.toString(16);
-        }
 
-        function verificarHash(str, hashArmazenado) {
-            return criarHash(str) === hashArmazenado;
-        }
+            function verificarHash(str, hashArmazenado) {
+                return criarHash(str) === hashArmazenado;
+            }
 
-        const autenticado = sessionStorage.getItem(STORAGE_KEY);
-        const senhaSalva = localStorage.getItem(STORAGE_SENHA);
+            const autenticado = sessionStorage.getItem(STORAGE_KEY);
+            const senhaSalva = localStorage.getItem(STORAGE_SENHA);
 
-        let temAcesso = false;
+            let temAcesso = false;
 
-        if (autenticado === 'true') {
-            temAcesso = true;
-        } else if (senhaSalva && verificarHash(SENHA_CORRETA, senhaSalva)) {
-            temAcesso = true;
-            sessionStorage.setItem(STORAGE_KEY, 'true');
-        }
+            if (autenticado === 'true') {
+                temAcesso = true;
+            } else if (senhaSalva && verificarHash(SENHA_CORRETA, senhaSalva)) {
+                temAcesso = true;
+                sessionStorage.setItem(STORAGE_KEY, 'true');
+            }
 
-        if (!temAcesso) {
-            window.location.replace('login.html');
-            throw new Error('Acesso não autorizado');
-        }
-    })();
+            if (!temAcesso) {
+                window.location.replace('login.html');
+                throw new Error('Acesso não autorizado');
+            }
+        })();
 
         // ============================================
         // VARIÁVEIS GLOBAIS E CONFIGURAÇÃO
@@ -929,6 +1197,7 @@
         let supabaseClient = null;
         let dadosCarregados = [];
         let idsSelecionados = new Set();
+        let clienteSelecionado = null;
 
         // Dados do remetente
         const REMETENTE = {
@@ -944,7 +1213,7 @@
         // CONEXÃO COM SUPABASE
         // ============================================
         
-            function conectarSupabase() {
+        function conectarSupabase() {
             // Dados fixos no código - já preenchidos
             const url = 'https://ytnfjzngalfapfnbobfm.supabase.co';
             const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
@@ -960,6 +1229,7 @@
                 alert('❌ Erro ao inicializar o Supabase. Verifique os dados.');
             }
         }
+
         async function testarConexao() {
             try {
                 const { data, error } = await supabaseClient
@@ -976,13 +1246,9 @@
                 document.getElementById('filtrosContainer').style.pointerEvents = 'auto';
                 document.getElementById('emptyState').innerHTML = `
                     <div class="empty-state-icon">📅</div>
-                    <h3>Selecione um período para visualizar as solicitações</h3>
-                    <p>Escolha a data inicial e final acima e clique em "Buscar Solicitações"</p>
+                    <h3>Selecione um período ou busque por cliente</h3>
+                    <p>Escolha filtros acima e clique em "Buscar Solicitações"</p>
                 `;
-
-                // Salva no localStorage para próximas sessões
-                localStorage.setItem('supabase_url', document.getElementById('supabaseUrl').value.trim());
-                localStorage.setItem('supabase_key', document.getElementById('supabaseKey').value.trim());
 
                 mostrarNotificacao('✅ Conectado ao Supabase com sucesso!');
             } catch (erro) {
@@ -992,7 +1258,7 @@
             }
         }
 
-              // Carrega configuração salva
+        // Carrega configuração salva
         window.addEventListener('DOMContentLoaded', function() {
             // Auto-conecta ao carregar a página (dados hardcoded)
             conectarSupabase();
@@ -1013,13 +1279,118 @@
                 }
             });
             
-            // Fechar modal de data de envio ao clicar fora
             document.getElementById('modalDataEnvio').addEventListener('click', function(e) {
                 if (e.target === this) {
                     fecharModalDataEnvio();
                 }
             });
+
+            document.getElementById('modalEdicao').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    fecharModalEdicao();
+                }
+            });
+
+            document.getElementById('modalExclusao').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    fecharModalExclusao();
+                }
+            });
         });
+
+        // ============================================
+        // FUNÇÕES DE BUSCA POR CLIENTE
+        // ============================================
+
+        async function buscarClientes() {
+            if (!supabaseClient) return;
+
+            const nome = document.getElementById('buscaNome').value.trim();
+            const cpf = document.getElementById('buscaCPF').value.trim().replace(/\D/g, '');
+            const instagram = document.getElementById('buscaInstagram').value.trim();
+            const whatsapp = document.getElementById('buscaWhatsApp').value.trim().replace(/\D/g, '');
+
+            // Só busca se tiver pelo menos 3 caracteres em algum campo
+            if (nome.length < 3 && cpf.length < 3 && instagram.length < 3 && whatsapp.length < 3) {
+                document.getElementById('resultadosBusca').style.display = 'none';
+                return;
+            }
+
+            try {
+                let query = supabaseClient
+                    .from('clientes_pg')
+                    .select('*')
+                    .limit(10);
+
+                if (nome.length >= 3) {
+                    query = query.ilike('nome', `%${nome}%`);
+                }
+                if (cpf.length >= 3) {
+                    query = query.ilike('cpf', `%${cpf}%`);
+                }
+                if (instagram.length >= 3) {
+                    query = query.ilike('instagram', `%${instagram}%`);
+                }
+                if (whatsapp.length >= 3) {
+                    query = query.ilike('whatsapp', `%${whatsapp}%`);
+                }
+
+                const { data, error } = await query;
+
+                if (error) throw error;
+
+                mostrarResultadosBusca(data || []);
+            } catch (erro) {
+                console.error('Erro ao buscar clientes:', erro);
+            }
+        }
+
+        function mostrarResultadosBusca(clientes) {
+            const container = document.getElementById('resultadosBusca');
+            
+            if (clientes.length === 0) {
+                container.innerHTML = '<div class="item-resultado">Nenhum cliente encontrado</div>';
+                container.style.display = 'block';
+                return;
+            }
+
+            container.innerHTML = clientes.map(cliente => `
+                <div class="item-resultado" onclick="selecionarCliente('${cliente.id}')">
+                    <strong>${cliente.nome || 'Sem nome'}</strong>
+                    <small>
+                        ${cliente.cpf ? `CPF: ${formatarCPF(cliente.cpf)} | ` : ''}
+                        ${cliente.whatsapp ? `Whats: ${cliente.whatsapp} | ` : ''}
+                        ${cliente.instagram ? `IG: ${cliente.instagram}` : ''}
+                    </small>
+                </div>
+            `).join('');
+            
+            container.style.display = 'block';
+        }
+
+        function selecionarCliente(clienteId) {
+            clienteSelecionado = clienteId;
+            document.getElementById('resultadosBusca').style.display = 'none';
+            
+            // Preenche os campos com os dados do cliente selecionado
+            const nome = document.querySelector(`[onclick="selecionarCliente('${clienteId}')"] strong`)?.textContent || 'Cliente selecionado';
+            mostrarNotificacao(`✅ Cliente "${nome}" selecionado! Clique em "Buscar Solicitações" para filtrar.`);
+            
+            // Muda a cor da borda para indicar seleção
+            document.querySelector('.busca-cliente').style.borderColor = '#4CAF50';
+        }
+
+        function limparBuscaCliente() {
+            document.getElementById('buscaNome').value = '';
+            document.getElementById('buscaCPF').value = '';
+            document.getElementById('buscaInstagram').value = '';
+            document.getElementById('buscaWhatsApp').value = '';
+            document.getElementById('resultadosBusca').style.display = 'none';
+            document.getElementById('resultadosBusca').innerHTML = '';
+            clienteSelecionado = null;
+            document.querySelector('.busca-cliente').style.borderColor = '#FF8BA7';
+        }
+
         // ============================================
         // FUNÇÕES UTILITÁRIAS
         // ============================================
@@ -1040,6 +1411,13 @@
             const d = new Date(data);
             if (isNaN(d.getTime())) return data;
             return d.toLocaleString('pt-BR');
+        }
+
+        function formatarDataHoraInput(data) {
+            if (!data) return '';
+            const d = new Date(data);
+            if (isNaN(d.getTime())) return data;
+            return d.toISOString().slice(0, 16); // formato datetime-local
         }
 
         function formatarCPF(cpf) {
@@ -1125,11 +1503,12 @@
                 const dataHoraFinal = new Date(`${dataFinal}T${horaFinal}:00`);
 
                 // Busca as solicitações com JOIN nas tabelas relacionadas
-                const { data, error } = await supabaseClient
+                let query = supabaseClient
                     .from('solicitacoes_pg')
                     .select(`
                         *,
                         clientes_pg (
+                            id,
                             nome,
                             cpf,
                             whatsapp,
@@ -1147,8 +1526,16 @@
                         )
                     `)
                     .gte('data_solicitacao', dataHoraInicial.toISOString())
-                    .lte('data_solicitacao', dataHoraFinal.toISOString())
-                    .order('data_solicitacao', { ascending: false });
+                    .lte('data_solicitacao', dataHoraFinal.toISOString());
+
+                // Se tiver cliente selecionado, filtra por ele
+                if (clienteSelecionado) {
+                    query = query.eq('cliente_id', clienteSelecionado);
+                }
+
+                query = query.order('data_solicitacao', { ascending: false });
+
+                const { data, error } = await query;
 
                 if (error) throw error;
 
@@ -1156,6 +1543,7 @@
                 dadosCarregados = (data || []).map((item, index) => ({
                     index: index,
                     id: item.id,
+                    cliente_id: item.cliente_id,
                     data_solicitacao: item.data_solicitacao,
                     data_envio: item.data_envio,
                     data_entrega_prevista: item.data_entrega_prevista,
@@ -1212,7 +1600,7 @@
             if (dadosCarregados.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="13" style="text-align: center; padding: 40px;">
+                        <td colspan="14" style="text-align: center; padding: 40px;">
                             Nenhuma solicitação encontrada para o período selecionado.
                         </td>
                     </tr>
@@ -1287,6 +1675,16 @@
                             ${btnText}
                         </button>
                     </td>
+                    <td>
+                        <div class="acoes-container">
+                            <button class="btn-acao btn-editar" onclick="abrirModalEdicao('${item.id}')" title="Editar solicitação">
+                                ✏️
+                            </button>
+                            <button class="btn-acao btn-excluir" onclick="abrirModalExclusao('${item.id}')" title="Excluir solicitação">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
                 `;
 
                 if (idsSelecionados.has(item.index)) {
@@ -1342,7 +1740,7 @@
                 atualizado_em: new Date().toISOString()
             };
 
-            const btnSalvar = document.querySelector('.btn-salvar');
+            const btnSalvar = document.querySelector('#modalMedidas .btn-salvar');
             const textoOriginal = btnSalvar.innerHTML;
             btnSalvar.innerHTML = '⏳ Salvando...';
             btnSalvar.disabled = true;
@@ -1446,6 +1844,141 @@
             } finally {
                 btnSalvar.innerHTML = textoOriginal;
                 btnSalvar.disabled = false;
+            }
+        }
+
+        // ============================================
+        // FUNÇÕES DE EDIÇÃO COMPLETA
+        // ============================================
+
+        function abrirModalEdicao(solicitacaoId) {
+            const item = dadosCarregados.find(d => d.id === solicitacaoId);
+            if (!item) return;
+
+            document.getElementById('editSolicitacaoId').value = solicitacaoId;
+            document.getElementById('editNome').value = item.nome || '';
+            document.getElementById('editCPF').value = formatarCPF(item.cpf) || '';
+            document.getElementById('editDataSolicitacao').value = formatarDataHoraInput(item.data_solicitacao);
+            document.getElementById('editDataEnvio').value = item.data_envio ? item.data_envio.split('T')[0] : '';
+            document.getElementById('editStatus').value = item.status || 'pendente';
+            document.getElementById('editFormaEnvio').value = item.forma_envio || '';
+            document.getElementById('editCodigoRastreio').value = item.codigo_rastreio || '';
+            document.getElementById('editValorFrete').value = item.valor_frete || '';
+            document.getElementById('editObservacoes').value = item.observacoes || '';
+            
+            document.getElementById('modalEdicao').classList.add('ativo');
+        }
+
+        function fecharModalEdicao() {
+            document.getElementById('modalEdicao').classList.remove('ativo');
+        }
+
+        async function salvarEdicaoCompleta() {
+            const solicitacaoId = document.getElementById('editSolicitacaoId').value;
+            
+            const dadosAtualizacao = {
+                data_solicitacao: document.getElementById('editDataSolicitacao').value,
+                data_envio: document.getElementById('editDataEnvio').value || null,
+                status: document.getElementById('editStatus').value,
+                forma_envio: document.getElementById('editFormaEnvio').value || null,
+                codigo_rastreio: document.getElementById('editCodigoRastreio').value || null,
+                valor_frete: document.getElementById('editValorFrete').value ? parseFloat(document.getElementById('editValorFrete').value) : null,
+                observacoes: document.getElementById('editObservacoes').value || null,
+                atualizado_em: new Date().toISOString()
+            };
+
+            // Se data_envio foi preenchida, ajusta o formato
+            if (dadosAtualizacao.data_envio) {
+                dadosAtualizacao.data_envio += 'T00:00:00';
+            }
+
+            const btnSalvar = document.querySelector('#modalEdicao .btn-salvar');
+            const textoOriginal = btnSalvar.innerHTML;
+            btnSalvar.innerHTML = '⏳ Salvando...';
+            btnSalvar.disabled = true;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('solicitacoes_pg')
+                    .update(dadosAtualizacao)
+                    .eq('id', solicitacaoId)
+                    .select();
+
+                if (error) throw error;
+
+                // Atualizar dados locais
+                const index = dadosCarregados.findIndex(d => d.id === solicitacaoId);
+                if (index !== -1) {
+                    dadosCarregados[index] = { 
+                        ...dadosCarregados[index], 
+                        ...dadosAtualizacao
+                    };
+                }
+                
+                renderizarTabela();
+                fecharModalEdicao();
+                mostrarNotificacao('✅ Solicitação atualizada com sucesso!');
+
+            } catch (erro) {
+                console.error('Erro ao salvar:', erro);
+                alert('❌ Erro ao salvar alterações: ' + erro.message);
+            } finally {
+                btnSalvar.innerHTML = textoOriginal;
+                btnSalvar.disabled = false;
+            }
+        }
+
+        // ============================================
+        // FUNÇÕES DE EXCLUSÃO
+        // ============================================
+
+        function abrirModalExclusao(solicitacaoId) {
+            document.getElementById('excluirSolicitacaoId').value = solicitacaoId;
+            document.getElementById('modalExclusao').classList.add('ativo');
+        }
+
+        function fecharModalExclusao() {
+            document.getElementById('modalExclusao').classList.remove('ativo');
+        }
+
+        async function confirmarExclusao() {
+            const solicitacaoId = document.getElementById('excluirSolicitacaoId').value;
+            
+            const btnExcluir = document.querySelector('#modalExclusao .btn-danger');
+            const textoOriginal = btnExcluir.innerHTML;
+            btnExcluir.innerHTML = '⏳ Excluindo...';
+            btnExcluir.disabled = true;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('solicitacoes_pg')
+                    .delete()
+                    .eq('id', solicitacaoId);
+
+                if (error) throw error;
+
+                // Remove dos dados locais
+                const index = dadosCarregados.findIndex(d => d.id === solicitacaoId);
+                if (index !== -1) {
+                    dadosCarregados.splice(index, 1);
+                    // Reindexa os dados
+                    dadosCarregados.forEach((item, i) => item.index = i);
+                }
+                
+                // Remove da seleção se estiver selecionado
+                idsSelecionados.delete(index);
+                
+                renderizarTabela();
+                atualizarEstatisticas();
+                fecharModalExclusao();
+                mostrarNotificacao('🗑️ Solicitação excluída com sucesso!');
+
+            } catch (erro) {
+                console.error('Erro ao excluir:', erro);
+                alert('❌ Erro ao excluir solicitação: ' + erro.message);
+            } finally {
+                btnExcluir.innerHTML = textoOriginal;
+                btnExcluir.disabled = false;
             }
         }
 
@@ -1562,6 +2095,7 @@
             idsSelecionados.clear();
             document.getElementById('checkboxHeader').checked = false;
             document.getElementById('selecionarTodos').checked = false;
+            limparBuscaCliente();
         }
 
         // ============================================
