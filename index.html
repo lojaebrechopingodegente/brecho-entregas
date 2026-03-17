@@ -160,6 +160,18 @@
             display: none;
         }
         .erro-conexao.show { display: block; }
+
+        .endereco-alterado {
+            background: #FFF3E0;
+            border: 1px solid #FF9800;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-top: 5px;
+            font-size: 0.85rem;
+            color: #E65100;
+            display: none;
+        }
+        .endereco-alterado.show { display: block; }
     </style>
 <base target="_blank">
 </head>
@@ -249,6 +261,9 @@
                 <div class="form-group">
                     <label class="required">Rua / Avenida</label>
                     <input type="text" name="rua" id="rua" required placeholder="Nome da rua ou avenida">
+                    <div class="endereco-alterado" id="avisoEnderecoAlterado">
+                        📝 Endereço modificado - será cadastrado um novo endereço para esta entrega
+                    </div>
                 </div>
 
                 <div class="endereco-grid">
@@ -342,11 +357,15 @@
         var dadosClienteCarregados = false;
         var clienteIdAtual = null;
         var enderecoIdAtual = null;
+        var enderecoFoiAlterado = false;
 
         // Variáveis para controle do debounce do CPF
         let cpfTimeout = null;
         let ultimoCPFBuscado = '';
         let buscaEmAndamento = false;
+
+        // Valores originais do endereço carregado
+        var enderecoOriginal = {};
 
         document.addEventListener('DOMContentLoaded', function() {
             inicializarSupabase();
@@ -500,6 +519,9 @@
             // Configurar busca automática de CPF
             configurarBuscaAutomaticaCPF();
 
+            // Configurar monitoramento de alterações no endereço
+            configurarMonitoramentoEndereco();
+
             document.getElementById('btnLimparDados').addEventListener('click', limparDados);
             document.getElementById('btnCopiar').addEventListener('click', copiarPix);
 
@@ -629,10 +651,25 @@
                         document.getElementById('cidade').value = endereco.cidade || '';
                         document.getElementById('cepEndereco').value = endereco.cep || '';
                         enderecoIdAtual = endereco.id;
+
+                        // Salva os valores originais para comparar depois (INCLUINDO O ID)
+                        enderecoOriginal = {
+                            id: endereco.id,
+                            rua: endereco.rua || '',
+                            numero: endereco.numero || '',
+                            complemento: endereco.complemento || '',
+                            bairro: endereco.bairro || '',
+                            cidade: endereco.cidade || '',
+                            cep: endereco.cep || ''
+                        };
+
+                        console.log('Endereço original salvo:', enderecoOriginal);
                     }
 
                     dadosClienteCarregados = true;
+                    enderecoFoiAlterado = false;
                     msgDados.classList.add('show');
+                    document.getElementById('avisoEnderecoAlterado').classList.remove('show');
 
                     // Efeito visual nos campos preenchidos
                     ['nome', 'whatsapp', 'instagram', 'rua', 'numero', 'bairro', 'cidade', 'cepEndereco'].forEach(id => {
@@ -655,6 +692,7 @@
                         msgDados.classList.remove('show');
                         clienteIdAtual = null;
                         enderecoIdAtual = null;
+                        enderecoOriginal = {};
                     }
                 }
 
@@ -729,6 +767,70 @@
             });
         }
 
+        // ============================================
+        // MONITORAR ALTERAÇÕES NO ENDEREÇO
+        // ============================================
+        function configurarMonitoramentoEndereco() {
+            const camposEndereco = ['rua', 'numero', 'complemento', 'bairro', 'cidade', 'cepEndereco'];
+
+            camposEndereco.forEach(campoId => {
+                const campo = document.getElementById(campoId);
+                if (campo) {
+                    // Usar 'input' para detectar qualquer alteração imediatamente
+                    campo.addEventListener('input', function() {
+                        verificarAlteracaoEndereco();
+                    });
+
+                    // Também usar 'change' para garantir
+                    campo.addEventListener('change', function() {
+                        verificarAlteracaoEndereco();
+                    });
+                }
+            });
+        }
+
+        function verificarAlteracaoEndereco() {
+            // Só verifica se havia um endereço carregado
+            if (!dadosClienteCarregados) {
+                return;
+            }
+
+            const camposEndereco = ['rua', 'numero', 'complemento', 'bairro', 'cidade', 'cepEndereco'];
+            let algumCampoAlterado = false;
+
+            camposEndereco.forEach(campoId => {
+                const campo = document.getElementById(campoId);
+                if (!campo) return;
+
+                const campoNome = campoId === 'cepEndereco' ? 'cep' : campoId;
+                const valorAtual = campo.value || '';
+                const valorOriginal = enderecoOriginal[campoNome] || '';
+
+                if (valorAtual !== valorOriginal) {
+                    algumCampoAlterado = true;
+                }
+            });
+
+            const aviso = document.getElementById('avisoEnderecoAlterado');
+
+            if (algumCampoAlterado) {
+                if (!enderecoFoiAlterado) {
+                    enderecoFoiAlterado = true;
+                    enderecoIdAtual = null; // Força criação de novo endereço
+                    console.log('📝 Endereço alterado - será criado novo endereço. enderecoIdAtual resetado para null');
+                }
+                if (aviso) aviso.classList.add('show');
+            } else {
+                if (enderecoFoiAlterado) {
+                    enderecoFoiAlterado = false;
+                    // Restaura o ID original se voltar ao valor inicial
+                    enderecoIdAtual = enderecoOriginal.id;
+                    console.log('📝 Endereço restaurado ao original - usando endereço existente');
+                }
+                if (aviso) aviso.classList.remove('show');
+            }
+        }
+
         function limparCamposExcetoCPF() {
             ['nome', 'whatsapp', 'instagram', 'rua', 'numero', 'complemento', 'bairro', 'cidade', 'cepEndereco', 'observacoes'].forEach(id => {
                 const campo = document.getElementById(id);
@@ -736,6 +838,8 @@
             });
             clienteIdAtual = null;
             enderecoIdAtual = null;
+            enderecoOriginal = {};
+            enderecoFoiAlterado = false;
         }
 
         function limparDados() {
@@ -751,9 +855,12 @@
                     if (campo) campo.value = '';
                 });
                 document.getElementById('dadosCarregados').classList.remove('show');
+                document.getElementById('avisoEnderecoAlterado').classList.remove('show');
                 dadosClienteCarregados = false;
                 clienteIdAtual = null;
                 enderecoIdAtual = null;
+                enderecoOriginal = {};
+                enderecoFoiAlterado = false;
 
                 document.querySelectorAll('input[name="regiao"]').forEach(r => r.checked = false);
                 document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selecionado'));
@@ -876,9 +983,11 @@
                 }
 
                 // 2. ENDEREÇO
+                // Se enderecoIdAtual for null (endereço alterado ou novo), cria novo endereço
                 let enderecoId = enderecoIdAtual;
 
                 if (!enderecoId) {
+                    console.log('Criando novo endereço...');
                     const { data: novoEnd, error: erroEnd } = await supabaseClient
                         .from('enderecos_pg')
                         .insert([{
@@ -898,6 +1007,9 @@
 
                     if (erroEnd) throw erroEnd;
                     enderecoId = novoEnd.id;
+                    console.log('Novo endereço criado com ID:', enderecoId);
+                } else {
+                    console.log('Usando endereço existente ID:', enderecoId);
                 }
 
                 // 3. SOLICITAÇÃO
