@@ -121,6 +121,7 @@
         .btn-remover-filtro:hover { background: #D32F2F; transform: translateY(-1px); }
     </style>
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
     <div class="container">
@@ -685,175 +686,270 @@
         // PDF E ETIQUETAS - CORRIGIDAS
         // ============================================
         async function gerarPDF() {
-            if (idsSelecionados.size === 0) { 
-                alert('⚠️ Selecione pelo menos uma solicitação'); 
-                return; 
+            if (idsSelecionados.size === 0) {
+                alert('⚠️ Selecione pelo menos uma solicitação para gerar o PDF.');
+                return;
             }
-            
-            try {
-                const { jsPDF } = window.jspdf;
-                if (!jsPDF) {
-                    alert('❌ Biblioteca jsPDF não carregada. Recarregue a página.');
-                    return;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+
+            const dataInicial = document.getElementById('dataInicial').value;
+            const dataFinal = document.getElementById('dataFinal').value;
+
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Loja e Brechó Pingo de Gente - Solicitações de Entrega', 15, 15);
+
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Período: ${formatarDataBr(dataInicial)} a ${formatarDataBr(dataFinal)}`, 15, 22);
+
+            doc.setDrawColor(0, 0, 0);
+            doc.setLineWidth(0.5);
+            doc.line(10, 25, 287, 25);
+
+            const dadosSelecionados = Array.from(idsSelecionados).map(index => {
+                const item = dadosCarregados.find(d => d.index === index);
+                return [
+                    formatarDataBr(item.data_solicitacao),
+                    item.nome || '-',
+                    item.instagram || '-',
+                    item.regiao || '-',
+                    formatarCEP(item.cep),
+                    item.cidade || '-',
+                    item.observacoes || '-'
+                ];
+            });
+
+            doc.autoTable({
+                head: [['Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Observações']],
+                body: dadosSelecionados,
+                startY: 30,
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [255, 255, 255],
+                    textColor: [0, 0, 0],
+                    fontSize: 11,
+                    fontStyle: 'bold',
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.5
+                },
+                bodyStyles: {
+                    fontSize: 10,
+                    textColor: [0, 0, 0],
+                    fillColor: [255, 255, 255]
+                },
+                alternateRowStyles: {
+                    fillColor: [255, 255, 255]
+                },
+                columnStyles: {
+                    0: { cellWidth: 25 },
+                    1: { cellWidth: 50 },
+                    2: { cellWidth: 35 },
+                    3: { cellWidth: 40 },
+                    4: { cellWidth: 25 },
+                    5: { cellWidth: 35 },
+                    6: { cellWidth: 'auto' }
+                },
+                margin: { top: 30, left: 10, right: 10 },
+                styles: {
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.5
                 }
+            });
 
-                const doc = new jsPDF('landscape');
-                const dataInicial = document.getElementById('dataInicial').value;
-                const dataFinal = document.getElementById('dataFinal').value;
-                
-                // Cabeçalho
-                doc.setFontSize(18); 
-                doc.text('Loja e Brechó Pingo de Gente - Solicitações', 15, 15);
-                doc.setFontSize(11); 
-                doc.text(`Período: ${formatarDataBr(dataInicial)} a ${formatarDataBr(dataFinal)}`, 15, 22);
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                doc.text(
+                    `Página ${i} de ${pageCount} - Total de ${dadosSelecionados.length} solicitações selecionadas`,
+                    297 / 2,
+                    210 - 10,
+                    { align: 'center' }
+                );
+            }
 
-                // Preparar dados
-                const dadosSelecionados = [];
-                idsSelecionados.forEach(index => {
-                    const item = dadosCarregados.find(d => d.index === index);
-                    if (item) {
-                        dadosSelecionados.push([
-                            formatarDataBr(item.data_solicitacao), 
-                            (item.nome || '-').substring(0, 25), 
-                            item.instagram || '-', 
-                            item.regiao || '-', 
-                            formatarCEP(item.cep), 
-                            item.cidade || '-', 
-                            (item.observacoes || '-').substring(0, 30)
-                        ]);
-                    }
-                });
-
-                // Verificar se autoTable está disponível
-                if (typeof doc.autoTable === 'function') {
-                    doc.autoTable({ 
-                        head: [['Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Obs']], 
-                        body: dadosSelecionados, 
-                        startY: 30, 
-                        theme: 'grid',
-                        styles: { fontSize: 9, cellPadding: 2 },
-                        headStyles: { fillColor: [255, 107, 138] }
-                    });
-                } else {
-                    // Fallback se autoTable não carregar
-                    let y = 30;
-                    doc.setFontSize(10);
-                    dadosSelecionados.forEach((row, i) => {
-                        if (y > 180) {
-                            doc.addPage();
-                            y = 20;
-                        }
-                        doc.text(row.join(' | '), 15, y);
-                        y += 7;
-                    });
-                }
-
-                // Abrir em nova aba com fallback para download
-                const pdfOutput = doc.output('datauristring');
-                const newWindow = window.open();
-                if (newWindow) {
-                    newWindow.document.write('<iframe width="100%" height="100%" src="' + pdfOutput + '"></iframe>');
-                } else {
-                    doc.save(`Solicitacoes_${dataInicial}_${dataFinal}.pdf`);
-                }
-                
-            } catch (erro) {
-                console.error('Erro ao gerar PDF:', erro);
-                alert('❌ Erro ao gerar PDF: ' + erro.message);
+            const pdfDataUri = doc.output('datauristring');
+            const novaAba = window.open();
+            if (novaAba) {
+                novaAba.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Solicitações de Entrega - Pingo de Gente</title>
+                        <style>
+                            body { margin: 0; padding: 0; overflow: hidden; }
+                            iframe { width: 100vw; height: 100vh; border: none; }
+                        </style>
+                    </head>
+                    <body>
+                        <iframe src="${pdfDataUri}" type="application/pdf"></iframe>
+                    </body>
+                    </html>
+                `);
+                novaAba.document.close();
+            } else {
+                alert('❌ O navegador bloqueou a abertura de nova aba.');
             }
         }
 
         async function gerarEtiquetas() {
-            if (idsSelecionados.size === 0) { 
-                alert('⚠️ Selecione pelo menos uma solicitação'); 
-                return; 
+            if (idsSelecionados.size === 0) {
+                alert('⚠️ Selecione pelo menos uma solicitação para gerar as etiquetas.');
+                return;
             }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('portrait', 'mm', 'a4');
             
-            try {
-                const { jsPDF } = window.jspdf;
-                if (!jsPDF) {
-                    alert('❌ Biblioteca jsPDF não carregada. Recarregue a página.');
-                    return;
-                }
+            const margemX = 10;
+            const margemY = 10;
+            const gapX = 5;
+            const gapY = 5;
+            
+            const etiquetaLargura = 92.5;
+            const etiquetaAltura = 136;
+            
+            const posicoesX = [margemX, margemX + etiquetaLargura + gapX];
+            const posicoesY = [margemY, margemY + etiquetaAltura + gapY];
 
-                const doc = new jsPDF('portrait', 'mm', 'a4');
+            const dadosSelecionados = Array.from(idsSelecionados).map(index => 
+                dadosCarregados.find(d => d.index === index)
+            ).filter(Boolean);
+            
+            let etiquetaAtual = 0;
+            
+            dadosSelecionados.forEach((item, index) => {
+                const posicaoNaPagina = etiquetaAtual % 4;
+                const coluna = posicaoNaPagina % 2;
+                const linha = Math.floor(posicaoNaPagina / 2);
                 
-                // Coletar dados selecionados
-                const dadosSelecionados = [];
-                idsSelecionados.forEach(index => {
-                    const item = dadosCarregados.find(d => d.index === index);
-                    if (item) dadosSelecionados.push(item);
-                });
-
-                dadosSelecionados.forEach((item, i) => {
-                    if (i > 0) doc.addPage();
-                    
-                    // === REMETENTE ===
-                    doc.setDrawColor(0, 0, 0);        // Preto
-                    doc.setLineWidth(0.5);             // Espessura da linha
-                    doc.rect(10, 10, 190, 50);         // Caixa do remetente
-                    
-                    doc.setFontSize(10);
-                    doc.setFont(undefined, 'bold');
-                    doc.text('REMETENTE:', 15, 20);
-                    doc.setFont(undefined, 'normal');
-                    doc.setFontSize(11);
-                    doc.text(REMETENTE.nome, 15, 28);
-                    doc.setFontSize(10);
-                    doc.text(REMETENTE.endereco, 15, 36);
-                    doc.text(`${REMETENTE.bairro} - ${REMETENTE.cidade}/${REMETENTE.estado}`, 15, 44);
-                    doc.text(`CEP: ${REMETENTE.cep}`, 15, 52);
-
-                    // === LINHA DIVISÓRIA ===
-                    doc.setDrawColor(0, 0, 0);
-                    doc.setLineWidth(0.8);
-                    doc.line(10, 65, 200, 65);         // Linha horizontal grossa
-
-                    // === DESTINATÁRIO ===
-                    doc.setDrawColor(255, 0, 0);       // Vermelho para destacar
-                    doc.setLineWidth(0.5);
-                    doc.rect(10, 75, 190, 85);         // Caixa do destinatário
-                    
-                    doc.setFontSize(10);
-                    doc.setFont(undefined, 'bold');
-                    doc.setTextColor(255, 0, 0);       // Texto vermelho
-                    doc.text('DESTINATÁRIO:', 15, 85);
-                    doc.setTextColor(0, 0, 0);         // Voltar para preto
-                    doc.setFontSize(16);
-                    doc.setFont(undefined, 'bold');
-                    doc.text(String(item.nome || 'N/A').toUpperCase(), 15, 100);
-                    
-                    doc.setFont(undefined, 'normal');
-                    doc.setFontSize(11);
-                    const endereco = `${item.rua || ''}, ${item.numero || ''}${item.complemento ? ' - ' + item.complemento : ''}`;
-                    doc.text(endereco, 15, 115);
-                    doc.text(`${item.bairro || ''} - ${item.cidade || ''}/${item.estado || 'SC'}`, 15, 130);
-                    doc.setFontSize(12);
-                    doc.setFont(undefined, 'bold');
-                    doc.text(`CEP: ${formatarCEP(item.cep)}`, 15, 145);
-                    doc.setFont(undefined, 'normal');
-                    
-                    // Informações adicionais se houver
-                    if (item.observacoes) {
-                        doc.setFontSize(9);
-                        doc.setTextColor(100, 100, 100);
-                        doc.text(`Obs: ${String(item.observacoes).substring(0, 100)}`, 15, 155);
-                        doc.setTextColor(0, 0, 0);
-                    }
-                });
-
-                // Abrir em nova aba com fallback para download
-                const pdfOutput = doc.output('datauristring');
-                const newWindow = window.open();
-                if (newWindow) {
-                    newWindow.document.write('<iframe width="100%" height="100%" src="' + pdfOutput + '"></iframe>');
-                } else {
-                    doc.save(`Etiquetas_${new Date().toISOString().split('T')[0]}.pdf`);
+                if (posicaoNaPagina === 0 && index > 0) {
+                    doc.addPage();
                 }
                 
-            } catch (erro) {
-                console.error('Erro ao gerar etiquetas:', erro);
-                alert('❌ Erro ao gerar etiquetas: ' + erro.message);
+                const posX = posicoesX[coluna];
+                const posY = posicoesY[linha];
+                
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.5);
+                doc.rect(posX, posY, etiquetaLargura, etiquetaAltura);
+                
+                doc.line(posX, posY + 28, posX + etiquetaLargura, posY + 28);
+                
+                doc.setFontSize(7);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(100, 100, 100);
+                doc.text('REMETENTE:', posX + 3, posY + 6);
+                
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(0, 0, 0);
+                doc.text(REMETENTE.nome, posX + 3, posY + 13);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text(REMETENTE.endereco, posX + 3, posY + 19);
+                doc.text(`${REMETENTE.bairro} - ${REMETENTE.cidade} - ${REMETENTE.estado}`, posX + 3, posY + 24);
+                
+                const destY = posY + 35;
+                
+                doc.setFontSize(7);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(100, 100, 100);
+                doc.text('DESTINATÁRIO:', posX + 3, destY);
+                
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(0, 0, 0);
+                const nome = (item.nome || 'NÃO INFORMADO').toUpperCase();
+                const nomeLinhas = doc.splitTextToSize(nome, etiquetaLargura - 6);
+                doc.text(nomeLinhas, posX + 3, destY + 8);
+                
+                let currentY = destY + 8 + (nomeLinhas.length * 5);
+                
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                
+                const rua = item.rua || '';
+                const numero = item.numero || 'S/N';
+                const complemento = item.complemento || '';
+                let linhaEndereco = `${rua}, ${numero}`;
+                if (complemento) {
+                    linhaEndereco += ` - ${complemento}`;
+                }
+                
+                const linhasEndereco = doc.splitTextToSize(linhaEndereco, etiquetaLargura - 6);
+                doc.text(linhasEndereco, posX + 3, currentY);
+                currentY += (linhasEndereco.length * 4.5) + 2;
+                
+                const bairro = item.bairro || '';
+                if (bairro) {
+                    doc.text(`Bairro: ${bairro}`, posX + 3, currentY);
+                    currentY += 5;
+                }
+                
+                const cidade = item.cidade || '';
+                const estado = item.estado || 'SC';
+                doc.setFont('helvetica', 'bold');
+                doc.text(`${cidade} - ${estado}`, posX + 3, currentY);
+                currentY += 8;
+                
+                const cep = formatarCEP(item.cep);
+                doc.setFontSize(11);
+                doc.text(`CEP: ${cep}`, posX + 3, currentY + 1);
+                
+                const obsY = posY + etiquetaAltura - 20;
+                
+                doc.setDrawColor(150, 150, 150);
+                doc.setLineWidth(0.3);
+                doc.line(posX + 3, obsY, posX + etiquetaLargura - 3, obsY);
+                
+                doc.setFontSize(7);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(100, 100, 100);
+                doc.text('OBSERVAÇÕES:', posX + 3, obsY + 5);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(0, 0, 0);
+                const obs = item.observacoes || 'Nenhuma observação';
+                const linhasObs = doc.splitTextToSize(obs, etiquetaLargura - 6);
+                const linhasLimitadas = linhasObs.slice(0, 2);
+                doc.text(linhasLimitadas, posX + 3, obsY + 10);
+                
+                doc.setFontSize(6);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`${index + 1}/${dadosSelecionados.length}`, posX + etiquetaLargura - 2, posY + etiquetaAltura - 2, { align: 'right' });
+                
+                etiquetaAtual++;
+            });
+
+            const pdfDataUri = doc.output('datauristring');
+            const novaAba = window.open();
+            if (novaAba) {
+                novaAba.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Etiquetas de Entrega - Pingo de Gente</title>
+                        <style>
+                            body { margin: 0; padding: 0; overflow: hidden; }
+                            iframe { width: 100vw; height: 100vh; border: none; }
+                        </style>
+                    </head>
+                    <body>
+                        <iframe src="${pdfDataUri}" type="application/pdf"></iframe>
+                    </body>
+                    </html>
+                `);
+                novaAba.document.close();
+            } else {
+                alert('❌ O navegador bloqueou a abertura de nova aba.');
             }
         }
 
