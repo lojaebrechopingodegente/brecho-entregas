@@ -1051,7 +1051,6 @@
                                 <input type="checkbox" id="checkboxHeader" onchange="toggleSelecionarTodos()">
                             </th>
                             <th>Data Solicitação</th>
-                            <th>Data Envio</th>
                             <th>Nome</th>
                             <th>CPF</th>
                             <th>WhatsApp</th>
@@ -1060,7 +1059,6 @@
                             <th>CEP</th>
                             <th>Endereço</th>
                             <th>Status</th>
-                            <th>Observações</th>
                             <th>Medidas</th>
                             <th>Ações</th>
                         </tr>
@@ -1708,7 +1706,7 @@
             if (dadosCarregados.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="14" style="text-align: center; padding: 40px;">
+                        <td colspan="12" style="text-align: center; padding: 40px;">
                             Nenhuma solicitação encontrada para o período selecionado.
                         </td>
                     </tr>
@@ -1751,14 +1749,6 @@
                                ${idsSelecionados.has(item.index) ? 'checked' : ''}>
                     </td>
                     <td>${formatarDataHoraBr(item.data_solicitacao)}</td>
-                    <td>
-                        <div style="display: flex; flex-direction: column; gap: 5px;">
-                            <span>${item.data_envio ? formatarDataBr(item.data_envio) : '-'}</span>
-                            <button class="btn-medidas" onclick="abrirModalDataEnvio('${item.id}')" style="font-size: 0.75rem; padding: 4px 8px;">
-                                📅 Editar
-                            </button>
-                        </div>
-                    </td>
                     <td><strong>${item.nome || '-'}</strong></td>
                     <td>${formatarCPF(item.cpf)}</td>
                     <td>
@@ -1776,7 +1766,6 @@
                     <td>${formatarCEP(item.cep)}</td>
                     <td style="max-width: 200px; font-size: 0.85rem;">${enderecoCompleto}</td>
                     <td>${getTagStatus(item.status)}</td>
-                    <td style="max-width: 150px; font-size: 0.85rem;">${item.observacoes || '-'}</td>
                     <td class="col-medidas">
                         ${medidasHtml}
                         <button class="${btnClass}" onclick="abrirModalMedidas('${item.id}')">
