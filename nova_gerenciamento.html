@@ -860,6 +860,28 @@
         </div>
     </div>
 
+    <!-- Modal de Data de Envio -->
+    <div class="modal-overlay" id="modalDataEnvio">
+        <div class="modal-medidas">
+            <div class="modal-header">
+                <h3>📅 Editar Data de Envio</h3>
+                <button class="btn-fechar" onclick="fecharModalDataEnvio()">&times;</button>
+            </div>
+            <div class="modal-body" style="grid-template-columns: 1fr;">
+                <div class="campo-medida">
+                    <label>Data de Envio</label>
+                    <input type="date" id="dataEnvioInput">
+                    <span class="unidade">Selecione a data de envio do pedido</span>
+                </div>
+            </div>
+            <input type="hidden" id="dataEnvioSolicitacaoId">
+            <div class="modal-footer">
+                <button class="btn-cancelar" onclick="fecharModalDataEnvio()">Cancelar</button>
+                <button class="btn-salvar" onclick="salvarDataEnvio()">💾 Salvar Data</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     // ============================================
     // PROTEÇÃO DE ACESSO - BLOQUEIO DE ACESSO DIRETO
@@ -988,6 +1010,13 @@
             document.getElementById('modalMedidas').addEventListener('click', function(e) {
                 if (e.target === this) {
                     fecharModal();
+                }
+            });
+            
+            // Fechar modal de data de envio ao clicar fora
+            document.getElementById('modalDataEnvio').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    fecharModalDataEnvio();
                 }
             });
         });
@@ -1225,7 +1254,14 @@
                                ${idsSelecionados.has(item.index) ? 'checked' : ''}>
                     </td>
                     <td>${formatarDataHoraBr(item.data_solicitacao)}</td>
-                    <td>${item.data_envio ? formatarDataBr(item.data_envio) : '-'}</td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            <span>${item.data_envio ? formatarDataBr(item.data_envio) : '-'}</span>
+                            <button class="btn-medidas" onclick="abrirModalDataEnvio('${item.id}')" style="font-size: 0.75rem; padding: 4px 8px;">
+                                📅 Editar
+                            </button>
+                        </div>
+                    </td>
                     <td><strong>${item.nome || '-'}</strong></td>
                     <td>${formatarCPF(item.cpf)}</td>
                     <td>
@@ -1335,6 +1371,69 @@
             } catch (erro) {
                 console.error('Erro ao salvar:', erro);
                 alert('❌ Erro ao salvar medidas: ' + erro.message);
+            } finally {
+                btnSalvar.innerHTML = textoOriginal;
+                btnSalvar.disabled = false;
+            }
+        }
+
+        // ============================================
+        // FUNÇÕES PARA DATA DE ENVIO (SUPABASE)
+        // ============================================
+        
+        function abrirModalDataEnvio(solicitacaoId) {
+            const item = dadosCarregados.find(d => d.id === solicitacaoId);
+            if (!item) return;
+
+            document.getElementById('dataEnvioSolicitacaoId').value = solicitacaoId;
+            document.getElementById('dataEnvioInput').value = item.data_envio ? item.data_envio.split('T')[0] : '';
+            
+            document.getElementById('modalDataEnvio').classList.add('ativo');
+        }
+
+        function fecharModalDataEnvio() {
+            document.getElementById('modalDataEnvio').classList.remove('ativo');
+        }
+
+        async function salvarDataEnvio() {
+            const solicitacaoId = document.getElementById('dataEnvioSolicitacaoId').value;
+            const dataEnvio = document.getElementById('dataEnvioInput').value;
+            
+            const dadosAtualizacao = {
+                data_envio: dataEnvio ? dataEnvio + 'T00:00:00' : null,
+                atualizado_em: new Date().toISOString()
+            };
+
+            const btnSalvar = document.querySelector('#modalDataEnvio .btn-salvar');
+            const textoOriginal = btnSalvar.innerHTML;
+            btnSalvar.innerHTML = '⏳ Salvando...';
+            btnSalvar.disabled = true;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('solicitacoes_pg')
+                    .update(dadosAtualizacao)
+                    .eq('id', solicitacaoId)
+                    .select();
+
+                if (error) throw error;
+
+                // Atualizar dados locais
+                const index = dadosCarregados.findIndex(d => d.id === solicitacaoId);
+                if (index !== -1) {
+                    dadosCarregados[index] = { 
+                        ...dadosCarregados[index], 
+                        ...dadosAtualizacao
+                    };
+                }
+                
+                renderizarTabela();
+                fecharModalDataEnvio();
+                mostrarNotificacao('✅ Data de envio atualizada com sucesso!');
+
+            } catch (erro) {
+                console.error('Erro ao salvar:', erro);
+                alert('❌ Erro ao salvar data de envio: ' + erro.message);
             } finally {
                 btnSalvar.innerHTML = textoOriginal;
                 btnSalvar.disabled = false;
