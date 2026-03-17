@@ -918,7 +918,7 @@
         }
 
         if (!temAcesso) {
-            window.location.replace('login_novo.html');
+            window.location.replace('login.html');
             throw new Error('Acesso não autorizado');
         }
     })();
@@ -1081,6 +1081,7 @@
             const cores = {
                 'pendente': '#FFA726',
                 'enviado': '#42A5F5',
+                'enviada': '#42A5F5',
                 'entregue': '#66BB6A',
                 'cancelado': '#EF5350'
             };
@@ -1399,8 +1400,12 @@
             const solicitacaoId = document.getElementById('dataEnvioSolicitacaoId').value;
             const dataEnvio = document.getElementById('dataEnvioInput').value;
             
+            // Define o status baseado na presença da data de envio
+            const novoStatus = dataEnvio ? 'enviada' : 'pendente';
+            
             const dadosAtualizacao = {
                 data_envio: dataEnvio ? dataEnvio + 'T00:00:00' : null,
+                status: novoStatus,
                 atualizado_em: new Date().toISOString()
             };
 
@@ -1429,7 +1434,11 @@
                 
                 renderizarTabela();
                 fecharModalDataEnvio();
-                mostrarNotificacao('✅ Data de envio atualizada com sucesso!');
+                
+                const mensagemStatus = dataEnvio 
+                    ? '✅ Data de envio salva e status alterado para "Enviada"!' 
+                    : '✅ Data de envio removida e status alterado para "Pendente"!';
+                mostrarNotificacao(mensagemStatus);
 
             } catch (erro) {
                 console.error('Erro ao salvar:', erro);
@@ -1830,7 +1839,7 @@
         function fazerLogout() {
             sessionStorage.removeItem('pingo_autenticado');
             localStorage.removeItem('pingo_senha_hash');
-            window.location.replace('login_novo.html');
+            window.location.replace('login.html');
         }
     </script>
 </body>
