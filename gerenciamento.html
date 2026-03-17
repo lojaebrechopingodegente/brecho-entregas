@@ -755,7 +755,15 @@
 
                 // Salvar em vez de abrir em nova aba (evita bloqueador de pop-up)
                 const fileName = `Solicitacoes_${dataInicial}_${dataFinal}.pdf`;
-                doc.save(fileName);
+                // Para abrir em nova aba (pode ser bloqueado pelo navegador)
+const pdfOutput = doc.output('datauristring');
+const newWindow = window.open();
+if (newWindow) {
+    newWindow.document.write('<iframe width="100%" height="100%" src="' + pdfOutput + '"></iframe>');
+} else {
+    // Fallback se bloqueado
+    doc.save(fileName);
+}
                 
             } catch (erro) {
                 console.error('Erro ao gerar PDF:', erro);
@@ -828,7 +836,15 @@
                 });
 
                 const fileName = `Etiquetas_${new Date().toISOString().split('T')[0]}.pdf`;
-                doc.save(fileName);
+              // Para abrir em nova aba (pode ser bloqueado pelo navegador)
+const pdfOutput = doc.output('datauristring');
+const newWindow = window.open();
+if (newWindow) {
+    newWindow.document.write('<iframe width="100%" height="100%" src="' + pdfOutput + '"></iframe>');
+} else {
+    // Fallback se bloqueado
+    doc.save(fileName);
+}
                 
             } catch (erro) {
                 console.error('Erro ao gerar etiquetas:', erro);
