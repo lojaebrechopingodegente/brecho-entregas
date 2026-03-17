@@ -1896,7 +1896,9 @@
             const dataEnvio = document.getElementById('dataEnvioInput').value;
             
             // Define o status baseado na presença da data de envio
-            const novoStatus = dataEnvio ? 'enviada' : 'pendente';
+            // Se tiver data de envio, status = entregue
+            // Se não tiver data de envio, status = pendente
+            const novoStatus = dataEnvio ? 'entregue' : 'pendente';
             
             const dadosAtualizacao = {
                 data_envio: dataEnvio ? dataEnvio + 'T00:00:00' : null,
@@ -1931,7 +1933,7 @@
                 fecharModalDataEnvio();
                 
                 const mensagemStatus = dataEnvio 
-                    ? '✅ Data de envio salva e status alterado para "Enviada"!' 
+                    ? '✅ Data de envio salva e status alterado para "Entregue"!' 
                     : '✅ Data de envio removida e status alterado para "Pendente"!';
                 mostrarNotificacao(mensagemStatus);
 
