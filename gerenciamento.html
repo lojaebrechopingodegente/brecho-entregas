@@ -528,7 +528,7 @@
         }
 
         // ============================================
-        // EDIÇÃO COMPLETA - CORRIGIDA
+        // EDIÇÃO COMPLETA
         // ============================================
         function abrirModalEdicao(solicitacaoId) {
             const item = dadosCarregados.find(d => d.id === solicitacaoId);
@@ -548,7 +548,6 @@
 
         function fecharModalEdicao() { document.getElementById('modalEdicao').classList.remove('ativo'); }
 
-        // NOVA FUNÇÃO: Atualiza status automaticamente quando data de envio muda
         function atualizarStatusAutomatico() {
             const dataEnvio = document.getElementById('editDataEnvio').value;
             const statusSelect = document.getElementById('editStatus');
@@ -564,7 +563,6 @@
             const dataSolicitacao = document.getElementById('editDataSolicitacao').value;
             const dataEnvio = document.getElementById('editDataEnvio').value;
 
-            // Lógica automática: se tem data de envio, status = entregue
             let novoStatus = document.getElementById('editStatus').value;
             if (dataEnvio) {
                 novoStatus = 'entregue';
@@ -682,6 +680,7 @@
             document.getElementById('selecionarTodos').checked = false;
             removerFiltroCliente();
         }
+
         // ============================================
         // PDF E ETIQUETAS - CORRIGIDAS
         // ============================================
@@ -755,7 +754,6 @@
                 if (newWindow) {
                     newWindow.document.write('<iframe width="100%" height="100%" src="' + pdfOutput + '"></iframe>');
                 } else {
-                    // Fallback se bloqueado
                     doc.save(`Solicitacoes_${dataInicial}_${dataFinal}.pdf`);
                 }
                 
@@ -790,41 +788,56 @@
                 dadosSelecionados.forEach((item, i) => {
                     if (i > 0) doc.addPage();
                     
-                    // Remetente
-                    doc.setFontSize(12); 
-                    doc.setFont(undefined, 'bold');
-                    doc.text('REMETENTE:', 10, 20); 
-                    doc.setFont(undefined, 'normal');
-                    doc.text(REMETENTE.nome, 10, 30);
+                    // === REMETENTE ===
+                    doc.setDrawColor(0, 0, 0);        // Preto
+                    doc.setLineWidth(0.5);             // Espessura da linha
+                    doc.rect(10, 10, 190, 50);         // Caixa do remetente
+                    
                     doc.setFontSize(10);
-                    doc.text(REMETENTE.endereco, 10, 38);
-                    doc.text(`${REMETENTE.bairro} - ${REMETENTE.cidade}/${REMETENTE.estado}`, 10, 46);
-                    doc.text(`CEP: ${REMETENTE.cep}`, 10, 54);
-
-                    // Linha divisória
-                    doc.setDrawColor(200, 200, 200);
-                    doc.line(10, 65, 200, 65);
-
-                    // Destinatário
-                    doc.setFontSize(12);
                     doc.setFont(undefined, 'bold');
-                    doc.text('DESTINATÁRIO:', 10, 80); 
-                    doc.setFontSize(14);
+                    doc.text('REMETENTE:', 15, 20);
+                    doc.setFont(undefined, 'normal');
+                    doc.setFontSize(11);
+                    doc.text(REMETENTE.nome, 15, 28);
+                    doc.setFontSize(10);
+                    doc.text(REMETENTE.endereco, 15, 36);
+                    doc.text(`${REMETENTE.bairro} - ${REMETENTE.cidade}/${REMETENTE.estado}`, 15, 44);
+                    doc.text(`CEP: ${REMETENTE.cep}`, 15, 52);
+
+                    // === LINHA DIVISÓRIA ===
+                    doc.setDrawColor(0, 0, 0);
+                    doc.setLineWidth(0.8);
+                    doc.line(10, 65, 200, 65);         // Linha horizontal grossa
+
+                    // === DESTINATÁRIO ===
+                    doc.setDrawColor(255, 0, 0);       // Vermelho para destacar
+                    doc.setLineWidth(0.5);
+                    doc.rect(10, 75, 190, 85);         // Caixa do destinatário
+                    
+                    doc.setFontSize(10);
                     doc.setFont(undefined, 'bold');
-                    doc.text(String(item.nome || 'N/A').toUpperCase(), 10, 95);
+                    doc.setTextColor(255, 0, 0);       // Texto vermelho
+                    doc.text('DESTINATÁRIO:', 15, 85);
+                    doc.setTextColor(0, 0, 0);         // Voltar para preto
+                    doc.setFontSize(16);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(String(item.nome || 'N/A').toUpperCase(), 15, 100);
                     
                     doc.setFont(undefined, 'normal');
                     doc.setFontSize(11);
                     const endereco = `${item.rua || ''}, ${item.numero || ''}${item.complemento ? ' - ' + item.complemento : ''}`;
-                    doc.text(endereco, 10, 110);
-                    doc.text(`${item.bairro || ''} - ${item.cidade || ''}/${item.estado || 'SC'}`, 10, 125);
-                    doc.text(`CEP: ${formatarCEP(item.cep)}`, 10, 140);
+                    doc.text(endereco, 15, 115);
+                    doc.text(`${item.bairro || ''} - ${item.cidade || ''}/${item.estado || 'SC'}`, 15, 130);
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(`CEP: ${formatarCEP(item.cep)}`, 15, 145);
+                    doc.setFont(undefined, 'normal');
                     
                     // Informações adicionais se houver
                     if (item.observacoes) {
                         doc.setFontSize(9);
                         doc.setTextColor(100, 100, 100);
-                        doc.text(`Obs: ${String(item.observacoes).substring(0, 100)}`, 10, 155);
+                        doc.text(`Obs: ${String(item.observacoes).substring(0, 100)}`, 15, 155);
                         doc.setTextColor(0, 0, 0);
                     }
                 });
@@ -835,7 +848,6 @@
                 if (newWindow) {
                     newWindow.document.write('<iframe width="100%" height="100%" src="' + pdfOutput + '"></iframe>');
                 } else {
-                    // Fallback se bloqueado
                     doc.save(`Etiquetas_${new Date().toISOString().split('T')[0]}.pdf`);
                 }
                 
@@ -853,4 +865,3 @@
     </script>
 </body>
 </html>
-    
