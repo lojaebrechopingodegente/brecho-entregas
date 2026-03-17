@@ -84,6 +84,56 @@
         }
         .limpar-dados:hover { color: #FF6B8A; background: none !important; box-shadow: none !important; transform: none !important; }
 
+        .btn-toggle-debug {
+            width: auto !important;
+            padding: 8px 15px !important;
+            font-size: 0.85rem !important;
+            background: linear-gradient(135deg, #607d8b, #546e7a) !important;
+            margin-top: 10px !important;
+            border-radius: 8px !important;
+        }
+        .btn-toggle-debug:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(96, 125, 139, 0.3) !important;
+        }
+
+        .debug-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #1565c0;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+        .debug-info.show { display: block; }
+        .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #bbdefb;
+        }
+        .btn-limpar-debug {
+            width: auto !important;
+            padding: 5px 12px !important;
+            font-size: 0.75rem !important;
+            background: #e53935 !important;
+            border-radius: 6px !important;
+        }
+        .btn-limpar-debug:hover {
+            background: #c62828 !important;
+        }
+        #debugContent {
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            line-height: 1.4;
+        }
+
         .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .price-card {
             background: white; padding: 20px; border-radius: 15px;
@@ -228,6 +278,18 @@
                         </button>
                     </div>
 
+                    <button type="button" class="btn-toggle-debug" id="btnToggleDebug">
+                        🔍 Mostrar Detalhes
+                    </button>
+
+                    <div class="debug-info" id="debugInfo">
+                        <div class="debug-header">
+                            <strong>🔧 Informações de Debug</strong>
+                            <button type="button" class="btn-limpar-debug" id="btnLimparDebug">Limpar</button>
+                        </div>
+                        <div id="debugContent"></div>
+                    </div>
+
                     <p class="hint">💡 Digite seu CPF completo. Se já tiver cadastro, seus dados serão carregados automaticamente!</p>
                 </div>
 
@@ -350,6 +412,7 @@
         let buscaEmAndamento = false;
 
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM carregado, iniciando...');
             inicializarSupabase();
             configurarEventos();
             atualizarInfoEnvio();
@@ -358,15 +421,19 @@
         function inicializarSupabase() {
             try {
                 if (typeof window.supabase === 'undefined') {
+                    console.error('SDK do Supabase não carregado');
                     mostrarErroConexao();
                     return;
                 }
 
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 supabaseConectado = true;
+                console.log('✅ Supabase inicializado com sucesso');
+
                 testarConexao();
 
             } catch (e) {
+                console.error('❌ Erro ao inicializar Supabase:', e);
                 mostrarErroConexao();
             }
         }
@@ -375,17 +442,38 @@
             try {
                 const { data, error } = await supabaseClient.from('clientes_pg').select('count').limit(1);
                 if (error) throw error;
-                } catch (e) {
-                }
+                console.log('✅ Conexão com banco de dados OK');
+            } catch (e) {
+                console.warn('⚠️ Teste de conexão falhou:', e);
+            }
         }
 
         function mostrarErroConexao() {
             document.getElementById('erroConexao').classList.add('show');
         }
 
-        else {
+        function mostrarDebug(mensagem) {
+            const debugContent = document.getElementById('debugContent');
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            debugContent.innerHTML += '[' + timestamp + '] ' + mensagem + '<br>';
+            console.log(mensagem);
+        }
+
+        function toggleDebug() {
+            const debugDiv = document.getElementById('debugInfo');
+            const btn = document.getElementById('btnToggleDebug');
+
+            if (debugDiv.style.display === 'none' || !debugDiv.style.display) {
+                debugDiv.style.display = 'block';
+                btn.innerHTML = '🔍 Ocultar Detalhes';
+            } else {
+                debugDiv.style.display = 'none';
                 btn.innerHTML = '🔍 Mostrar Detalhes';
             }
+        }
+
+        function limparDebug() {
+            document.getElementById('debugContent').innerHTML = '';
         }
 
         // ============================================
@@ -506,6 +594,9 @@
 
             document.getElementById('btnLimparDados').addEventListener('click', limparDados);
             document.getElementById('btnCopiar').addEventListener('click', copiarPix);
+            document.getElementById('btnToggleDebug').addEventListener('click', toggleDebug);
+            document.getElementById('btnLimparDebug').addEventListener('click', limparDebug);
+
             // Formatação de CEP
             document.getElementById('cepEndereco').addEventListener('input', function(e) {
                 let value = e.target.value.replace(/\D/g, '');
@@ -559,7 +650,10 @@
         // BUSCA POR CPF - VERSÃO AUTOMÁTICA
         // ============================================
         async function buscarPorCPFAutomatico(cpfDigitado) {
+            console.log('Buscando CPF automaticamente...');
+
             if (!supabaseConectado) {
+                console.log('Supabase não conectado');
                 return;
             }
 
@@ -578,6 +672,9 @@
             ultimoCPFBuscado = cpfSomenteNumeros;
             buscaEmAndamento = true;
 
+            mostrarDebug('CPF completo detectado: ' + cpfDigitado);
+            mostrarDebug('Buscando automaticamente...');
+
             const spinner = document.getElementById('loadingSpinner');
             const msgDados = document.getElementById('dadosCarregados');
 
@@ -586,6 +683,7 @@
 
             try {
                 // TENTATIVA 1: Buscar sem formatação
+                mostrarDebug('Buscando CPF: ' + cpfSomenteNumeros);
                 let { data: cliente, error } = await supabaseClient
                     .from('clientes_pg')
                     .select('*')
@@ -594,11 +692,13 @@
                     .maybeSingle();
 
                 if (error) {
-                    }
+                    mostrarDebug('Erro na busca: ' + error.message);
+                }
 
                 // TENTATIVA 2: Buscar com formatação (XXX.XXX.XXX-XX)
                 if (!cliente) {
                     const cpfFormatado = cpfSomenteNumeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                    mostrarDebug('Tentando com formatação: ' + cpfFormatado);
                     let result = await supabaseClient
                         .from('clientes_pg')
                         .select('*')
@@ -607,11 +707,14 @@
                         .maybeSingle();
 
                     cliente = result.data;
-                    if (result.error) }
+                    if (result.error) mostrarDebug('Erro tentativa 2: ' + result.error.message);
+                }
 
-                );
+                mostrarDebug('Resultado: ' + (cliente ? 'ENCONTRADO - ' + cliente.nome : 'NÃO ENCONTRADO'));
 
                 if (cliente) {
+                    mostrarDebug('Carregando dados do cliente...');
+
                     // Busca endereço
                     const { data: endereco, error: erroEndereco } = await supabaseClient
                         .from('enderecos_pg')
@@ -623,7 +726,8 @@
                         .maybeSingle();
 
                     if (erroEndereco) {
-                        }
+                        mostrarDebug('Erro ao buscar endereço: ' + erroEndereco.message);
+                    }
 
                     // Preenche campos
                     document.getElementById('nome').value = cliente.nome || '';
@@ -640,7 +744,8 @@
                         document.getElementById('cidade').value = endereco.cidade || '';
                         document.getElementById('cepEndereco').value = endereco.cep || '';
                         enderecoIdAtual = endereco.id;
-                        }
+                        mostrarDebug('Endereço carregado: ' + endereco.cidade + '/' + endereco.bairro);
+                    }
 
                     dadosClienteCarregados = true;
                     msgDados.classList.add('show');
@@ -658,7 +763,10 @@
                         }
                     });
 
-                    } else {
+                    mostrarDebug('✅ Dados carregados com sucesso!');
+
+                } else {
+                    mostrarDebug('CPF não encontrado - prosseguir com cadastro manual');
                     // Limpa dados anteriores se existirem
                     if (dadosClienteCarregados) {
                         limparCamposExcetoCPF();
@@ -670,7 +778,9 @@
                 }
 
             } catch (error) {
-                } finally {
+                mostrarDebug('ERRO: ' + error.message);
+                console.error('Erro na busca automática:', error);
+            } finally {
                 spinner.style.display = 'none';
                 buscaEmAndamento = false;
             }
@@ -761,6 +871,7 @@
                     if (campo) campo.value = '';
                 });
                 document.getElementById('dadosCarregados').classList.remove('show');
+                limparDebug();
                 dadosClienteCarregados = false;
                 clienteIdAtual = null;
                 enderecoIdAtual = null;
@@ -955,6 +1066,7 @@
                 document.getElementById('successMsg').classList.add('show');
 
             } catch (error) {
+                console.error('❌ Erro no envio:', error);
                 alert('❌ Erro ao enviar: ' + (error.message || 'Tente novamente.'));
                 btn.innerText = '📦 ENVIAR SOLICITAÇÃO';
                 btn.disabled = false;
