@@ -410,7 +410,7 @@
             }
 
             if (!temAcesso) {
-                window.location.replace('login.html');
+                window.location.replace('dashboard.html');
                 throw new Error('Acesso não autorizado');
             }
         })();
@@ -1260,7 +1260,7 @@
         function fazerLogout() {
             sessionStorage.removeItem('pingo_autenticado');
             localStorage.removeItem('pingo_senha_hash');
-            window.location.replace('login.html');
+            window.location.replace('dashboard.html');
         }
     </script>
 </body>
