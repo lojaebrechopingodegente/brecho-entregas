@@ -1182,6 +1182,9 @@
                 alert('⚠️ Selecione pelo menos uma entrega para emitir etiquetas.');
                 return;
             }
+            function fecharModalEtiquetas() {
+    document.getElementById('modalEtiquetas').classList.remove('ativo');
+}
 
             const dadosSelecionados = Array.from(idsSelecionados).map(index => {
                 return dadosCarregados.find(d => d.index === index);
