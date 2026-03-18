@@ -454,11 +454,10 @@
         // ============================================
         // LOGOUT
         // ============================================
-        function fazerLogout() {
-            sessionStorage.removeItem('pingo_autenticado');
-            localStorage.removeItem('pingo_senha_hash');
-            window.location.replace('login.html');
-        }
+     function fazerLogout() {
+    localStorage.removeItem('pingo_senha_hash');
+    window.location.replace('login.html');
+}
 
         // Inicializar
         document.addEventListener('DOMContentLoaded', inicializarSupabase);
