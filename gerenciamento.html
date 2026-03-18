@@ -382,41 +382,31 @@
 
     <script>
 
-        // ============================================
-        // PROTEÇÃO DE ACESSO
-        // ============================================
-        (function() {
-            const STORAGE_KEY = 'pingo_autenticado';
-            const STORAGE_SENHA = 'pingo_senha_hash';
-            const SENHA_CORRETA = '770057';
+     // ============================================
+// PROTEÇÃO DE ACESSO - CORRIGIDO
+// ============================================
+(function() {
+    const STORAGE_SENHA = 'pingo_senha_hash';
+    const SENHA_CORRETA = '770057';
 
-            function criarHash(str) {
-                let hash = 0;
-                for (let i = 0; i < str.length; i++) {
-                    const char = str.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash;
-                }
-                return hash.toString(16);
-            }
+    function criarHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return hash.toString(16);
+    }
 
-            const autenticado = sessionStorage.getItem(STORAGE_KEY);
-            const senhaSalva = localStorage.getItem(STORAGE_SENHA);
-            let temAcesso = false;
+    const senhaSalva = localStorage.getItem(STORAGE_SENHA);
+    const temAcesso = senhaSalva && criarHash(SENHA_CORRETA) === senhaSalva;
 
-            if (autenticado === 'true') {
-                temAcesso = true;
-            } else if (senhaSalva && criarHash('770057') === senhaSalva) {
-                temAcesso = true;
-                sessionStorage.setItem(STORAGE_KEY, 'true');
-            }
-
-            if (!temAcesso) {
-                window.location.replace('dashboard.html');
-                throw new Error('Acesso não autorizado');
-            }
-        })();
-
+    if (!temAcesso) {
+        window.location.replace('login.html');
+        throw new Error('Acesso não autorizado');
+    }
+})();
         // ============================================
         // VARIÁVEIS GLOBAIS
         // ============================================
@@ -1227,11 +1217,10 @@
             }
         }
 
-        function fazerLogout() {
-            sessionStorage.removeItem('pingo_autenticado');
-            localStorage.removeItem('pingo_senha_hash');
-            window.location.replace('dashboard.html');
-        }
+      function fazerLogout() {
+    localStorage.removeItem('pingo_senha_hash');
+    window.location.replace('login.html');
+}
     </script>
 </body>
 </html>
