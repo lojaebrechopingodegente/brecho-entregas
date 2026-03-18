@@ -31,6 +31,65 @@
         .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(238, 90, 111, 0.4); }
         .btn-pdf:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
         .btn-etiqueta { background: linear-gradient(135deg, #4ECDC4, #44A08D); color: white; }
+        /* BOTÃO VOLTAR - Estilo padronizado */
+.btn-voltar {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: linear-gradient(135deg, #A8E6CF, #7FCDCD);
+    color: #2D3436;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.btn-voltar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(168, 230, 207, 0.4);
+}
+
+/* BOTÃO SAIR - Estilo idêntico à dashboard */
+.btn-logout {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #FF6B6B, #EE5A6F);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-logout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(238, 90, 111, 0.4);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .btn-voltar, .btn-logout {
+        position: relative;
+        top: auto;
+        left: auto;
+        right: auto;
+        margin: 5px;
+    }
+    .header {
+        padding-top: 20px;
+    }
+}
         .btn-etiqueta:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4); }
         .btn-etiqueta:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
         .btn-danger { background: linear-gradient(135deg, #FF6B6B, #EE5A6F); color: white; }
