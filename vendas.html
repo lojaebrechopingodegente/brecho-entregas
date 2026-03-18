@@ -1,1 +1,874 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Vendas - Pingo de Gente</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #E0F7FA 0%, #F0FFF4 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(78, 205, 196, 0.15);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-voltar {
+            background: linear-gradient(135deg, #A8E6CF, #7FCDCD);
+            color: #2D3436;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-voltar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(168, 230, 207, 0.4);
+        }
+
+        .header h1 {
+            color: #4ECDC4;
+            font-size: 1.8rem;
+        }
+
+        .header p {
+            color: #636E72;
+            font-size: 0.9rem;
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #FF6B6B, #EE5A6F);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(238, 90, 111, 0.4);
+        }
+
+        /* Abas */
+        .tabs-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .tabs-header {
+            display: flex;
+            background: #F8F9FA;
+            border-bottom: 2px solid #E0E0E0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            background: transparent;
+            color: #636E72;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: #4ECDC4;
+            background: rgba(78, 205, 196, 0.05);
+        }
+
+        .tab-btn.ativo {
+            color: #4ECDC4;
+            background: white;
+        }
+
+        .tab-btn.ativo::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #4ECDC4, #44A08D);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.ativo {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Formulário de Nova Venda */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #2D3436;
+            font-size: 0.9rem;
+        }
+
+        .form-group label .required {
+            color: #FF6B8A;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 14px 18px;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4ECDC4;
+            box-shadow: 0 0 0 4px rgba(78, 205, 196, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .hint {
+            font-size: 0.8rem;
+            color: #636E72;
+            margin-top: 4px;
+        }
+
+        /* Itens da Venda */
+        .itens-section {
+            background: #F8F9FA;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 25px;
+        }
+
+        .itens-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .itens-header h3 {
+            color: #2D3436;
+            font-size: 1.2rem;
+        }
+
+        .btn-adicionar {
+            background: linear-gradient(135deg, #4ECDC4, #44A08D);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-adicionar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4);
+        }
+
+        .item-venda {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 2px solid #E0E0E0;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .item-venda input,
+        .item-venda select {
+            padding: 12px;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+
+        .btn-remover-item {
+            background: #FF6B6B;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-remover-item:hover {
+            background: #EE5A6F;
+            transform: scale(1.05);
+        }
+
+        /* Total */
+        .total-section {
+            background: linear-gradient(135deg, #4ECDC4, #44A08D);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .total-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .total-valor {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        /* Botão Salvar */
+        .btn-salvar {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: all 0.3s;
+        }
+
+        .btn-salvar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(17, 153, 142, 0.4);
+        }
+
+        .btn-salvar:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Lista de Vendas */
+        .filtros-vendas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .tabela-vendas {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .tabela-vendas table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tabela-vendas th {
+            background: #F8F9FA;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2D3436;
+            border-bottom: 2px solid #E0E0E0;
+        }
+
+        .tabela-vendas td {
+            padding: 15px;
+            border-bottom: 1px solid #E0E0E0;
+            color: #636E72;
+        }
+
+        .tabela-vendas tr:hover {
+            background: #F8F9FA;
+        }
+
+        .tag-status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .tag-pago {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .tag-pendente {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        .tag-cancelado {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .header-left {
+                flex-direction: column;
+            }
+
+            .tabs-header {
+                flex-direction: column;
+            }
+
+            .tab-btn.ativo::after {
+                display: none;
+            }
+
+            .item-venda {
+                grid-template-columns: 1fr;
+            }
+
+            .total-section {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <a href="dashboard.html" class="btn-voltar">← Voltar ao Dashboard</a>
+                <div>
+                    <h1>🛍️ Registro de Vendas</h1>
+                    <p>Loja e Brechó Pingo de Gente</p>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
+        </div>
+
+        <!-- Abas -->
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <button class="tab-btn ativo" onclick="mudarAba('nova')">➕ Nova Venda</button>
+                <button class="tab-btn" onclick="mudarAba('historico')">📋 Histórico</button>
+                <button class="tab-btn" onclick="mudarAba('relatorios')">📊 Relatórios</button>
+            </div>
+
+            <!-- Aba Nova Venda -->
+            <div id="aba-nova" class="tab-content ativo">
+                <form id="formVenda">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Data da Venda <span class="required">*</span></label>
+                            <input type="datetime-local" id="dataVenda" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Cliente (opcional)</label>
+                            <input type="text" id="nomeCliente" placeholder="Nome do cliente">
+                        </div>
+
+                        <div class="form-group">
+                            <label>CPF (opcional)</label>
+                            <input type="text" id="cpfCliente" placeholder="000.000.000-00" maxlength="14">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Canal de Venda <span class="required">*</span></label>
+                            <select id="canalVenda" required>
+                                <option value="">Selecione...</option>
+                                <option value="loja_fisica">🏪 Loja Física</option>
+                                <option value="instagram">📱 Instagram</option>
+                                <option value="whatsapp">💬 WhatsApp</option>
+                                <option value="facebook">📘 Facebook</option>
+                                <option value="site">🌐 Site</option>
+                                <option value="outro">📍 Outro</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Forma de Pagamento <span class="required">*</span></label>
+                            <select id="formaPagamento" required>
+                                <option value="">Selecione...</option>
+                                <option value="dinheiro">💵 Dinheiro</option>
+                                <option value="pix">⚡ PIX</option>
+                                <option value="cartao_credito">💳 Cartão Crédito</option>
+                                <option value="cartao_debito">💳 Cartão Débito</option>
+                                <option value="boleto">📄 Boleto</option>
+                                <option value="transferencia">🏦 Transferência</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Status do Pagamento <span class="required">*</span></label>
+                            <select id="statusPagamento" required>
+                                <option value="pago">✅ Pago</option>
+                                <option value="pendente">⏳ Pendente</option>
+                                <option value="parcial">💰 Parcial</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Itens da Venda -->
+                    <div class="itens-section">
+                        <div class="itens-header">
+                            <h3>🛒 Itens da Venda</h3>
+                            <button type="button" class="btn-adicionar" onclick="adicionarItem()">
+                                ➕ Adicionar Item
+                            </button>
+                        </div>
+
+                        <div id="listaItens">
+                            <!-- Items serão adicionados aqui via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Total -->
+                    <div class="total-section">
+                        <span class="total-label">Total da Venda:</span>
+                        <span class="total-valor" id="totalVenda">R$ 0,00</span>
+                    </div>
+
+                    <div class="form-group full-width" style="margin-top: 20px;">
+                        <label>Observações</label>
+                        <textarea id="observacoes" placeholder="Informações adicionais sobre a venda..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-salvar">💾 REGISTRAR VENDA</button>
+                </form>
+            </div>
+
+            <!-- Aba Histórico -->
+            <div id="aba-historico" class="tab-content">
+                <div class="filtros-vendas">
+                    <div class="form-group">
+                        <label>Data Inicial</label>
+                        <input type="date" id="filtroDataInicial">
+                    </div>
+                    <div class="form-group">
+                        <label>Data Final</label>
+                        <input type="date" id="filtroDataFinal">
+                    </div>
+                    <div class="form-group">
+                        <label>Canal</label>
+                        <select id="filtroCanal">
+                            <option value="">Todos</option>
+                            <option value="loja_fisica">Loja Física</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="whatsapp">WhatsApp</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="filtroStatus">
+                            <option value="">Todos</option>
+                            <option value="pago">Pago</option>
+                            <option value="pendente">Pendente</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="tabela-vendas">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Cliente</th>
+                                <th>Canal</th>
+                                <th>Itens</th>
+                                <th>Total</th>
+                                <th>Pagamento</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaHistorico">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 40px;">
+                                    Selecione os filtros e clique em buscar
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Aba Relatórios -->
+            <div id="aba-relatorios" class="tab-content">
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px;">📊</div>
+                    <h3 style="color: #2D3436; margin-bottom: 15px;">Relatórios em Desenvolvimento</h3>
+                    <p style="color: #636E72;">Em breve você poderá gerar relatórios detalhados de vendas!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // PROTEÇÃO DE ACESSO
+        // ============================================
+        (function() {
+            const STORAGE_KEY = 'pingo_autenticado';
+            const STORAGE_SENHA = 'pingo_senha_hash';
+            const SENHA_CORRETA = '770057';
+
+            function criarHash(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString(16);
+            }
+
+            const autenticado = sessionStorage.getItem(STORAGE_KEY);
+            const senhaSalva = localStorage.getItem(STORAGE_SENHA);
+            let temAcesso = false;
+
+            if (autenticado === 'true') {
+                temAcesso = true;
+            } else if (senhaSalva && criarHash(SENHA_CORRETA) === senhaSalva) {
+                temAcesso = true;
+                sessionStorage.setItem(STORAGE_KEY, 'true');
+            }
+
+            if (!temAcesso) {
+                window.location.replace('login.html');
+                throw new Error('Acesso não autorizado');
+            }
+        })();
+
+        // ============================================
+        // CONFIGURAÇÃO SUPABASE
+        // ============================================
+        const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
+
+        let supabaseClient = null;
+        let itensVenda = [];
+
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializarSupabase();
+            
+            // Set data atual
+            const agora = new Date();
+            agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
+            document.getElementById('dataVenda').value = agora.toISOString().slice(0, 16);
+
+            // Adicionar primeiro item
+            adicionarItem();
+
+            // Máscara CPF
+            document.getElementById('cpfCliente').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.slice(0, 11);
+                if (value.length > 9) {
+                    value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                } else if (value.length > 6) {
+                    value = value.replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3');
+                } else if (value.length > 3) {
+                    value = value.replace(/(\d{3})(\d{3})/, '$1.$2');
+                }
+                e.target.value = value;
+            });
+
+            // Form submit
+            document.getElementById('formVenda').addEventListener('submit', salvarVenda);
+        });
+
+        function inicializarSupabase() {
+            try {
+                if (typeof supabase !== 'undefined') {
+                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                }
+            } catch (e) {
+                console.error('Erro ao conectar Supabase:', e);
+            }
+        }
+
+        // ============================================
+        // ABAS
+        // ============================================
+        function mudarAba(aba) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('ativo'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('ativo'));
+
+            event.target.classList.add('ativo');
+            document.getElementById(`aba-${aba}`).classList.add('ativo');
+
+            if (aba === 'historico') {
+                buscarHistorico();
+            }
+        }
+
+        // ============================================
+        // ITENS DA VENDA
+        // ============================================
+        function adicionarItem() {
+            const id = Date.now();
+            const div = document.createElement('div');
+            div.className = 'item-venda';
+            div.dataset.id = id;
+            div.innerHTML = `
+                <div>
+                    <label style="font-size: 0.8rem; color: #636E72; margin-bottom: 5px; display: block;">Descrição</label>
+                    <input type="text" placeholder="Ex: Vestido azul tamanho M" class="item-descricao" required>
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; color: #636E72; margin-bottom: 5px; display: block;">Qtd</label>
+                    <input type="number" value="1" min="1" class="item-quantidade" onchange="calcularTotal()">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; color: #636E72; margin-bottom: 5px; display: block;">Preço Unit.</label>
+                    <input type="number" placeholder="0,00" step="0.01" min="0" class="item-preco" onchange="calcularTotal()">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; color: #636E72; margin-bottom: 5px; display: block;">Subtotal</label>
+                    <input type="text" class="item-subtotal" readonly value="R$ 0,00" style="background: #f5f5f5;">
+                </div>
+                <button type="button" class="btn-remover-item" onclick="removerItem(${id})" title="Remover item">×</button>
+            `;
+            
+            document.getElementById('listaItens').appendChild(div);
+            itensVenda.push(id);
+        }
+
+        function removerItem(id) {
+            if (itensVenda.length <= 1) {
+                alert('⚠️ A venda deve ter pelo menos um item.');
+                return;
+            }
+            
+            const div = document.querySelector(`.item-venda[data-id="${id}"]`);
+            if (div) {
+                div.remove();
+                itensVenda = itensVenda.filter(i => i !== id);
+                calcularTotal();
+            }
+        }
+
+        function calcularTotal() {
+            let total = 0;
+            
+            document.querySelectorAll('.item-venda').forEach(item => {
+                const qtd = parseInt(item.querySelector('.item-quantidade').value) || 0;
+                const preco = parseFloat(item.querySelector('.item-preco').value) || 0;
+                const subtotal = qtd * preco;
+                
+                item.querySelector('.item-subtotal').value = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+                total += subtotal;
+            });
+
+            document.getElementById('totalVenda').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        // ============================================
+        // SALVAR VENDA
+        // ============================================
+        async function salvarVenda(e) {
+            e.preventDefault();
+
+            if (!supabaseClient) {
+                alert('❌ Erro de conexão com o banco de dados.');
+                return;
+            }
+
+            // Validar itens
+            const itens = [];
+            let temItemValido = false;
+            
+            document.querySelectorAll('.item-venda').forEach(item => {
+                const descricao = item.querySelector('.item-descricao').value.trim();
+                const qtd = parseInt(item.querySelector('.item-quantidade').value) || 0;
+                const preco = parseFloat(item.querySelector('.item-preco').value) || 0;
+                
+                if (descricao && qtd > 0 && preco > 0) {
+                    itens.push({ descricao, quantidade: qtd, preco_unitario: preco });
+                    temItemValido = true;
+                }
+            });
+
+            if (!temItemValido) {
+                alert('⚠️ Adicione pelo menos um item válido à venda.');
+                return;
+            }
+
+            const btn = document.querySelector('.btn-salvar');
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Salvando...';
+
+            try {
+                const total = itens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario), 0);
+                
+                const venda = {
+                    data_venda: document.getElementById('dataVenda').value,
+                    cliente_nome: document.getElementById('nomeCliente').value || null,
+                    cliente_cpf: document.getElementById('cpfCliente').value.replace(/\D/g, '') || null,
+                    canal_venda: document.getElementById('canalVenda').value,
+                    forma_pagamento: document.getElementById('formaPagamento').value,
+                    status_pagamento: document.getElementById('statusPagamento').value,
+                    total: total,
+                    itens: itens,
+                    observacoes: document.getElementById('observacoes').value || null,
+                    criado_em: new Date().toISOString()
+                };
+
+                const { data, error } = await supabaseClient
+                    .from('vendas_pg')
+                    .insert([venda])
+                    .select();
+
+                if (error) throw error;
+
+                alert('✅ Venda registrada com sucesso!');
+                
+                // Limpar formulário
+                document.getElementById('formVenda').reset();
+                document.getElementById('listaItens').innerHTML = '';
+                itensVenda = [];
+                adicionarItem();
+                
+                // Reset data
+                const agora = new Date();
+                agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
+                document.getElementById('dataVenda').value = agora.toISOString().slice(0, 16);
+                
+                calcularTotal();
+
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('❌ Erro ao registrar venda: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '💾 REGISTRAR VENDA';
+            }
+        }
+
+        // ============================================
+        // HISTÓRICO (placeholder)
+        // ============================================
+        async function buscarHistorico() {
+            // Implementar busca no Supabase
+            console.log('Buscando histórico...');
+        }
+
+        // ============================================
+        // LOGOUT
+        // ============================================
+        function fazerLogout() {
+            sessionStorage.removeItem('pingo_autenticado');
+            localStorage.removeItem('pingo_senha_hash');
+            window.location.replace('login.html');
+        }
+    </script>
+</body>
+</html>
