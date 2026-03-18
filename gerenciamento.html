@@ -54,6 +54,17 @@
         .tag-floripa { background: #E3F2FD; color: #1565C0; }
         .tag-sc { background: #E8F5E9; color: #2E7D32; }
         .tag-outros { background: #FFF3E0; color: #E65100; }
+        .numero-pedido { 
+            display: inline-block; 
+            background: linear-gradient(135deg, #FF6B8A, #FF8BA7); 
+            color: white; 
+            padding: 5px 12px; 
+            border-radius: 8px; 
+            font-size: 0.85rem; 
+            font-weight: bold;
+            font-family: monospace;
+            letter-spacing: 0.5px;
+        }
         .whatsapp-link { color: #25D366; text-decoration: none; font-weight: 600; }
         .whatsapp-link:hover { text-decoration: underline; }
         .instagram-link { color: #E1306C; text-decoration: none; font-weight: 600; }
@@ -83,6 +94,17 @@
         .campo-medida input:focus, .campo-medida select:focus, .campo-medida textarea:focus { outline: none; border-color: #FF8BA7; box-shadow: 0 0 0 4px rgba(255, 139, 167, 0.1); }
         .campo-medida textarea { resize: vertical; min-height: 80px; }
         .campo-medida .unidade { font-size: 0.75rem; color: #636E72; margin-top: 2px; }
+        .campo-medida input[readonly] { background: #f5f5f5; cursor: not-allowed; }
+        .campo-numero-pedido { grid-column: 1 / -1; }
+        .campo-numero-pedido input {
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            background: linear-gradient(135deg, #FFF5F7, #F0FFF4);
+            border: 2px solid #FF6B8A;
+            color: #FF6B8A;
+        }
         .modal-footer { display: flex; gap: 10px; justify-content: flex-end; }
         .btn-salvar { background: linear-gradient(135deg, #4ECDC4, #44A08D); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
         .btn-salvar:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4); }
@@ -119,6 +141,8 @@
         .filtro-info-detalhes { font-size: 0.85rem; color: #388E3C; margin-top: 2px; }
         .btn-remover-filtro { background: #EF5350; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
         .btn-remover-filtro:hover { background: #D32F2F; transform: translateY(-1px); }
+        .filtro-numero-pedido { background: #E3F2FD; border: 2px solid #2196F3; }
+        .filtro-numero-pedido h3 { color: #1565C0; }
     </style>
 <base target="_blank">
 <base target="_blank">
@@ -132,7 +156,21 @@
         </div>
 
         <div class="filtros-container" id="filtrosContainer" style="opacity: 0.5; pointer-events: none;">
-            <h2 class="filtros-titulo">📅 Filtros por Período e Cliente</h2>
+            <h2 class="filtros-titulo">📅 Filtros por Período, Cliente e Nº do Pedido</h2>
+
+            <!-- Filtro por Número do Pedido -->
+            <div class="busca-cliente filtro-numero-pedido">
+                <h3>🔍 Buscar por Número do Pedido</h3>
+                <div class="filtros-grid">
+                    <div class="campo-filtro">
+                        <label>Número da Solicitação (ex: SOL-2026-0001)</label>
+                        <input type="search" id="buscaNumeroPedido" placeholder="Digite o número do pedido..." oninput="buscarPorNumeroPedido()">
+                    </div>
+                </div>
+                <div id="resultadosBuscaPedido" class="resultados-busca" style="display: none;"></div>
+                <div id="filtroNumeroPedidoAtivo" class="filtro-cliente-ativo"></div>
+                <button class="btn btn-secondary" onclick="limparBuscaNumeroPedido()" style="margin-top: 10px;">🧹 Limpar Busca por Nº Pedido</button>
+            </div>
 
             <div class="busca-cliente">
                 <h3>🔍 Buscar por Cliente</h3>
@@ -144,7 +182,7 @@
                 </div>
                 <div id="resultadosBusca" class="resultados-busca" style="display: none;"></div>
                 <div id="filtroClienteAtivo" class="filtro-cliente-ativo"></div>
-                <button class="btn btn-secondary" onclick="limparBuscaCliente()" style="margin-top: 10px;">🧹 Limpar Busca</button>
+                <button class="btn btn-secondary" onclick="limparBuscaCliente()" style="margin-top: 10px;">🧹 Limpar Busca Cliente</button>
             </div>
 
             <div class="filtros-grid">
@@ -183,8 +221,18 @@
                     <thead>
                         <tr>
                             <th><input type="checkbox" id="checkboxHeader" onchange="toggleSelecionarTodos()"></th>
-                            <th>Data Solicitação</th><th>Nome</th><th>CPF</th><th>WhatsApp</th><th>Instagram</th>
-                            <th>Região</th><th>CEP</th><th>Endereço</th><th>Status</th><th>Medidas</th><th>Ações</th>
+                            <th>Nº Pedido</th>
+                            <th>Data Solicitação</th>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>WhatsApp</th>
+                            <th>Instagram</th>
+                            <th>Região</th>
+                            <th>CEP</th>
+                            <th>Endereço</th>
+                            <th>Status</th>
+                            <th>Medidas</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaBody"></tbody>
@@ -226,6 +274,13 @@
         <div class="modal-completo">
             <div class="modal-header"><h3>✏️ Editar Solicitação</h3><button class="btn-fechar" onclick="fecharModalEdicao()">×</button></div>
             <div class="modal-body">
+                <!-- Campo Número do Pedido - Destacado e readonly -->
+                <div class="campo-medida campo-numero-pedido">
+                    <label>📋 Número da Solicitação</label>
+                    <input type="text" id="editNumeroSolicitacao" readonly>
+                    <span class="unidade">Número único de protocolo (não editável)</span>
+                </div>
+                
                 <div class="campo-medida"><label>Nome</label><input type="text" id="editNome" readonly style="background: #f5f5f5;"></div>
                 <div class="campo-medida"><label>CPF</label><input type="text" id="editCPF" readonly style="background: #f5f5f5;"></div>
                 <div class="campo-medida"><label>Data Solicitação</label><input type="datetime-local" id="editDataSolicitacao"></div>
@@ -302,6 +357,7 @@
         let dadosCarregados = [];
         let idsSelecionados = new Set();
         let clienteSelecionado = null;
+        let numeroPedidoSelecionado = null;
 
         const REMETENTE = {
             nome: 'Amanda Marcelino',
@@ -368,6 +424,82 @@
         function getTagStatus(status) { const cores = {'pendente': '#FFA726', 'enviada': '#42A5F5', 'entregue': '#66BB6A', 'cancelado': '#EF5350'}; const cor = cores[status] || '#9E9E9E'; return `<span style="display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: ${cor}20; color: ${cor}; border: 1px solid ${cor};">${status || 'Pendente'}</span>`; }
 
         // ============================================
+        // BUSCA POR NÚMERO DO PEDIDO
+        // ============================================
+        async function buscarPorNumeroPedido() {
+            if (!supabaseClient) return;
+            const numeroPedido = document.getElementById('buscaNumeroPedido').value.trim();
+            
+            if (numeroPedido.length < 3) { 
+                document.getElementById('resultadosBuscaPedido').style.display = 'none'; 
+                return; 
+            }
+
+            let query = supabaseClient
+                .from('solicitacoes_pg')
+                .select('*, clientes_pg (id, nome, cpf, whatsapp, instagram)')
+                .ilike('numero_solicitacao', `%${numeroPedido}%`)
+                .limit(10);
+
+            const { data, error } = await query;
+            if (error) { 
+                console.error('Erro:', error); 
+                return; 
+            }
+            mostrarResultadosBuscaPedido(data || []);
+        }
+
+        function mostrarResultadosBuscaPedido(solicitacoes) {
+            const container = document.getElementById('resultadosBuscaPedido');
+            if (solicitacoes.length === 0) { 
+                container.innerHTML = '<div class="item-resultado">Nenhum pedido encontrado</div>'; 
+                container.style.display = 'block'; 
+                return; 
+            }
+            
+            container.innerHTML = solicitacoes.map(s => {
+                const cliente = s.clientes_pg;
+                return `<div class="item-resultado" onclick="selecionarNumeroPedido('${s.id}', '${s.numero_solicitacao}')">
+                    <strong style="color: #1565C0; font-family: monospace; font-size: 1.1rem;">${s.numero_solicitacao || 'Sem número'}</strong>
+                    <small>${cliente ? `Cliente: ${cliente.nome} | CPF: ${formatarCPF(cliente.cpf)}` : 'Cliente não encontrado'}</small>
+                    <small style="display: block; margin-top: 4px; color: #FF6B8A;">Status: ${s.status || 'Pendente'} | Data: ${formatarDataBr(s.data_solicitacao)}</small>
+                </div>`;
+            }).join('');
+            
+            container.style.display = 'block';
+        }
+
+        function selecionarNumeroPedido(solicitacaoId, numeroSolicitacao) {
+            numeroPedidoSelecionado = solicitacaoId;
+            document.getElementById('resultadosBuscaPedido').style.display = 'none';
+            document.getElementById('filtroNumeroPedidoAtivo').innerHTML = `
+                <div class="card-filtro-ativo" style="background: linear-gradient(135deg, #E3F2FD, #BBDEFB); border-color: #2196F3;">
+                    <div>
+                        <div class="filtro-info-label" style="color: #1565C0;">📋 Número do Pedido Selecionado</div>
+                        <div class="filtro-info-nome" style="color: #0D47A1; font-family: monospace;">${numeroSolicitacao}</div>
+                    </div>
+                    <button class="btn-remover-filtro" onclick="removerFiltroNumeroPedido()">❌ Remover</button>
+                </div>`;
+            document.getElementById('filtroNumeroPedidoAtivo').style.display = 'block';
+            document.querySelector('.filtro-numero-pedido').style.borderColor = '#4CAF50';
+            
+            // Limpa o filtro de cliente para evitar conflito
+            removerFiltroCliente();
+        }
+
+        function removerFiltroNumeroPedido() {
+            numeroPedidoSelecionado = null;
+            document.getElementById('filtroNumeroPedidoAtivo').style.display = 'none';
+            document.querySelector('.filtro-numero-pedido').style.borderColor = '#2196F3';
+            document.getElementById('buscaNumeroPedido').value = '';
+            document.getElementById('resultadosBuscaPedido').style.display = 'none';
+        }
+
+        function limparBuscaNumeroPedido() {
+            removerFiltroNumeroPedido();
+        }
+
+        // ============================================
         // BUSCA POR CLIENTE
         // ============================================
         async function buscarClientes() {
@@ -405,6 +537,9 @@
             document.getElementById('filtroClienteAtivo').innerHTML = `<div class="card-filtro-ativo"><div><div class="filtro-info-label">🎯 Cliente Selecionado</div><div class="filtro-info-nome">${nome}</div><div class="filtro-info-detalhes">${detalhes}</div></div><button class="btn-remover-filtro" onclick="removerFiltroCliente()">❌ Remover</button></div>`;
             document.getElementById('filtroClienteAtivo').style.display = 'block';
             document.querySelector('.busca-cliente').style.borderColor = '#4CAF50';
+            
+            // Limpa o filtro de número de pedido para evitar conflito
+            removerFiltroNumeroPedido();
         }
 
         function removerFiltroCliente() {
@@ -421,6 +556,13 @@
         // ============================================
         async function buscarSolicitacoes() {
             if (!supabaseClient) { alert('⚠️ Conecte-se primeiro!'); return; }
+            
+            // Se tiver número de pedido selecionado, busca diretamente por ele
+            if (numeroPedidoSelecionado) {
+                await buscarPorIdSolicitacao(numeroPedidoSelecionado);
+                return;
+            }
+            
             const dataInicial = document.getElementById('dataInicial').value;
             const horaInicial = document.getElementById('horaInicial').value || '00:00';
             const dataFinal = document.getElementById('dataFinal').value;
@@ -446,11 +588,7 @@
                 const { data, error } = await query;
                 if (error) throw error;
 
-                dadosCarregados = (data || []).map((item, index) => ({ index, id: item.id, cliente_id: item.cliente_id, data_solicitacao: item.data_solicitacao, data_envio: item.data_envio, status: item.status, observacoes: item.observacoes, peso_kg: item.peso_kg, altura_cm: item.altura_cm, largura_cm: item.largura_cm, comprimento_cm: item.comprimento_cm, valor_frete: item.valor_frete, codigo_rastreio: item.codigo_rastreio, forma_envio: item.forma_envio, nome: item.clientes_pg?.nome, cpf: item.clientes_pg?.cpf, whatsapp: item.clientes_pg?.whatsapp, instagram: item.clientes_pg?.instagram, cep: item.enderecos_pg?.cep, rua: item.enderecos_pg?.rua, numero: item.enderecos_pg?.numero, complemento: item.enderecos_pg?.complemento, bairro: item.enderecos_pg?.bairro, cidade: item.enderecos_pg?.cidade, estado: item.enderecos_pg?.estado, regiao: item.enderecos_pg?.regiao }));
-
-                idsSelecionados.clear();
-                renderizarTabela();
-                atualizarEstatisticas();
+                processarDadosCarregados(data);
                 document.getElementById('periodoSelecionado').textContent = `Período: ${formatarDataBr(dataInicial)} ${horaInicial} a ${formatarDataBr(dataFinal)} ${horaFinal}`;
             } catch (erro) {
                 alert('❌ Erro: ' + erro.message);
@@ -460,11 +598,73 @@
             }
         }
 
+        // Busca específica por ID da solicitação (quando filtra por número)
+        async function buscarPorIdSolicitacao(solicitacaoId) {
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('tabelaContainer').style.display = 'none';
+            document.getElementById('statsContainer').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('solicitacoes_pg')
+                    .select(`*, clientes_pg (id, nome, cpf, whatsapp, instagram), enderecos_pg (cep, rua, numero, complemento, bairro, cidade, estado, regiao)`)
+                    .eq('id', solicitacaoId)
+                    .single();
+
+                if (error) throw error;
+
+                processarDadosCarregados(data ? [data] : []);
+                document.getElementById('periodoSelecionado').textContent = `Filtro: Número do Pedido Específico`;
+            } catch (erro) {
+                alert('❌ Erro: ' + erro.message);
+                document.getElementById('emptyState').style.display = 'block';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function processarDadosCarregados(data) {
+            dadosCarregados = (data || []).map((item, index) => ({ 
+                index, 
+                id: item.id, 
+                cliente_id: item.cliente_id,
+                numero_solicitacao: item.numero_solicitacao,
+                data_solicitacao: item.data_solicitacao, 
+                data_envio: item.data_envio, 
+                status: item.status, 
+                observacoes: item.observacoes, 
+                peso_kg: item.peso_kg, 
+                altura_cm: item.altura_cm, 
+                largura_cm: item.largura_cm, 
+                comprimento_cm: item.comprimento_cm, 
+                valor_frete: item.valor_frete, 
+                codigo_rastreio: item.codigo_rastreio, 
+                forma_envio: item.forma_envio, 
+                nome: item.clientes_pg?.nome, 
+                cpf: item.clientes_pg?.cpf, 
+                whatsapp: item.clientes_pg?.whatsapp, 
+                instagram: item.clientes_pg?.instagram, 
+                cep: item.enderecos_pg?.cep, 
+                rua: item.enderecos_pg?.rua, 
+                numero: item.enderecos_pg?.numero, 
+                complemento: item.enderecos_pg?.complemento, 
+                bairro: item.enderecos_pg?.bairro, 
+                cidade: item.enderecos_pg?.cidade, 
+                estado: item.enderecos_pg?.estado, 
+                regiao: item.enderecos_pg?.regiao 
+            }));
+
+            idsSelecionados.clear();
+            renderizarTabela();
+            atualizarEstatisticas();
+        }
+
         function renderizarTabela() {
             const tbody = document.getElementById('tabelaBody');
             tbody.innerHTML = '';
             if (dadosCarregados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 40px;">Nenhuma solicitação encontrada</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; padding: 40px;">Nenhuma solicitação encontrada</td></tr>';
                 document.getElementById('tabelaContainer').style.display = 'block';
                 document.getElementById('statsContainer').style.display = 'grid';
                 return;
@@ -480,7 +680,24 @@
                 let medidasHtml = '-';
                 if (temMedidas) { const dim = [item.altura_cm, item.largura_cm, item.comprimento_cm].filter(Boolean); medidasHtml = `<div class="medidas-resumo">${item.peso_kg ? `⚖️ ${item.peso_kg}kg<br>` : ''}${dim.length > 0 ? `📐 ${dim.join('×')}cm` : ''}</div>`; }
 
-                tr.innerHTML = `<td><input type="checkbox" class="checkbox-selecao" onchange="toggleSelecao(${item.index})" ${idsSelecionados.has(item.index) ? 'checked' : ''}></td><td>${formatarDataHoraBr(item.data_solicitacao)}</td><td><strong>${item.nome || '-'}</strong></td><td>${formatarCPF(item.cpf)}</td><td><a href="https://wa.me/${formatarWhatsApp(item.whatsapp)}" target="_blank" class="whatsapp-link">📱 ${item.whatsapp || '-'}</a></td><td>${item.instagram ? `<a href="https://instagram.com/${item.instagram.replace('@', '')}" target="_blank" class="instagram-link">${item.instagram}</a>` : '-'}</td><td>${getTagRegiao(item.regiao)}</td><td>${formatarCEP(item.cep)}</td><td style="max-width: 200px; font-size: 0.85rem;">${enderecoCompleto}</td><td>${getTagStatus(item.status)}</td><td class="col-medidas">${medidasHtml}<button class="${btnClass}" onclick="abrirModalMedidas('${item.id}')">${btnText}</button></td><td><div class="acoes-container"><button class="btn-acao btn-editar" onclick="abrirModalEdicao('${item.id}')" title="Editar">✏️</button><button class="btn-acao btn-excluir" onclick="abrirModalExclusao('${item.id}')" title="Excluir">🗑️</button></div></td>`;
+                // Adiciona a coluna número do pedido
+                const numeroPedidoHtml = item.numero_solicitacao 
+                    ? `<span class="numero-pedido">${item.numero_solicitacao}</span>` 
+                    : '<span style="color: #9E9E9E; font-style: italic;">-</span>';
+
+                tr.innerHTML = `<td><input type="checkbox" class="checkbox-selecao" onchange="toggleSelecao(${item.index})" ${idsSelecionados.has(item.index) ? 'checked' : ''}></td>
+                    <td>${numeroPedidoHtml}</td>
+                    <td>${formatarDataHoraBr(item.data_solicitacao)}</td>
+                    <td><strong>${item.nome || '-'}</strong></td>
+                    <td>${formatarCPF(item.cpf)}</td>
+                    <td><a href="https://wa.me/${formatarWhatsApp(item.whatsapp)}" target="_blank" class="whatsapp-link">📱 ${item.whatsapp || '-'}</a></td>
+                    <td>${item.instagram ? `<a href="https://instagram.com/${item.instagram.replace('@', '')}" target="_blank" class="instagram-link">${item.instagram}</a>` : '-'}</td>
+                    <td>${getTagRegiao(item.regiao)}</td>
+                    <td>${formatarCEP(item.cep)}</td>
+                    <td style="max-width: 200px; font-size: 0.85rem;">${enderecoCompleto}</td>
+                    <td>${getTagStatus(item.status)}</td>
+                    <td class="col-medidas">${medidasHtml}<button class="${btnClass}" onclick="abrirModalMedidas('${item.id}')">${btnText}</button></td>
+                    <td><div class="acoes-container"><button class="btn-acao btn-editar" onclick="abrirModalEdicao('${item.id}')" title="Editar">✏️</button><button class="btn-acao btn-excluir" onclick="abrirModalExclusao('${item.id}')" title="Excluir">🗑️</button></div></td>`;
                 if (idsSelecionados.has(item.index)) tr.classList.add('selecionado');
                 tbody.appendChild(tr);
             });
@@ -534,7 +751,12 @@
         function abrirModalEdicao(solicitacaoId) {
             const item = dadosCarregados.find(d => d.id === solicitacaoId);
             if (!item) return;
+            
             document.getElementById('editSolicitacaoId').value = solicitacaoId;
+            
+            // NOVO: Preenche o número da solicitação (readonly)
+            document.getElementById('editNumeroSolicitacao').value = item.numero_solicitacao || 'Não atribuído';
+            
             document.getElementById('editNome').value = item.nome || '';
             document.getElementById('editCPF').value = formatarCPF(item.cpf) || '';
             document.getElementById('editDataSolicitacao').value = formatarDataHoraInput(item.data_solicitacao);
@@ -680,10 +902,17 @@
             document.getElementById('checkboxHeader').checked = false;
             document.getElementById('selecionarTodos').checked = false;
             removerFiltroCliente();
+            removerFiltroNumeroPedido();
+            
+            // Restaura datas padrão
+            const hoje = new Date();
+            const seteDiasAtras = new Date(hoje.getTime() - (7 * 24 * 60 * 60 * 1000));
+            document.getElementById('dataFinal').value = formatarDataInput(hoje);
+            document.getElementById('dataInicial').value = formatarDataInput(seteDiasAtras);
         }
 
         // ============================================
-        // PDF E ETIQUETAS - CORRIGIDAS
+        // PDF E ETIQUETAS - ATUALIZADOS COM Nº PEDIDO
         // ============================================
         async function gerarPDF() {
             if (idsSelecionados.size === 0) {
@@ -713,6 +942,7 @@
             const dadosSelecionados = Array.from(idsSelecionados).map(index => {
                 const item = dadosCarregados.find(d => d.index === index);
                 return [
+                    item.numero_solicitacao || '-',
                     formatarDataBr(item.data_solicitacao),
                     item.nome || '-',
                     item.instagram || '-',
@@ -724,7 +954,7 @@
             });
 
             doc.autoTable({
-                head: [['Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Observações']],
+                head: [['Nº Pedido', 'Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Observações']],
                 body: dadosSelecionados,
                 startY: 30,
                 theme: 'grid',
@@ -745,13 +975,14 @@
                     fillColor: [255, 255, 255]
                 },
                 columnStyles: {
-                    0: { cellWidth: 25 },
-                    1: { cellWidth: 50 },
-                    2: { cellWidth: 35 },
-                    3: { cellWidth: 40 },
-                    4: { cellWidth: 25 },
-                    5: { cellWidth: 35 },
-                    6: { cellWidth: 'auto' }
+                    0: { cellWidth: 30, fontStyle: 'bold' },
+                    1: { cellWidth: 25 },
+                    2: { cellWidth: 45 },
+                    3: { cellWidth: 30 },
+                    4: { cellWidth: 40 },
+                    5: { cellWidth: 25 },
+                    6: { cellWidth: 30 },
+                    7: { cellWidth: 'auto' }
                 },
                 margin: { top: 30, left: 10, right: 10 },
                 styles: {
@@ -862,6 +1093,14 @@
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(100, 100, 100);
                 doc.text('DESTINATÁRIO:', posX + 3, destY);
+                
+                // NOVO: Adiciona número do pedido na etiqueta
+                if (item.numero_solicitacao) {
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(255, 107, 138); // Cor rosa do branding
+                    doc.text(`PEDIDO: ${item.numero_solicitacao}`, posX + etiquetaLargura - 3, destY, { align: 'right' });
+                }
                 
                 doc.setFontSize(11);
                 doc.setFont('helvetica', 'bold');
