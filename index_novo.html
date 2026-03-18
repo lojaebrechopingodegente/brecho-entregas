@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitação de Entrega - Loja e Brechó Pingo de Gente</title>
+    
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- EmailJS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -229,7 +235,6 @@
         }
     </style>
 <base target="_blank">
-<base target="_blank">
 </head>
 <body>
     <div class="container">
@@ -420,10 +425,24 @@
 
     <script>
         // ============================================
-        // CONFIGURAÇÃO E INICIALIZAÇÃO
+        // CONFIGURAÇÃO SUPABASE
         // ============================================
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
+
+        // ============================================
+        // CONFIGURAÇÃO EMAILJS - PREENCHA COM SEUS DADOS
+        // ============================================
+        const EMAILJS_CONFIG = {
+            PUBLIC_KEY: 'R3iqK9BVPwhsiyJmk',           // Sua Public Key
+            SERVICE_ID: 'service_rqpqwg3',              // Seu Service ID
+            TEMPLATE_ID: 'template_ttdmkto'             // Seu Template ID
+        };
+
+        // Inicializar EmailJS
+        (function() {
+            emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
+        })();
 
         var supabaseClient = null;
         var supabaseConectado = false;
@@ -441,12 +460,10 @@
         var enderecoFoiAlterado = false;
         var numeroSolicitacaoGerado = null;
 
-        // Variáveis para controle do debounce do CPF
         let cpfTimeout = null;
         let ultimoCPFBuscado = '';
         let buscaEmAndamento = false;
 
-        // Valores originais do endereço carregado
         var enderecoOriginal = {};
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -598,19 +615,13 @@
                 aplicarSelecaoRegiao(regiao);
             });
 
-            // Configurar busca automática de CPF
             configurarBuscaAutomaticaCPF();
-
-            // Configurar monitoramento de alterações no endereço
             configurarMonitoramentoEndereco();
-
-            // Configurar checkbox de e-mail
             configurarCheckboxEmail();
 
             document.getElementById('btnLimparDados').addEventListener('click', limparDados);
             document.getElementById('btnCopiar').addEventListener('click', copiarPix);
 
-            // Formatação de CEP
             document.getElementById('cepEndereco').addEventListener('input', function(e) {
                 let value = e.target.value.replace(/\D/g, '');
                 if (value.length > 5) {
@@ -622,21 +633,13 @@
             document.getElementById('deliveryForm').addEventListener('submit', enviarFormulario);
         }
 
-        // ============================================
-        // CONFIGURAR CHECKBOX DE E-MAIL
-        // ============================================
         function configurarCheckboxEmail() {
             const checkboxEmail = document.getElementById('receberEmail');
             const container = document.getElementById('checkboxEmailContainer');
             
             container.addEventListener('click', function(e) {
-                // Se clicou no checkbox diretamente, não faz nada (deixa o comportamento padrão)
                 if (e.target.type === 'checkbox') return;
-                
-                // Se clicou no container ou no texto, toggle o checkbox
                 checkboxEmail.checked = !checkboxEmail.checked;
-                
-                // Dispara o evento change manualmente
                 checkboxEmail.dispatchEvent(new Event('change'));
             });
 
@@ -647,7 +650,6 @@
                     container.style.borderColor = '#2196F3';
                     container.style.background = 'linear-gradient(135deg, #BBDEFB 0%, #E1BEE7 100%)';
                     
-                    // Se não tiver e-mail preenchido, foca no campo
                     if (!emailInput.value) {
                         emailInput.focus();
                         emailInput.style.borderColor = '#2196F3';
@@ -700,24 +702,14 @@
         }
 
         // ============================================
-        // BUSCA POR CPF - VERSÃO AUTOMÁTICA
+        // BUSCA POR CPF
         // ============================================
         async function buscarPorCPFAutomatico(cpfDigitado) {
-            if (!supabaseConectado) {
-                return;
-            }
+            if (!supabaseConectado) return;
 
             const cpfSomenteNumeros = cpfDigitado.replace(/\D/g, '');
-
-            // Só busca se tiver 11 dígitos
-            if (cpfSomenteNumeros.length !== 11) {
-                return;
-            }
-
-            // Evita buscar o mesmo CPF duas vezes ou busca simultânea
-            if (cpfSomenteNumeros === ultimoCPFBuscado || buscaEmAndamento) {
-                return;
-            }
+            if (cpfSomenteNumeros.length !== 11) return;
+            if (cpfSomenteNumeros === ultimoCPFBuscado || buscaEmAndamento) return;
 
             ultimoCPFBuscado = cpfSomenteNumeros;
             buscaEmAndamento = true;
@@ -729,7 +721,6 @@
             msgDados.classList.remove('show');
 
             try {
-                // TENTATIVA 1: Buscar sem formatação
                 let { data: cliente, error } = await supabaseClient
                     .from('clientes_pg')
                     .select('*')
@@ -737,7 +728,6 @@
                     .limit(1)
                     .maybeSingle();
 
-                // TENTATIVA 2: Buscar com formatação (XXX.XXX.XXX-XX)
                 if (!cliente) {
                     const cpfFormatado = cpfSomenteNumeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
                     let result = await supabaseClient
@@ -746,13 +736,11 @@
                         .eq('cpf', cpfFormatado)
                         .limit(1)
                         .maybeSingle();
-
                     cliente = result.data;
                 }
 
                 if (cliente) {
-                    // Busca endereço
-                    const { data: endereco, error: erroEndereco } = await supabaseClient
+                    const { data: endereco } = await supabaseClient
                         .from('enderecos_pg')
                         .select('*')
                         .eq('cliente_id', cliente.id)
@@ -761,7 +749,6 @@
                         .limit(1)
                         .maybeSingle();
 
-                    // Preenche campos
                     document.getElementById('nome').value = cliente.nome || '';
                     document.getElementById('whatsapp').value = cliente.whatsapp || '';
                     document.getElementById('instagram').value = cliente.instagram || '';
@@ -778,7 +765,6 @@
                         document.getElementById('cepEndereco').value = endereco.cep || '';
                         enderecoIdAtual = endereco.id;
 
-                        // Salva os valores originais para comparar depois (INCLUINDO O ID)
                         enderecoOriginal = {
                             id: endereco.id,
                             rua: endereco.rua || '',
@@ -788,8 +774,6 @@
                             cidade: endereco.cidade || '',
                             cep: endereco.cep || ''
                         };
-
-                        console.log('Endereço original salvo:', enderecoOriginal);
                     }
 
                     dadosClienteCarregados = true;
@@ -797,7 +781,6 @@
                     msgDados.classList.add('show');
                     document.getElementById('avisoEnderecoAlterado').classList.remove('show');
 
-                    // Efeito visual nos campos preenchidos
                     ['nome', 'whatsapp', 'instagram', 'email', 'rua', 'numero', 'bairro', 'cidade', 'cepEndereco'].forEach(id => {
                         const campo = document.getElementById(id);
                         if (campo && campo.value) {
@@ -811,7 +794,6 @@
                     });
 
                 } else {
-                    // Limpa dados anteriores se existirem
                     if (dadosClienteCarregados) {
                         limparCamposExcetoCPF();
                         dadosClienteCarregados = false;
@@ -830,28 +812,21 @@
             }
         }
 
-        // Configurar evento de input no CPF com debounce
         function configurarBuscaAutomaticaCPF() {
             const cpfInput = document.getElementById('cpf');
 
             cpfInput.addEventListener('input', function(e) {
-                // Limpa o timeout anterior
-                if (cpfTimeout) {
-                    clearTimeout(cpfTimeout);
-                }
+                if (cpfTimeout) clearTimeout(cpfTimeout);
 
                 const valor = e.target.value;
                 const cpfSomenteNumeros = valor.replace(/\D/g, '');
 
-                // Resetar último CPF buscado se o usuário apagou tudo
                 if (cpfSomenteNumeros.length === 0) {
                     ultimoCPFBuscado = '';
                     return;
                 }
 
-                // Se ainda não tem 11 dígitos, apenas formata
                 if (cpfSomenteNumeros.length < 11) {
-                    // Formatação visual do CPF
                     let formatado = cpfSomenteNumeros;
                     if (cpfSomenteNumeros.length > 9) {
                         formatado = cpfSomenteNumeros.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
@@ -864,62 +839,41 @@
                     return;
                 }
 
-                // Se tem 11 dígitos, formata e agenda a busca
                 let formatado = cpfSomenteNumeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
                 e.target.value = formatado;
 
-                // Aguarda 500ms após o usuário parar de digitar para buscar
                 cpfTimeout = setTimeout(() => {
                     buscarPorCPFAutomatico(formatado);
                 }, 500);
             });
 
-            // Também busca quando o campo perde o foco (blur)
             cpfInput.addEventListener('blur', function(e) {
                 const valor = e.target.value;
                 const cpfSomenteNumeros = valor.replace(/\D/g, '');
-
                 if (cpfSomenteNumeros.length === 11 && cpfSomenteNumeros !== ultimoCPFBuscado) {
                     buscarPorCPFAutomatico(valor);
                 }
             });
 
-            // Previne caracteres não numéricos
             cpfInput.addEventListener('keypress', function(e) {
                 const char = String.fromCharCode(e.which);
-                if (!/[0-9]/.test(char)) {
-                    e.preventDefault();
-                }
+                if (!/[0-9]/.test(char)) e.preventDefault();
             });
         }
 
-        // ============================================
-        // MONITORAR ALTERAÇÕES NO ENDEREÇO
-        // ============================================
         function configurarMonitoramentoEndereco() {
             const camposEndereco = ['rua', 'numero', 'complemento', 'bairro', 'cidade', 'cepEndereco'];
-
             camposEndereco.forEach(campoId => {
                 const campo = document.getElementById(campoId);
                 if (campo) {
-                    // Usar 'input' para detectar qualquer alteração imediatamente
-                    campo.addEventListener('input', function() {
-                        verificarAlteracaoEndereco();
-                    });
-
-                    // Também usar 'change' para garantir
-                    campo.addEventListener('change', function() {
-                        verificarAlteracaoEndereco();
-                    });
+                    campo.addEventListener('input', verificarAlteracaoEndereco);
+                    campo.addEventListener('change', verificarAlteracaoEndereco);
                 }
             });
         }
 
         function verificarAlteracaoEndereco() {
-            // Só verifica se havia um endereço carregado
-            if (!dadosClienteCarregados) {
-                return;
-            }
+            if (!dadosClienteCarregados) return;
 
             const camposEndereco = ['rua', 'numero', 'complemento', 'bairro', 'cidade', 'cepEndereco'];
             let algumCampoAlterado = false;
@@ -927,14 +881,10 @@
             camposEndereco.forEach(campoId => {
                 const campo = document.getElementById(campoId);
                 if (!campo) return;
-
                 const campoNome = campoId === 'cepEndereco' ? 'cep' : campoId;
                 const valorAtual = campo.value || '';
                 const valorOriginal = enderecoOriginal[campoNome] || '';
-
-                if (valorAtual !== valorOriginal) {
-                    algumCampoAlterado = true;
-                }
+                if (valorAtual !== valorOriginal) algumCampoAlterado = true;
             });
 
             const aviso = document.getElementById('avisoEnderecoAlterado');
@@ -942,16 +892,13 @@
             if (algumCampoAlterado) {
                 if (!enderecoFoiAlterado) {
                     enderecoFoiAlterado = true;
-                    enderecoIdAtual = null; // Força criação de novo endereço
-                    console.log('📝 Endereço alterado - será criado novo endereço. enderecoIdAtual resetado para null');
+                    enderecoIdAtual = null;
                 }
                 if (aviso) aviso.classList.add('show');
             } else {
                 if (enderecoFoiAlterado) {
                     enderecoFoiAlterado = false;
-                    // Restaura o ID original se voltar ao valor inicial
                     enderecoIdAtual = enderecoOriginal.id;
-                    console.log('📝 Endereço restaurado ao original - usando endereço existente');
                 }
                 if (aviso) aviso.classList.remove('show');
             }
@@ -970,10 +917,7 @@
 
         function limparDados() {
             if (confirm('Tem certeza que deseja limpar todos os dados e preencher novo cadastro?')) {
-                // Limpa o timeout de busca
-                if (cpfTimeout) {
-                    clearTimeout(cpfTimeout);
-                }
+                if (cpfTimeout) clearTimeout(cpfTimeout);
                 ultimoCPFBuscado = '';
 
                 ['cpf', 'nome', 'whatsapp', 'instagram', 'email', 'rua', 'numero', 'complemento', 'bairro', 'cidade', 'cepEndereco', 'observacoes'].forEach(id => {
@@ -996,7 +940,6 @@
                 regiaoSelecionadaAtual = '';
                 pixCopiado = false;
 
-                // Foca no campo CPF novamente
                 document.getElementById('cpf').focus();
             }
         }
@@ -1039,7 +982,6 @@
             const ano = agora.getFullYear();
             
             try {
-                // Busca a última solicitação do ano atual
                 const { data: ultimaSolicitacao, error } = await supabaseClient
                     .from('solicitacoes_pg')
                     .select('numero_solicitacao')
@@ -1053,165 +995,54 @@
                 let sequencial = 1;
                 
                 if (ultimaSolicitacao && ultimaSolicitacao.numero_solicitacao) {
-                    // Extrai o número sequencial da última solicitação
                     const partes = ultimaSolicitacao.numero_solicitacao.split('-');
                     if (partes.length === 3) {
                         const ultimoSequencial = parseInt(partes[2], 10);
-                        if (!isNaN(ultimoSequencial)) {
-                            sequencial = ultimoSequencial + 1;
-                        }
+                        if (!isNaN(ultimoSequencial)) sequencial = ultimoSequencial + 1;
                     }
                 }
 
-                // Formata o número com zeros à esquerda (ex: SOL-2026-0001)
-                const numeroFormatado = `SOL-${ano}-${sequencial.toString().padStart(4, '0')}`;
-                return numeroFormatado;
+                return `SOL-${ano}-${sequencial.toString().padStart(4, '0')}`;
 
             } catch (error) {
                 console.error('Erro ao gerar número sequencial:', error);
-                // Fallback: usa timestamp se der erro
                 return `SOL-${ano}-${Date.now().toString().slice(-4)}`;
             }
         }
 
         // ============================================
-        // ENVIAR E-MAIL DE CONFIRMAÇÃO
+        // ENVIAR E-MAIL VIA EMAILJS
         // ============================================
         async function enviarEmailConfirmacao(dadosSolicitacao) {
             try {
-                // Aqui você pode integrar com um serviço de e-mail como:
-                // - Supabase Edge Functions
-                // - EmailJS
-                // - SendGrid
-                // - AWS SES
-                // - ou qualquer outro serviço de sua preferência
-                
-                // Exemplo usando Supabase Edge Function (você precisará criar a função):
-                /*
-                const { data, error } = await supabaseClient.functions.invoke('enviar-email', {
-                    body: {
-                        para: dadosSolicitacao.email,
-                        assunto: `Confirmação de Solicitação #${dadosSolicitacao.numeroSolicitacao} - Pingo de Gente`,
-                        html: montarCorpoEmail(dadosSolicitacao)
-                    }
-                });
-                */
+                const templateParams = {
+                    to_email: dadosSolicitacao.email,
+                    numero_solicitacao: dadosSolicitacao.numeroSolicitacao,
+                    nome: dadosSolicitacao.nome,
+                    data_solicitacao: dadosSolicitacao.dataSolicitacao,
+                    regiao: dadosSolicitacao.regiao,
+                    rua: dadosSolicitacao.rua,
+                    numero: dadosSolicitacao.numero,
+                    complemento: dadosSolicitacao.complemento || 'N/A',
+                    bairro: dadosSolicitacao.bairro,
+                    cidade: dadosSolicitacao.cidade,
+                    cep: dadosSolicitacao.cep,
+                    observacoes: dadosSolicitacao.observacoes || 'Nenhuma observação'
+                };
 
-                // Por enquanto, vamos apenas simular o sucesso
-                // Você precisará implementar a função de e-mail no Supabase ou usar outro serviço
-                
-                console.log('E-mail de confirmação solicitado para:', dadosSolicitacao.email);
+                const response = await emailjs.send(
+                    EMAILJS_CONFIG.SERVICE_ID,
+                    EMAILJS_CONFIG.TEMPLATE_ID,
+                    templateParams
+                );
+
+                console.log('✅ E-mail enviado:', response.status, response.text);
                 return true;
 
             } catch (error) {
-                console.error('Erro ao enviar e-mail:', error);
+                console.error('❌ Erro ao enviar e-mail:', error);
                 return false;
             }
-        }
-
-// ============================================
-// ENVIAR E-MAIL VIA EMAILJS
-// ============================================
-async function enviarEmailConfirmacao(dadosSolicitacao) {
-    try {
-        // templateParams: objeto com todos os dados para o template
-        const templateParams = {
-            // ⬇️ AQUI está o to_email - e-mail do cliente
-            to_email: dadosSolicitacao.email,
-            
-            // Demais campos que você usa no template:
-            numero_solicitacao: dadosSolicitacao.numeroSolicitacao,
-            nome: dadosSolicitacao.nome,
-            data_solicitacao: dadosSolicitacao.dataSolicitacao,
-            regiao: dadosSolicitacao.regiao,
-            rua: dadosSolicitacao.rua,
-            numero: dadosSolicitacao.numero,
-            complemento: dadosSolicitacao.complemento || 'N/A',
-            bairro: dadosSolicitacao.bairro,
-            cidade: dadosSolicitacao.cidade,
-            cep: dadosSolicitacao.cep,
-            observacoes: dadosSolicitacao.observacoes || 'Nenhuma observação'
-        };
-
-        const response = await emailjs.send(
-            EMAILJS_CONFIG.SERVICE_ID,  // ex: 'pingo_gmail'
-            EMAILJS_CONFIG.TEMPLATE_ID, // ex: 'template_abc123'
-            templateParams              // ⬅️ objeto com to_email e demais campos
-        );
-
-        console.log('✅ E-mail enviado:', response);
-        return true;
-
-    } catch (error) {
-        console.error('❌ Erro ao enviar e-mail:', error);
-        return false;
-    }
-}
-        
-        function montarCorpoEmail(dados) {
-            return `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #FFF5F7;">
-                    <div style="text-align: center; margin-bottom: 30px;">
-                        <h1 style="color: #FF6B8A; margin: 0;">🍼 Pingo de Gente</h1>
-                        <p style="color: #636E72; margin: 5px 0;">Loja e Brechó Infantil</p>
-                    </div>
-                    
-                    <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                        <h2 style="color: #FF6B8A; margin-bottom: 20px;">✅ Solicitação Recebida!</h2>
-                        
-                        <div style="background: linear-gradient(135deg, #FF6B8A, #FF8BA7); color: white; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
-                            <p style="margin: 0; font-size: 0.9rem;">Número da Solicitação</p>
-                            <p style="margin: 5px 0 0 0; font-size: 1.8rem; font-weight: bold;">${dados.numeroSolicitacao}</p>
-                        </div>
-                        
-                        <p style="color: #2D3436; line-height: 1.6;">
-                            Olá <strong>${dados.nome}</strong>,<br><br>
-                            Sua solicitação de entrega foi recebida com sucesso! Aqui estão os detalhes:
-                        </p>
-                        
-                        <table style="width: 100%; margin: 20px 0; border-collapse: collapse;">
-                            <tr>
-                                <td style="padding: 10px; border-bottom: 1px solid #E0E0E0; color: #636E72;"><strong>Data da Solicitação:</strong></td>
-                                <td style="padding: 10px; border-bottom: 1px solid #E0E0E0; color: #2D3436;">${dados.dataSolicitacao}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px; border-bottom: 1px solid #E0E0E0; color: #636E72;"><strong>Região:</strong></td>
-                                <td style="padding: 10px; border-bottom: 1px solid #E0E0E0; color: #2D3436;">${dados.regiao}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px; border-bottom: 1px solid #E0E0E0; color: #636E72;"><strong>Endereço:</strong></td>
-                                <td style="padding: 10px; border-bottom: 1px solid #E0E0E0; color: #2D3436;">
-                                    ${dados.rua}, ${dados.numero}${dados.complemento ? ' - ' + dados.complemento : ''}<br>
-                                    ${dados.bairro}, ${dados.cidade} - CEP: ${dados.cep}
-                                </td>
-                            </tr>
-                            ${dados.observacoes ? `
-                            <tr>
-                                <td style="padding: 10px; border-bottom: 1px solid #E0E0E0; color: #636E72;"><strong>Observações:</strong></td>
-                                <td style="padding: 10px; border-bottom: 1px solid #E0E0E0; color: #2D3436;">${dados.observacoes}</td>
-                            </tr>
-                            ` : ''}
-                        </table>
-                        
-                        <div style="background: #FFF3E0; border-left: 4px solid #FF9800; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
-                            <p style="margin: 0; color: #E65100; font-size: 0.9rem;">
-                                <strong>⏰ Prazo de Entrega:</strong><br>
-                                Sua sacola será enviada entre quinta e sexta-feira da semana correspondente ao prazo de solicitação.
-                            </p>
-                        </div>
-                        
-                        <p style="color: #636E72; font-size: 0.9rem; margin-top: 20px;">
-                            <strong>Não esqueça:</strong> Envie o comprovante do pagamento via PIX no nosso Instagram 
-                            <a href="https://www.instagram.com/pingodegentelojaebrecho/" style="color: #FF6B8A;">@pingodegentelojaebrecho</a>
-                        </p>
-                    </div>
-                    
-                    <div style="text-align: center; margin-top: 20px; color: #9E9E9E; font-size: 0.8rem;">
-                        <p>Este é um e-mail automático. Por favor, não responda.</p>
-                        <p>© 2026 Pingo de Gente - Loja e Brechó Infantil</p>
-                    </div>
-                </div>
-            `;
         }
 
         // ============================================
@@ -1245,7 +1076,6 @@ async function enviarEmailConfirmacao(dadosSolicitacao) {
             const receberEmail = document.getElementById('receberEmail').checked;
             const email = document.getElementById('email').value;
 
-            // Validação de e-mail se o checkbox estiver marcado
             if (receberEmail && !email) {
                 alert('⚠️ Você marcou a opção de receber cópia por e-mail, mas não informou um endereço de e-mail válido.');
                 document.getElementById('email').focus();
@@ -1310,7 +1140,6 @@ async function enviarEmailConfirmacao(dadosSolicitacao) {
                         clienteId = novo.id;
                     }
                 } else {
-                    // Atualiza o e-mail do cliente se foi informado e é diferente
                     if (email) {
                         await supabaseClient
                             .from('clientes_pg')
@@ -1323,7 +1152,6 @@ async function enviarEmailConfirmacao(dadosSolicitacao) {
                 let enderecoId = enderecoIdAtual;
 
                 if (!enderecoId) {
-                    console.log('Criando novo endereço...');
                     const { data: novoEnd, error: erroEnd } = await supabaseClient
                         .from('enderecos_pg')
                         .insert([{
@@ -1343,12 +1171,9 @@ async function enviarEmailConfirmacao(dadosSolicitacao) {
 
                     if (erroEnd) throw erroEnd;
                     enderecoId = novoEnd.id;
-                    console.log('Novo endereço criado com ID:', enderecoId);
-                } else {
-                    console.log('Usando endereço existente ID:', enderecoId);
                 }
 
-                // 4. SOLICITAÇÃO (com número sequencial)
+                // 4. SOLICITAÇÃO
                 const agora = new Date();
                 const diaSemana = agora.getDay();
                 const hora = agora.getHours();
@@ -1411,7 +1236,6 @@ async function enviarEmailConfirmacao(dadosSolicitacao) {
                     
                     emailEnviado = await enviarEmailConfirmacao(dadosEmail);
                     
-                    // Atualiza o status do e-mail no banco
                     if (emailEnviado) {
                         await supabaseClient
                             .from('solicitacoes_pg')
