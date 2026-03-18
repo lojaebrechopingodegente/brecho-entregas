@@ -1,1 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Pingo de Gente</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FFF5F7 0%, #F0FFF4 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(255, 139, 167, 0.15);
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo-container {
+            margin-bottom: 15px;
+        }
+
+        .logo-img {
+            max-width: 250px;
+            width: 90%;
+            height: auto;
+        }
+
+        .logo-fallback {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #FF8BA7, #FF6B8A);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto;
+            display: none;
+        }
+
+        .header h1 {
+            color: #FF6B8A;
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #636E72;
+            font-size: 1rem;
+        }
+
+        .btn-logout {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #FF6B6B, #EE5A6F);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(238, 90, 111, 0.4);
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 3px solid transparent;
+            text-decoration: none;
+            display: block;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 50px rgba(255, 139, 167, 0.25);
+        }
+
+        .card-entregas {
+            border-top: 5px solid #FF6B8A;
+        }
+
+        .card-entregas:hover {
+            border-color: #FF6B8A;
+        }
+
+        .card-vendas {
+            border-top: 5px solid #4ECDC4;
+        }
+
+        .card-vendas:hover {
+            border-color: #4ECDC4;
+        }
+
+        .card-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .card-entregas .card-icon {
+            filter: hue-rotate(320deg);
+        }
+
+        .card h2 {
+            color: #2D3436;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: #636E72;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .card-badge {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .card-entregas .card-badge {
+            background: linear-gradient(135deg, #FF8BA7, #FF6B8A);
+            color: white;
+        }
+
+        .card-vendas .card-badge {
+            background: linear-gradient(135deg, #4ECDC4, #44A08D);
+            color: white;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .stats-section h3 {
+            color: #2D3436;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, #FFF5F7, #F0FFF4);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #E0E0E0;
+            transition: all 0.3s;
+        }
+
+        .stat-item:hover {
+            border-color: #FF8BA7;
+            transform: scale(1.02);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #FF6B8A;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #636E72;
+            margin-top: 5px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #636E72;
+            font-size: 0.85rem;
+        }
+
+        /* Animações */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 25px;
+            }
+
+            .btn-logout {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-top: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
+            
+            <div class="logo-container">
+                <img src="https://raw.githubusercontent.com/lojaebrechopingodegente/brecho-entregas/main/logo.png" 
+                     alt="Pingo de Gente" class="logo-img"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="logo-fallback">👶</div>
+            </div>
+            
+            <h1>Central de Gerenciamento</h1>
+            <p>Loja e Brechó Pingo de Gente</p>
+        </div>
+
+        <!-- Cards de Navegação -->
+        <div class="cards-grid">
+            <!-- Card Gerenciamento de Entregas -->
+            <a href="gerenciamento.html" class="card card-entregas">
+                <span class="card-icon">📦</span>
+                <h2>Gerenciamento de Entregas</h2>
+                <p>Gerencie solicitações de entrega, visualize pedidos, registre medidas e gere etiquetas e relatórios PDF.</p>
+                <span class="card-badge">Acessar →</span>
+            </a>
+
+            <!-- Card Registro de Vendas -->
+            <a href="vendas.html" class="card card-vendas">
+                <span class="card-icon">🛍️</span>
+                <h2>Registro de Vendas</h2>
+                <p>Registre novas vendas, consulte histórico, acompanhe pagamentos e gerencie o estoque.</p>
+                <span class="card-badge">Acessar →</span>
+            </a>
+        </div>
+
+        <!-- Estatísticas Rápidas -->
+        <div class="stats-section">
+            <h3>📊 Resumo do Dia</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-value" id="statEntregasHoje">-</span>
+                    <span class="stat-label">Entregas Hoje</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statVendasHoje">-</span>
+                    <span class="stat-label">Vendas Hoje</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statPendentes">-</span>
+                    <span class="stat-label">Pendentes</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statTotalSemana">-</span>
+                    <span class="stat-label">Total Semana</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2026 Loja e Brechó Pingo de Gente - Todos os direitos reservados</p>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // PROTEÇÃO DE ACESSO
+        // ============================================
+        (function() {
+            const STORAGE_KEY = 'pingo_autenticado';
+            const STORAGE_SENHA = 'pingo_senha_hash';
+            const SENHA_CORRETA = '770057';
+
+            function criarHash(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString(16);
+            }
+
+            const autenticado = sessionStorage.getItem(STORAGE_KEY);
+            const senhaSalva = localStorage.getItem(STORAGE_SENHA);
+            let temAcesso = false;
+
+            if (autenticado === 'true') {
+                temAcesso = true;
+            } else if (senhaSalva && criarHash(SENHA_CORRETA) === senhaSalva) {
+                temAcesso = true;
+                sessionStorage.setItem(STORAGE_KEY, 'true');
+            }
+
+            if (!temAcesso) {
+                window.location.replace('login.html');
+                throw new Error('Acesso não autorizado');
+            }
+        })();
+
+        // ============================================
+        // SUPABASE CONFIGURAÇÃO
+        // ============================================
+        const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
+
+        let supabaseClient = null;
+
+        function inicializarSupabase() {
+            try {
+                if (typeof supabase !== 'undefined') {
+                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    carregarEstatisticas();
+                }
+            } catch (e) {
+                console.error('Erro ao conectar Supabase:', e);
+            }
+        }
+
+        // ============================================
+        // CARREGAR ESTATÍSTICAS
+        // ============================================
+        async function carregarEstatisticas() {
+            if (!supabaseClient) return;
+
+            try {
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+                const amanha = new Date(hoje);
+                amanha.setDate(amanha.getDate() + 1);
+
+                // Entregas de hoje
+                const { data: entregasHoje, error: err1 } = await supabaseClient
+                    .from('solicitacoes_pg')
+                    .select('id', { count: 'exact' })
+                    .gte('data_solicitacao', hoje.toISOString())
+                    .lt('data_solicitacao', amanha.toISOString());
+
+                if (!err1) {
+                    document.getElementById('statEntregasHoje').textContent = entregasHoje?.length || 0;
+                }
+
+                // Vendas de hoje (quando existir a tabela)
+                const { data: vendasHoje, error: err2 } = await supabaseClient
+                    .from('vendas_pg')
+                    .select('id', { count: 'exact' })
+                    .gte('data_venda', hoje.toISOString())
+                    .lt('data_venda', amanha.toISOString());
+
+                if (!err2) {
+                    document.getElementById('statVendasHoje').textContent = vendasHoje?.length || 0;
+                } else {
+                    document.getElementById('statVendasHoje').textContent = '0';
+                }
+
+                // Pendentes
+                const { data: pendentes, error: err3 } = await supabaseClient
+                    .from('solicitacoes_pg')
+                    .select('id', { count: 'exact' })
+                    .eq('status', 'pendente');
+
+                if (!err3) {
+                    document.getElementById('statPendentes').textContent = pendentes?.length || 0;
+                }
+
+                // Total da semana
+                const inicioSemana = new Date(hoje);
+                inicioSemana.setDate(hoje.getDate() - hoje.getDay());
+                
+                const { data: totalSemana, error: err4 } = await supabaseClient
+                    .from('solicitacoes_pg')
+                    .select('id', { count: 'exact' })
+                    .gte('data_solicitacao', inicioSemana.toISOString())
+                    .lt('data_solicitacao', amanha.toISOString());
+
+                if (!err4) {
+                    document.getElementById('statTotalSemana').textContent = totalSemana?.length || 0;
+                }
+
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+
+        // ============================================
+        // LOGOUT
+        // ============================================
+        function fazerLogout() {
+            sessionStorage.removeItem('pingo_autenticado');
+            localStorage.removeItem('pingo_senha_hash');
+            window.location.replace('login.html');
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', inicializarSupabase);
+    </script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</body>
+</html>
