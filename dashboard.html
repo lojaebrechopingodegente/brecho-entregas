@@ -23,7 +23,6 @@
             margin: 0 auto;
         }
 
-        /* Header */
         .header {
             background: white;
             padding: 30px;
@@ -88,7 +87,6 @@
             box-shadow: 0 5px 15px rgba(238, 90, 111, 0.4);
         }
 
-        /* Cards Grid */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -171,7 +169,6 @@
             color: white;
         }
 
-        /* Stats Section */
         .stats-section {
             background: white;
             border-radius: 20px;
@@ -221,7 +218,6 @@
             margin-top: 5px;
         }
 
-        /* Footer */
         .footer {
             text-align: center;
             margin-top: 30px;
@@ -229,7 +225,6 @@
             font-size: 0.85rem;
         }
 
-        /* Animações */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -253,7 +248,6 @@
             animation-delay: 0.2s;
         }
 
-        /* Responsivo */
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 1.5rem;
@@ -278,7 +272,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
             <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
             
@@ -293,9 +286,7 @@
             <p>Loja e Brechó Pingo de Gente</p>
         </div>
 
-        <!-- Cards de Navegação -->
         <div class="cards-grid">
-            <!-- Card Gerenciamento de Entregas -->
             <a href="gerenciamento.html" class="card card-entregas">
                 <span class="card-icon">📦</span>
                 <h2>Gerenciamento de Entregas</h2>
@@ -303,7 +294,6 @@
                 <span class="card-badge">Acessar →</span>
             </a>
 
-            <!-- Card Registro de Vendas -->
             <a href="vendas.html" class="card card-vendas">
                 <span class="card-icon">🛍️</span>
                 <h2>Registro de Vendas</h2>
@@ -312,7 +302,6 @@
             </a>
         </div>
 
-        <!-- Estatísticas Rápidas -->
         <div class="stats-section">
             <h3>📊 Resumo do Dia</h3>
             <div class="stats-grid">
@@ -335,38 +324,38 @@
             </div>
         </div>
 
-        <!-- Footer -->
         <div class="footer">
             <p>© 2026 Loja e Brechó Pingo de Gente - Todos os direitos reservados</p>
         </div>
     </div>
 
     <script>
-      // ============================================
-// PROTEÇÃO DE ACESSO - CORRIGIDO
-// ============================================
-(function() {
-    const STORAGE_SENHA = 'pingo_senha_hash';
-    const SENHA_CORRETA = '770057';
+        // ============================================
+        // PROTEÇÃO DE ACESSO
+        // ============================================
+        (function() {
+            const STORAGE_SENHA = 'pingo_senha_hash';
+            const SENHA_CORRETA = '770057';
 
-    function criarHash(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
-        }
-        return hash.toString(16);
-    }
+            function criarHash(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString(16);
+            }
 
-    const senhaSalva = localStorage.getItem(STORAGE_SENHA);
-    const temAcesso = senhaSalva && criarHash(SENHA_CORRETA) === senhaSalva;
+            const senhaSalva = localStorage.getItem(STORAGE_SENHA);
+            const temAcesso = senhaSalva && criarHash(SENHA_CORRETA) === senhaSalva;
 
-    if (!temAcesso) {
-        window.location.replace('login.html');
-        throw new Error('Acesso não autorizado');
-    }
-})();
+            if (!temAcesso) {
+                window.location.replace('login.html');
+                throw new Error('Acesso não autorizado');
+            }
+        })();
+
         // ============================================
         // SUPABASE CONFIGURAÇÃO
         // ============================================
@@ -386,9 +375,6 @@
             }
         }
 
-        // ============================================
-        // CARREGAR ESTATÍSTICAS
-        // ============================================
         async function carregarEstatisticas() {
             if (!supabaseClient) return;
 
@@ -398,7 +384,6 @@
                 const amanha = new Date(hoje);
                 amanha.setDate(amanha.getDate() + 1);
 
-                // Entregas de hoje
                 const { data: entregasHoje, error: err1 } = await supabaseClient
                     .from('solicitacoes_pg')
                     .select('id', { count: 'exact' })
@@ -409,7 +394,6 @@
                     document.getElementById('statEntregasHoje').textContent = entregasHoje?.length || 0;
                 }
 
-                // Vendas de hoje (quando existir a tabela)
                 const { data: vendasHoje, error: err2 } = await supabaseClient
                     .from('vendas_pg')
                     .select('id', { count: 'exact' })
@@ -422,7 +406,6 @@
                     document.getElementById('statVendasHoje').textContent = '0';
                 }
 
-                // Pendentes
                 const { data: pendentes, error: err3 } = await supabaseClient
                     .from('solicitacoes_pg')
                     .select('id', { count: 'exact' })
@@ -432,7 +415,6 @@
                     document.getElementById('statPendentes').textContent = pendentes?.length || 0;
                 }
 
-                // Total da semana
                 const inicioSemana = new Date(hoje);
                 inicioSemana.setDate(hoje.getDate() - hoje.getDay());
                 
@@ -451,19 +433,14 @@
             }
         }
 
-        // ============================================
-        // LOGOUT
-        // ============================================
-     function fazerLogout() {
-    localStorage.removeItem('pingo_senha_hash');
-    window.location.replace('login.html');
-}
+        function fazerLogout() {
+            localStorage.removeItem('pingo_senha_hash');
+            window.location.replace('login.html');
+        }
 
-        // Inicializar
         document.addEventListener('DOMContentLoaded', inicializarSupabase);
     </script>
     
-    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </body>
 </html>
