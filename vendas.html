@@ -24,7 +24,6 @@
             margin: 0 auto;
         }
 
-        /* Header */
         .header {
             background: white;
             padding: 25px;
@@ -68,6 +67,7 @@
         .header h1 {
             color: #4ECDC4;
             font-size: 1.8rem;
+            margin-bottom: 5px;
         }
 
         .header p {
@@ -92,7 +92,6 @@
             box-shadow: 0 5px 15px rgba(238, 90, 111, 0.4);
         }
 
-        /* Abas */
         .tabs-container {
             background: white;
             border-radius: 20px;
@@ -155,7 +154,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Formulário de Nova Venda */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -212,7 +210,6 @@
             margin-top: 4px;
         }
 
-        /* Itens da Venda */
         .itens-section {
             background: #F8F9FA;
             border-radius: 15px;
@@ -293,7 +290,6 @@
             transform: scale(1.05);
         }
 
-        /* Total */
         .total-section {
             background: linear-gradient(135deg, #4ECDC4, #44A08D);
             color: white;
@@ -317,7 +313,6 @@
             font-weight: bold;
         }
 
-        /* Botão Salvar */
         .btn-salvar {
             width: 100%;
             padding: 18px;
@@ -344,7 +339,6 @@
             box-shadow: none;
         }
 
-        /* Lista de Vendas */
         .filtros-vendas {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -406,7 +400,6 @@
             color: #C62828;
         }
 
-        /* Responsivo */
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -438,7 +431,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
             <div class="header-left">
                 <a href="dashboard.html" class="btn-voltar">← Voltar ao Dashboard</a>
@@ -450,7 +442,6 @@
             <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
         </div>
 
-        <!-- Abas -->
         <div class="tabs-container">
             <div class="tabs-header">
                 <button class="tab-btn ativo" onclick="mudarAba('nova')">➕ Nova Venda</button>
@@ -458,7 +449,6 @@
                 <button class="tab-btn" onclick="mudarAba('relatorios')">📊 Relatórios</button>
             </div>
 
-            <!-- Aba Nova Venda -->
             <div id="aba-nova" class="tab-content ativo">
                 <form id="formVenda">
                     <div class="form-grid">
@@ -513,7 +503,6 @@
                         </div>
                     </div>
 
-                    <!-- Itens da Venda -->
                     <div class="itens-section">
                         <div class="itens-header">
                             <h3>🛒 Itens da Venda</h3>
@@ -523,11 +512,9 @@
                         </div>
 
                         <div id="listaItens">
-                            <!-- Items serão adicionados aqui via JS -->
                         </div>
                     </div>
 
-                    <!-- Total -->
                     <div class="total-section">
                         <span class="total-label">Total da Venda:</span>
                         <span class="total-valor" id="totalVenda">R$ 0,00</span>
@@ -542,7 +529,6 @@
                 </form>
             </div>
 
-            <!-- Aba Histórico -->
             <div id="aba-historico" class="tab-content">
                 <div class="filtros-vendas">
                     <div class="form-group">
@@ -597,7 +583,6 @@
                 </div>
             </div>
 
-            <!-- Aba Relatórios -->
             <div id="aba-relatorios" class="tab-content">
                 <div style="text-align: center; padding: 60px 20px;">
                     <div style="font-size: 4rem; margin-bottom: 20px;">📊</div>
@@ -610,55 +595,46 @@
 
     <script>
         // ============================================
-// PROTEÇÃO DE ACESSO - CORRIGIDO
-// ============================================
-(function() {
-    const STORAGE_SENHA = 'pingo_senha_hash';
-    const SENHA_CORRETA = '770057';
-
-    function criarHash(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
-        }
-        return hash.toString(16);
-    }
-
-    const senhaSalva = localStorage.getItem(STORAGE_SENHA);
-    const temAcesso = senhaSalva && criarHash(SENHA_CORRETA) === senhaSalva;
-
-    if (!temAcesso) {
-        window.location.replace('login.html');
-        throw new Error('Acesso não autorizado');
-    }
-})();
-
+        // PROTEÇÃO DE ACESSO
         // ============================================
-        // CONFIGURAÇÃO SUPABASE
-        // ============================================
+        (function() {
+            const STORAGE_SENHA = 'pingo_senha_hash';
+            const SENHA_CORRETA = '770057';
+
+            function criarHash(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString(16);
+            }
+
+            const senhaSalva = localStorage.getItem(STORAGE_SENHA);
+            const temAcesso = senhaSalva && criarHash(SENHA_CORRETA) === senhaSalva;
+
+            if (!temAcesso) {
+                window.location.replace('login.html');
+                throw new Error('Acesso não autorizado');
+            }
+        })();
+
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
 
         let supabaseClient = null;
         let itensVenda = [];
 
-        // ============================================
-        // INICIALIZAÇÃO
-        // ============================================
         document.addEventListener('DOMContentLoaded', function() {
             inicializarSupabase();
             
-            // Set data atual
             const agora = new Date();
             agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
             document.getElementById('dataVenda').value = agora.toISOString().slice(0, 16);
 
-            // Adicionar primeiro item
             adicionarItem();
 
-            // Máscara CPF
             document.getElementById('cpfCliente').addEventListener('input', function(e) {
                 let value = e.target.value.replace(/\D/g, '');
                 if (value.length > 11) value = value.slice(0, 11);
@@ -672,7 +648,6 @@
                 e.target.value = value;
             });
 
-            // Form submit
             document.getElementById('formVenda').addEventListener('submit', salvarVenda);
         });
 
@@ -686,9 +661,6 @@
             }
         }
 
-        // ============================================
-        // ABAS
-        // ============================================
         function mudarAba(aba) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('ativo'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('ativo'));
@@ -701,9 +673,6 @@
             }
         }
 
-        // ============================================
-        // ITENS DA VENDA
-        // ============================================
         function adicionarItem() {
             const id = Date.now();
             const div = document.createElement('div');
@@ -762,9 +731,6 @@
             document.getElementById('totalVenda').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
         }
 
-        // ============================================
-        // SALVAR VENDA
-        // ============================================
         async function salvarVenda(e) {
             e.preventDefault();
 
@@ -773,7 +739,6 @@
                 return;
             }
 
-            // Validar itens
             const itens = [];
             let temItemValido = false;
             
@@ -822,13 +787,11 @@
 
                 alert('✅ Venda registrada com sucesso!');
                 
-                // Limpar formulário
                 document.getElementById('formVenda').reset();
                 document.getElementById('listaItens').innerHTML = '';
                 itensVenda = [];
                 adicionarItem();
                 
-                // Reset data
                 const agora = new Date();
                 agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
                 document.getElementById('dataVenda').value = agora.toISOString().slice(0, 16);
@@ -844,21 +807,14 @@
             }
         }
 
-        // ============================================
-        // HISTÓRICO (placeholder)
-        // ============================================
         async function buscarHistorico() {
-            // Implementar busca no Supabase
             console.log('Buscando histórico...');
         }
 
-        // ============================================
-        // LOGOUT
-        // ============================================
-       function fazerLogout() {
-    localStorage.removeItem('pingo_senha_hash');
-    window.location.replace('login.html');
-}
+        function fazerLogout() {
+            localStorage.removeItem('pingo_senha_hash');
+            window.location.replace('login.html');
+        }
     </script>
 </body>
 </html>
