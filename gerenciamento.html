@@ -1177,14 +1177,52 @@
         // NOVA FUNÇÃO: MODAL DE EMISSÃO DE ETIQUETAS
         // ============================================
         
+               // ============================================
+        // NOVA FUNÇÃO: MODAL DE EMISSÃO DE ETIQUETAS
+        // ============================================
+        
+        function fecharModalEtiquetas() {
+            document.getElementById('modalEtiquetas').classList.remove('ativo');
+        }
+
+        function copiarCampo(elementId, botao) {
+            const elemento = document.getElementById(elementId);
+            if (!elemento) return;
+            
+            const texto = elemento.textContent;
+            
+            navigator.clipboard.writeText(texto).then(() => {
+                // Feedback visual no botão
+                botao.textContent = '✅ Copiado';
+                botao.classList.add('copiado');
+                
+                // Feedback visual no campo
+                const campoCopiar = botao.closest('.campo-copiar');
+                if (campoCopiar) campoCopiar.classList.add('copiado');
+                
+                // Volta ao normal após 2 segundos
+                setTimeout(() => {
+                    botao.textContent = '📋 Copiar';
+                    botao.classList.remove('copiado');
+                    if (campoCopiar) campoCopiar.classList.remove('copiado');
+                }, 2000);
+            }).catch(err => {
+                console.error('Erro ao copiar:', err);
+                // Fallback para navegadores antigos
+                const range = document.createRange();
+                range.selectNode(elemento);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                document.execCommand('copy');
+                window.getSelection().removeAllRanges();
+            });
+        }
+        
         function abrirModalEtiquetas() {
             if (idsSelecionados.size === 0) {
                 alert('⚠️ Selecione pelo menos uma entrega para emitir etiquetas.');
                 return;
             }
-            function fecharModalEtiquetas() {
-    document.getElementById('modalEtiquetas').classList.remove('ativo');
-}
 
             const dadosSelecionados = Array.from(idsSelecionados).map(index => {
                 return dadosCarregados.find(d => d.index === index);
