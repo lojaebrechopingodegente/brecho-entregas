@@ -1173,7 +1173,7 @@
             document.getElementById('dataInicial').value = formatarDataInput(seteDiasAtras);
         }
 
-        // ============================================
+               // ============================================
         // NOVA FUNÇÃO: MODAL DE EMISSÃO DE ETIQUETAS
         // ============================================
         
@@ -1194,17 +1194,47 @@
                 const enderecoCompleto = `${item.rua || ''}, ${item.numero || 'S/N'}${item.complemento ? ' - ' + item.complemento : ''}`;
                 const cidadeUF = `${item.cidade || ''} - ${item.estado || 'SC'}`;
                 
-                const medidasHtml = item.peso_kg || item.altura_cm ? `
+                // Verifica se há medidas preenchidas
+                const temMedidas = item.peso_kg || item.altura_cm || item.largura_cm || item.comprimento_cm;
+                
+                const medidasHtml = temMedidas ? `
                     <div class="etiqueta-secao">
                         <div class="etiqueta-secao-titulo">📦 Medidas do Pacote</div>
-                        <div class="medidas-etiqueta">
-                            ${item.peso_kg ? `<div class="medida-item"><strong>Peso:</strong> ${item.peso_kg} kg</div>` : ''}
-                            ${item.altura_cm ? `<div class="medida-item"><strong>Altura:</strong> ${item.altura_cm} cm</div>` : ''}
-                            ${item.largura_cm ? `<div class="medida-item"><strong>Largura:</strong> ${item.largura_cm} cm</div>` : ''}
-                            ${item.comprimento_cm ? `<div class="medida-item"><strong>Comprimento:</strong> ${item.comprimento_cm} cm</div>` : ''}
+                        <div class="etiqueta-grid">
+                            ${item.peso_kg ? `
+                            <div class="campo-copiar">
+                                <span class="campo-label">Peso:</span>
+                                <span class="campo-valor" id="peso-${idx}">${item.peso_kg} kg</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('peso-${idx}', this)">📋 Copiar</button>
+                            </div>` : ''}
+                            ${item.altura_cm ? `
+                            <div class="campo-copiar">
+                                <span class="campo-label">Altura:</span>
+                                <span class="campo-valor" id="altura-${idx}">${item.altura_cm} cm</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('altura-${idx}', this)">📋 Copiar</button>
+                            </div>` : ''}
+                            ${item.largura_cm ? `
+                            <div class="campo-copiar">
+                                <span class="campo-label">Largura:</span>
+                                <span class="campo-valor" id="largura-${idx}">${item.largura_cm} cm</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('largura-${idx}', this)">📋 Copiar</button>
+                            </div>` : ''}
+                            ${item.comprimento_cm ? `
+                            <div class="campo-copiar">
+                                <span class="campo-label">Comprimento:</span>
+                                <span class="campo-valor" id="comprimento-${idx}">${item.comprimento_cm} cm</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('comprimento-${idx}', this)">📋 Copiar</button>
+                            </div>` : ''}
                         </div>
                     </div>
-                ` : '';
+                ` : `
+                    <div class="etiqueta-secao">
+                        <div class="etiqueta-secao-titulo">📦 Medidas do Pacote</div>
+                        <div style="padding: 15px; background: #FFF3E0; border-radius: 8px; color: #E65100; font-size: 0.9rem;">
+                            ⚠️ Medidas não cadastradas para esta entrega
+                        </div>
+                    </div>
+                `;
 
                 const card = document.createElement('div');
                 card.className = 'etiqueta-card';
@@ -1280,48 +1310,6 @@
             });
 
             document.getElementById('modalEtiquetas').classList.add('ativo');
-        }
-
-        function fecharModalEtiquetas() {
-            document.getElementById('modalEtiquetas').classList.remove('ativo');
-        }
-
-        async function copiarCampo(elementId, btn) {
-            const elemento = document.getElementById(elementId);
-            const texto = elemento.textContent;
-            
-            try {
-                await navigator.clipboard.writeText(texto);
-                
-                // Feedback visual no botão
-                const textoOriginal = btn.textContent;
-                btn.textContent = '✓ Copiado!';
-                btn.classList.add('copiado');
-                
-                // Feedback visual no campo
-                const campoCopiar = btn.closest('.campo-copiar');
-                campoCopiar.classList.add('copiado');
-                
-                setTimeout(() => {
-                    btn.textContent = textoOriginal;
-                    btn.classList.remove('copiado');
-                    campoCopiar.classList.remove('copiado');
-                }, 2000);
-                
-            } catch (err) {
-                // Fallback para navegadores antigos
-                const textArea = document.createElement('textarea');
-                textArea.value = texto;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                
-                btn.textContent = '✓ Copiado!';
-                setTimeout(() => {
-                    btn.textContent = '📋 Copiar';
-                }, 2000);
-            }
         }
 
         async function gerarPDF() {
