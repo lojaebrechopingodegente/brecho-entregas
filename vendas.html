@@ -787,9 +787,9 @@
         <!-- Abas -->
         <div class="tabs-container">
             <div class="tabs-header">
-                <button class="tab-btn ativo" onclick="mudarAba('nova')">➕ Nova Venda</button>
-                <button class="tab-btn" onclick="mudarAba('historico')">📋 Histórico</button>
-                <button class="tab-btn" onclick="mudarAba('relatorios')">📊 Relatórios</button>
+                <button class="tab-btn ativo" onclick="mudarAba('nova', this)">➕ Nova Venda</button>
+                <button class="tab-btn" onclick="mudarAba('historico', this)">📋 Histórico</button>
+                <button class="tab-btn" onclick="mudarAba('relatorios', this)">📊 Relatórios</button>
             </div>
 
             <!-- Aba Nova Venda -->
@@ -920,7 +920,7 @@
                         </div>
                     </div>
                     <div class="botoes-filtro">
-                        <button class="btn-primary" onclick="buscarVendas()">
+                        <button class="btn-primary" onclick="buscarVendas(this)">
                             🔍 Buscar Vendas
                         </button>
                         <button class="btn-secondary" onclick="limparFiltrosHistorico()">
@@ -1163,13 +1163,17 @@
         }
 
         // ============================================
-        // ABAS
+        // ABAS - CORRIGIDO
         // ============================================
-        function mudarAba(aba) {
+        function mudarAba(aba, clickedBtn) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('ativo'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('ativo'));
 
-            event.target.classList.add('ativo');
+            // Usar o botão clicado passado como parâmetro
+            if (clickedBtn) {
+                clickedBtn.classList.add('ativo');
+            }
+            
             document.getElementById(`aba-${aba}`).classList.add('ativo');
 
             if (aba === 'historico') {
@@ -1325,17 +1329,21 @@
         }
 
         // ============================================
-        // HISTÓRICO DE VENDAS - NOVO
+        // HISTÓRICO DE VENDAS - CORRIGIDO
         // ============================================
-        async function buscarVendas() {
+        async function buscarVendas(btn) {
             if (!supabaseClient) {
                 alert('❌ Erro de conexão com o banco de dados.');
                 return;
             }
 
-            const btn = event.target;
-            btn.disabled = true;
-            btn.innerHTML = '⏳ Buscando...';
+            // Se btn não foi passado, tenta encontrar o botão de busca
+            const botao = btn || document.querySelector('.botoes-filtro .btn-primary');
+            
+            if (botao) {
+                botao.disabled = true;
+                botao.innerHTML = '⏳ Buscando...';
+            }
 
             try {
                 const dataInicial = document.getElementById('filtroDataInicial').value;
@@ -1380,8 +1388,10 @@
                 console.error('Erro:', error);
                 alert('❌ Erro ao buscar vendas: ' + error.message);
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = '🔍 Buscar Vendas';
+                if (botao) {
+                    botao.disabled = false;
+                    botao.innerHTML = '🔍 Buscar Vendas';
+                }
             }
         }
 
@@ -1596,57 +1606,56 @@
             document.getElementById('modalEdicao').classList.remove('ativo');
         }
 
-      async function salvarEdicaoVenda(e) {
-    e.preventDefault();
+        async function salvarEdicaoVenda(e) {
+            e.preventDefault();
 
-    if (!supabaseClient) {
-        alert('❌ Erro de conexão com o banco de dados.');
-        return;
-    }
+            if (!supabaseClient) {
+                alert('❌ Erro de conexão com o banco de dados.');
+                return;
+            }
 
-    const id = document.getElementById('editId').value;
-    // CORREÇÃO: Buscar o botão pelo seletor mais específico
-    const btn = document.querySelector('#formEdicaoVenda .btn-salvar-modal');
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '⏳ Salvando...';
-    }
+            const id = document.getElementById('editId').value;
+            const btn = document.querySelector('#formEdicaoVenda .btn-salvar-modal');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '⏳ Salvando...';
+            }
 
-    try {
-        const dadosAtualizacao = {
-            data_venda: document.getElementById('editDataVenda').value,
-            cliente_nome: document.getElementById('editNomeCliente').value || null,
-            cliente_cpf: document.getElementById('editCpfCliente').value.replace(/\D/g, '') || null,
-            canal_venda: document.getElementById('editCanalVenda').value,
-            forma_pagamento: document.getElementById('editFormaPagamento').value,
-            status_pagamento: document.getElementById('editStatusPagamento').value,
-            observacoes: document.getElementById('editObservacoes').value || null
-        };
+            try {
+                const dadosAtualizacao = {
+                    data_venda: document.getElementById('editDataVenda').value,
+                    cliente_nome: document.getElementById('editNomeCliente').value || null,
+                    cliente_cpf: document.getElementById('editCpfCliente').value.replace(/\D/g, '') || null,
+                    canal_venda: document.getElementById('editCanalVenda').value,
+                    forma_pagamento: document.getElementById('editFormaPagamento').value,
+                    status_pagamento: document.getElementById('editStatusPagamento').value,
+                    observacoes: document.getElementById('editObservacoes').value || null
+                };
 
-        const { error } = await supabaseClient
-            .from('vendas_pg')
-            .update(dadosAtualizacao)
-            .eq('id', id);
+                const { error } = await supabaseClient
+                    .from('vendas_pg')
+                    .update(dadosAtualizacao)
+                    .eq('id', id);
 
-        if (error) throw error;
+                if (error) throw error;
 
-        alert('✅ Venda atualizada com sucesso!');
-        fecharModalEdicao();
-        
-        // Recarregar a lista
-        await buscarVendas();
+                alert('✅ Venda atualizada com sucesso!');
+                fecharModalEdicao();
+                
+                // Recarregar a lista - agora funciona sem depender de event
+                await buscarVendas();
 
-    } catch (error) {
-        console.error('Erro:', error);
-        alert('❌ Erro ao atualizar venda: ' + error.message);
-    } finally {
-        // CORREÇÃO: Verificar se o botão existe antes de reativar
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '💾 Salvar Alterações';
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('❌ Erro ao atualizar venda: ' + error.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '💾 Salvar Alterações';
+                }
+            }
         }
-    }
-}
+
         // ============================================
         // EXCLUIR VENDA
         // ============================================
