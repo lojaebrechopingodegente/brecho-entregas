@@ -204,6 +204,7 @@
         .filtro-numero-pedido h3 { color: #1565C0; }
     </style>
 
+<base target="_blank">
 </head>
 <body>
     <div class="container">
@@ -1070,27 +1071,11 @@
                 );
             }
 
-            const pdfDataUri = doc.output('datauristring');
-            const novaAba = window.open();
-            if (novaAba) {
-                novaAba.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Solicitações de Entrega - Pingo de Gente</title>
-                        <style>
-                            body { margin: 0; padding: 0; overflow: hidden; }
-                            iframe { width: 100vw; height: 100vh; border: none; }
-                        </style>
-                    </head>
-                    <body>
-                        <iframe src="${pdfDataUri}" type="application/pdf"></iframe>
-                    </body>
-                    </html>
-                `);
-                novaAba.document.close();
-            } else {
-                alert('❌ O navegador bloqueou a abertura de nova aba.');
+            // CORREÇÃO: Usar bloburl em vez de datauristring para evitar bloqueio de popup
+            const pdfBlobUrl = doc.output('bloburl');
+            const novaAba = window.open(pdfBlobUrl, '_blank');
+            if (!novaAba) {
+                alert('❌ O navegador bloqueou a abertura de nova aba. Por favor, permita popups para este site.');
             }
         }
 
@@ -1234,27 +1219,11 @@
                 etiquetaAtual++;
             });
 
-            const pdfDataUri = doc.output('datauristring');
-            const novaAba = window.open();
-            if (novaAba) {
-                novaAba.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Etiquetas de Entrega - Pingo de Gente</title>
-                        <style>
-                            body { margin: 0; padding: 0; overflow: hidden; }
-                            iframe { width: 100vw; height: 100vh; border: none; }
-                        </style>
-                    </head>
-                    <body>
-                        <iframe src="${pdfDataUri}" type="application/pdf"></iframe>
-                    </body>
-                    </html>
-                `);
-                novaAba.document.close();
-            } else {
-                alert('❌ O navegador bloqueou a abertura de nova aba.');
+            // CORREÇÃO: Usar bloburl em vez de datauristring para evitar bloqueio de popup
+            const pdfBlobUrl = doc.output('bloburl');
+            const novaAba = window.open(pdfBlobUrl, '_blank');
+            if (!novaAba) {
+                alert('❌ O navegador bloqueou a abertura de nova aba. Por favor, permita popups para este site.');
             }
         }
 
