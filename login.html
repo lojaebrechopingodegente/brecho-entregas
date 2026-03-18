@@ -160,7 +160,6 @@
             color: #b2bec3;
         }
 
-        /* Animação de shake para erro */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
@@ -171,7 +170,6 @@
             animation: shake 0.5s;
         }
 
-        /* Loading spinner */
         .spinner {
             display: none;
             width: 20px;
@@ -188,7 +186,6 @@
             100% { transform: rotate(360deg); }
         }
     </style>
-<base target="_blank">
 </head>
 <body>
     <div class="login-container">
@@ -224,13 +221,6 @@
                 </label>
             </div>
 
-            <div class="checkbox-group">
-                <input type="checkbox" id="lembrarSenha">
-                <label for="lembrarSenha" style="margin:0; font-weight:normal; cursor:pointer;">
-                    Lembrar senha neste dispositivo
-                </label>
-            </div>
-
             <button type="submit" id="btnEntrar">
                 <span id="btnTexto">🔐 Entrar</span>
                 <div class="spinner" id="spinner"></div>
@@ -244,39 +234,30 @@
 
     <script>
         // ============================================
-        // CONFIGURAÇÃO - ALTERE AQUI A SENHA DESEJADA
+        // CONFIGURAÇÃO
         // ============================================
-        const SENHA_CORRETA = '770057'; // 🔑 Mude para sua senha
-
-        // Nome da página principal (ajuste se necessário)
+        const SENHA_CORRETA = '770057';
         const PAGINA_PRINCIPAL = 'dashboard.html';
-
-        // Chave para localStorage
-        const STORAGE_KEY = 'pingo_autenticado';
         const STORAGE_SENHA = 'pingo_senha_hash';
+
+        function criarHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString(16);
+        }
 
         // Verificar se já está autenticado ao carregar
         document.addEventListener('DOMContentLoaded', function() {
-            verificarAutenticacao();
-        });
-
-        function verificarAutenticacao() {
-            // Verificar se tem senha salva (lembrar senha)
             const senhaSalva = localStorage.getItem(STORAGE_SENHA);
-            if (senhaSalva) {
-                // Verificar se a senha salva está correta (hash simples)
-                if (verificarHash(SENHA_CORRETA, senhaSalva)) {
-                    redirecionar();
-                    return;
-                }
+            if (senhaSalva && criarHash(SENHA_CORRETA) === senhaSalva) {
+                // Já autenticado, redirecionar para dashboard
+                window.location.replace(PAGINA_PRINCIPAL);
             }
-
-            // Verificar se tem sessão ativa
-            const autenticado = sessionStorage.getItem(STORAGE_KEY);
-            if (autenticado === 'true') {
-                redirecionar();
-            }
-        }
+        });
 
         function fazerLogin(event) {
             event.preventDefault();
@@ -296,23 +277,13 @@
             btn.disabled = true;
             errorDiv.classList.remove('show');
 
-            // Simular delay para UX (opcional)
             setTimeout(() => {
                 if (senhaDigitada === SENHA_CORRETA) {
-                    // Sucesso!
-
-                    // Verificar se quer lembrar senha
-                    const lembrar = document.getElementById('lembrarSenha').checked;
-                    if (lembrar) {
-                        // Salvar hash da senha (não a senha em si)
-                        localStorage.setItem(STORAGE_SENHA, criarHash(SENHA_CORRETA));
-                    }
-
-                    // Marcar sessão como autenticada
-                    sessionStorage.setItem(STORAGE_KEY, 'true');
-
+                    // Salvar hash da senha no localStorage
+                    localStorage.setItem(STORAGE_SENHA, criarHash(SENHA_CORRETA));
+                    
                     // Redirecionar
-                    redirecionar();
+                    window.location.replace(PAGINA_PRINCIPAL);
                 } else {
                     // Erro
                     btnTexto.style.display = 'inline';
@@ -334,39 +305,11 @@
             return false;
         }
 
-        function redirecionar() {
-            // Redirecionar para a página principal
-            window.location.href = PAGINA_PRINCIPAL;
-        }
-
         function toggleSenha() {
             const senhaInput = document.getElementById('senha');
             const mostrar = document.getElementById('mostrarSenha').checked;
-
             senhaInput.type = mostrar ? 'text' : 'password';
         }
-
-        // Funções simples de hash (para não armazenar senha em texto plano)
-        function criarHash(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
-            }
-            return hash.toString(16);
-        }
-
-        function verificarHash(str, hashArmazenado) {
-            return criarHash(str) === hashArmazenado;
-        }
-
-        // Permitir pressionar Enter no input
-        document.getElementById('senha').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                fazerLogin(e);
-            }
-        });
     </script>
 </body>
 </html>
