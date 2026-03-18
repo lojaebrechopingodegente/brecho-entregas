@@ -150,25 +150,16 @@
 <body>
     <div class="container">
         
-    <div class="header" style="position: relative; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 25px 30px;">
-    <div style="display: flex; align-items: center; gap: 20px;">
-        <a href="dashboard.html" style="background: linear-gradient(135deg, #A8E6CF, #7FCDCD); color: #2D3436; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 0.95rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(168, 230, 207, 0.4)';" onmouseout="this.style.transform=''; this.style.boxShadow='';">← Voltar ao Dashboard</a>
-        <div>
-            <h1 style="color: #FF6B8A; font-size: 1.8rem; margin-bottom: 5px;">📦 Gerenciamento de Entregas</h1>
-            <p style="color: #636E72; font-size: 0.9rem;">Loja e Brechó Pingo de Gente</p>
-        </div>
-    </div>
-    <button onclick="fazerLogout()" style="background: linear-gradient(135deg, #FF6B6B, #EE5A6F); color: white; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 0.95rem; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(238, 90, 111, 0.4)';" onmouseout="this.style.transform=''; this.style.boxShadow='';">🚪 Sair</button>
-</div>
-            <h1>📦 Gerenciamento de Entregas</h1>
-            <p>Loja e Brechó Pingo de Gente</p>
-        </div>
-<div class="header-left">
+   <!-- HEADER CORRIGIDO - Mesmo estilo da dashboard -->
+<div class="header">
+    <!-- Botão Voltar -->
     <a href="dashboard.html" class="btn-voltar">← Voltar ao Dashboard</a>
-    <div>
-        <h1>📦 Gerenciamento de Entregas</h1>
-        <p>Loja e Brechó Pingo de Gente</p>
-    </div>
+    
+    <!-- Botão Sair - Mesma classe da dashboard -->
+    <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
+    
+    <h1>📦 Gerenciamento de Entregas</h1>
+    <p>Loja e Brechó Pingo de Gente</p>
 </div>
         <div class="filtros-container" id="filtrosContainer" style="opacity: 0.5; pointer-events: none;">
             <h2 class="filtros-titulo">📅 Filtros por Período, Cliente e Nº do Pedido</h2>
