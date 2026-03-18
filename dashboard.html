@@ -296,7 +296,7 @@
             width: 100%;
         }
 
-        /* Stats Section Original */
+        /* Stats Section de Entregas - ATUALIZADO */
         .stats-section {
             background: white;
             border-radius: 20px;
@@ -315,13 +315,13 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
         }
 
         .stat-item {
             background: linear-gradient(135deg, #FFF5F7, #F0FFF4);
-            padding: 20px;
+            padding: 25px;
             border-radius: 15px;
             text-align: center;
             border: 2px solid #E0E0E0;
@@ -334,15 +334,22 @@
         }
 
         .stat-value {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: bold;
             color: #FF6B8A;
             display: block;
         }
 
         .stat-label {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: #636E72;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .stat-sublabel {
+            font-size: 0.75rem;
+            color: #95a5a6;
             margin-top: 5px;
         }
 
@@ -484,25 +491,26 @@
             </div>
         </div>
 
-        <!-- Estatísticas Rápidas (Entregas) -->
+        <!-- Estatísticas de Entregas - ATUALIZADO -->
         <div class="stats-section">
-            <h3>📊 Resumo das Entregas</h3>
+            <h3>📦 Resumo das Entregas</h3>
             <div class="stats-grid">
                 <div class="stat-item">
-                    <span class="stat-value" id="statEntregasHoje">-</span>
-                    <span class="stat-label">Entregas Hoje</span>
+                    <span class="stat-value" id="statEntregasSemana">-</span>
+                    <span class="stat-label">Entregas na Semana</span>
+                    <span class="stat-sublabel">(corte: quarta 17:00)</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value" id="statVendasHoje">-</span>
-                    <span class="stat-label">Vendas Hoje</span>
+                    <span class="stat-value" id="statEntregasMes">-</span>
+                    <span class="stat-label">Entregas no Mês</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value" id="statPendentes">-</span>
-                    <span class="stat-label">Pendentes</span>
+                    <span class="stat-value" id="statEntregasAno">-</span>
+                    <span class="stat-label">Entregas no Ano</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value" id="statTotalSemana">-</span>
-                    <span class="stat-label">Total Semana</span>
+                    <span class="stat-value" id="statEntregasPendentes">-</span>
+                    <span class="stat-label">Entregas Pendentes</span>
                 </div>
             </div>
         </div>
@@ -748,7 +756,7 @@
         }
 
         function formatarMoeda(valor) {
-            return 'R$ ' + valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return 'R$ ' + valor.toFixed(2).replace('.', ',').replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.');
         }
 
         function formatarMoedaCurto(valor) {
@@ -759,67 +767,102 @@
         }
 
         // ============================================
-        // ESTATÍSTICAS DE ENTREGAS (ORIGINAL)
+        // ESTATÍSTICAS DE ENTREGAS - ATUALIZADO
         // ============================================
         async function carregarEstatisticasEntregas() {
             if (!supabaseClient) return;
 
             try {
                 const hoje = new Date();
-                hoje.setHours(0, 0, 0, 0);
-                const amanha = new Date(hoje);
-                amanha.setDate(amanha.getDate() + 1);
-
-                // Entregas de hoje
-                const { data: entregasHoje, error: err1 } = await supabaseClient
+                const anoAtual = hoje.getFullYear();
+                const mesAtual = hoje.getMonth(); // 0-11
+                
+                // ============================================
+                // 1. ENTREGAS NA SEMANA (corte: quarta-feira 17:00)
+                // ============================================
+                // Encontrar a última quarta-feira às 17:00
+                const ultimaQuarta = new Date(hoje);
+                const diaSemana = hoje.getDay(); // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sáb
+                
+                // Calcular quantos dias atrás foi a última quarta
+                let diasAtras = 0;
+                if (diaSemana === 3) {
+                    // Hoje é quarta, verificar se já passou das 17:00
+                    if (hoje.getHours() >= 17) {
+                        diasAtras = 0; // Começa hoje às 17:00
+                    } else {
+                        diasAtras = 7; // A última quarta foi semana passada
+                    }
+                } else if (diaSemana < 3) {
+                    // Segunda ou Terça - última quarta foi (diaSemana + 4) dias atrás
+                    diasAtras = diaSemana + 4;
+                } else {
+                    // Quinta, Sexta, Sábado, Domingo - última quarta foi (diaSemana - 3) dias atrás
+                    diasAtras = diaSemana - 3;
+                }
+                
+                const inicioSemana = new Date(hoje);
+                inicioSemana.setDate(hoje.getDate() - diasAtras);
+                inicioSemana.setHours(17, 0, 0, 0);
+                
+                const { data: entregasSemana, error: errSemana } = await supabaseClient
                     .from('solicitacoes_pg')
                     .select('id', { count: 'exact' })
-                    .gte('data_solicitacao', hoje.toISOString())
-                    .lt('data_solicitacao', amanha.toISOString());
+                    .gte('data_solicitacao', inicioSemana.toISOString())
+                    .lte('data_solicitacao', hoje.toISOString());
 
-                if (!err1) {
-                    document.getElementById('statEntregasHoje').textContent = entregasHoje?.length || 0;
+                if (!errSemana) {
+                    document.getElementById('statEntregasSemana').textContent = entregasSemana?.length || 0;
                 }
 
-                // Vendas de hoje (quantidade)
-                const { data: vendasHoje, error: err2 } = await supabaseClient
-                    .from('vendas_pg')
+                // ============================================
+                // 2. ENTREGAS NO MÊS
+                // ============================================
+                const inicioMes = new Date(anoAtual, mesAtual, 1);
+                inicioMes.setHours(0, 0, 0, 0);
+                const fimMes = new Date(anoAtual, mesAtual + 1, 0, 23, 59, 59, 999);
+
+                const { data: entregasMes, error: errMes } = await supabaseClient
+                    .from('solicitacoes_pg')
                     .select('id', { count: 'exact' })
-                    .gte('data_venda', hoje.toISOString())
-                    .lt('data_venda', amanha.toISOString());
+                    .gte('data_solicitacao', inicioMes.toISOString())
+                    .lte('data_solicitacao', fimMes.toISOString());
 
-                if (!err2) {
-                    document.getElementById('statVendasHoje').textContent = vendasHoje?.length || 0;
-                } else {
-                    document.getElementById('statVendasHoje').textContent = '0';
+                if (!errMes) {
+                    document.getElementById('statEntregasMes').textContent = entregasMes?.length || 0;
                 }
 
-                // Pendentes
-                const { data: pendentes, error: err3 } = await supabaseClient
+                // ============================================
+                // 3. ENTREGAS NO ANO
+                // ============================================
+                const inicioAno = new Date(anoAtual, 0, 1);
+                inicioAno.setHours(0, 0, 0, 0);
+                const fimAno = new Date(anoAtual, 11, 31, 23, 59, 59, 999);
+
+                const { data: entregasAno, error: errAno } = await supabaseClient
+                    .from('solicitacoes_pg')
+                    .select('id', { count: 'exact' })
+                    .gte('data_solicitacao', inicioAno.toISOString())
+                    .lte('data_solicitacao', fimAno.toISOString());
+
+                if (!errAno) {
+                    document.getElementById('statEntregasAno').textContent = entregasAno?.length || 0;
+                }
+
+                // ============================================
+                // 4. ENTREGAS PENDENTES
+                // ============================================
+                const { data: pendentes, error: errPendentes } = await supabaseClient
                     .from('solicitacoes_pg')
                     .select('id', { count: 'exact' })
                     .eq('status', 'pendente');
 
-                if (!err3) {
-                    document.getElementById('statPendentes').textContent = pendentes?.length || 0;
-                }
-
-                // Total da semana
-                const inicioSemana = new Date(hoje);
-                inicioSemana.setDate(hoje.getDate() - hoje.getDay());
-                
-                const { data: totalSemana, error: err4 } = await supabaseClient
-                    .from('solicitacoes_pg')
-                    .select('id', { count: 'exact' })
-                    .gte('data_solicitacao', inicioSemana.toISOString())
-                    .lt('data_solicitacao', amanha.toISOString());
-
-                if (!err4) {
-                    document.getElementById('statTotalSemana').textContent = totalSemana?.length || 0;
+                if (!errPendentes) {
+                    document.getElementById('statEntregasPendentes').textContent = pendentes?.length || 0;
                 }
 
             } catch (error) {
-                console.error('Erro ao carregar estatísticas:', error);
+                console.error('Erro ao carregar estatísticas de entregas:', error);
             }
         }
 
