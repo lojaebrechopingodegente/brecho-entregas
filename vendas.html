@@ -1596,7 +1596,7 @@
             document.getElementById('modalEdicao').classList.remove('ativo');
         }
 
-        async function salvarEdicaoVenda(e) {
+      async function salvarEdicaoVenda(e) {
     e.preventDefault();
 
     if (!supabaseClient) {
@@ -1605,9 +1605,12 @@
     }
 
     const id = document.getElementById('editId').value;
-    const btn = e.target.querySelector('.btn-salvar-modal');
-    btn.disabled = true;
-    btn.innerHTML = '⏳ Salvando...';
+    // CORREÇÃO: Buscar o botão pelo seletor mais específico
+    const btn = document.querySelector('#formEdicaoVenda .btn-salvar-modal');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Salvando...';
+    }
 
     try {
         const dadosAtualizacao = {
@@ -1618,7 +1621,6 @@
             forma_pagamento: document.getElementById('editFormaPagamento').value,
             status_pagamento: document.getElementById('editStatusPagamento').value,
             observacoes: document.getElementById('editObservacoes').value || null
-            // REMOVIDO: atualizado_em: new Date().toISOString()
         };
 
         const { error } = await supabaseClient
@@ -1638,8 +1640,11 @@
         console.error('Erro:', error);
         alert('❌ Erro ao atualizar venda: ' + error.message);
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = '💾 Salvar Alterações';
+        // CORREÇÃO: Verificar se o botão existe antes de reativar
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '💾 Salvar Alterações';
+        }
     }
 }
         // ============================================
