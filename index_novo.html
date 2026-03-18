@@ -1109,6 +1109,45 @@
             }
         }
 
+// ============================================
+// ENVIAR E-MAIL VIA EMAILJS
+// ============================================
+async function enviarEmailConfirmacao(dadosSolicitacao) {
+    try {
+        // templateParams: objeto com todos os dados para o template
+        const templateParams = {
+            // ⬇️ AQUI está o to_email - e-mail do cliente
+            to_email: dadosSolicitacao.email,
+            
+            // Demais campos que você usa no template:
+            numero_solicitacao: dadosSolicitacao.numeroSolicitacao,
+            nome: dadosSolicitacao.nome,
+            data_solicitacao: dadosSolicitacao.dataSolicitacao,
+            regiao: dadosSolicitacao.regiao,
+            rua: dadosSolicitacao.rua,
+            numero: dadosSolicitacao.numero,
+            complemento: dadosSolicitacao.complemento || 'N/A',
+            bairro: dadosSolicitacao.bairro,
+            cidade: dadosSolicitacao.cidade,
+            cep: dadosSolicitacao.cep,
+            observacoes: dadosSolicitacao.observacoes || 'Nenhuma observação'
+        };
+
+        const response = await emailjs.send(
+            EMAILJS_CONFIG.SERVICE_ID,  // ex: 'pingo_gmail'
+            EMAILJS_CONFIG.TEMPLATE_ID, // ex: 'template_abc123'
+            templateParams              // ⬅️ objeto com to_email e demais campos
+        );
+
+        console.log('✅ E-mail enviado:', response);
+        return true;
+
+    } catch (error) {
+        console.error('❌ Erro ao enviar e-mail:', error);
+        return false;
+    }
+}
+        
         function montarCorpoEmail(dados) {
             return `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #FFF5F7;">
