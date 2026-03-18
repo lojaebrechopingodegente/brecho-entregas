@@ -172,7 +172,7 @@
             color: white;
         }
 
-        /* Seção de Vendas - NOVO */
+        /* Seção de Vendas */
         .vendas-section {
             background: white;
             border-radius: 20px;
@@ -181,7 +181,7 @@
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
         }
 
-        .vendas-header {
+        .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -190,7 +190,7 @@
             gap: 15px;
         }
 
-        .vendas-header h2 {
+        .section-header h2 {
             color: #2D3436;
             font-size: 1.5rem;
             display: flex;
@@ -271,10 +271,6 @@
             font-weight: bold;
         }
 
-        .total-card.carregando {
-            opacity: 0.7;
-        }
-
         /* Gráfico */
         .grafico-container {
             background: #F8F9FA;
@@ -296,27 +292,30 @@
             width: 100%;
         }
 
-        /* Stats Section de Entregas - ATUALIZADO */
-        .stats-section {
+        /* Seção de Entregas - NOVA */
+        .entregas-section {
             background: white;
             border-radius: 20px;
             padding: 30px;
+            margin-bottom: 30px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #FF6B8A;
         }
 
-        .stats-section h3 {
-            color: #2D3436;
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .entregas-section .section-header h2 {
+            color: #FF6B8A;
         }
 
+        .entregas-section .filtro-ano select:focus {
+            border-color: #FF6B8A;
+        }
+
+        /* Stats Grid de Entregas */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
+            margin-bottom: 30px;
         }
 
         .stat-item {
@@ -351,6 +350,11 @@
             font-size: 0.75rem;
             color: #95a5a6;
             margin-top: 5px;
+        }
+
+        /* Gráfico de Entregas - cores diferentes */
+        .entregas-section .grafico-container {
+            background: #FFF5F7;
         }
 
         .footer {
@@ -403,7 +407,7 @@
                 margin-top: 15px;
             }
 
-            .vendas-header {
+            .section-header {
                 flex-direction: column;
                 text-align: center;
             }
@@ -452,13 +456,13 @@
             </a>
         </div>
 
-        <!-- NOVA SEÇÃO: Resumo de Vendas -->
+        <!-- SEÇÃO: Resumo de Vendas -->
         <div class="vendas-section">
-            <div class="vendas-header">
+            <div class="section-header">
                 <h2>💰 Resumo de Vendas</h2>
                 <div class="filtro-ano">
-                    <label for="selectAno">Ano:</label>
-                    <select id="selectAno" onchange="atualizarGrafico()">
+                    <label for="selectAnoVendas">Ano:</label>
+                    <select id="selectAnoVendas" onchange="atualizarGraficoVendas()">
                         <option value="2026">2026</option>
                         <option value="2025">2025</option>
                         <option value="2024">2024</option>
@@ -482,7 +486,7 @@
                 </div>
             </div>
 
-            <!-- Gráfico Mensal -->
+            <!-- Gráfico Mensal de Vendas -->
             <div class="grafico-container">
                 <h3>📊 Vendas por Mês</h3>
                 <div class="chart-wrapper">
@@ -491,9 +495,21 @@
             </div>
         </div>
 
-        <!-- Estatísticas de Entregas - ATUALIZADO -->
-        <div class="stats-section">
-            <h3>📦 Resumo das Entregas</h3>
+        <!-- SEÇÃO: Resumo de Entregas - NOVA -->
+        <div class="entregas-section">
+            <div class="section-header">
+                <h2>📦 Resumo de Entregas</h2>
+                <div class="filtro-ano">
+                    <label for="selectAnoEntregas">Ano:</label>
+                    <select id="selectAnoEntregas" onchange="atualizarGraficoEntregas()">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Cards de Estatísticas -->
             <div class="stats-grid">
                 <div class="stat-item">
                     <span class="stat-value" id="statEntregasSemana">-</span>
@@ -511,6 +527,14 @@
                 <div class="stat-item">
                     <span class="stat-value" id="statEntregasPendentes">-</span>
                     <span class="stat-label">Entregas Pendentes</span>
+                </div>
+            </div>
+
+            <!-- Gráfico Mensal de Entregas -->
+            <div class="grafico-container">
+                <h3>📦 Entregas por Mês</h3>
+                <div class="chart-wrapper">
+                    <canvas id="graficoEntregas"></canvas>
                 </div>
             </div>
         </div>
@@ -556,6 +580,7 @@
 
         let supabaseClient = null;
         let graficoVendas = null;
+        let graficoEntregas = null;
 
         // ============================================
         // INICIALIZAÇÃO
@@ -573,13 +598,13 @@
 
         async function carregarTodosOsDados() {
             await Promise.all([
-                carregarEstatisticasEntregas(),
-                carregarResumoVendas()
+                carregarResumoVendas(),
+                carregarResumoEntregas()
             ]);
         }
 
         // ============================================
-        // RESUMO DE VENDAS (NOVO)
+        // RESUMO DE VENDAS
         // ============================================
         async function carregarResumoVendas() {
             if (!supabaseClient) return;
@@ -631,20 +656,19 @@
                 document.getElementById('totalAno').textContent = formatarMoeda(totalAno);
 
                 // Carregar gráfico inicial
-                await atualizarGrafico();
+                await atualizarGraficoVendas();
 
             } catch (error) {
                 console.error('Erro ao carregar resumo de vendas:', error);
             }
         }
 
-        async function atualizarGrafico() {
+        async function atualizarGraficoVendas() {
             if (!supabaseClient) return;
 
-            const anoSelecionado = parseInt(document.getElementById('selectAno').value);
+            const anoSelecionado = parseInt(document.getElementById('selectAnoVendas').value);
             
             try {
-                // Buscar todas as vendas do ano selecionado
                 const inicioAno = new Date(anoSelecionado, 0, 1);
                 const fimAno = new Date(anoSelecionado, 11, 31, 23, 59, 59, 999);
 
@@ -656,23 +680,22 @@
 
                 if (error) throw error;
 
-                // Agrupar por mês
                 const vendasPorMes = new Array(12).fill(0);
                 
                 (vendasAno || []).forEach(venda => {
                     const data = new Date(venda.data_venda);
-                    const mes = data.getMonth(); // 0-11
+                    const mes = data.getMonth();
                     vendasPorMes[mes] += (venda.total || 0);
                 });
 
-                criarOuAtualizarGrafico(vendasPorMes, anoSelecionado);
+                criarOuAtualizarGraficoVendas(vendasPorMes, anoSelecionado);
 
             } catch (error) {
-                console.error('Erro ao carregar gráfico:', error);
+                console.error('Erro ao carregar gráfico de vendas:', error);
             }
         }
 
-        function criarOuAtualizarGrafico(dados, ano) {
+        function criarOuAtualizarGraficoVendas(dados, ano) {
             const ctx = document.getElementById('graficoVendas').getContext('2d');
             
             const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -755,49 +778,31 @@
             });
         }
 
-        function formatarMoeda(valor) {
-            return 'R$ ' + valor.toFixed(2).replace('.', ',').replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.');
-        }
-
-        function formatarMoedaCurto(valor) {
-            if (valor >= 1000) {
-                return 'R$ ' + (valor / 1000).toFixed(1) + 'k';
-            }
-            return 'R$ ' + valor.toFixed(0);
-        }
-
         // ============================================
-        // ESTATÍSTICAS DE ENTREGAS - ATUALIZADO
+        // RESUMO DE ENTREGAS - NOVO
         // ============================================
-        async function carregarEstatisticasEntregas() {
+        async function carregarResumoEntregas() {
             if (!supabaseClient) return;
 
             try {
                 const hoje = new Date();
                 const anoAtual = hoje.getFullYear();
-                const mesAtual = hoje.getMonth(); // 0-11
+                const mesAtual = hoje.getMonth();
                 
-                // ============================================
                 // 1. ENTREGAS NA SEMANA (corte: quarta-feira 17:00)
-                // ============================================
-                // Encontrar a última quarta-feira às 17:00
                 const ultimaQuarta = new Date(hoje);
-                const diaSemana = hoje.getDay(); // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sáb
+                const diaSemana = hoje.getDay();
                 
-                // Calcular quantos dias atrás foi a última quarta
                 let diasAtras = 0;
                 if (diaSemana === 3) {
-                    // Hoje é quarta, verificar se já passou das 17:00
                     if (hoje.getHours() >= 17) {
-                        diasAtras = 0; // Começa hoje às 17:00
+                        diasAtras = 0;
                     } else {
-                        diasAtras = 7; // A última quarta foi semana passada
+                        diasAtras = 7;
                     }
                 } else if (diaSemana < 3) {
-                    // Segunda ou Terça - última quarta foi (diaSemana + 4) dias atrás
                     diasAtras = diaSemana + 4;
                 } else {
-                    // Quinta, Sexta, Sábado, Domingo - última quarta foi (diaSemana - 3) dias atrás
                     diasAtras = diaSemana - 3;
                 }
                 
@@ -815,9 +820,7 @@
                     document.getElementById('statEntregasSemana').textContent = entregasSemana?.length || 0;
                 }
 
-                // ============================================
                 // 2. ENTREGAS NO MÊS
-                // ============================================
                 const inicioMes = new Date(anoAtual, mesAtual, 1);
                 inicioMes.setHours(0, 0, 0, 0);
                 const fimMes = new Date(anoAtual, mesAtual + 1, 0, 23, 59, 59, 999);
@@ -832,9 +835,7 @@
                     document.getElementById('statEntregasMes').textContent = entregasMes?.length || 0;
                 }
 
-                // ============================================
                 // 3. ENTREGAS NO ANO
-                // ============================================
                 const inicioAno = new Date(anoAtual, 0, 1);
                 inicioAno.setHours(0, 0, 0, 0);
                 const fimAno = new Date(anoAtual, 11, 31, 23, 59, 59, 999);
@@ -849,9 +850,7 @@
                     document.getElementById('statEntregasAno').textContent = entregasAno?.length || 0;
                 }
 
-                // ============================================
                 // 4. ENTREGAS PENDENTES
-                // ============================================
                 const { data: pendentes, error: errPendentes } = await supabaseClient
                     .from('solicitacoes_pg')
                     .select('id', { count: 'exact' })
@@ -861,9 +860,141 @@
                     document.getElementById('statEntregasPendentes').textContent = pendentes?.length || 0;
                 }
 
+                // Carregar gráfico inicial de entregas
+                await atualizarGraficoEntregas();
+
             } catch (error) {
                 console.error('Erro ao carregar estatísticas de entregas:', error);
             }
+        }
+
+        async function atualizarGraficoEntregas() {
+            if (!supabaseClient) return;
+
+            const anoSelecionado = parseInt(document.getElementById('selectAnoEntregas').value);
+            
+            try {
+                const inicioAno = new Date(anoSelecionado, 0, 1);
+                const fimAno = new Date(anoSelecionado, 11, 31, 23, 59, 59, 999);
+
+                const { data: entregasAno, error } = await supabaseClient
+                    .from('solicitacoes_pg')
+                    .select('data_solicitacao')
+                    .gte('data_solicitacao', inicioAno.toISOString())
+                    .lte('data_solicitacao', fimAno.toISOString());
+
+                if (error) throw error;
+
+                // Agrupar por mês
+                const entregasPorMes = new Array(12).fill(0);
+                
+                (entregasAno || []).forEach(entrega => {
+                    const data = new Date(entrega.data_solicitacao);
+                    const mes = data.getMonth();
+                    entregasPorMes[mes] += 1;
+                });
+
+                criarOuAtualizarGraficoEntregas(entregasPorMes, anoSelecionado);
+
+            } catch (error) {
+                console.error('Erro ao carregar gráfico de entregas:', error);
+            }
+        }
+
+        function criarOuAtualizarGraficoEntregas(dados, ano) {
+            const ctx = document.getElementById('graficoEntregas').getContext('2d');
+            
+            const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            
+            if (graficoEntregas) {
+                graficoEntregas.destroy();
+            }
+
+            // Cores diferentes para entregas (tom de rosa/laranja)
+            graficoEntregas = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: meses,
+                    datasets: [{
+                        label: `Entregas ${ano}`,
+                        data: dados,
+                        backgroundColor: 'rgba(255, 107, 138, 0.8)',
+                        borderColor: 'rgba(255, 107, 138, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        hoverBackgroundColor: 'rgba(255, 107, 138, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: "'Segoe UI', sans-serif"
+                                },
+                                color: '#2D3436'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + ' entrega(s)';
+                                }
+                            },
+                            backgroundColor: 'rgba(45, 52, 54, 0.9)',
+                            padding: 12,
+                            cornerRadius: 8,
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                color: '#636E72',
+                                font: { size: 12 }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#636E72',
+                                font: { size: 12 }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+
+        // ============================================
+        // UTILITÁRIOS
+        // ============================================
+        function formatarMoeda(valor) {
+            return 'R$ ' + valor.toFixed(2).replace('.', ',').replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.');
+        }
+
+        function formatarMoedaCurto(valor) {
+            if (valor >= 1000) {
+                return 'R$ ' + (valor / 1000).toFixed(1) + 'k';
+            }
+            return 'R$ ' + valor.toFixed(0);
         }
 
         // ============================================
