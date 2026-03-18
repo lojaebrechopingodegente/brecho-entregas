@@ -1597,52 +1597,51 @@
         }
 
         async function salvarEdicaoVenda(e) {
-            e.preventDefault();
+    e.preventDefault();
 
-            if (!supabaseClient) {
-                alert('❌ Erro de conexão com o banco de dados.');
-                return;
-            }
+    if (!supabaseClient) {
+        alert('❌ Erro de conexão com o banco de dados.');
+        return;
+    }
 
-            const id = document.getElementById('editId').value;
-            const btn = e.target.querySelector('.btn-salvar-modal');
-            btn.disabled = true;
-            btn.innerHTML = '⏳ Salvando...';
+    const id = document.getElementById('editId').value;
+    const btn = e.target.querySelector('.btn-salvar-modal');
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Salvando...';
 
-            try {
-                const dadosAtualizacao = {
-                    data_venda: document.getElementById('editDataVenda').value,
-                    cliente_nome: document.getElementById('editNomeCliente').value || null,
-                    cliente_cpf: document.getElementById('editCpfCliente').value.replace(/\D/g, '') || null,
-                    canal_venda: document.getElementById('editCanalVenda').value,
-                    forma_pagamento: document.getElementById('editFormaPagamento').value,
-                    status_pagamento: document.getElementById('editStatusPagamento').value,
-                    observacoes: document.getElementById('editObservacoes').value || null,
-                    atualizado_em: new Date().toISOString()
-                };
+    try {
+        const dadosAtualizacao = {
+            data_venda: document.getElementById('editDataVenda').value,
+            cliente_nome: document.getElementById('editNomeCliente').value || null,
+            cliente_cpf: document.getElementById('editCpfCliente').value.replace(/\D/g, '') || null,
+            canal_venda: document.getElementById('editCanalVenda').value,
+            forma_pagamento: document.getElementById('editFormaPagamento').value,
+            status_pagamento: document.getElementById('editStatusPagamento').value,
+            observacoes: document.getElementById('editObservacoes').value || null
+            // REMOVIDO: atualizado_em: new Date().toISOString()
+        };
 
-                const { error } = await supabaseClient
-                    .from('vendas_pg')
-                    .update(dadosAtualizacao)
-                    .eq('id', id);
+        const { error } = await supabaseClient
+            .from('vendas_pg')
+            .update(dadosAtualizacao)
+            .eq('id', id);
 
-                if (error) throw error;
+        if (error) throw error;
 
-                alert('✅ Venda atualizada com sucesso!');
-                fecharModalEdicao();
-                
-                // Recarregar a lista
-                await buscarVendas();
+        alert('✅ Venda atualizada com sucesso!');
+        fecharModalEdicao();
+        
+        // Recarregar a lista
+        await buscarVendas();
 
-            } catch (error) {
-                console.error('Erro:', error);
-                alert('❌ Erro ao atualizar venda: ' + error.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '💾 Salvar Alterações';
-            }
-        }
-
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('❌ Erro ao atualizar venda: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '💾 Salvar Alterações';
+    }
+}
         // ============================================
         // EXCLUIR VENDA
         // ============================================
