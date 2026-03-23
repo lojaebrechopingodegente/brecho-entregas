@@ -459,7 +459,7 @@
             margin-bottom: 5px;
         }
 
-        /* NOVO: Estilo para URL de rastreamento */
+        /* Estilo para URL de rastreamento */
         .url-rastreamento {
             background: #E3F2FD;
             border: 2px solid #2196F3;
@@ -481,6 +481,45 @@
             color: #1976D2;
             font-size: 0.9rem;
             text-decoration: none;
+        }
+
+        /* NOVO: Botão abrir Instagram do cliente */
+        .btn-abrir-instagram {
+            width: 100%;
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-abrir-instagram:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 39, 67, 0.4);
+        }
+
+        .instagram-info {
+            background: #FFF3E0;
+            border: 2px solid #FF9800;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #E65100;
+        }
+
+        .instagram-info strong {
+            display: block;
+            margin-bottom: 5px;
         }
 
         .empty-state {
@@ -682,7 +721,7 @@
         </div>
     </div>
 
-    <!-- Modal Enviar Instagram -->
+    <!-- Modal Enviar Instagram - ATUALIZADO -->
     <div class="modal-overlay" id="modalInstagram">
         <div class="modal">
             <div class="modal-header">
@@ -695,14 +734,24 @@
                 <input type="text" id="igClienteNome" readonly>
             </div>
 
-            <!-- NOVO: Exibir URL de rastreamento -->
+            <!-- NOVO: Botão para abrir Instagram do cliente -->
+            <div id="instagramClienteSection">
+                <div class="instagram-info">
+                    <strong>💡 Como enviar:</strong>
+                    Clique no botão abaixo para abrir o perfil do cliente no Instagram. Depois, inicie uma conversa no Direct e cole a mensagem.
+                </div>
+                <button class="btn-abrir-instagram" onclick="abrirInstagramCliente()" id="btnAbrirInstagram">
+                    📱 Abrir Instagram do Cliente
+                </button>
+            </div>
+
             <div class="url-rastreamento" id="urlRastreamentoContainer" style="display: none;">
                 <div class="url-rastreamento-label">🔗 Link de Rastreamento</div>
                 <a href="#" target="_blank" class="url-rastreamento-link" id="urlRastreamentoLink"></a>
             </div>
 
             <div class="form-group">
-                <label for="igMensagem">Mensagem</label>
+                <label for="igMensagem">Mensagem (copie e cole no Instagram)</label>
                 <textarea id="igMensagem"></textarea>
             </div>
 
@@ -715,7 +764,7 @@
                 📋 Copiar Mensagem
             </button>
             <p style="text-align: center; margin-top: 15px; color: #636E72; font-size: 0.85rem;">
-                Cole a mensagem no Instagram Direct do cliente
+                Depois de copiar, cole no Direct do cliente
             </p>
         </div>
     </div>
@@ -756,6 +805,7 @@
         let supabaseClient = null;
         let solicitacoesData = [];
         let clientesCache = {};
+        let instagramAtual = ''; // NOVO: Guarda o Instagram do cliente atual
 
         // ============================================
         // URLs DE RASTREAMENTO POR TRANSPORTADORA
@@ -1099,7 +1149,7 @@
         }
 
         // ============================================
-        // MODAL INSTAGRAM - COM URL DE RASTREAMENTO
+        // MODAL INSTAGRAM - COM BOTÃO ABRIR PERFIL
         // ============================================
         function abrirModalInstagram(solicitacaoId) {
             const sol = solicitacoesData.find(s => s.id === solicitacaoId);
@@ -1111,7 +1161,18 @@
                 return;
             }
 
-            document.getElementById('igClienteNome').value = cliente.nome;
+            // NOVO: Guardar Instagram atual para abrir depois
+            instagramAtual = cliente.instagram.replace('@', '').trim();
+
+            document.getElementById('igClienteNome').value = `${cliente.nome} (@${instagramAtual})`;
+
+            // Exibir/ocultar seção do Instagram baseado se tem @ cadastrado
+            const instagramSection = document.getElementById('instagramClienteSection');
+            if (instagramAtual) {
+                instagramSection.style.display = 'block';
+            } else {
+                instagramSection.style.display = 'none';
+            }
 
             // NOVO: Gerar e exibir URL de rastreamento
             const urlRastreamento = gerarUrlRastreamento(sol);
@@ -1140,7 +1201,30 @@
         }
 
         // ============================================
-        // NOVA FUNÇÃO: GERAR URL DE RASTREAMENTO
+        // NOVO: FUNÇÃO PARA ABRIR INSTAGRAM DO CLIENTE
+        // ============================================
+        function abrirInstagramCliente() {
+            if (!instagramAtual) {
+                alert('Não foi possível encontrar o Instagram do cliente');
+                return;
+            }
+
+            // Tentar abrir o app do Instagram primeiro (deep link)
+            // Se não conseguir, cai no link da web
+            const instagramUrl = `https://ig.me/m/${instagramAtual}`;
+            const instagramAppUrl = `instagram://user?username=${instagramAtual}`;
+            
+            // Primeiro tenta o app
+            window.location.href = instagramAppUrl;
+            
+            // Se não abrir o app em 1 segundo, abre a web
+            setTimeout(() => {
+                window.open(instagramUrl, '_blank');
+            }, 1000);
+        }
+
+        // ============================================
+        // GERAR URL DE RASTREAMENTO
         // ============================================
         function gerarUrlRastreamento(sol) {
             if (!sol.codigo_rastreio) return null;
@@ -1157,7 +1241,7 @@
         }
 
         // ============================================
-        // MENSAGEM INSTAGRAM ATUALIZADA COM URL
+        // MENSAGEM INSTAGRAM COM URL
         // ============================================
         function gerarMensagemInstagram(sol, cliente, urlRastreamento) {
             const numero = sol.numero_solicitacao || 'N/A';
@@ -1172,7 +1256,7 @@
                 mensagem += `🔍 Código de Rastreio: ${codigo}\n`;
                 mensagem += `🚛 Transportadora: ${formaEnvio}\n`;
                 
-                // NOVO: Adicionar URL de rastreamento
+                // Adicionar URL de rastreamento
                 if (urlRastreamento) {
                     mensagem += `\n🔗 Acompanhe sua entrega:\n${urlRastreamento}\n`;
                 }
@@ -1204,8 +1288,11 @@
             const mensagem = document.getElementById('igMensagem').value;
             
             navigator.clipboard.writeText(mensagem).then(() => {
-                alert('✅ Mensagem copiada! Agora cole no Instagram Direct do cliente.');
-                fecharModal('modalInstagram');
+                alert('✅ Mensagem copiada! Agora abra o Instagram do cliente e cole no Direct.');
+                // NOVO: Perguntar se quer abrir o Instagram
+                if (confirm('Deseja abrir o perfil do cliente no Instagram agora?')) {
+                    abrirInstagramCliente();
+                }
             }).catch(() => {
                 // Fallback
                 const textarea = document.createElement('textarea');
@@ -1214,8 +1301,7 @@
                 textarea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textarea);
-                alert('✅ Mensagem copiada! Agora cole no Instagram Direct do cliente.');
-                fecharModal('modalInstagram');
+                alert('✅ Mensagem copiada! Agora abra o Instagram do cliente e cole no Direct.');
             });
         }
 
