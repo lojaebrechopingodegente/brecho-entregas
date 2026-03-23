@@ -38,13 +38,13 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            background: linear-gradient(135deg, #e17055, #d63031);
-            color: white;
+            background: linear-gradient(135deg, #A8E6CF, #7FCDCD);
+            color: #2D3436;
             border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 600;
             transition: all 0.3s;
             text-decoration: none;
@@ -55,7 +55,7 @@
 
         .btn-voltar:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(225, 112, 85, 0.4);
+            box-shadow: 0 5px 15px rgba(168, 230, 207, 0.4);
         }
 
         .header-content {
@@ -462,6 +462,17 @@
             100% { transform: rotate(360deg); }
         }
 
+        .numero-pedido {
+            display: inline-block;
+            background: linear-gradient(135deg, #e17055, #d63031);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 1.5rem;
@@ -526,6 +537,14 @@
         <!-- Filtros -->
         <div class="filtros-section">
             <div class="filtro-group">
+                <label for="dataInicial">Data Inicial</label>
+                <input type="date" id="dataInicial">
+            </div>
+            <div class="filtro-group">
+                <label for="dataFinal">Data Final</label>
+                <input type="date" id="dataFinal">
+            </div>
+            <div class="filtro-group">
                 <label for="filtroStatus">Status</label>
                 <select id="filtroStatus">
                     <option value="">Todos</option>
@@ -539,7 +558,7 @@
                 <label for="filtroBusca">Buscar (Nº ou Cliente)</label>
                 <input type="text" id="filtroBusca" placeholder="Digite para buscar...">
             </div>
-            <button class="btn-filtrar" onclick="aplicarFiltros()">🔍 Filtrar</button>
+            <button class="btn-filtrar" onclick="aplicarFiltros()">🔍 Buscar</button>
         </div>
 
         <!-- Tabela -->
@@ -674,6 +693,14 @@
             try {
                 if (typeof supabase !== 'undefined') {
                     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    
+                    // Definir datas padrão (últimos 30 dias)
+                    const hoje = new Date();
+                    const trintaDiasAtras = new Date(hoje.getTime() - (30 * 24 * 60 * 60 * 1000));
+                    document.getElementById('dataFinal').value = hoje.toISOString().split('T')[0];
+                    document.getElementById('dataInicial').value = trintaDiasAtras.toISOString().split('T')[0];
+                    
+                    // Carregar dados iniciais
                     carregarDados();
                 }
             } catch (e) {
@@ -695,7 +722,7 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('clientes_pg')
-                    .select('id, nome, instagram');
+                    .select('id, nome, instagram, whatsapp');
                 
                 if (error) throw error;
                 
@@ -712,28 +739,52 @@
         async function carregarSolicitacoes() {
             if (!supabaseClient) return;
 
+            const dataInicial = document.getElementById('dataInicial').value;
+            const dataFinal = document.getElementById('dataFinal').value;
+
             try {
-                const { data, error } = await supabaseClient
+                let query = supabaseClient
                     .from('solicitacoes_pg')
                     .select(`
                         *,
                         enderecos_pg (
-                            logradouro,
+                            cep,
+                            rua,
                             numero,
+                            complemento,
+                            bairro,
                             cidade,
                             estado
                         )
                     `)
                     .order('data_solicitacao', { ascending: false });
 
-                if (error) throw error;
+                // Aplicar filtro de data se existir
+                if (dataInicial) {
+                    const inicio = new Date(dataInicial);
+                    inicio.setHours(0, 0, 0, 0);
+                    query = query.gte('data_solicitacao', inicio.toISOString());
+                }
+                
+                if (dataFinal) {
+                    const fim = new Date(dataFinal);
+                    fim.setHours(23, 59, 59, 999);
+                    query = query.lte('data_solicitacao', fim.toISOString());
+                }
+
+                const { data, error } = await query;
+
+                if (error) {
+                    console.error('Erro na query:', error);
+                    throw error;
+                }
 
                 solicitacoesData = data || [];
                 atualizarStats();
                 renderizarTabela(solicitacoesData);
             } catch (e) {
                 console.error('Erro ao carregar solicitações:', e);
-                mostrarErro('Erro ao carregar solicitações');
+                mostrarErro('Erro ao carregar solicitações: ' + e.message);
             }
         }
 
@@ -757,7 +808,7 @@
                     <div class="empty-state">
                         <div class="empty-state-icon">📭</div>
                         <h3>Nenhuma solicitação encontrada</h3>
-                        <p>Tente ajustar os filtros de busca</p>
+                        <p>Tente ajustar os filtros de data</p>
                     </div>
                 `;
                 return;
@@ -784,11 +835,15 @@
                 const dataSol = formatarData(sol.data_solicitacao);
                 const dataEnv = sol.data_envio ? formatarData(sol.data_envio) : '-';
                 const statusClass = `status-${sol.status || 'pendente'}`;
+                const temInstagram = cliente.instagram && cliente.instagram.trim() !== '';
                 
                 html += `
                     <tr>
-                        <td><strong>${sol.numero_solicitacao || '-'}</strong></td>
-                        <td>${cliente.nome}</td>
+                        <td><span class="numero-pedido">${sol.numero_solicitacao || '-'}</span></td>
+                        <td>
+                            <strong>${cliente.nome}</strong>
+                            ${temInstagram ? `<br><small style="color:#E1306C">@${cliente.instagram}</small>` : ''}
+                        </td>
                         <td>${dataSol}</td>
                         <td><span class="status-badge ${statusClass}">${sol.status || 'pendente'}</span></td>
                         <td>${sol.codigo_rastreio || '-'}</td>
@@ -799,7 +854,7 @@
                                     📦 ${sol.codigo_rastreio ? 'Editar' : 'Rastreio'}
                                 </button>
                                 <button class="btn-acao btn-instagram" onclick="abrirModalInstagram('${sol.id}')" 
-                                    ${!cliente.instagram ? 'disabled title="Cliente sem Instagram cadastrado"' : ''}>
+                                    ${!temInstagram ? 'disabled title="Cliente sem Instagram cadastrado"' : ''}>
                                     📱 Instagram
                                 </button>
                             </div>
@@ -819,22 +874,25 @@
             const status = document.getElementById('filtroStatus').value;
             const busca = document.getElementById('filtroBusca').value.toLowerCase();
 
-            let filtrados = solicitacoesData;
+            // Recarregar do banco com novas datas
+            carregarSolicitacoes().then(() => {
+                let filtrados = solicitacoesData;
 
-            if (status) {
-                filtrados = filtrados.filter(s => s.status === status);
-            }
+                if (status) {
+                    filtrados = filtrados.filter(s => s.status === status);
+                }
 
-            if (busca) {
-                filtrados = filtrados.filter(s => {
-                    const cliente = clientesCache[s.cliente_id] || { nome: '' };
-                    const numMatch = (s.numero_solicitacao || '').toLowerCase().includes(busca);
-                    const nomeMatch = cliente.nome.toLowerCase().includes(busca);
-                    return numMatch || nomeMatch;
-                });
-            }
+                if (busca) {
+                    filtrados = filtrados.filter(s => {
+                        const cliente = clientesCache[s.cliente_id] || { nome: '' };
+                        const numMatch = (s.numero_solicitacao || '').toLowerCase().includes(busca);
+                        const nomeMatch = cliente.nome.toLowerCase().includes(busca);
+                        return numMatch || nomeMatch;
+                    });
+                }
 
-            renderizarTabela(filtrados);
+                renderizarTabela(filtrados);
+            });
         }
 
         // ============================================
@@ -958,7 +1016,7 @@
                 alert('✅ Mensagem copiada! Agora cole no Instagram Direct do cliente.');
                 fecharModal('modalInstagram');
             }).catch(() => {
-                // Fallback para navegadores antigos
+                // Fallback
                 const textarea = document.createElement('textarea');
                 textarea.value = mensagem;
                 document.body.appendChild(textarea);
