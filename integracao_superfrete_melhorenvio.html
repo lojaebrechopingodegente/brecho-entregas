@@ -24,6 +24,29 @@
             margin: 0 auto;
         }
 
+        /* Botão Voltar */
+        .btn-voltar {
+            background: linear-gradient(135deg, #A8E6CF, #7FCDCD);
+            color: #2D3436;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .btn-voltar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(168, 230, 207, 0.4);
+        }
+
         h1 { text-align: center; color: #1a1a2e; margin-bottom: 8px; }
         .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 14px; }
 
@@ -116,29 +139,6 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
-        }
-
-        .ambiente-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .ambiente-btn {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e8e8e8;
-            background: white;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .ambiente-btn.active {
-            border-color: #667eea;
-            background: #f0f4ff;
-            color: #667eea;
         }
 
         .alert {
@@ -307,93 +307,6 @@
             font-style: italic;
         }
 
-        /* NOVOS ESTILOS PARA LINKS DE INTEGRAÇÃO */
-        .integracoes-box {
-            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-            border: 2px dashed #667eea;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 25px;
-        }
-
-        .integracoes-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .integracoes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-        }
-
-        .integracao-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-            text-decoration: none;
-            display: block;
-        }
-
-        .integracao-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-
-        .integracao-card.superfrete:hover {
-            border-color: #00b4d8;
-        }
-
-        .integracao-card.melhorenvio:hover {
-            border-color: #f5576c;
-        }
-
-        .integracao-icon {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-
-        .integracao-name {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin-bottom: 5px;
-        }
-
-        .integracao-desc {
-            font-size: 12px;
-            color: #666;
-        }
-
-        .integracao-status {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-top: 10px;
-            text-transform: uppercase;
-        }
-
-        .status-ok {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-dev {
-            background: #fff3cd;
-            color: #856404;
-        }
-
         .rastreamento-link {
             display: inline-flex;
             align-items: center;
@@ -413,82 +326,44 @@
             background: #667eea;
             color: white;
         }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .vincular-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
     </style>
 <base target="_blank">
 </head>
 <body>
     <div class="container">
+        <!-- Botão Voltar -->
+        <a href="rastreamento.html" class="btn-voltar">← Voltar para Rastreamento</a>
+
         <h1>🏷️ SuperFrete + Supabase</h1>
-        <p class="subtitle">Loja Pingo de Gente - Integração Completa</p>
-
-        <!-- LINKS DE INTEGRAÇÃO -->
-        <div class="section">
-            <div class="section-title">🔗 Integrações de Envio</div>
-
-            <div class="integracoes-box">
-                <div class="integracoes-title">
-                    🚚 Acesse as integrações de rastreamento
-                </div>
-
-                <div class="integracoes-grid">
-                    <!-- SuperFrete -->
-                    <a href="#" class="integracao-card superfretre" onclick="mostrarSecao('superfrete'); return false;">
-                        <div class="integracao-icon">📦</div>
-                        <div class="integracao-name">SuperFrete</div>
-                        <div class="integracao-desc">Integração ativa para consulta de etiquetas e rastreamento</div>
-                        <span class="integracao-status status-ok">✅ Ativo</span>
-                    </a>
-
-                    <!-- Melhor Envio -->
-                    <a href="#" class="integracao-card melhorenvio" onclick="mostrarSecao('melhorenvio'); return false;">
-                        <div class="integracao-icon">🚛</div>
-                        <div class="integracao-name">Melhor Envio</div>
-                        <div class="integracao-desc">Em desenvolvimento - Em breve disponível</div>
-                        <span class="integracao-status status-dev">🚧 Em Breve</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Alerta informativo -->
-            <div class="alert alert-info" style="margin:0;">
-                <strong>💡 Dica:</strong> Clique nos cards acima para alternar entre as integrações. 
-                O SuperFrete está pronto para uso, e o Melhor Envio será implementado em breve.
-            </div>
-        </div>
-
-        <!-- CONFIGURAÇÃO SUPABASE -->
-        <div class="section">
-            <div class="section-title">🔧 Configuração Supabase</div>
-
-            <div class="form-group">
-                <label>URL do Projeto Supabase:</label>
-                <input type="text" id="supabaseUrl" value="https://ytnfjzngalfapfnbobfm.supabase.co">
-            </div>
-
-            <div class="form-group">
-                <label>Chave Anônima (Anon Key):</label>
-                <input type="password" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIs...">
-            </div>
-
-            <button onclick="conectarSupabase()" id="btnConectar">
-                🔗 Conectar ao Supabase
-            </button>
-
-            <div id="supabaseStatus"></div>
-        </div>
+        <p class="subtitle">Loja Pingo de Gente - Integração Produção</p>
 
         <!-- SEÇÃO SUPERFRETE -->
-        <div class="section hidden" id="secaoSuperfrete">
-            <div class="section-title">📦 Consulta SuperFrete</div>
-
-            <div class="ambiente-selector">
-                <button class="ambiente-btn active" onclick="setAmbiente('sandbox')">🧪 Sandbox</button>
-                <button class="ambiente-btn" onclick="setAmbiente('producao')">🚀 Produção</button>
-            </div>
+        <div class="section" id="secaoSuperfrete">
+            <div class="section-title">📦 Consulta SuperFrete (Produção)</div>
 
             <div class="form-group">
                 <label>Token SuperFrete:</label>
-                <input type="password" id="tokenSuperfrete" placeholder="Cole seu token aqui...">
+                <input type="password" id="tokenSuperfrete" placeholder="Cole seu token de produção aqui...">
             </div>
 
             <div class="alert alert-info">
@@ -502,38 +377,11 @@
 
             <div class="form-group">
                 <label>Cole aqui o resultado JSON:</label>
-                <textarea id="jsonResultado" placeholder='{"orders":[...]} ou {"data":[...]}'></textarea>
+                <textarea id="jsonResultado" placeholder='{"data":[...]}'></textarea>
             </div>
 
             <button onclick="processarEtiquetas()" id="btnProcessar">
                 📊 Processar Etiquetas
-            </button>
-        </div>
-
-        <!-- SEÇÃO MELHOR ENVIO (EM DESENVOLVIMENTO) -->
-        <div class="section hidden" id="secaoMelhorEnvio">
-            <div class="section-title">🚛 Consulta Melhor Envio</div>
-
-            <div class="alert alert-warning">
-                <strong>🚧 Em Desenvolvimento</strong><br>
-                Esta integração está sendo desenvolvida e estará disponível em breve.
-            </div>
-
-            <div class="form-group">
-                <label>Token Melhor Envio:</label>
-                <input type="password" id="tokenMelhorEnvio" placeholder="Cole seu token do Melhor Envio..." disabled>
-            </div>
-
-            <div class="form-group">
-                <label>Ambiente:</label>
-                <select disabled>
-                    <option>Sandbox</option>
-                    <option>Produção</option>
-                </select>
-            </div>
-
-            <button disabled style="opacity:0.6; cursor:not-allowed;">
-                🚧 Em Breve
             </button>
         </div>
 
@@ -558,130 +406,111 @@
     </div>
 
     <script>
-        // Variáveis globais
+        // ============================================
+        // PROTEÇÃO DE ACESSO
+        // ============================================
+        (function() {
+            const STORAGE_SENHA = 'pingo_senha_hash';
+            const SENHA_CORRETA = '770057';
+
+            function criarHash(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString(16);
+            }
+
+            const senhaSalva = localStorage.getItem(STORAGE_SENHA);
+            const temAcesso = senhaSalva && criarHash(SENHA_CORRETA) === senhaSalva;
+
+            if (!temAcesso) {
+                window.location.replace('login.html');
+                throw new Error('Acesso não autorizado');
+            }
+        })();
+
+        // ============================================
+        // SUPABASE CONFIGURAÇÃO
+        // ============================================
+        const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
+
         let supabaseClient = null;
-        let ambienteAtual = 'sandbox';
         let etiquetasData = [];
         let solicitacoesCache = [];
-        let rastreamentosExistentes = []; // Códigos de rastreio já cadastrados
-        let secaoAtual = 'superfrete';
+        let rastreamentosExistentes = [];
 
         const CONFIG = {
-            sandbox: { 
-                url: 'https://sandbox.superfrete.com/api/v0/me/orders?page=1&limit=50', 
-                campoDados: 'orders'
-            },
             producao: { 
                 url: 'https://api.superfrete.com/api/v0/me/orders?page=1&limit=50', 
                 campoDados: 'data'
             }
         };
 
-        // Mostrar seção específica
-        function mostrarSecao(secao) {
-            secaoAtual = secao;
-
-            // Esconder todas as seções
-            document.getElementById('secaoSuperfrete').classList.add('hidden');
-            document.getElementById('secaoMelhorEnvio').classList.add('hidden');
-
-            // Mostrar seção selecionada
-            if (secao === 'superfrete') {
-                document.getElementById('secaoSuperfrete').classList.remove('hidden');
-            } else if (secao === 'melhorenvio') {
-                document.getElementById('secaoMelhorEnvio').classList.remove('hidden');
-            }
-
-            // Atualizar visual dos cards
-            document.querySelectorAll('.integracao-card').forEach(card => {
-                card.style.borderColor = 'transparent';
-                card.style.transform = 'none';
-            });
-
-            event.currentTarget.style.borderColor = secao === 'superfrete' ? '#00b4d8' : '#f5576c';
-        }
-
-        // Conectar ao Supabase
-        async function conectarSupabase() {
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-            const btn = document.getElementById('btnConectar');
-            const status = document.getElementById('supabaseStatus');
-
-            if (!url || !key) {
-                alert('Preencha URL e chave do Supabase!');
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span> Conectando...';
-
+        // Inicializar Supabase automaticamente
+        async function inicializarSupabase() {
             try {
-                // Criar cliente Supabase
-                supabaseClient = window.supabase.createClient(url, key);
+                if (typeof supabase !== 'undefined') {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    
+                    // Buscar solicitações
+                    const { data: solicitacoes, error: errorSol } = await supabaseClient
+                        .from('solicitacoes_pg')
+                        .select('id, numero_solicitacao, codigo_rastreio, clientes_pg(nome, email)')
+                        .order('data_solicitacao', { ascending: false })
+                        .limit(200);
 
-                // Buscar solicitações
-                const { data: solicitacoes, error: errorSol } = await supabaseClient
-                    .from('solicitacoes_pg')
-                    .select('id, numero_solicitacao, codigo_rastreio, clientes_pg(nome, email)')
-                    .order('data_solicitacao', { ascending: false })
-                    .limit(200);
+                    if (errorSol) throw errorSol;
 
-                if (errorSol) throw errorSol;
+                    // Buscar rastreamentos existentes
+                    const { data: rastreamentos, error: errorRast } = await supabaseClient
+                        .from('rastreamentos_pg')
+                        .select('codigo_rastreio, solicitacao_id');
 
-                // Buscar rastreamentos existentes para filtrar
-                const { data: rastreamentos, error: errorRast } = await supabaseClient
-                    .from('rastreamentos_pg')
-                    .select('codigo_rastreio, solicitacao_id');
+                    if (errorRast) throw errorRast;
 
-                if (errorRast) throw errorRast;
+                    rastreamentosExistentes = rastreamentos.map(r => r.codigo_rastreio);
 
-                // Criar lista de códigos já cadastrados
-                rastreamentosExistentes = rastreamentos.map(r => r.codigo_rastreio);
+                    // Filtrar apenas solicitações SEM rastreamento
+                    solicitacoesCache = solicitacoes.filter(s => {
+                        const semCodigoNaTabela = !s.codigo_rastreio;
+                        const semRastreamentoCadastrado = !rastreamentos.some(r => r.solicitacao_id === s.id);
+                        return semCodigoNaTabela && semRastreamentoCadastrado;
+                    });
 
-                // Filtrar apenas solicitações SEM rastreamento
-                solicitacoesCache = solicitacoes.filter(s => {
-                    // Verifica se não tem código na própria tabela
-                    const semCodigoNaTabela = !s.codigo_rastreio;
-                    // Verifica se não existe na tabela de rastreamentos
-                    const semRastreamentoCadastrado = !rastreamentos.some(r => r.solicitacao_id === s.id);
-                    return semCodigoNaTabela && semRastreamentoCadastrado;
-                });
+                    // Mostrar mensagem de sucesso
+                    const secao = document.getElementById('secaoSuperfrete');
+                    const statusDiv = document.createElement('div');
+                    statusDiv.id = 'supabaseStatus';
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-success" style="margin-top: 15px;">
+                            ✅ Conectado ao Supabase!<br>
+                            • ${solicitacoesCache.length} solicitações sem rastreamento<br>
+                            • ${rastreamentos.length} rastreamentos já cadastrados (filtrados)
+                        </div>
+                    `;
+                    secao.appendChild(statusDiv);
 
-                status.innerHTML = `
-                    <div class="alert alert-success">
-                        ✅ Conectado!<br>
-                        • ${solicitacoesCache.length} solicitações sem rastreamento<br>
-                        • ${rastreamentos.length} rastreamentos já cadastrados (filtrados)
-                    </div>
-                `;
+                    atualizarContador();
 
-                // Mostrar seção ativa (SuperFrete por padrão)
-                if (secaoAtual === 'superfrete') {
-                    document.getElementById('secaoSuperfrete').classList.remove('hidden');
                 }
-
             } catch (err) {
-                console.error('Erro completo:', err);
-                status.innerHTML = `<div class="alert alert-error">❌ Erro: ${err.message}</div>`;
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '🔗 Conectar ao Supabase';
+                console.error('Erro ao conectar Supabase:', err);
+                const secao = document.getElementById('secaoSuperfrete');
+                const statusDiv = document.createElement('div');
+                statusDiv.id = 'supabaseStatus';
+                statusDiv.innerHTML = `<div class="alert alert-error" style="margin-top: 15px;">❌ Erro: ${err.message}</div>`;
+                secao.appendChild(statusDiv);
             }
-        }
-
-        // Alternar ambiente
-        function setAmbiente(amb) {
-            ambienteAtual = amb;
-            document.querySelectorAll('.ambiente-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            atualizarComando();
         }
 
         // Atualizar comando PowerShell
         function atualizarComando() {
-            const token = document.getElementById('tokenSuperfrete').value.trim() || 'SEU_TOKEN';
-            const url = CONFIG[ambienteAtual].url;
+            const token = document.getElementById('tokenSuperfrete').value.trim() || 'SEU_TOKEN_AQUI';
+            const url = CONFIG.producao.url;
 
             const comando = `Invoke-RestMethod -Uri "${url}" -Method GET -Headers @{"Authorization"="Bearer ${token}"; "Accept"="application/json"; "User-Agent"="Loja Pingo de Gente (marcobet@gmail.com)"} | ConvertTo-Json -Depth 10 | Set-Clipboard`;
 
@@ -709,8 +538,8 @@
 
             try {
                 const data = JSON.parse(jsonText);
-                const campo = CONFIG[ambienteAtual].campoDados;
-                etiquetasData = data[campo] || data.orders || data.data || [];
+                const campo = CONFIG.producao.campoDados;
+                etiquetasData = data[campo] || data.data || [];
 
                 if (!Array.isArray(etiquetasData) || etiquetasData.length === 0) {
                     alert('Nenhuma etiqueta encontrada no JSON!');
@@ -746,7 +575,7 @@
                 let temVisivel = false;
 
                 options.forEach(opt => {
-                    if (opt.value === '') return; // Manter opção "Selecione..."
+                    if (opt.value === '') return;
 
                     const texto = opt.textContent.toLowerCase();
                     if (texto.includes(filtro)) {
@@ -757,9 +586,7 @@
                     }
                 });
 
-                // Se não tiver nenhuma visível, mostrar mensagem
                 if (!temVisivel && filtro !== '') {
-                    // Adicionar opção temporária se não existir
                     let optNenhuma = select.querySelector('option[data-temp="true"]');
                     if (!optNenhuma) {
                         optNenhuma = document.createElement('option');
@@ -798,7 +625,6 @@
 
             container.classList.remove('hidden');
 
-            // Estatísticas
             const comRastreio = etiquetas.filter(e => {
                 const rastreio = e.tracking || e.tracking_code || e.code;
                 return rastreio && rastreio !== 'N/A';
@@ -819,7 +645,6 @@
                 </div>
             `;
 
-            // Gerar opções do select
             const opcoesSolicitacoes = solicitacoesCache.map(s => {
                 const nome = s.clientes_pg?.nome || 'Sem nome';
                 const email = s.clientes_pg?.email || '';
@@ -827,7 +652,6 @@
                 return `<option value="${s.id}">#${num} - ${nome} ${email ? '(' + email + ')' : ''}</option>`;
             }).join('');
 
-            // Renderizar cada etiqueta
             lista.innerHTML = etiquetas.map((etq, index) => {
                 const id = etq.order_id || etq.id || 'N/A';
                 const rastreio = etq.tracking || etq.tracking_code || etq.code || '';
@@ -845,7 +669,6 @@
 
                 const status = (etq.status || 'unknown').toLowerCase();
 
-                // Link de rastreamento baseado na transportadora
                 let linkRastreamento = '';
                 if (rastreio) {
                     if (transportadora.toLowerCase().includes('correios')) {
@@ -924,7 +747,6 @@
             btn.innerHTML = '<span class="loading"></span> Salvando...';
 
             try {
-                // Inserir rastreamento
                 const { error } = await supabaseClient
                     .from('rastreamentos_pg')
                     .insert({
@@ -932,12 +754,11 @@
                         codigo_rastreio: codigoRastreio,
                         forma_envio: formaEnvio.toLowerCase(),
                         data_envio: dataEnvio || null,
-                        observacoes: `Importado do SuperFrete (${ambienteAtual})`
+                        observacoes: `Importado do SuperFrete (producao)`
                     });
 
                 if (error) throw error;
 
-                // Atualizar solicitação
                 await supabaseClient
                     .from('solicitacoes_pg')
                     .update({
@@ -949,14 +770,12 @@
                     })
                     .eq('id', solicitacaoId);
 
-                // Adicionar à lista de existentes e remover da lista de disponíveis
                 rastreamentosExistentes.push(codigoRastreio);
                 solicitacoesCache = solicitacoesCache.filter(s => s.id !== solicitacaoId);
 
                 document.getElementById(`etiqueta-${index}`).classList.add('salvo');
                 msgDiv.innerHTML = '<div class="alert alert-success" style="margin:0;padding:10px;">✅ Salvo! Removido da lista.</div>';
 
-                // Atualizar contador
                 atualizarContador();
 
             } catch (err) {
@@ -970,7 +789,10 @@
 
         // Inicializar
         document.getElementById('tokenSuperfrete').addEventListener('input', atualizarComando);
-        atualizarComando();
+        document.addEventListener('DOMContentLoaded', () => {
+            atualizarComando();
+            inicializarSupabase();
+        });
     </script>
 </body>
 </html>
