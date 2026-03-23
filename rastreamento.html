@@ -694,7 +694,7 @@
             </div>
             <div class="filtro-group">
                 <label for="filtroStatus">Status</label>
-                <select id="filtroStatus">
+                <select id="filtroStatus" onchange="aplicarFiltrosLocal()">
                     <option value="">Todos</option>
                     <option value="pendente">Pendente</option>
                     <option value="enviado">Enviado</option>
@@ -704,7 +704,7 @@
             </div>
             <div class="filtro-group">
                 <label for="filtroBusca">Buscar (Nº ou Cliente)</label>
-                <input type="text" id="filtroBusca" placeholder="Digite para buscar...">
+                <input type="text" id="filtroBusca" oninput="aplicarFiltrosLocal()" placeholder="Digite para buscar...">
             </div>
             <button class="btn-filtrar" onclick="aplicarFiltros()">🔍 Buscar</button>
         </div>
@@ -933,6 +933,9 @@
             }
         }
 
+        // ============================================
+        // CARREGAR SOLICITAÇÕES - ATUALIZADO (filtros da tela prevalecem)
+        // ============================================
         async function carregarSolicitacoes() {
             if (!supabaseClient) return;
 
@@ -981,7 +984,10 @@
                 await carregarRastreamentos();
                 
                 atualizarStats();
-                renderizarTabela(solicitacoesData);
+                
+                // Aplicar filtros da tela (status/busca) nos dados carregados
+                aplicarFiltrosLocal();
+                
             } catch (e) {
                 console.error('Erro ao carregar solicitações:', e);
                 mostrarErro('Erro ao carregar solicitações: ' + e.message);
@@ -1116,34 +1122,42 @@
         }
 
         // ============================================
-        // FILTROS
+        // FILTROS - ATUALIZADO (filtros da tela prevalecem)
         // ============================================
         function aplicarFiltros() {
+            // Recarrega dados do banco com as datas selecionadas
+            // e aplica filtros automaticamente no final via aplicarFiltrosLocal()
+            carregarSolicitacoes();
+        }
+
+        // NOVO: Aplica filtros localmente sem bater no banco
+        function aplicarFiltrosLocal() {
             const status = document.getElementById('filtroStatus').value;
             const busca = document.getElementById('filtroBusca').value.toLowerCase();
 
-            carregarSolicitacoes().then(() => {
-                let filtrados = solicitacoesData;
+            let filtrados = [...solicitacoesData]; // Criar cópia
 
-                if (status) {
-                    if (status === 'enviado') {
-                        filtrados = filtrados.filter(s => s.codigo_rastreio);
-                    } else {
-                        filtrados = filtrados.filter(s => s.status === status);
-                    }
+            if (status) {
+                if (status === 'enviado') {
+                    filtrados = filtrados.filter(s => s.codigo_rastreio);
+                } else if (status === 'pendente') {
+                    filtrados = filtrados.filter(s => !s.codigo_rastreio);
+                } else {
+                    filtrados = filtrados.filter(s => s.status === status);
                 }
+            }
 
-                if (busca) {
-                    filtrados = filtrados.filter(s => {
-                        const cliente = clientesCache[s.cliente_id] || { nome: '' };
-                        const numMatch = (s.numero_solicitacao || '').toLowerCase().includes(busca);
-                        const nomeMatch = cliente.nome.toLowerCase().includes(busca);
-                        return numMatch || nomeMatch;
-                    });
-                }
+            if (busca) {
+                filtrados = filtrados.filter(s => {
+                    const cliente = clientesCache[s.cliente_id] || { nome: '' };
+                    const numMatch = (s.numero_solicitacao || '').toLowerCase().includes(busca);
+                    const nomeMatch = cliente.nome.toLowerCase().includes(busca);
+                    const codigoMatch = (s.codigo_rastreio || '').toLowerCase().includes(busca);
+                    return numMatch || nomeMatch || codigoMatch;
+                });
+            }
 
-                renderizarTabela(filtrados);
-            });
+            renderizarTabela(filtrados);
         }
 
         // ============================================
