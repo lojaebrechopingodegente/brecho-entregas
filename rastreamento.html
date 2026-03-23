@@ -308,7 +308,7 @@
             background: white;
             border-radius: 20px;
             padding: 30px;
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -459,31 +459,40 @@
             margin-bottom: 5px;
         }
 
-        /* Estilo para URL de rastreamento */
-        .url-rastreamento {
-            background: #E3F2FD;
-            border: 2px solid #2196F3;
+        /* Histórico de rastreamentos */
+        .historico-rastreamentos {
+            background: #F5F5F5;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .historico-item {
+            background: white;
+            padding: 10px;
             border-radius: 8px;
-            padding: 12px 15px;
-            margin-top: 15px;
-            word-break: break-all;
+            margin-bottom: 8px;
+            border-left: 4px solid #e17055;
         }
 
-        .url-rastreamento-label {
-            font-size: 0.75rem;
-            color: #1565C0;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-            font-weight: 600;
+        .historico-item:last-child {
+            margin-bottom: 0;
         }
 
-        .url-rastreamento-link {
-            color: #1976D2;
-            font-size: 0.9rem;
-            text-decoration: none;
+        .historico-codigo {
+            font-family: monospace;
+            font-weight: bold;
+            color: #e17055;
         }
 
-        /* NOVO: Botão abrir Instagram do cliente */
+        .historico-data {
+            font-size: 0.8rem;
+            color: #636E72;
+        }
+
+        /* Botão abrir Instagram do cliente */
         .btn-abrir-instagram {
             width: 100%;
             background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
@@ -668,15 +677,23 @@
         </div>
     </div>
 
-    <!-- Modal Cadastrar Rastreio -->
+    <!-- Modal Cadastrar Rastreio - ATUALIZADO -->
     <div class="modal-overlay" id="modalRastreio">
         <div class="modal">
             <div class="modal-header">
-                <h3>📦 Cadastrar Rastreio</h3>
+                <h3>📦 Cadastrar/Editar Rastreio</h3>
                 <button class="btn-fechar" onclick="fecharModal('modalRastreio')">×</button>
             </div>
+            
+            <!-- NOVO: Histórico de rastreamentos -->
+            <div class="historico-rastreamentos" id="historicoRastreamentos" style="display: none;">
+                <h4 style="margin-bottom: 10px; color: #636E72;">📜 Histórico de Rastreamentos</h4>
+                <div id="listaHistorico"></div>
+            </div>
+
             <form id="formRastreio" onsubmit="salvarRastreio(event)">
                 <input type="hidden" id="rastreioSolicitacaoId">
+                <input type="hidden" id="rastreioId"> <!-- NOVO: ID do rastreamento atual -->
                 
                 <div class="form-group">
                     <label for="codigoRastreio">
@@ -716,12 +733,19 @@
                     </select>
                 </div>
 
+                <div class="form-group">
+                    <label for="observacoesRastreio">
+                        Observações <span class="campo-opcional">(opcional)</span>
+                    </label>
+                    <textarea id="observacoesRastreio" placeholder="Alguma observação sobre este rastreamento..."></textarea>
+                </div>
+
                 <button type="submit" class="btn-salvar">💾 Salvar Rastreio</button>
             </form>
         </div>
     </div>
 
-    <!-- Modal Enviar Instagram - ATUALIZADO -->
+    <!-- Modal Enviar Instagram -->
     <div class="modal-overlay" id="modalInstagram">
         <div class="modal">
             <div class="modal-header">
@@ -734,7 +758,6 @@
                 <input type="text" id="igClienteNome" readonly>
             </div>
 
-            <!-- NOVO: Botão para abrir Instagram do cliente -->
             <div id="instagramClienteSection">
                 <div class="instagram-info">
                     <strong>💡 Como enviar:</strong>
@@ -743,11 +766,6 @@
                 <button class="btn-abrir-instagram" onclick="abrirInstagramCliente()" id="btnAbrirInstagram">
                     📱 Abrir Instagram do Cliente
                 </button>
-            </div>
-
-            <div class="url-rastreamento" id="urlRastreamentoContainer" style="display: none;">
-                <div class="url-rastreamento-label">🔗 Link de Rastreamento</div>
-                <a href="#" target="_blank" class="url-rastreamento-link" id="urlRastreamentoLink"></a>
             </div>
 
             <div class="form-group">
@@ -805,7 +823,8 @@
         let supabaseClient = null;
         let solicitacoesData = [];
         let clientesCache = {};
-        let instagramAtual = ''; // NOVO: Guarda o Instagram do cliente atual
+        let instagramAtual = '';
+        let rastreamentosCache = {}; // NOVO: Cache de rastreamentos por solicitação
 
         // ============================================
         // URLs DE RASTREAMENTO POR TRANSPORTADORA
@@ -859,7 +878,6 @@
                 
                 if (error) throw error;
                 
-                // Criar cache de clientes
                 clientesCache = {};
                 (data || []).forEach(c => {
                     clientesCache[c.id] = c;
@@ -892,7 +910,6 @@
                     `)
                     .order('data_solicitacao', { ascending: false });
 
-                // Aplicar filtro de data se existir
                 if (dataInicial) {
                     const inicio = new Date(dataInicial);
                     inicio.setHours(0, 0, 0, 0);
@@ -913,6 +930,10 @@
                 }
 
                 solicitacoesData = data || [];
+                
+                // NOVO: Carregar rastreamentos para todas as solicitações
+                await carregarRastreamentos();
+                
                 atualizarStats();
                 renderizarTabela(solicitacoesData);
             } catch (e) {
@@ -921,10 +942,59 @@
             }
         }
 
+        // ============================================
+        // NOVO: CARREGAR RASTREAMENTOS DA TABELA rastreamentos_pg
+        // ============================================
+        async function carregarRastreamentos() {
+            if (!supabaseClient || solicitacoesData.length === 0) return;
+            
+            const solicitacaoIds = solicitacoesData.map(s => s.id);
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('rastreamentos_pg')
+                    .select('*')
+                    .in('solicitacao_id', solicitacaoIds)
+                    .order('data_cadastro', { ascending: false });
+                
+                if (error) throw error;
+                
+                // Organizar rastreamentos por solicitação
+                rastreamentosCache = {};
+                solicitacaoIds.forEach(id => rastreamentosCache[id] = []);
+                
+                (data || []).forEach(rast => {
+                    if (!rastreamentosCache[rast.solicitacao_id]) {
+                        rastreamentosCache[rast.solicitacao_id] = [];
+                    }
+                    rastreamentosCache[rast.solicitacao_id].push(rast);
+                });
+                
+                // Atualizar solicitacoesData com o rastreamento mais recente
+                solicitacoesData.forEach(sol => {
+                    const rastreamentos = rastreamentosCache[sol.id] || [];
+                    if (rastreamentos.length > 0) {
+                        const maisRecente = rastreamentos[0];
+                        sol.codigo_rastreio = maisRecente.codigo_rastreio;
+                        sol.forma_envio = maisRecente.forma_envio;
+                        sol.data_envio = maisRecente.data_envio;
+                        sol.data_entrega_prevista = maisRecente.data_entrega_prevista;
+                        sol.rastreamento_id = maisRecente.id;
+                    } else {
+                        sol.codigo_rastreio = null;
+                        sol.rastreamento_id = null;
+                    }
+                });
+                
+            } catch (e) {
+                console.error('Erro ao carregar rastreamentos:', e);
+            }
+        }
+
         function atualizarStats() {
             const total = solicitacoesData.length;
-            const pendentes = solicitacoesData.filter(s => s.status === 'pendente').length;
-            const enviados = solicitacoesData.filter(s => s.status === 'enviado').length;
+            const pendentes = solicitacoesData.filter(s => !s.codigo_rastreio).length;
+            const enviados = solicitacoesData.filter(s => s.codigo_rastreio && s.status !== 'entregue').length;
             const entregues = solicitacoesData.filter(s => s.status === 'entregue').length;
 
             document.getElementById('statTotal').textContent = total;
@@ -956,7 +1026,7 @@
                             <th>Data Solicitação</th>
                             <th>Status</th>
                             <th>Código Rastreio</th>
-                            <th>Data Envio</th>
+                            <th>Forma Envio</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -966,8 +1036,7 @@
             dados.forEach(sol => {
                 const cliente = clientesCache[sol.cliente_id] || { nome: 'N/A', instagram: '' };
                 const dataSol = formatarData(sol.data_solicitacao);
-                const dataEnv = sol.data_envio ? formatarData(sol.data_envio) : '-';
-                const statusClass = `status-${sol.status || 'pendente'}`;
+                const statusClass = `status-${sol.codigo_rastreio ? 'enviado' : (sol.status || 'pendente')}`;
                 const temInstagram = cliente.instagram && cliente.instagram.trim() !== '';
                 
                 html += `
@@ -978,13 +1047,13 @@
                             ${temInstagram ? `<br><small style="color:#E1306C">@${cliente.instagram}</small>` : ''}
                         </td>
                         <td>${dataSol}</td>
-                        <td><span class="status-badge ${statusClass}">${sol.status || 'pendente'}</span></td>
+                        <td><span class="status-badge ${statusClass}">${sol.codigo_rastreio ? 'Enviado' : (sol.status || 'Pendente')}</span></td>
                         <td>${sol.codigo_rastreio || '-'}</td>
-                        <td>${dataEnv}</td>
+                        <td>${sol.forma_envio ? formatarFormaEnvio(sol.forma_envio) : '-'}</td>
                         <td>
                             <div class="acoes-cell">
                                 <button class="btn-acao btn-rastreio" onclick="abrirModalRastreio('${sol.id}')">
-                                    📦 ${sol.codigo_rastreio ? 'Editar' : 'Rastreio'}
+                                    📦 ${sol.codigo_rastreio ? 'Editar' : 'Cadastrar'}
                                 </button>
                                 <button class="btn-acao btn-instagram" onclick="abrirModalInstagram('${sol.id}')" 
                                     ${!temInstagram ? 'disabled title="Cliente sem Instagram cadastrado"' : ''}>
@@ -1007,12 +1076,15 @@
             const status = document.getElementById('filtroStatus').value;
             const busca = document.getElementById('filtroBusca').value.toLowerCase();
 
-            // Recarregar do banco com novas datas
             carregarSolicitacoes().then(() => {
                 let filtrados = solicitacoesData;
 
                 if (status) {
-                    filtrados = filtrados.filter(s => s.status === status);
+                    if (status === 'enviado') {
+                        filtrados = filtrados.filter(s => s.codigo_rastreio);
+                    } else {
+                        filtrados = filtrados.filter(s => s.status === status);
+                    }
                 }
 
                 if (busca) {
@@ -1036,35 +1108,24 @@
             
             valor = valor.trim();
             
-            // Se for URL, extrair o código do final
             if (valor.includes('/') || valor.includes('?')) {
-                // Pega tudo após a última barra
                 const partes = valor.split('/');
                 let ultimaParte = partes[partes.length - 1];
                 
-                // Remove parâmetros de query se houver (ex: ?codigo=XXX)
                 if (ultimaParte.includes('?')) {
                     const params = new URLSearchParams(ultimaParte.split('?')[1]);
-                    // Tenta pegar de parâmetros comuns
                     const codigoParam = params.get('codigo') || params.get('tracking') || params.get('id');
                     if (codigoParam) return codigoParam;
-                    // Se não encontrou nos params, pega antes do ?
                     ultimaParte = ultimaParte.split('?')[0];
                 }
                 
-                // Remove hash se houver
                 ultimaParte = ultimaParte.split('#')[0];
-                
                 return ultimaParte.trim();
             }
             
-            // Se não for URL, retorna o valor limpo
             return valor;
         }
 
-        // ============================================
-        // PREVIEW DO CÓDIGO EXTRAÍDO
-        // ============================================
         function previewCodigoRastreio() {
             const input = document.getElementById('codigoRastreio');
             const preview = document.getElementById('codigoPreview');
@@ -1081,75 +1142,143 @@
         }
 
         // ============================================
-        // MODAL RASTREIO
+        // MODAL RASTREIO - ATUALIZADO COM HISTÓRICO
         // ============================================
-        function abrirModalRastreio(solicitacaoId) {
+        async function abrirModalRastreio(solicitacaoId) {
             const sol = solicitacoesData.find(s => s.id === solicitacaoId);
             if (!sol) return;
 
             document.getElementById('rastreioSolicitacaoId').value = solicitacaoId;
-            document.getElementById('codigoRastreio').value = sol.codigo_rastreio || '';
-            document.getElementById('dataEnvio').value = sol.data_envio || '';
-            document.getElementById('dataPrevista').value = sol.data_entrega_prevista || '';
-            document.getElementById('formaEnvio').value = sol.forma_envio || 'correios';
+            document.getElementById('rastreioId').value = sol.rastreamento_id || '';
             
-            // Resetar preview
+            // NOVO: Mostrar histórico de rastreamentos
+            await mostrarHistoricoRastreamentos(solicitacaoId);
+            
+            // Preencher com dados do rastreamento mais recente se existir
+            if (sol.rastreamento_id) {
+                const rastRecente = rastreamentosCache[solicitacaoId]?.[0];
+                if (rastRecente) {
+                    document.getElementById('codigoRastreio').value = rastRecente.codigo_rastreio || '';
+                    document.getElementById('dataEnvio').value = rastRecente.data_envio || '';
+                    document.getElementById('dataPrevista').value = rastRecente.data_entrega_prevista || '';
+                    document.getElementById('formaEnvio').value = rastRecente.forma_envio || 'correios';
+                    document.getElementById('observacoesRastreio').value = rastRecente.observacoes || '';
+                }
+            } else {
+                // Limpar campos para novo cadastro
+                document.getElementById('codigoRastreio').value = '';
+                document.getElementById('dataEnvio').value = '';
+                document.getElementById('dataPrevista').value = '';
+                document.getElementById('formaEnvio').value = 'correios';
+                document.getElementById('observacoesRastreio').value = '';
+            }
+            
             document.getElementById('codigoPreview').classList.remove('active');
-
             document.getElementById('modalRastreio').classList.add('active');
         }
 
+        // NOVO: Mostrar histórico de rastreamentos
+        async function mostrarHistoricoRastreamentos(solicitacaoId) {
+            const historicoDiv = document.getElementById('historicoRastreamentos');
+            const listaDiv = document.getElementById('listaHistorico');
+            
+            const rastreamentos = rastreamentosCache[solicitacaoId] || [];
+            
+            if (rastreamentos.length === 0) {
+                historicoDiv.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            rastreamentos.forEach((rast, index) => {
+                const dataCad = new Date(rast.data_cadastro).toLocaleString('pt-BR');
+                html += `
+                    <div class="historico-item">
+                        <div class="historico-codigo">${rast.codigo_rastreio}</div>
+                        <div class="historico-data">
+                            📅 ${dataCad} | 🚛 ${formatarFormaEnvio(rast.forma_envio)}
+                            ${rast.observacoes ? ' | 📝 ' + rast.observacoes : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            listaDiv.innerHTML = html;
+            historicoDiv.style.display = 'block';
+        }
+
+        // ============================================
+        // SALVAR RASTREIO - ATUALIZADO PARA NOVA TABELA
+        // ============================================
         async function salvarRastreio(event) {
             event.preventDefault();
             
             const solicitacaoId = document.getElementById('rastreioSolicitacaoId').value;
+            const rastreioId = document.getElementById('rastreioId').value;
             const codigoInput = document.getElementById('codigoRastreio').value.trim();
             
-            // Extrair código se for URL
             const codigo = extrairCodigoRastreio(codigoInput);
             
             const dataEnvio = document.getElementById('dataEnvio').value || null;
             const dataPrevista = document.getElementById('dataPrevista').value || null;
             const formaEnvio = document.getElementById('formaEnvio').value;
+            const observacoes = document.getElementById('observacoesRastreio').value || null;
 
-            // Validação: pelo menos o código é obrigatório
             if (!codigo) {
                 alert('⚠️ Por favor, informe o código de rastreio ou URL');
                 return;
             }
 
             try {
-                const updateData = {
-                    codigo_rastreio: codigo,
-                    forma_envio: formaEnvio,
-                    atualizado_em: new Date().toISOString()
-                };
+                let result;
                 
-                // Só adiciona as datas se foram preenchidas
-                if (dataEnvio) updateData.data_envio = dataEnvio;
-                if (dataPrevista) updateData.data_entrega_prevista = dataPrevista;
-                
-                // Se tem código de rastreio, marca como enviado
-                if (codigo) updateData.status = 'enviado';
+                if (rastreioId) {
+                    // ATUALIZAR rastreamento existente
+                    result = await supabaseClient
+                        .from('rastreamentos_pg')
+                        .update({
+                            codigo_rastreio: codigo,
+                            forma_envio: formaEnvio,
+                            data_envio: dataEnvio,
+                            data_entrega_prevista: dataPrevista,
+                            observacoes: observacoes
+                        })
+                        .eq('id', rastreioId)
+                        .select();
+                } else {
+                    // INSERIR novo rastreamento
+                    result = await supabaseClient
+                        .from('rastreamentos_pg')
+                        .insert({
+                            solicitacao_id: solicitacaoId,
+                            codigo_rastreio: codigo,
+                            forma_envio: formaEnvio,
+                            data_envio: dataEnvio,
+                            data_entrega_prevista: dataPrevista,
+                            observacoes: observacoes
+                        })
+                        .select();
+                }
 
-                const { error } = await supabaseClient
+                if (result.error) throw result.error;
+
+                // Atualizar status da solicitação para 'enviado'
+                await supabaseClient
                     .from('solicitacoes_pg')
-                    .update(updateData)
+                    .update({ status: 'enviado' })
                     .eq('id', solicitacaoId);
-
-                if (error) throw error;
 
                 fecharModal('modalRastreio');
                 await carregarSolicitacoes();
-                alert('✅ Rastreio cadastrado com sucesso!\n\nCódigo: ' + codigo);
+                alert('✅ Rastreio salvo com sucesso!\n\nCódigo: ' + codigo);
             } catch (e) {
                 console.error('Erro ao salvar rastreio:', e);
-                alert('❌ Erro ao salvar rastreio');
+                alert('❌ Erro ao salvar rastreio: ' + e.message);
             }
         }
 
         // ============================================
-        // MODAL INSTAGRAM - COM BOTÃO ABRIR PERFIL
+        // MODAL INSTAGRAM
         // ============================================
         function abrirModalInstagram(solicitacaoId) {
             const sol = solicitacoesData.find(s => s.id === solicitacaoId);
@@ -1161,12 +1290,9 @@
                 return;
             }
 
-            // NOVO: Guardar Instagram atual para abrir depois
             instagramAtual = cliente.instagram.replace('@', '').trim();
-
             document.getElementById('igClienteNome').value = `${cliente.nome} (@${instagramAtual})`;
 
-            // Exibir/ocultar seção do Instagram baseado se tem @ cadastrado
             const instagramSection = document.getElementById('instagramClienteSection');
             if (instagramAtual) {
                 instagramSection.style.display = 'block';
@@ -1174,25 +1300,11 @@
                 instagramSection.style.display = 'none';
             }
 
-            // NOVO: Gerar e exibir URL de rastreamento
             const urlRastreamento = gerarUrlRastreamento(sol);
-            const urlContainer = document.getElementById('urlRastreamentoContainer');
-            const urlLink = document.getElementById('urlRastreamentoLink');
-            
-            if (urlRastreamento) {
-                urlLink.href = urlRastreamento;
-                urlLink.textContent = urlRastreamento;
-                urlContainer.style.display = 'block';
-            } else {
-                urlContainer.style.display = 'none';
-            }
-
-            // Gerar mensagem padrão com URL
             const mensagem = gerarMensagemInstagram(sol, cliente, urlRastreamento);
             document.getElementById('igMensagem').value = mensagem;
             document.getElementById('igPreview').textContent = mensagem;
 
-            // Atualizar preview ao editar
             document.getElementById('igMensagem').oninput = function() {
                 document.getElementById('igPreview').textContent = this.value;
             };
@@ -1200,32 +1312,22 @@
             document.getElementById('modalInstagram').classList.add('active');
         }
 
-        // ============================================
-        // NOVO: FUNÇÃO PARA ABRIR INSTAGRAM DO CLIENTE
-        // ============================================
         function abrirInstagramCliente() {
             if (!instagramAtual) {
                 alert('Não foi possível encontrar o Instagram do cliente');
                 return;
             }
 
-            // Tentar abrir o app do Instagram primeiro (deep link)
-            // Se não conseguir, cai no link da web
             const instagramUrl = `https://ig.me/m/${instagramAtual}`;
             const instagramAppUrl = `instagram://user?username=${instagramAtual}`;
             
-            // Primeiro tenta o app
             window.location.href = instagramAppUrl;
             
-            // Se não abrir o app em 1 segundo, abre a web
             setTimeout(() => {
                 window.open(instagramUrl, '_blank');
             }, 1000);
         }
 
-        // ============================================
-        // GERAR URL DE RASTREAMENTO
-        // ============================================
         function gerarUrlRastreamento(sol) {
             if (!sol.codigo_rastreio) return null;
             
@@ -1236,13 +1338,9 @@
                 return geradorUrl(sol.codigo_rastreio);
             }
             
-            // Fallback para URL genérica
             return `https://www.google.com/search?q=rastreamento+${sol.codigo_rastreio}`;
         }
 
-        // ============================================
-        // MENSAGEM INSTAGRAM COM URL
-        // ============================================
         function gerarMensagemInstagram(sol, cliente, urlRastreamento) {
             const numero = sol.numero_solicitacao || 'N/A';
             const codigo = sol.codigo_rastreio || 'N/A';
@@ -1256,7 +1354,6 @@
                 mensagem += `🔍 Código de Rastreio: ${codigo}\n`;
                 mensagem += `🚛 Transportadora: ${formaEnvio}\n`;
                 
-                // Adicionar URL de rastreamento
                 if (urlRastreamento) {
                     mensagem += `\n🔗 Acompanhe sua entrega:\n${urlRastreamento}\n`;
                 }
@@ -1289,12 +1386,10 @@
             
             navigator.clipboard.writeText(mensagem).then(() => {
                 alert('✅ Mensagem copiada! Agora abra o Instagram do cliente e cole no Direct.');
-                // NOVO: Perguntar se quer abrir o Instagram
                 if (confirm('Deseja abrir o perfil do cliente no Instagram agora?')) {
                     abrirInstagramCliente();
                 }
             }).catch(() => {
-                // Fallback
                 const textarea = document.createElement('textarea');
                 textarea.value = mensagem;
                 document.body.appendChild(textarea);
