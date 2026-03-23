@@ -385,6 +385,13 @@
             min-height: 100px;
         }
 
+        /* NOVO: Indicador de campo opcional */
+        .campo-opcional {
+            font-weight: normal;
+            color: #95a5a6;
+            font-size: 0.85rem;
+        }
+
         .btn-salvar {
             width: 100%;
             background: linear-gradient(135deg, #e17055, #d63031);
@@ -427,6 +434,30 @@
             line-height: 1.6;
             color: #2D3436;
             white-space: pre-wrap;
+        }
+
+        /* NOVO: Preview do código extraído */
+        .codigo-preview {
+            background: #E8F5E9;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: #2E7D32;
+            display: none;
+        }
+
+        .codigo-preview.active {
+            display: block;
+        }
+
+        .codigo-preview-label {
+            font-size: 0.75rem;
+            color: #4CAF50;
+            text-transform: uppercase;
+            margin-bottom: 5px;
         }
 
         .empty-state {
@@ -586,17 +617,29 @@
                 <input type="hidden" id="rastreioSolicitacaoId">
                 
                 <div class="form-group">
-                    <label for="codigoRastreio">Código de Rastreio</label>
-                    <input type="text" id="codigoRastreio" required placeholder="Ex: AA123456789BR">
+                    <label for="codigoRastreio">
+                        Código de Rastreio ou URL
+                        <span class="campo-opcional">(cole a URL completa, ex: https://rastreio.superfrete.com/#/tracking/AN724853594BR)</span>
+                    </label>
+                    <input type="text" id="codigoRastreio" placeholder="Cole o código ou URL de rastreamento..." oninput="previewCodigoRastreio()">
+                    <!-- NOVO: Preview do código extraído -->
+                    <div class="codigo-preview" id="codigoPreview">
+                        <div class="codigo-preview-label">✅ Código extraído:</div>
+                        <span id="codigoExtraido"></span>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="dataEnvio">Data de Envio</label>
-                    <input type="date" id="dataEnvio" required>
+                    <label for="dataEnvio">
+                        Data de Envio <span class="campo-opcional">(opcional)</span>
+                    </label>
+                    <input type="date" id="dataEnvio">
                 </div>
 
                 <div class="form-group">
-                    <label for="dataPrevista">Data Prevista de Entrega</label>
+                    <label for="dataPrevista">
+                        Data Prevista de Entrega <span class="campo-opcional">(opcional)</span>
+                    </label>
                     <input type="date" id="dataPrevista">
                 </div>
 
@@ -896,6 +939,58 @@
         }
 
         // ============================================
+        // FUNÇÃO PARA EXTRAIR CÓDIGO DE RASTREIO
+        // ============================================
+        function extrairCodigoRastreio(valor) {
+            if (!valor || valor.trim() === '') return '';
+            
+            valor = valor.trim();
+            
+            // Se for URL, extrair o código do final
+            if (valor.includes('/') || valor.includes('?')) {
+                // Pega tudo após a última barra
+                const partes = valor.split('/');
+                let ultimaParte = partes[partes.length - 1];
+                
+                // Remove parâmetros de query se houver (ex: ?codigo=XXX)
+                if (ultimaParte.includes('?')) {
+                    const params = new URLSearchParams(ultimaParte.split('?')[1]);
+                    // Tenta pegar de parâmetros comuns
+                    const codigoParam = params.get('codigo') || params.get('tracking') || params.get('id');
+                    if (codigoParam) return codigoParam;
+                    // Se não encontrou nos params, pega antes do ?
+                    ultimaParte = ultimaParte.split('?')[0];
+                }
+                
+                // Remove hash se houver
+                ultimaParte = ultimaParte.split('#')[0];
+                
+                return ultimaParte.trim();
+            }
+            
+            // Se não for URL, retorna o valor limpo
+            return valor;
+        }
+
+        // ============================================
+        // PREVIEW DO CÓDIGO EXTRAÍDO
+        // ============================================
+        function previewCodigoRastreio() {
+            const input = document.getElementById('codigoRastreio');
+            const preview = document.getElementById('codigoPreview');
+            const extraido = document.getElementById('codigoExtraido');
+            
+            const codigo = extrairCodigoRastreio(input.value);
+            
+            if (codigo && input.value.includes('/')) {
+                extraido.textContent = codigo;
+                preview.classList.add('active');
+            } else {
+                preview.classList.remove('active');
+            }
+        }
+
+        // ============================================
         // MODAL RASTREIO
         // ============================================
         function abrirModalRastreio(solicitacaoId) {
@@ -907,6 +1002,9 @@
             document.getElementById('dataEnvio').value = sol.data_envio || '';
             document.getElementById('dataPrevista').value = sol.data_entrega_prevista || '';
             document.getElementById('formaEnvio').value = sol.forma_envio || 'correios';
+            
+            // Resetar preview
+            document.getElementById('codigoPreview').classList.remove('active');
 
             document.getElementById('modalRastreio').classList.add('active');
         }
@@ -915,29 +1013,45 @@
             event.preventDefault();
             
             const solicitacaoId = document.getElementById('rastreioSolicitacaoId').value;
-            const codigo = document.getElementById('codigoRastreio').value.trim();
-            const dataEnvio = document.getElementById('dataEnvio').value;
-            const dataPrevista = document.getElementById('dataPrevista').value;
+            const codigoInput = document.getElementById('codigoRastreio').value.trim();
+            
+            // Extrair código se for URL
+            const codigo = extrairCodigoRastreio(codigoInput);
+            
+            const dataEnvio = document.getElementById('dataEnvio').value || null;
+            const dataPrevista = document.getElementById('dataPrevista').value || null;
             const formaEnvio = document.getElementById('formaEnvio').value;
 
+            // Validação: pelo menos o código é obrigatório
+            if (!codigo) {
+                alert('⚠️ Por favor, informe o código de rastreio ou URL');
+                return;
+            }
+
             try {
+                const updateData = {
+                    codigo_rastreio: codigo,
+                    forma_envio: formaEnvio,
+                    atualizado_em: new Date().toISOString()
+                };
+                
+                // Só adiciona as datas se foram preenchidas
+                if (dataEnvio) updateData.data_envio = dataEnvio;
+                if (dataPrevista) updateData.data_entrega_prevista = dataPrevista;
+                
+                // Se tem código de rastreio, marca como enviado
+                if (codigo) updateData.status = 'enviado';
+
                 const { error } = await supabaseClient
                     .from('solicitacoes_pg')
-                    .update({
-                        codigo_rastreio: codigo,
-                        data_envio: dataEnvio,
-                        data_entrega_prevista: dataPrevista,
-                        forma_envio: formaEnvio,
-                        status: 'enviado',
-                        atualizado_em: new Date().toISOString()
-                    })
+                    .update(updateData)
                     .eq('id', solicitacaoId);
 
                 if (error) throw error;
 
                 fecharModal('modalRastreio');
                 await carregarSolicitacoes();
-                alert('✅ Rastreio cadastrado com sucesso!');
+                alert('✅ Rastreio cadastrado com sucesso!\n\nCódigo: ' + codigo);
             } catch (e) {
                 console.error('Erro ao salvar rastreio:', e);
                 alert('❌ Erro ao salvar rastreio');
