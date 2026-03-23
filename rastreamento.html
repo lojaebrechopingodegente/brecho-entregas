@@ -34,10 +34,17 @@
             position: relative;
         }
 
-        .btn-voltar {
+        /* Container para os botões do header */
+        .header-buttons {
             position: absolute;
             top: 20px;
             left: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-voltar {
             background: linear-gradient(135deg, #A8E6CF, #7FCDCD);
             color: #2D3436;
             border: none;
@@ -56,6 +63,28 @@
         .btn-voltar:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(168, 230, 207, 0.4);
+        }
+
+        /* NOVO: Botão de integração */
+        .btn-integracao {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-integracao:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
         .header-content {
@@ -580,6 +609,14 @@
                 font-size: 1.5rem;
             }
 
+            .header-buttons {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin-bottom: 15px;
+                justify-content: center;
+            }
+
             .filtros-section {
                 flex-direction: column;
             }
@@ -604,12 +641,21 @@
             }
         }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <a href="dashboard.html" class="btn-voltar">← Voltar</a>
+            <!-- NOVO: Container para botões do header -->
+            <div class="header-buttons">
+                <a href="dashboard.html" class="btn-voltar">← Voltar</a>
+                <!-- NOVO: Link para página de integração -->
+                <a href="integracao_superfrete_melhorenvio.html" class="btn-integracao">
+                    🔗 Integração Super Frete/Melhor Envio
+                </a>
+            </div>
+            
             <div class="header-content">
                 <h1>🚚 Rastreamento de Entregas</h1>
                 <p>Gerencie códigos de rastreio e envie atualizações aos clientes</p>
