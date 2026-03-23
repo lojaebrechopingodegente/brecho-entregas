@@ -24,7 +24,6 @@
             margin: 0 auto;
         }
 
-        /* Botão Voltar */
         .btn-voltar {
             background: linear-gradient(135deg, #A8E6CF, #7FCDCD);
             color: #2D3436;
@@ -116,6 +115,7 @@
         .btn-warning { background: #ffc107; color: #212529; }
         .btn-info { background: #17a2b8; }
         .btn-orange { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .btn-auto { background: linear-gradient(135deg, #11998e, #38ef7d); }
 
         .comando-box {
             background: #1e1e1e;
@@ -162,6 +162,7 @@
         }
 
         .etiqueta-card.salvo { border-color: #28a745; background: #f8fff8; }
+        .etiqueta-card.auto-matched { border-color: #11998e; background: #f0fff4; }
 
         .etiqueta-header {
             display: flex;
@@ -336,6 +337,63 @@
             gap: 15px;
         }
 
+        .match-info {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #2e7d32;
+        }
+
+        .no-match-warning {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #e65100;
+        }
+
+        .conciliacao-summary {
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            border: 2px solid #667eea;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .conciliacao-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .conciliacao-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .conciliacao-number {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .conciliacao-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .matched { color: #11998e; }
+        .unmatched { color: #ff6b6b; }
+        .total { color: #667eea; }
+
         @media (max-width: 768px) {
             .vincular-row {
                 grid-template-columns: 1fr;
@@ -351,7 +409,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Botão Voltar -->
         <a href="rastreamento.html" class="btn-voltar">← Voltar para Rastreamento</a>
 
         <h1>🏷️ SuperFrete + Supabase</h1>
@@ -383,6 +440,38 @@
             <button onclick="processarEtiquetas()" id="btnProcessar">
                 📊 Processar Etiquetas
             </button>
+
+            <!-- BOTÃO DE CONCILIAÇÃO AUTOMÁTICA -->
+            <button onclick="conciliarAutomaticamente()" id="btnConciliar" class="btn-auto hidden" style="margin-left: 10px;">
+                🤖 Conciliar por Nome
+            </button>
+        </div>
+
+        <!-- RESUMO DA CONCILIAÇÃO -->
+        <div id="resumoConciliacao" class="conciliacao-summary hidden">
+            <div class="section-title">📊 Resumo da Conciliação</div>
+            <div class="conciliacao-grid">
+                <div class="conciliacao-item">
+                    <div class="conciliacao-number total" id="totalEtiquetas">0</div>
+                    <div class="conciliacao-label">Total de Etiquetas</div>
+                </div>
+                <div class="conciliacao-item">
+                    <div class="conciliacao-number matched" id="matchedEtiquetas">0</div>
+                    <div class="conciliacao-label">Conciliados Automaticamente</div>
+                </div>
+                <div class="conciliacao-item">
+                    <div class="conciliacao-number unmatched" id="unmatchedEtiquetas">0</div>
+                    <div class="conciliacao-label">Pendentes de Vínculo</div>
+                </div>
+            </div>
+            <div style="margin-top: 15px; text-align: center;">
+                <button onclick="mostrarTodos()" class="btn-info" style="margin-right: 10px;">
+                    👁️ Mostrar Todos
+                </button>
+                <button onclick="mostrarApenasNaoConciliados()" class="btn-warning">
+                    ⚠️ Mostrar Apenas Não Conciliados
+                </button>
+            </div>
         </div>
 
         <!-- RESULTADOS -->
@@ -390,7 +479,6 @@
             <div class="section">
                 <div class="section-title">📋 Etiquetas Encontradas</div>
 
-                <!-- FILTRO DE PESQUISA -->
                 <div class="filtro-box">
                     <label>🔍 Pesquisar solicitação por nome:</label>
                     <input type="text" id="filtroNome" placeholder="Digite o nome do cliente..." oninput="filtrarSolicitacoes()">
@@ -440,8 +528,10 @@
 
         let supabaseClient = null;
         let etiquetasData = [];
+        let etiquetasProcessadas = []; // Etiquetas com info de match
         let solicitacoesCache = [];
         let rastreamentosExistentes = [];
+        let mostrandoApenasNaoConciliados = false;
 
         const CONFIG = {
             producao: { 
@@ -456,7 +546,6 @@
                 if (typeof supabase !== 'undefined') {
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                     
-                    // Buscar solicitações
                     const { data: solicitacoes, error: errorSol } = await supabaseClient
                         .from('solicitacoes_pg')
                         .select('id, numero_solicitacao, codigo_rastreio, clientes_pg(nome, email)')
@@ -465,7 +554,6 @@
 
                     if (errorSol) throw errorSol;
 
-                    // Buscar rastreamentos existentes
                     const { data: rastreamentos, error: errorRast } = await supabaseClient
                         .from('rastreamentos_pg')
                         .select('codigo_rastreio, solicitacao_id');
@@ -473,15 +561,12 @@
                     if (errorRast) throw errorRast;
 
                     rastreamentosExistentes = rastreamentos.map(r => r.codigo_rastreio);
-
-                    // Filtrar apenas solicitações SEM rastreamento
                     solicitacoesCache = solicitacoes.filter(s => {
                         const semCodigoNaTabela = !s.codigo_rastreio;
                         const semRastreamentoCadastrado = !rastreamentos.some(r => r.solicitacao_id === s.id);
                         return semCodigoNaTabela && semRastreamentoCadastrado;
                     });
 
-                    // Mostrar mensagem de sucesso
                     const secao = document.getElementById('secaoSuperfrete');
                     const statusDiv = document.createElement('div');
                     statusDiv.id = 'supabaseStatus';
@@ -495,7 +580,6 @@
                     secao.appendChild(statusDiv);
 
                     atualizarContador();
-
                 }
             } catch (err) {
                 console.error('Erro ao conectar Supabase:', err);
@@ -517,7 +601,6 @@
             document.getElementById('comandoTexto').textContent = comando;
         }
 
-        // Copiar comando
         function copiarComando() {
             const texto = document.getElementById('comandoTexto').textContent;
             navigator.clipboard.writeText(texto).then(() => {
@@ -546,7 +629,6 @@
                     return;
                 }
 
-                // Filtrar etiquetas que já têm rastreamento cadastrado
                 etiquetasData = etiquetasData.filter(etq => {
                     const rastreio = etq.tracking || etq.tracking_code || etq.code || '';
                     return !rastreamentosExistentes.includes(rastreio);
@@ -557,11 +639,330 @@
                     return;
                 }
 
-                renderizarEtiquetas(etiquetasData);
+                // Preparar dados processados
+                etiquetasProcessadas = etiquetasData.map((etq, index) => ({
+                    ...etq,
+                    index: index,
+                    matched: false,
+                    solicitacaoId: null,
+                    solicitacaoNome: null,
+                    matchScore: 0
+                }));
+
+                // Mostrar botão de conciliação
+                document.getElementById('btnConciliar').classList.remove('hidden');
+                document.getElementById('resumoConciliacao').classList.remove('hidden');
+                
+                atualizarResumoConciliacao();
+                renderizarEtiquetas(etiquetasProcessadas);
                 atualizarContador();
 
             } catch (err) {
                 alert('Erro ao processar JSON: ' + err.message);
+            }
+        }
+
+        // FUNÇÃO DE CONCILIAÇÃO AUTOMÁTICA POR NOME
+        function conciliarAutomaticamente() {
+            let matchedCount = 0;
+
+            etiquetasProcessadas.forEach(etq => {
+                if (etq.matched) return; // Já conciliado
+
+                const nomeEtiqueta = normalizarTexto(etq.to?.name || '');
+                
+                if (!nomeEtiqueta) return;
+
+                let melhorMatch = null;
+                let melhorScore = 0;
+
+                solicitacoesCache.forEach(sol => {
+                    const nomeSolicitacao = normalizarTexto(sol.clientes_pg?.nome || '');
+                    
+                    if (!nomeSolicitacao) return;
+
+                    const score = calcularSimilaridade(nomeEtiqueta, nomeSolicitacao);
+                    
+                    // Threshold de 0.6 (60% de similaridade)
+                    if (score > melhorScore && score >= 0.6) {
+                        melhorScore = score;
+                        melhorMatch = sol;
+                    }
+                });
+
+                if (melhorMatch) {
+                    etq.matched = true;
+                    etq.solicitacaoId = melhorMatch.id;
+                    etq.solicitacaoNome = melhorMatch.clientes_pg?.nome;
+                    etq.matchScore = melhorScore;
+                    matchedCount++;
+                }
+            });
+
+            atualizarResumoConciliacao();
+            renderizarEtiquetas(etiquetasProcessadas);
+            
+            alert(`✅ Conciliação automática concluída!\n\n${matchedCount} etiquetas foram vinculadas automaticamente.\n\nAs etiquetas não encontradas permanecem para vínculo manual.`);
+        }
+
+        // Normalizar texto para comparação
+        function normalizarTexto(texto) {
+            return texto
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove acentos
+                .replace(/[^a-z0-9\s]/g, ' ') // Remove caracteres especiais
+                .replace(/\s+/g, ' ') // Remove espaços múltiplos
+                .trim();
+        }
+
+        // Calcular similaridade entre dois textos (coeficiente de Jaccard adaptado)
+        function calcularSimilaridade(str1, str2) {
+            const palavras1 = new Set(str1.split(' ').filter(p => p.length > 2));
+            const palavras2 = new Set(str2.split(' ').filter(p => p.length > 2));
+            
+            if (palavras1.size === 0 || palavras2.size === 0) return 0;
+
+            const intersecao = [...palavras1].filter(p => palavras2.has(p));
+            const uniao = new Set([...palavras1, ...palavras2]);
+            
+            return intersecao.length / uniao.size;
+        }
+
+        // Atualizar resumo da conciliação
+        function atualizarResumoConciliacao() {
+            const total = etiquetasProcessadas.length;
+            const matched = etiquetasProcessadas.filter(e => e.matched).length;
+            const unmatched = total - matched;
+
+            document.getElementById('totalEtiquetas').textContent = total;
+            document.getElementById('matchedEtiquetas').textContent = matched;
+            document.getElementById('unmatchedEtiquetas').textContent = unmatched;
+        }
+
+        // Mostrar todos
+        function mostrarTodos() {
+            mostrandoApenasNaoConciliados = false;
+            renderizarEtiquetas(etiquetasProcessadas);
+        }
+
+        // Mostrar apenas não conciliados
+        function mostrarApenasNaoConciliados() {
+            mostrandoApenasNaoConciliados = true;
+            const naoConciliados = etiquetasProcessadas.filter(e => !e.matched);
+            renderizarEtiquetas(naoConciliados, true);
+        }
+
+        // Renderizar etiquetas
+        function renderizarEtiquetas(etiquetas, isFiltered = false) {
+            const container = document.getElementById('secaoResultados');
+            const lista = document.getElementById('listaEtiquetas');
+            const stats = document.getElementById('statsBar');
+
+            container.classList.remove('hidden');
+
+            const comRastreio = etiquetas.filter(e => {
+                const rastreio = e.tracking || e.tracking_code || e.code;
+                return rastreio && rastreio !== 'N/A';
+            }).length;
+
+            const matched = etiquetas.filter(e => e.matched).length;
+
+            stats.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-number">${etiquetas.length}</div>
+                    <div class="stat-label">${isFiltered ? 'Não Conciliados' : 'Total'}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" style="color:#11998e;">${matched}</div>
+                    <div class="stat-label">Auto-Conciliados</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" style="color:#28a745;">${comRastreio}</div>
+                    <div class="stat-label">Com Rastreio</div>
+                </div>
+            `;
+
+            const opcoesSolicitacoes = solicitacoesCache.map(s => {
+                const nome = s.clientes_pg?.nome || 'Sem nome';
+                const email = s.clientes_pg?.email || '';
+                const num = s.numero_solicitacao || s.id.substring(0, 8);
+                return `<option value="${s.id}">#${num} - ${nome} ${email ? '(' + email + ')' : ''}</option>`;
+            }).join('');
+
+            lista.innerHTML = etiquetas.map((etq) => {
+                const index = etq.index;
+                const id = etq.order_id || etq.id || 'N/A';
+                const rastreio = etq.tracking || etq.tracking_code || etq.code || '';
+                const destinatario = etq.to?.name || 'N/A';
+                const cidade = etq.to?.city || 'N/A';
+                const estado = etq.to?.state || etq.to?.state_abbr || 'N/A';
+                const transportadora = etq.carrier || 'correios';
+
+                let valor = 0;
+                if (typeof etq.price === 'object') {
+                    valor = etq.price?.total || 0;
+                } else {
+                    valor = etq.price || 0;
+                }
+
+                const status = (etq.status || 'unknown').toLowerCase();
+
+                let linkRastreamento = '';
+                if (rastreio) {
+                    if (transportadora.toLowerCase().includes('correios')) {
+                        linkRastreamento = `https://rastreamento.correios.com.br/app/index.php?objeto=${rastreio}`;
+                    } else if (transportadora.toLowerCase().includes('jadlog')) {
+                        linkRastreamento = `https://www.jadlog.com.br/tracking?objeto=${rastreio}`;
+                    } else {
+                        linkRastreamento = `https://rastreamentomelhorenvio.com.br/${rastreio}`;
+                    }
+                }
+
+                // Se já foi conciliado automaticamente
+                const isMatched = etq.matched;
+                const cardClass = isMatched ? 'etiqueta-card auto-matched' : 'etiqueta-card';
+                
+                const matchInfo = isMatched ? `
+                    <div class="match-info">
+                        ✅ <strong>Conciliado automaticamente:</strong> ${etq.solicitacaoNome}<br>
+                        <small>Confiança: ${Math.round(etq.matchScore * 100)}%</small>
+                    </div>
+                ` : '';
+
+                const noMatchWarning = (!isMatched && !isFiltered) ? `
+                    <div class="no-match-warning">
+                        ⚠️ Nenhuma solicitação encontrada com nome similar
+                    </div>
+                ` : '';
+
+                return `
+                    <div class="${cardClass}" id="etiqueta-${index}">
+                        <div class="etiqueta-header">
+                            <div>
+                                <div class="etiqueta-id">#${id}</div>
+                                <div style="font-size:12px;color:#666;">${destinatario} - ${cidade}/${estado}</div>
+                            </div>
+                            <span class="status status-${status}">${status.toUpperCase()}</span>
+                        </div>
+
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Rastreio</label>
+                                <p>${rastreio ? `<span class="rastreio">${rastreio}</span>` : 'N/A'}</p>
+                                ${rastreio ? `<a href="${linkRastreamento}" target="_blank" class="rastreamento-link">🔍 Rastrear →</a>` : ''}
+                            </div>
+                            <div class="info-item">
+                                <label>Transportadora</label>
+                                <p>${transportadora}</p>
+                            </div>
+                            <div class="info-item">
+                                <label>Valor</label>
+                                <p class="valor">R$ ${parseFloat(valor).toFixed(2)}</p>
+                            </div>
+                            <div class="info-item">
+                                <label>Criado em</label>
+                                <p>${new Date(etq.created_at).toLocaleString('pt-BR')}</p>
+                            </div>
+                        </div>
+
+                        ${matchInfo}
+                        ${noMatchWarning}
+
+                        ${rastreio ? `
+                        <div class="vincular-section">
+                            <label>${isMatched ? 'Verificar/Alterar Vínculo:' : 'Vincular à Solicitação:'}</label>
+                            <div class="vincular-row">
+                                <select id="solicitacao-${index}">
+                                    <option value="">Selecione...</option>
+                                    ${opcoesSolicitacoes}
+                                </select>
+                                <input type="date" id="data-envio-${index}" value="${new Date().toISOString().split('T')[0]}">
+                                <button class="btn-success" onclick="salvarRastreamento(${index}, '${rastreio}', '${transportadora}')">
+                                    ${isMatched ? '✓ Confirmar' : 'Salvar'}
+                                </button>
+                            </div>
+                            <div id="msg-${index}" style="margin-top:10px;"></div>
+                        </div>
+                        ` : '<div style="margin-top:15px;color:#856404;">⚠️ Sem código de rastreio</div>'}
+                    </div>
+                `;
+            }).join('');
+
+            // Preencher selects dos já conciliados
+            setTimeout(() => {
+                etiquetas.forEach(etq => {
+                    if (etq.matched && etq.solicitacaoId) {
+                        const select = document.getElementById(`solicitacao-${etq.index}`);
+                        if (select) select.value = etq.solicitacaoId;
+                    }
+                });
+            }, 100);
+        }
+
+        // Salvar rastreamento
+        async function salvarRastreamento(index, codigoRastreio, formaEnvio) {
+            const solicitacaoId = document.getElementById(`solicitacao-${index}`).value;
+            const dataEnvio = document.getElementById(`data-envio-${index}`).value;
+            const msgDiv = document.getElementById(`msg-${index}`);
+            const btn = event.target;
+
+            if (!solicitacaoId) {
+                msgDiv.innerHTML = '<span style="color:#dc3545;">Selecione uma solicitação!</span>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Salvando...';
+
+            try {
+                const { error } = await supabaseClient
+                    .from('rastreamentos_pg')
+                    .insert({
+                        solicitacao_id: solicitacaoId,
+                        codigo_rastreio: codigoRastreio,
+                        forma_envio: formaEnvio.toLowerCase(),
+                        data_envio: dataEnvio || null,
+                        observacoes: `Importado do SuperFrete (producao)${etiquetasProcessadas[index]?.matched ? ' - Auto-conciliado' : ''}`
+                    });
+
+                if (error) throw error;
+
+                await supabaseClient
+                    .from('solicitacoes_pg')
+                    .update({
+                        codigo_rastreio: codigoRastreio,
+                        forma_envio: formaEnvio.toLowerCase(),
+                        data_envio: dataEnvio || null,
+                        status: 'enviado',
+                        atualizado_em: new Date().toISOString()
+                    })
+                    .eq('id', solicitacaoId);
+
+                rastreamentosExistentes.push(codigoRastreio);
+                solicitacoesCache = solicitacoesCache.filter(s => s.id !== solicitacaoId);
+                
+                // Marcar como salvo e remover da lista atual
+                etiquetasProcessadas = etiquetasProcessadas.filter(e => e.index !== index);
+
+                document.getElementById(`etiqueta-${index}`).classList.add('salvo');
+                msgDiv.innerHTML = '<div class="alert alert-success" style="margin:0;padding:10px;">✅ Salvo! Removido da lista.</div>';
+
+                // Re-renderizar se estiver filtrado
+                if (mostrandoApenasNaoConciliados) {
+                    mostrarApenasNaoConciliados();
+                } else {
+                    renderizarEtiquetas(etiquetasProcessadas);
+                }
+                
+                atualizarResumoConciliacao();
+                atualizarContador();
+
+            } catch (err) {
+                let msg = err.message;
+                if (err.code === '23505') msg = 'Rastreio já cadastrado!';
+                msgDiv.innerHTML = `<div class="alert alert-error" style="margin:0;padding:10px;">❌ ${msg}</div>`;
+                btn.disabled = false;
+                btn.textContent = etiquetasProcessadas.find(e => e.index === index)?.matched ? '✓ Confirmar' : 'Salvar';
             }
         }
 
@@ -602,7 +1003,6 @@
             atualizarContador();
         }
 
-        // Atualizar contador de solicitações visíveis
         function atualizarContador() {
             const filtro = document.getElementById('filtroNome').value.toLowerCase();
             let total = 0;
@@ -615,176 +1015,6 @@
             });
 
             document.getElementById('contadorSolicitacoes').textContent = total;
-        }
-
-        // Renderizar etiquetas
-        function renderizarEtiquetas(etiquetas) {
-            const container = document.getElementById('secaoResultados');
-            const lista = document.getElementById('listaEtiquetas');
-            const stats = document.getElementById('statsBar');
-
-            container.classList.remove('hidden');
-
-            const comRastreio = etiquetas.filter(e => {
-                const rastreio = e.tracking || e.tracking_code || e.code;
-                return rastreio && rastreio !== 'N/A';
-            }).length;
-
-            stats.innerHTML = `
-                <div class="stat-item">
-                    <div class="stat-number">${etiquetas.length}</div>
-                    <div class="stat-label">Etiquetas Novas</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" style="color:#28a745;">${comRastreio}</div>
-                    <div class="stat-label">Com Rastreio</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" style="color:#dc3545;">${rastreamentosExistentes.length}</div>
-                    <div class="stat-label">Já Cadastrados</div>
-                </div>
-            `;
-
-            const opcoesSolicitacoes = solicitacoesCache.map(s => {
-                const nome = s.clientes_pg?.nome || 'Sem nome';
-                const email = s.clientes_pg?.email || '';
-                const num = s.numero_solicitacao || s.id.substring(0, 8);
-                return `<option value="${s.id}">#${num} - ${nome} ${email ? '(' + email + ')' : ''}</option>`;
-            }).join('');
-
-            lista.innerHTML = etiquetas.map((etq, index) => {
-                const id = etq.order_id || etq.id || 'N/A';
-                const rastreio = etq.tracking || etq.tracking_code || etq.code || '';
-                const destinatario = etq.to?.name || 'N/A';
-                const cidade = etq.to?.city || 'N/A';
-                const estado = etq.to?.state || etq.to?.state_abbr || 'N/A';
-                const transportadora = etq.carrier || 'correios';
-
-                let valor = 0;
-                if (typeof etq.price === 'object') {
-                    valor = etq.price?.total || 0;
-                } else {
-                    valor = etq.price || 0;
-                }
-
-                const status = (etq.status || 'unknown').toLowerCase();
-
-                let linkRastreamento = '';
-                if (rastreio) {
-                    if (transportadora.toLowerCase().includes('correios')) {
-                        linkRastreamento = `https://rastreamento.correios.com.br/app/index.php?objeto=${rastreio}`;
-                    } else if (transportadora.toLowerCase().includes('jadlog')) {
-                        linkRastreamento = `https://www.jadlog.com.br/tracking?objeto=${rastreio}`;
-                    } else {
-                        linkRastreamento = `https://rastreamentomelhorenvio.com.br/${rastreio}`;
-                    }
-                }
-
-                return `
-                    <div class="etiqueta-card" id="etiqueta-${index}">
-                        <div class="etiqueta-header">
-                            <div>
-                                <div class="etiqueta-id">#${id}</div>
-                                <div style="font-size:12px;color:#666;">${destinatario} - ${cidade}/${estado}</div>
-                            </div>
-                            <span class="status status-${status}">${status.toUpperCase()}</span>
-                        </div>
-
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <label>Rastreio</label>
-                                <p>${rastreio ? `<span class="rastreio">${rastreio}</span>` : 'N/A'}</p>
-                                ${rastreio ? `<a href="${linkRastreamento}" target="_blank" class="rastreamento-link">🔍 Rastrear →</a>` : ''}
-                            </div>
-                            <div class="info-item">
-                                <label>Transportadora</label>
-                                <p>${transportadora}</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Valor</label>
-                                <p class="valor">R$ ${parseFloat(valor).toFixed(2)}</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Criado em</label>
-                                <p>${new Date(etq.created_at).toLocaleString('pt-BR')}</p>
-                            </div>
-                        </div>
-
-                        ${rastreio ? `
-                        <div class="vincular-section">
-                            <label>Vincular à Solicitação:</label>
-                            <div class="vincular-row">
-                                <select id="solicitacao-${index}">
-                                    <option value="">Selecione...</option>
-                                    ${opcoesSolicitacoes}
-                                </select>
-                                <input type="date" id="data-envio-${index}">
-                                <button class="btn-success" onclick="salvarRastreamento(${index}, '${rastreio}', '${transportadora}')">
-                                    Salvar
-                                </button>
-                            </div>
-                            <div id="msg-${index}" style="margin-top:10px;"></div>
-                        </div>
-                        ` : '<div style="margin-top:15px;color:#856404;">⚠️ Sem código de rastreio</div>'}
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Salvar rastreamento
-        async function salvarRastreamento(index, codigoRastreio, formaEnvio) {
-            const solicitacaoId = document.getElementById(`solicitacao-${index}`).value;
-            const dataEnvio = document.getElementById(`data-envio-${index}`).value;
-            const msgDiv = document.getElementById(`msg-${index}`);
-            const btn = event.target;
-
-            if (!solicitacaoId) {
-                msgDiv.innerHTML = '<span style="color:#dc3545;">Selecione uma solicitação!</span>';
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span> Salvando...';
-
-            try {
-                const { error } = await supabaseClient
-                    .from('rastreamentos_pg')
-                    .insert({
-                        solicitacao_id: solicitacaoId,
-                        codigo_rastreio: codigoRastreio,
-                        forma_envio: formaEnvio.toLowerCase(),
-                        data_envio: dataEnvio || null,
-                        observacoes: `Importado do SuperFrete (producao)`
-                    });
-
-                if (error) throw error;
-
-                await supabaseClient
-                    .from('solicitacoes_pg')
-                    .update({
-                        codigo_rastreio: codigoRastreio,
-                        forma_envio: formaEnvio.toLowerCase(),
-                        data_envio: dataEnvio || null,
-                        status: 'enviado',
-                        atualizado_em: new Date().toISOString()
-                    })
-                    .eq('id', solicitacaoId);
-
-                rastreamentosExistentes.push(codigoRastreio);
-                solicitacoesCache = solicitacoesCache.filter(s => s.id !== solicitacaoId);
-
-                document.getElementById(`etiqueta-${index}`).classList.add('salvo');
-                msgDiv.innerHTML = '<div class="alert alert-success" style="margin:0;padding:10px;">✅ Salvo! Removido da lista.</div>';
-
-                atualizarContador();
-
-            } catch (err) {
-                let msg = err.message;
-                if (err.code === '23505') msg = 'Rastreio já cadastrado!';
-                msgDiv.innerHTML = `<div class="alert alert-error" style="margin:0;padding:10px;">❌ ${msg}</div>`;
-                btn.disabled = false;
-                btn.textContent = 'Salvar';
-            }
         }
 
         // Inicializar
