@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SuperFrete + Supabase - Loja Pingo de Gente</title>
+    <title>Conciliação SuperFrete - Loja Pingo de Gente</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -20,7 +20,7 @@
             border-radius: 24px;
             box-shadow: 0 25px 80px rgba(0,0,0,0.3);
             padding: 40px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
@@ -90,7 +90,7 @@
             border-color: #667eea;
         }
 
-        textarea { min-height: 150px; font-family: monospace; font-size: 13px; }
+        textarea { min-height: 120px; font-family: monospace; font-size: 13px; }
 
         button {
             padding: 14px 28px;
@@ -114,7 +114,6 @@
         .btn-success { background: #28a745; }
         .btn-warning { background: #ffc107; color: #212529; }
         .btn-info { background: #17a2b8; }
-        .btn-orange { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
         .btn-auto { background: linear-gradient(135deg, #11998e, #38ef7d); }
 
         .comando-box {
@@ -153,32 +152,62 @@
         .alert-info { background: #e7f3ff; border: 1px solid #b3d9ff; color: #004085; }
         .alert-warning { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; }
 
-        .etiqueta-card {
+        .solicitacao-card {
             background: white;
             border: 2px solid #e8e8e8;
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 15px;
+            transition: all 0.3s;
         }
 
-        .etiqueta-card.salvo { border-color: #28a745; background: #f8fff8; }
-        .etiqueta-card.auto-matched { border-color: #11998e; background: #f0fff4; }
+        .solicitacao-card:hover {
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
 
-        .etiqueta-header {
+        .solicitacao-card.matched { 
+            border-color: #11998e; 
+            background: linear-gradient(135deg, #f0fff4 0%, #e8f5e9 100%);
+        }
+
+        .solicitacao-card.unmatched { 
+            border-color: #ff9800; 
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+        }
+
+        .solicitacao-card.salvo { 
+            border-color: #28a745; 
+            opacity: 0.7;
+        }
+
+        .solicitacao-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .etiqueta-id {
-            font-size: 16px;
+        .solicitacao-numero {
+            font-size: 18px;
             font-weight: 700;
-            color: #1a1a2e;
+            color: #667eea;
             font-family: monospace;
         }
 
-        .status {
+        .solicitacao-cliente {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .solicitacao-email {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .status-badge {
             padding: 6px 14px;
             border-radius: 20px;
             font-size: 12px;
@@ -186,37 +215,30 @@
             text-transform: uppercase;
         }
 
-        .status-delivered { background: #d4edda; color: #155724; }
-        .status-released { background: #cce5ff; color: #004085; }
-        .status-canceled { background: #f8d7da; color: #721c24; }
+        .status-pendente { background: #FFEAA7; color: #B7791F; }
+        .status-encontrado { background: #55EFC4; color: #00B894; }
+        .status-nao-encontrado { background: #FF7675; color: #D63031; }
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
+        .etiqueta-encontrada {
+            background: white;
+            border: 2px dashed #11998e;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
         }
 
-        .info-item {
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 10px;
+        .etiqueta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
 
-        .info-item label {
-            font-size: 11px;
-            color: #888;
-            text-transform: uppercase;
-            margin-bottom: 4px;
+        .etiqueta-id {
+            font-family: monospace;
+            font-weight: 700;
+            color: #1a1a2e;
         }
-
-        .info-item p {
-            font-size: 14px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .valor { color: #28a745; font-size: 16px !important; }
 
         .rastreio {
             font-family: monospace;
@@ -227,18 +249,42 @@
             font-size: 12px;
         }
 
-        .vincular-section {
-            background: #f0f4ff;
-            padding: 15px;
-            border-radius: 12px;
-            margin-top: 15px;
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
-        .vincular-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr auto;
-            gap: 10px;
-            align-items: end;
+        .info-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .info-item label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .info-item p {
+            font-size: 13px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .valor { color: #28a745; }
+
+        .match-score {
+            display: inline-block;
+            background: #11998e;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .hidden { display: none !important; }
@@ -258,20 +304,6 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-
-        .filtro-box {
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            border: 2px solid #e8e8e8;
-        }
-
-        .filtro-box label {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 5px;
         }
 
         .stats-bar {
@@ -301,60 +333,12 @@
             color: #666;
         }
 
-        .info-filtro {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-            font-style: italic;
-        }
-
-        .rastreamento-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 13px;
-            margin-top: 8px;
-            padding: 6px 12px;
-            background: #f0f4ff;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-
-        .rastreamento-link:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        .header-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .match-info {
-            background: #e8f5e9;
-            border: 1px solid #4caf50;
-            border-radius: 8px;
-            padding: 10px;
-            margin-top: 10px;
-            font-size: 13px;
-            color: #2e7d32;
-        }
-
-        .no-match-warning {
-            background: #fff3e0;
-            border: 1px solid #ff9800;
-            border-radius: 8px;
-            padding: 10px;
-            margin-top: 10px;
-            font-size: 13px;
-            color: #e65100;
+        .filtro-box {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #e8e8e8;
         }
 
         .conciliacao-summary {
@@ -394,14 +378,41 @@
         .unmatched { color: #ff6b6b; }
         .total { color: #667eea; }
 
+        .rastreamento-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 12px;
+            padding: 4px 10px;
+            background: #f0f4ff;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .rastreamento-link:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .sem-etiqueta {
+            text-align: center;
+            padding: 20px;
+            color: #856404;
+            background: #fff3cd;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+
+        .email-input {
+            max-width: 400px;
+        }
+
         @media (max-width: 768px) {
-            .vincular-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .header-section {
+            .solicitacao-header {
                 flex-direction: column;
-                align-items: flex-start;
             }
         }
     </style>
@@ -411,20 +422,25 @@
     <div class="container">
         <a href="rastreamento.html" class="btn-voltar">← Voltar para Rastreamento</a>
 
-        <h1>🏷️ SuperFrete + Supabase</h1>
-        <p class="subtitle">Loja Pingo de Gente - Integração Produção</p>
+        <h1>🔄 Conciliação Inversa SuperFrete</h1>
+        <p class="subtitle">Busque solicitações do Supabase e encontre etiquetas no SuperFrete por nome</p>
 
-        <!-- SEÇÃO SUPERFRETE -->
-        <div class="section" id="secaoSuperfrete">
-            <div class="section-title">📦 Consulta SuperFrete (Produção)</div>
+        <!-- PASSO 1: TOKEN E JSON -->
+        <div class="section" id="secaoEntrada">
+            <div class="section-title">📥 Dados do SuperFrete</div>
 
             <div class="form-group">
-                <label>Token SuperFrete:</label>
-                <input type="password" id="tokenSuperfrete" placeholder="Cole seu token de produção aqui...">
+                <label>Token SuperFrete (Produção):</label>
+                <input type="password" id="tokenSuperfrete" placeholder="Cole seu token aqui...">
+            </div>
+
+            <div class="form-group">
+                <label>Seu e-mail (para o User-Agent):</label>
+                <input type="email" id="emailUsuario" class="email-input" placeholder="seu@email.com" value="marcobet@gmail.com">
             </div>
 
             <div class="alert alert-info">
-                <strong>💡 Dica:</strong> Execute o comando no PowerShell. O resultado será copiado automaticamente!
+                <strong>💡 Como obter o JSON:</strong> Copie o comando abaixo, cole no PowerShell e execute. O resultado será copiado automaticamente para a área de transferência.
             </div>
 
             <div class="comando-box">
@@ -433,43 +449,41 @@
             </div>
 
             <div class="form-group">
-                <label>Cole aqui o resultado JSON:</label>
-                <textarea id="jsonResultado" placeholder='{"data":[...]}'></textarea>
+                <label>Cole o JSON das etiquetas:</label>
+                <textarea id="jsonEtiquetas" placeholder='{"data":[...]}'></textarea>
             </div>
 
-            <button onclick="processarEtiquetas()" id="btnProcessar">
-                📊 Processar Etiquetas
-            </button>
-
-            <!-- BOTÃO DE CONCILIAÇÃO AUTOMÁTICA -->
-            <button onclick="conciliarAutomaticamente()" id="btnConciliar" class="btn-auto hidden" style="margin-left: 10px;">
-                🤖 Conciliar por Nome
+            <button onclick="carregarSolicitacoes()" id="btnCarregar">
+                🔍 Buscar Solicitações do Supabase
             </button>
         </div>
 
-        <!-- RESUMO DA CONCILIAÇÃO -->
+        <!-- RESUMO -->
         <div id="resumoConciliacao" class="conciliacao-summary hidden">
             <div class="section-title">📊 Resumo da Conciliação</div>
             <div class="conciliacao-grid">
                 <div class="conciliacao-item">
-                    <div class="conciliacao-number total" id="totalEtiquetas">0</div>
-                    <div class="conciliacao-label">Total de Etiquetas</div>
+                    <div class="conciliacao-number total" id="totalSolicitacoes">0</div>
+                    <div class="conciliacao-label">Solicitações Pendentes</div>
                 </div>
                 <div class="conciliacao-item">
-                    <div class="conciliacao-number matched" id="matchedEtiquetas">0</div>
-                    <div class="conciliacao-label">Conciliados Automaticamente</div>
+                    <div class="conciliacao-number matched" id="matchedSolicitacoes">0</div>
+                    <div class="conciliacao-label">Etiquetas Encontradas</div>
                 </div>
                 <div class="conciliacao-item">
-                    <div class="conciliacao-number unmatched" id="unmatchedEtiquetas">0</div>
-                    <div class="conciliacao-label">Pendentes de Vínculo</div>
+                    <div class="conciliacao-number unmatched" id="unmatchedSolicitacoes">0</div>
+                    <div class="conciliacao-label">Sem Etiqueta</div>
                 </div>
             </div>
             <div style="margin-top: 15px; text-align: center;">
                 <button onclick="mostrarTodos()" class="btn-info" style="margin-right: 10px;">
                     👁️ Mostrar Todos
                 </button>
-                <button onclick="mostrarApenasNaoConciliados()" class="btn-warning">
-                    ⚠️ Mostrar Apenas Não Conciliados
+                <button onclick="mostrarApenasNaoEncontrados()" class="btn-warning" style="margin-right: 10px;">
+                    ⚠️ Sem Etiqueta
+                </button>
+                <button onclick="conciliarTodosAutomaticamente()" class="btn-auto">
+                    🤖 Conciliar Todos Encontrados
                 </button>
             </div>
         </div>
@@ -477,18 +491,15 @@
         <!-- RESULTADOS -->
         <div id="secaoResultados" class="hidden">
             <div class="section">
-                <div class="section-title">📋 Etiquetas Encontradas</div>
+                <div class="section-title">📋 Solicitações do Supabase</div>
 
                 <div class="filtro-box">
-                    <label>🔍 Pesquisar solicitação por nome:</label>
-                    <input type="text" id="filtroNome" placeholder="Digite o nome do cliente..." oninput="filtrarSolicitacoes()">
-                    <div class="info-filtro">
-                        Mostrando <span id="contadorSolicitacoes">0</span> solicitações sem rastreamento
-                    </div>
+                    <label>🔍 Filtrar por nome:</label>
+                    <input type="text" id="filtroNome" placeholder="Digite para filtrar..." oninput="filtrarSolicitacoes()">
                 </div>
 
                 <div class="stats-bar" id="statsBar"></div>
-                <div id="listaEtiquetas"></div>
+                <div id="listaSolicitacoes"></div>
             </div>
         </div>
     </div>
@@ -521,82 +532,37 @@
         })();
 
         // ============================================
-        // SUPABASE CONFIGURAÇÃO
+        // CONFIGURAÇÃO
         // ============================================
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
 
         let supabaseClient = null;
-        let etiquetasData = [];
-        let etiquetasProcessadas = []; // Etiquetas com info de match
-        let solicitacoesCache = [];
+        let etiquetasSuperFrete = [];
+        let solicitacoesData = [];
         let rastreamentosExistentes = [];
-        let mostrandoApenasNaoConciliados = false;
+        let mostrandoApenasNaoEncontrados = false;
 
-        const CONFIG = {
-            producao: { 
-                url: 'https://api.superfrete.com/api/v0/me/orders?page=1&limit=50', 
-                campoDados: 'data'
-            }
-        };
-
-        // Inicializar Supabase automaticamente
-        async function inicializarSupabase() {
-            try {
-                if (typeof supabase !== 'undefined') {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    
-                    const { data: solicitacoes, error: errorSol } = await supabaseClient
-                        .from('solicitacoes_pg')
-                        .select('id, numero_solicitacao, codigo_rastreio, clientes_pg(nome, email)')
-                        .order('data_solicitacao', { ascending: false })
-                        .limit(200);
-
-                    if (errorSol) throw errorSol;
-
-                    const { data: rastreamentos, error: errorRast } = await supabaseClient
-                        .from('rastreamentos_pg')
-                        .select('codigo_rastreio, solicitacao_id');
-
-                    if (errorRast) throw errorRast;
-
-                    rastreamentosExistentes = rastreamentos.map(r => r.codigo_rastreio);
-                    solicitacoesCache = solicitacoes.filter(s => {
-                        const semCodigoNaTabela = !s.codigo_rastreio;
-                        const semRastreamentoCadastrado = !rastreamentos.some(r => r.solicitacao_id === s.id);
-                        return semCodigoNaTabela && semRastreamentoCadastrado;
-                    });
-
-                    const secao = document.getElementById('secaoSuperfrete');
-                    const statusDiv = document.createElement('div');
-                    statusDiv.id = 'supabaseStatus';
-                    statusDiv.innerHTML = `
-                        <div class="alert alert-success" style="margin-top: 15px;">
-                            ✅ Conectado ao Supabase!<br>
-                            • ${solicitacoesCache.length} solicitações sem rastreamento<br>
-                            • ${rastreamentos.length} rastreamentos já cadastrados (filtrados)
-                        </div>
-                    `;
-                    secao.appendChild(statusDiv);
-
-                    atualizarContador();
-                }
-            } catch (err) {
-                console.error('Erro ao conectar Supabase:', err);
-                const secao = document.getElementById('secaoSuperfrete');
-                const statusDiv = document.createElement('div');
-                statusDiv.id = 'supabaseStatus';
-                statusDiv.innerHTML = `<div class="alert alert-error" style="margin-top: 15px;">❌ Erro: ${err.message}</div>`;
-                secao.appendChild(statusDiv);
-            }
-        }
-
-        // Atualizar comando PowerShell
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
         function atualizarComando() {
-            const token = document.getElementById('tokenSuperfrete').value.trim() || 'SEU_TOKEN_AQUI';
-            const url = CONFIG.producao.url;
+            const token = document.getElementById('tokenSuperfrete').value.trim() || 'SEU_TOKEN';
+            const email = document.getElementById('emailUsuario').value.trim() || 'seu@email.com';
+            
+            // User-Agent no formato correto: "Aplicacao (email@exemplo.com)"
+            const userAgent = `LojaPingoDeGente (${email})`;
+            
+            const comando = `$headers = @{
+    "Authorization" = "Bearer ${token}"
+    "Accept" = "application/json"
+    "User-Agent" = "${userAgent}"
+}
 
-            const comando = `Invoke-RestMethod -Uri "${url}" -Method GET -Headers @{"Authorization"="Bearer ${token}"; "Accept"="application/json"; "User-Agent"="Loja Pingo de Gente (marcobet@gmail.com)"} | ConvertTo-Json -Depth 10 | Set-Clipboard`;
+$response = Invoke-RestMethod -Uri "https://api.superfrete.com/api/v0/me/orders?page=1&limit=100" -Method GET -Headers $headers
+$response | ConvertTo-Json -Depth 10 | Set-Clipboard
+
+Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor Green`;
 
             document.getElementById('comandoTexto').textContent = comando;
         }
@@ -610,112 +576,141 @@
             });
         }
 
-        // Processar etiquetas do JSON
-        async function processarEtiquetas() {
-            const jsonText = document.getElementById('jsonResultado').value.trim();
-
+        // ============================================
+        // CARREGAR SOLICITAÇÕES DO SUPABASE
+        // ============================================
+        async function carregarSolicitacoes() {
+            const jsonText = document.getElementById('jsonEtiquetas').value.trim();
+            
             if (!jsonText) {
-                alert('Cole o JSON primeiro!');
+                alert('Cole o JSON das etiquetas primeiro!');
                 return;
             }
 
+            // Parse JSON do SuperFrete
             try {
                 const data = JSON.parse(jsonText);
-                const campo = CONFIG.producao.campoDados;
-                etiquetasData = data[campo] || data.data || [];
-
-                if (!Array.isArray(etiquetasData) || etiquetasData.length === 0) {
+                etiquetasSuperFrete = data.data || data.orders || [];
+                
+                if (!Array.isArray(etiquetasSuperFrete) || etiquetasSuperFrete.length === 0) {
                     alert('Nenhuma etiqueta encontrada no JSON!');
                     return;
                 }
+            } catch (err) {
+                alert('JSON inválido: ' + err.message);
+                return;
+            }
 
-                etiquetasData = etiquetasData.filter(etq => {
-                    const rastreio = etq.tracking || etq.tracking_code || etq.code || '';
-                    return !rastreamentosExistentes.includes(rastreio);
-                });
+            const btn = document.getElementById('btnCarregar');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Carregando...';
 
-                if (etiquetasData.length === 0) {
-                    alert('Todas as etiquetas já estão cadastradas no sistema!');
-                    return;
-                }
+            try {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-                // Preparar dados processados
-                etiquetasProcessadas = etiquetasData.map((etq, index) => ({
-                    ...etq,
-                    index: index,
-                    matched: false,
-                    solicitacaoId: null,
-                    solicitacaoNome: null,
-                    matchScore: 0
+                // Buscar rastreamentos existentes
+                const { data: rastreamentos, error: errorRast } = await supabaseClient
+                    .from('rastreamentos_pg')
+                    .select('codigo_rastreio, solicitacao_id');
+
+                if (errorRast) throw errorRast;
+                rastreamentosExistentes = rastreamentos.map(r => r.codigo_rastreio);
+
+                // Buscar solicitações SEM rastreamento
+                const { data: solicitacoes, error: errorSol } = await supabaseClient
+                    .from('solicitacoes_pg')
+                    .select(`
+                        id, 
+                        numero_solicitacao, 
+                        codigo_rastreio,
+                        data_solicitacao,
+                        clientes_pg (
+                            nome, 
+                            email,
+                            instagram
+                        )
+                    `)
+                    .order('data_solicitacao', { ascending: false })
+                    .limit(300);
+
+                if (errorSol) throw errorSol;
+
+                // Filtrar apenas solicitações sem rastreamento
+                solicitacoesData = solicitacoes.filter(s => {
+                    const semCodigo = !s.codigo_rastreio;
+                    const semRastreamento = !rastreamentos.some(r => r.solicitacao_id === s.id);
+                    return semCodigo && semRastreamento;
+                }).map(s => ({
+                    ...s,
+                    etiquetaEncontrada: null,
+                    matchScore: 0,
+                    conciliado: false
                 }));
 
-                // Mostrar botão de conciliação
-                document.getElementById('btnConciliar').classList.remove('hidden');
+                // Tentar encontrar etiqueta para cada solicitação
+                buscarEtiquetasPorNome();
+
                 document.getElementById('resumoConciliacao').classList.remove('hidden');
-                
-                atualizarResumoConciliacao();
-                renderizarEtiquetas(etiquetasProcessadas);
-                atualizarContador();
+                atualizarResumo();
+                renderizarSolicitacoes(solicitacoesData);
 
             } catch (err) {
-                alert('Erro ao processar JSON: ' + err.message);
+                alert('Erro: ' + err.message);
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🔍 Buscar Solicitações do Supabase';
             }
         }
 
-        // FUNÇÃO DE CONCILIAÇÃO AUTOMÁTICA POR NOME
-        function conciliarAutomaticamente() {
-            let matchedCount = 0;
-
-            etiquetasProcessadas.forEach(etq => {
-                if (etq.matched) return; // Já conciliado
-
-                const nomeEtiqueta = normalizarTexto(etq.to?.name || '');
+        // ============================================
+        // BUSCAR ETIQUETAS POR NOME (CONCILIAÇÃO)
+        // ============================================
+        function buscarEtiquetasPorNome() {
+            solicitacoesData.forEach(sol => {
+                const nomeCliente = normalizarTexto(sol.clientes_pg?.nome || '');
                 
-                if (!nomeEtiqueta) return;
+                if (!nomeCliente) return;
 
                 let melhorMatch = null;
                 let melhorScore = 0;
 
-                solicitacoesCache.forEach(sol => {
-                    const nomeSolicitacao = normalizarTexto(sol.clientes_pg?.nome || '');
+                etiquetasSuperFrete.forEach(etq => {
+                    const nomeEtiqueta = normalizarTexto(etq.to?.name || '');
                     
-                    if (!nomeSolicitacao) return;
+                    if (!nomeEtiqueta) return;
 
-                    const score = calcularSimilaridade(nomeEtiqueta, nomeSolicitacao);
+                    // Verificar se etiqueta já não foi usada
+                    const jaUsada = solicitacoesData.some(s => 
+                        s.etiquetaEncontrada && s.etiquetaEncontrada.order_id === etq.order_id
+                    );
                     
-                    // Threshold de 0.6 (60% de similaridade)
-                    if (score > melhorScore && score >= 0.6) {
+                    if (jaUsada) return;
+
+                    const score = calcularSimilaridade(nomeCliente, nomeEtiqueta);
+                    
+                    if (score > melhorScore && score >= 0.5) {
                         melhorScore = score;
-                        melhorMatch = sol;
+                        melhorMatch = etq;
                     }
                 });
 
                 if (melhorMatch) {
-                    etq.matched = true;
-                    etq.solicitacaoId = melhorMatch.id;
-                    etq.solicitacaoNome = melhorMatch.clientes_pg?.nome;
-                    etq.matchScore = melhorScore;
-                    matchedCount++;
+                    sol.etiquetaEncontrada = melhorMatch;
+                    sol.matchScore = melhorScore;
                 }
             });
-
-            atualizarResumoConciliacao();
-            renderizarEtiquetas(etiquetasProcessadas);
-            
-            alert(`✅ Conciliação automática concluída!\n\n${matchedCount} etiquetas foram vinculadas automaticamente.\n\nAs etiquetas não encontradas permanecem para vínculo manual.`);
         }
 
-        // Normalizar texto para comparação
         function normalizarTexto(texto) {
             return texto
                 .toLowerCase()
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove acentos
-                .replace(/[^a-z0-9\s]/g, ' ') // Remove caracteres especiais
-                .replace(/\s+/g, ' ') // Remove espaços múltiplos
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9\s]/g, ' ')
+                .replace(/\s+/g, ' ')
                 .trim();
         }
 
-        // Calcular similaridade entre dois textos (coeficiente de Jaccard adaptado)
         function calcularSimilaridade(str1, str2) {
             const palavras1 = new Set(str1.split(' ').filter(p => p.length > 2));
             const palavras2 = new Set(str2.split(' ').filter(p => p.length > 2));
@@ -728,300 +723,271 @@
             return intersecao.length / uniao.size;
         }
 
-        // Atualizar resumo da conciliação
-        function atualizarResumoConciliacao() {
-            const total = etiquetasProcessadas.length;
-            const matched = etiquetasProcessadas.filter(e => e.matched).length;
-            const unmatched = total - matched;
-
-            document.getElementById('totalEtiquetas').textContent = total;
-            document.getElementById('matchedEtiquetas').textContent = matched;
-            document.getElementById('unmatchedEtiquetas').textContent = unmatched;
-        }
-
-        // Mostrar todos
-        function mostrarTodos() {
-            mostrandoApenasNaoConciliados = false;
-            renderizarEtiquetas(etiquetasProcessadas);
-        }
-
-        // Mostrar apenas não conciliados
-        function mostrarApenasNaoConciliados() {
-            mostrandoApenasNaoConciliados = true;
-            const naoConciliados = etiquetasProcessadas.filter(e => !e.matched);
-            renderizarEtiquetas(naoConciliados, true);
-        }
-
-        // Renderizar etiquetas
-        function renderizarEtiquetas(etiquetas, isFiltered = false) {
+        // ============================================
+        // RENDERIZAR SOLICITAÇÕES
+        // ============================================
+        function renderizarSolicitacoes(solicitacoes) {
             const container = document.getElementById('secaoResultados');
-            const lista = document.getElementById('listaEtiquetas');
+            const lista = document.getElementById('listaSolicitacoes');
             const stats = document.getElementById('statsBar');
 
             container.classList.remove('hidden');
 
-            const comRastreio = etiquetas.filter(e => {
-                const rastreio = e.tracking || e.tracking_code || e.code;
-                return rastreio && rastreio !== 'N/A';
-            }).length;
-
-            const matched = etiquetas.filter(e => e.matched).length;
+            const comEtiqueta = solicitacoes.filter(s => s.etiquetaEncontrada).length;
+            const semEtiqueta = solicitacoes.length - comEtiqueta;
 
             stats.innerHTML = `
                 <div class="stat-item">
-                    <div class="stat-number">${etiquetas.length}</div>
-                    <div class="stat-label">${isFiltered ? 'Não Conciliados' : 'Total'}</div>
+                    <div class="stat-number">${solicitacoes.length}</div>
+                    <div class="stat-label">Exibindo</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number" style="color:#11998e;">${matched}</div>
-                    <div class="stat-label">Auto-Conciliados</div>
+                    <div class="stat-number" style="color:#11998e;">${comEtiqueta}</div>
+                    <div class="stat-label">Com Etiqueta</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number" style="color:#28a745;">${comRastreio}</div>
-                    <div class="stat-label">Com Rastreio</div>
+                    <div class="stat-number" style="color:#ff6b6b;">${semEtiqueta}</div>
+                    <div class="stat-label">Sem Etiqueta</div>
                 </div>
             `;
 
-            const opcoesSolicitacoes = solicitacoesCache.map(s => {
-                const nome = s.clientes_pg?.nome || 'Sem nome';
-                const email = s.clientes_pg?.email || '';
-                const num = s.numero_solicitacao || s.id.substring(0, 8);
-                return `<option value="${s.id}">#${num} - ${nome} ${email ? '(' + email + ')' : ''}</option>`;
-            }).join('');
+            lista.innerHTML = solicitacoes.map(sol => {
+                const temEtiqueta = !!sol.etiquetaEncontrada;
+                const cardClass = sol.conciliado ? 'solicitacao-card salvo' : 
+                                  temEtiqueta ? 'solicitacao-card matched' : 
+                                  'solicitacao-card unmatched';
 
-            lista.innerHTML = etiquetas.map((etq) => {
-                const index = etq.index;
-                const id = etq.order_id || etq.id || 'N/A';
-                const rastreio = etq.tracking || etq.tracking_code || etq.code || '';
-                const destinatario = etq.to?.name || 'N/A';
-                const cidade = etq.to?.city || 'N/A';
-                const estado = etq.to?.state || etq.to?.state_abbr || 'N/A';
-                const transportadora = etq.carrier || 'correios';
+                const numero = sol.numero_solicitacao || sol.id.substring(0, 8);
+                const nome = sol.clientes_pg?.nome || 'Sem nome';
+                const email = sol.clientes_pg?.email || '';
 
-                let valor = 0;
-                if (typeof etq.price === 'object') {
-                    valor = etq.price?.total || 0;
-                } else {
-                    valor = etq.price || 0;
-                }
+                // Renderizar etiqueta encontrada
+                let etiquetaHtml = '';
+                if (temEtiqueta) {
+                    const etq = sol.etiquetaEncontrada;
+                    const rastreio = etq.tracking || etq.tracking_code || etq.code || 'N/A';
+                    const transportadora = etq.carrier || 'correios';
+                    const valor = etq.price?.total || etq.price || 0;
+                    const destinatario = etq.to?.name || 'N/A';
+                    const cidade = etq.to?.city || 'N/A';
+                    const estado = etq.to?.state || etq.to?.state_abbr || 'N/A';
 
-                const status = (etq.status || 'unknown').toLowerCase();
-
-                let linkRastreamento = '';
-                if (rastreio) {
-                    if (transportadora.toLowerCase().includes('correios')) {
-                        linkRastreamento = `https://rastreamento.correios.com.br/app/index.php?objeto=${rastreio}`;
-                    } else if (transportadora.toLowerCase().includes('jadlog')) {
-                        linkRastreamento = `https://www.jadlog.com.br/tracking?objeto=${rastreio}`;
-                    } else {
-                        linkRastreamento = `https://rastreamentomelhorenvio.com.br/${rastreio}`;
+                    let linkRastreio = '';
+                    if (rastreio !== 'N/A') {
+                        if (transportadora.toLowerCase().includes('correios')) {
+                            linkRastreio = `https://rastreamento.correios.com.br/app/index.php?objeto=${rastreio}`;
+                        } else {
+                            linkRastreio = `https://rastreamentomelhorenvio.com.br/${rastreio}`;
+                        }
                     }
-                }
 
-                // Se já foi conciliado automaticamente
-                const isMatched = etq.matched;
-                const cardClass = isMatched ? 'etiqueta-card auto-matched' : 'etiqueta-card';
-                
-                const matchInfo = isMatched ? `
-                    <div class="match-info">
-                        ✅ <strong>Conciliado automaticamente:</strong> ${etq.solicitacaoNome}<br>
-                        <small>Confiança: ${Math.round(etq.matchScore * 100)}%</small>
-                    </div>
-                ` : '';
-
-                const noMatchWarning = (!isMatched && !isFiltered) ? `
-                    <div class="no-match-warning">
-                        ⚠️ Nenhuma solicitação encontrada com nome similar
-                    </div>
-                ` : '';
-
-                return `
-                    <div class="${cardClass}" id="etiqueta-${index}">
-                        <div class="etiqueta-header">
-                            <div>
-                                <div class="etiqueta-id">#${id}</div>
-                                <div style="font-size:12px;color:#666;">${destinatario} - ${cidade}/${estado}</div>
+                    etiquetaHtml = `
+                        <div class="etiqueta-encontrada">
+                            <div class="etiqueta-header">
+                                <div>
+                                    <span class="etiqueta-id">#${etq.order_id || etq.id}</span>
+                                    <span class="match-score" style="margin-left: 10px;">
+                                        ${Math.round(sol.matchScore * 100)}% match
+                                    </span>
+                                </div>
+                                <span class="rastreio">${rastreio}</span>
                             </div>
-                            <span class="status status-${status}">${status.toUpperCase()}</span>
-                        </div>
-
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <label>Rastreio</label>
-                                <p>${rastreio ? `<span class="rastreio">${rastreio}</span>` : 'N/A'}</p>
-                                ${rastreio ? `<a href="${linkRastreamento}" target="_blank" class="rastreamento-link">🔍 Rastrear →</a>` : ''}
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>Destinatário SF</label>
+                                    <p>${destinatario}</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>Cidade/UF</label>
+                                    <p>${cidade}/${estado}</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>Transportadora</label>
+                                    <p>${transportadora}</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>Valor</label>
+                                    <p class="valor">R$ ${parseFloat(valor).toFixed(2)}</p>
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <label>Transportadora</label>
-                                <p>${transportadora}</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Valor</label>
-                                <p class="valor">R$ ${parseFloat(valor).toFixed(2)}</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Criado em</label>
-                                <p>${new Date(etq.created_at).toLocaleString('pt-BR')}</p>
-                            </div>
-                        </div>
-
-                        ${matchInfo}
-                        ${noMatchWarning}
-
-                        ${rastreio ? `
-                        <div class="vincular-section">
-                            <label>${isMatched ? 'Verificar/Alterar Vínculo:' : 'Vincular à Solicitação:'}</label>
-                            <div class="vincular-row">
-                                <select id="solicitacao-${index}">
-                                    <option value="">Selecione...</option>
-                                    ${opcoesSolicitacoes}
-                                </select>
-                                <input type="date" id="data-envio-${index}" value="${new Date().toISOString().split('T')[0]}">
-                                <button class="btn-success" onclick="salvarRastreamento(${index}, '${rastreio}', '${transportadora}')">
-                                    ${isMatched ? '✓ Confirmar' : 'Salvar'}
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                ${linkRastreio ? `<a href="${linkRastreio}" target="_blank" class="rastreamento-link">🔍 Rastrear</a>` : ''}
+                                <button class="btn-success" onclick="salvarRastreamento('${sol.id}')" 
+                                    ${sol.conciliado ? 'disabled' : ''} style="flex: 1;">
+                                    ${sol.conciliado ? '✅ Salvo' : '💾 Salvar Rastreamento'}
                                 </button>
                             </div>
-                            <div id="msg-${index}" style="margin-top:10px;"></div>
                         </div>
-                        ` : '<div style="margin-top:15px;color:#856404;">⚠️ Sem código de rastreio</div>'}
+                    `;
+                } else {
+                    etiquetaHtml = `
+                        <div class="sem-etiqueta">
+                            <div>🔍 Nenhuma etiqueta do SuperFrete encontrada para este cliente</div>
+                            <div style="font-size: 12px; margin-top: 5px;">
+                                Verifique se o nome está igual no SuperFrete ou se a etiqueta já foi usada
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="${cardClass}" id="sol-${sol.id}">
+                        <div class="solicitacao-header">
+                            <div>
+                                <div class="solicitacao-numero">#${numero}</div>
+                                <div class="solicitacao-cliente">${nome}</div>
+                                <div class="solicitacao-email">${email}</div>
+                            </div>
+                            <span class="status-badge ${temEtiqueta ? 'status-encontrado' : 'status-nao-encontrado'}">
+                                ${temEtiqueta ? '✓ Etiqueta Encontrada' : '✗ Sem Etiqueta'}
+                            </span>
+                        </div>
+                        ${etiquetaHtml}
                     </div>
                 `;
             }).join('');
-
-            // Preencher selects dos já conciliados
-            setTimeout(() => {
-                etiquetas.forEach(etq => {
-                    if (etq.matched && etq.solicitacaoId) {
-                        const select = document.getElementById(`solicitacao-${etq.index}`);
-                        if (select) select.value = etq.solicitacaoId;
-                    }
-                });
-            }, 100);
         }
 
-        // Salvar rastreamento
-        async function salvarRastreamento(index, codigoRastreio, formaEnvio) {
-            const solicitacaoId = document.getElementById(`solicitacao-${index}`).value;
-            const dataEnvio = document.getElementById(`data-envio-${index}`).value;
-            const msgDiv = document.getElementById(`msg-${index}`);
-            const btn = event.target;
+        // ============================================
+        // AÇÕES
+        // ============================================
+        function atualizarResumo() {
+            const total = solicitacoesData.length;
+            const matched = solicitacoesData.filter(s => s.etiquetaEncontrada).length;
+            const unmatched = total - matched;
 
-            if (!solicitacaoId) {
-                msgDiv.innerHTML = '<span style="color:#dc3545;">Selecione uma solicitação!</span>';
+            document.getElementById('totalSolicitacoes').textContent = total;
+            document.getElementById('matchedSolicitacoes').textContent = matched;
+            document.getElementById('unmatchedSolicitacoes').textContent = unmatched;
+        }
+
+        function mostrarTodos() {
+            mostrandoApenasNaoEncontrados = false;
+            renderizarSolicitacoes(solicitacoesData);
+        }
+
+        function mostrarApenasNaoEncontrados() {
+            mostrandoApenasNaoEncontrados = true;
+            const naoEncontrados = solicitacoesData.filter(s => !s.etiquetaEncontrada);
+            renderizarSolicitacoes(naoEncontrados);
+        }
+
+        async function conciliarTodosAutomaticamente() {
+            const encontrados = solicitacoesData.filter(s => s.etiquetaEncontrada && !s.conciliado);
+            
+            if (encontrados.length === 0) {
+                alert('Nenhuma solicitação pendente de conciliação!');
                 return;
             }
 
+            if (!confirm(`Deseja conciliar automaticamente ${encontrados.length} solicitações encontradas?`)) {
+                return;
+            }
+
+            let sucessos = 0;
+            let erros = 0;
+
+            for (const sol of encontrados) {
+                try {
+                    await salvarRastreamentoSilencioso(sol);
+                    sucessos++;
+                } catch (err) {
+                    erros++;
+                    console.error('Erro ao salvar:', sol.id, err);
+                }
+            }
+
+            alert(`✅ Conciliação concluída!\n\n${sucessos} salvos com sucesso${erros > 0 ? `\n${erros} erros` : ''}`);
+            atualizarResumo();
+            renderizarSolicitacoes(solicitacoesData);
+        }
+
+        async function salvarRastreamento(solicitacaoId) {
+            const sol = solicitacoesData.find(s => s.id === solicitacaoId);
+            if (!sol || !sol.etiquetaEncontrada) return;
+
+            const btn = event.target;
             btn.disabled = true;
             btn.innerHTML = '<span class="loading"></span> Salvando...';
 
             try {
-                const { error } = await supabaseClient
-                    .from('rastreamentos_pg')
-                    .insert({
-                        solicitacao_id: solicitacaoId,
-                        codigo_rastreio: codigoRastreio,
-                        forma_envio: formaEnvio.toLowerCase(),
-                        data_envio: dataEnvio || null,
-                        observacoes: `Importado do SuperFrete (producao)${etiquetasProcessadas[index]?.matched ? ' - Auto-conciliado' : ''}`
-                    });
-
-                if (error) throw error;
-
-                await supabaseClient
-                    .from('solicitacoes_pg')
-                    .update({
-                        codigo_rastreio: codigoRastreio,
-                        forma_envio: formaEnvio.toLowerCase(),
-                        data_envio: dataEnvio || null,
-                        status: 'enviado',
-                        atualizado_em: new Date().toISOString()
-                    })
-                    .eq('id', solicitacaoId);
-
-                rastreamentosExistentes.push(codigoRastreio);
-                solicitacoesCache = solicitacoesCache.filter(s => s.id !== solicitacaoId);
+                await salvarRastreamentoSilencioso(sol);
                 
-                // Marcar como salvo e remover da lista atual
-                etiquetasProcessadas = etiquetasProcessadas.filter(e => e.index !== index);
-
-                document.getElementById(`etiqueta-${index}`).classList.add('salvo');
-                msgDiv.innerHTML = '<div class="alert alert-success" style="margin:0;padding:10px;">✅ Salvo! Removido da lista.</div>';
-
-                // Re-renderizar se estiver filtrado
-                if (mostrandoApenasNaoConciliados) {
-                    mostrarApenasNaoConciliados();
-                } else {
-                    renderizarEtiquetas(etiquetasProcessadas);
-                }
+                sol.conciliado = true;
+                document.getElementById(`sol-${solicitacaoId}`).classList.add('salvo');
+                btn.innerHTML = '✅ Salvo';
                 
-                atualizarResumoConciliacao();
-                atualizarContador();
+                atualizarResumo();
 
             } catch (err) {
-                let msg = err.message;
-                if (err.code === '23505') msg = 'Rastreio já cadastrado!';
-                msgDiv.innerHTML = `<div class="alert alert-error" style="margin:0;padding:10px;">❌ ${msg}</div>`;
+                alert('Erro ao salvar: ' + err.message);
                 btn.disabled = false;
-                btn.textContent = etiquetasProcessadas.find(e => e.index === index)?.matched ? '✓ Confirmar' : 'Salvar';
+                btn.innerHTML = '💾 Salvar Rastreamento';
             }
         }
 
-        // Filtrar solicitações por nome
-        function filtrarSolicitacoes() {
-            const filtro = document.getElementById('filtroNome').value.toLowerCase();
-            const selects = document.querySelectorAll('select[id^="solicitacao-"]');
+        async function salvarRastreamentoSilencioso(sol) {
+            const etq = sol.etiquetaEncontrada;
+            const codigoRastreio = etq.tracking || etq.tracking_code || etq.code;
+            const formaEnvio = etq.carrier || 'correios';
 
-            selects.forEach(select => {
-                const options = select.querySelectorAll('option');
-                let temVisivel = false;
+            if (!codigoRastreio) {
+                throw new Error('Sem código de rastreio');
+            }
 
-                options.forEach(opt => {
-                    if (opt.value === '') return;
-
-                    const texto = opt.textContent.toLowerCase();
-                    if (texto.includes(filtro)) {
-                        opt.style.display = '';
-                        temVisivel = true;
-                    } else {
-                        opt.style.display = 'none';
-                    }
+            // Inserir rastreamento
+            const { error: errorRast } = await supabaseClient
+                .from('rastreamentos_pg')
+                .insert({
+                    solicitacao_id: sol.id,
+                    codigo_rastreio: codigoRastreio,
+                    forma_envio: formaEnvio.toLowerCase(),
+                    data_envio: new Date().toISOString().split('T')[0],
+                    observacoes: `Conciliado automaticamente do SuperFrete (match: ${Math.round(sol.matchScore * 100)}%)`
                 });
 
-                if (!temVisivel && filtro !== '') {
-                    let optNenhuma = select.querySelector('option[data-temp="true"]');
-                    if (!optNenhuma) {
-                        optNenhuma = document.createElement('option');
-                        optNenhuma.setAttribute('data-temp', 'true');
-                        optNenhuma.disabled = true;
-                        select.appendChild(optNenhuma);
-                    }
-                    optNenhuma.textContent = 'Nenhuma solicitação encontrada';
-                    optNenhuma.style.display = '';
-                }
-            });
+            if (errorRast) throw errorRast;
 
-            atualizarContador();
+            // Atualizar solicitação
+            const { error: errorSol } = await supabaseClient
+                .from('solicitacoes_pg')
+                .update({
+                    codigo_rastreio: codigoRastreio,
+                    forma_envio: formaEnvio.toLowerCase(),
+                    data_envio: new Date().toISOString().split('T')[0],
+                    status: 'enviado',
+                    atualizado_em: new Date().toISOString()
+                })
+                .eq('id', sol.id);
+
+            if (errorSol) throw errorSol;
+
+            sol.conciliado = true;
         }
 
-        function atualizarContador() {
+        function filtrarSolicitacoes() {
             const filtro = document.getElementById('filtroNome').value.toLowerCase();
-            let total = 0;
-
-            solicitacoesCache.forEach(s => {
-                const nome = (s.clientes_pg?.nome || '').toLowerCase();
-                if (nome.includes(filtro) || filtro === '') {
-                    total++;
-                }
+            
+            const filtradas = solicitacoesData.filter(sol => {
+                const nome = (sol.clientes_pg?.nome || '').toLowerCase();
+                const email = (sol.clientes_pg?.email || '').toLowerCase();
+                const numero = (sol.numero_solicitacao || '').toLowerCase();
+                
+                return nome.includes(filtro) || email.includes(filtro) || numero.includes(filtro);
             });
 
-            document.getElementById('contadorSolicitacoes').textContent = total;
+            if (mostrandoApenasNaoEncontrados) {
+                renderizarSolicitacoes(filtradas.filter(s => !s.etiquetaEncontrada));
+            } else {
+                renderizarSolicitacoes(filtradas);
+            }
         }
 
         // Inicializar
         document.getElementById('tokenSuperfrete').addEventListener('input', atualizarComando);
+        document.getElementById('emailUsuario').addEventListener('input', atualizarComando);
         document.addEventListener('DOMContentLoaded', () => {
             atualizarComando();
-            inicializarSupabase();
         });
     </script>
 </body>
