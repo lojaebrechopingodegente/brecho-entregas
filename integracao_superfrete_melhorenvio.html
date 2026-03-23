@@ -152,6 +152,29 @@
         .alert-info { background: #e7f3ff; border: 1px solid #b3d9ff; color: #004085; }
         .alert-warning { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; }
 
+        /* Filtros de data */
+        .filtros-data {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #e8e8e8;
+        }
+
+        .filtro-data-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filtro-data-group label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
         .solicitacao-card {
             background: white;
             border: 2px solid #e8e8e8;
@@ -178,6 +201,11 @@
         .solicitacao-card.salvo { 
             border-color: #28a745; 
             opacity: 0.7;
+        }
+
+        .solicitacao-card.fora-do-periodo {
+            opacity: 0.5;
+            border-style: dashed;
         }
 
         .solicitacao-header {
@@ -207,6 +235,12 @@
             color: #666;
         }
 
+        .solicitacao-data {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
         .status-badge {
             padding: 6px 14px;
             border-radius: 20px;
@@ -218,6 +252,7 @@
         .status-pendente { background: #FFEAA7; color: #B7791F; }
         .status-encontrado { background: #55EFC4; color: #00B894; }
         .status-nao-encontrado { background: #FF7675; color: #D63031; }
+        .status-fora-periodo { background: #e0e0e0; color: #666; }
 
         .etiqueta-encontrada {
             background: white;
@@ -406,6 +441,16 @@
             margin-top: 15px;
         }
 
+        .info-periodo {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #1565c0;
+        }
+
         .email-input {
             max-width: 400px;
         }
@@ -413,6 +458,10 @@
         @media (max-width: 768px) {
             .solicitacao-header {
                 flex-direction: column;
+            }
+            
+            .filtros-data {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -425,7 +474,7 @@
         <h1>🔄 Conciliação Inversa SuperFrete</h1>
         <p class="subtitle">Busque solicitações do Supabase e encontre etiquetas no SuperFrete por nome</p>
 
-        <!-- PASSO 1: TOKEN E JSON -->
+        <!-- PASSO 1: TOKEN, EMAIL E DATAS -->
         <div class="section" id="secaoEntrada">
             <div class="section-title">📥 Dados do SuperFrete</div>
 
@@ -437,6 +486,32 @@
             <div class="form-group">
                 <label>Seu e-mail (para o User-Agent):</label>
                 <input type="email" id="emailUsuario" class="email-input" placeholder="seu@email.com" value="marcobet@gmail.com">
+            </div>
+
+            <!-- FILTROS DE DATA -->
+            <div class="section-title" style="margin-top: 25px;">📅 Filtros por Data</div>
+            
+            <div class="filtros-data">
+                <div class="filtro-data-group">
+                    <label>Data Inicial (Solicitações Supabase)</label>
+                    <input type="date" id="dataInicialSupabase">
+                </div>
+                <div class="filtro-data-group">
+                    <label>Data Final (Solicitações Supabase)</label>
+                    <input type="date" id="dataFinalSupabase">
+                </div>
+                <div class="filtro-data-group">
+                    <label>Data Inicial (Etiquetas SuperFrete)</label>
+                    <input type="date" id="dataInicialSuperfrete">
+                </div>
+                <div class="filtro-data-group">
+                    <label>Data Final (Etiquetas SuperFrete)</label>
+                    <input type="date" id="dataFinalSuperfrete">
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>💡 Dica:</strong> Deixe as datas em branco para carregar tudo. As datas filtram tanto as solicitações do Supabase quanto as etiquetas do SuperFrete.
             </div>
 
             <div class="alert alert-info">
@@ -461,10 +536,11 @@
         <!-- RESUMO -->
         <div id="resumoConciliacao" class="conciliacao-summary hidden">
             <div class="section-title">📊 Resumo da Conciliação</div>
+            <div id="infoPeriodo" class="info-periodo"></div>
             <div class="conciliacao-grid">
                 <div class="conciliacao-item">
                     <div class="conciliacao-number total" id="totalSolicitacoes">0</div>
-                    <div class="conciliacao-label">Solicitações Pendentes</div>
+                    <div class="conciliacao-label">Solicitações no Período</div>
                 </div>
                 <div class="conciliacao-item">
                     <div class="conciliacao-number matched" id="matchedSolicitacoes">0</div>
@@ -474,6 +550,10 @@
                     <div class="conciliacao-number unmatched" id="unmatchedSolicitacoes">0</div>
                     <div class="conciliacao-label">Sem Etiqueta</div>
                 </div>
+                <div class="conciliacao-item">
+                    <div class="conciliacao-number" style="color:#ff9800;" id="foraPeriodoSolicitacoes">0</div>
+                    <div class="conciliacao-label">Fora do Período SF</div>
+                </div>
             </div>
             <div style="margin-top: 15px; text-align: center;">
                 <button onclick="mostrarTodos()" class="btn-info" style="margin-right: 10px;">
@@ -482,7 +562,10 @@
                 <button onclick="mostrarApenasNaoEncontrados()" class="btn-warning" style="margin-right: 10px;">
                     ⚠️ Sem Etiqueta
                 </button>
-                <button onclick="conciliarTodosAutomaticamente()" class="btn-auto">
+                <button onclick="mostrarForaDoPeriodo()" class="btn-auto" style="margin-right: 10px;">
+                    📅 Fora do Período
+                </button>
+                <button onclick="conciliarTodosAutomaticamente()" class="btn-success">
                     🤖 Conciliar Todos Encontrados
                 </button>
             </div>
@@ -539,9 +622,19 @@
 
         let supabaseClient = null;
         let etiquetasSuperFrete = [];
+        let etiquetasFiltradas = [];
         let solicitacoesData = [];
         let rastreamentosExistentes = [];
         let mostrandoApenasNaoEncontrados = false;
+        let mostrandoForaDoPeriodo = false;
+
+        // Datas dos filtros
+        let filtrosData = {
+            supabaseInicio: null,
+            supabaseFim: null,
+            superfreteInicio: null,
+            superfreteFim: null
+        };
 
         // ============================================
         // INICIALIZAÇÃO
@@ -550,7 +643,19 @@
             const token = document.getElementById('tokenSuperfrete').value.trim() || 'SEU_TOKEN';
             const email = document.getElementById('emailUsuario').value.trim() || 'seu@email.com';
             
-            // User-Agent no formato correto: "Aplicacao (email@exemplo.com)"
+            // Obter datas para o comando
+            const dataInicio = document.getElementById('dataInicialSuperfrete').value;
+            const dataFim = document.getElementById('dataFinalSuperfrete').value;
+            
+            // Construir URL com filtros de data se existirem
+            let url = "https://api.superfrete.com/api/v0/me/orders?page=1&limit=100";
+            if (dataInicio) {
+                url += `&start_date=${dataInicio}T00:00:00`;
+            }
+            if (dataFim) {
+                url += `&end_date=${dataFim}T23:59:59`;
+            }
+            
             const userAgent = `LojaPingoDeGente (${email})`;
             
             const comando = `$headers = @{
@@ -559,7 +664,7 @@
     "User-Agent" = "${userAgent}"
 }
 
-$response = Invoke-RestMethod -Uri "https://api.superfrete.com/api/v0/me/orders?page=1&limit=100" -Method GET -Headers $headers
+$response = Invoke-RestMethod -Uri "${url}" -Method GET -Headers $headers
 $response | ConvertTo-Json -Depth 10 | Set-Clipboard
 
 Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor Green`;
@@ -587,6 +692,12 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                 return;
             }
 
+            // Obter datas dos filtros
+            filtrosData.supabaseInicio = document.getElementById('dataInicialSupabase').value;
+            filtrosData.supabaseFim = document.getElementById('dataFinalSupabase').value;
+            filtrosData.superfreteInicio = document.getElementById('dataInicialSuperfrete').value;
+            filtrosData.superfreteFim = document.getElementById('dataFinalSuperfrete').value;
+
             // Parse JSON do SuperFrete
             try {
                 const data = JSON.parse(jsonText);
@@ -596,6 +707,10 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                     alert('Nenhuma etiqueta encontrada no JSON!');
                     return;
                 }
+
+                // Filtrar etiquetas por data do SuperFrete
+                etiquetasFiltradas = filtrarEtiquetasPorData(etiquetasSuperFrete);
+                
             } catch (err) {
                 alert('JSON inválido: ' + err.message);
                 return;
@@ -616,8 +731,8 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                 if (errorRast) throw errorRast;
                 rastreamentosExistentes = rastreamentos.map(r => r.codigo_rastreio);
 
-                // Buscar solicitações SEM rastreamento
-                const { data: solicitacoes, error: errorSol } = await supabaseClient
+                // Construir query do Supabase com filtros de data
+                let query = supabaseClient
                     .from('solicitacoes_pg')
                     .select(`
                         id, 
@@ -630,8 +745,22 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                             instagram
                         )
                     `)
-                    .order('data_solicitacao', { ascending: false })
-                    .limit(300);
+                    .order('data_solicitacao', { ascending: false });
+
+                // Aplicar filtros de data
+                if (filtrosData.supabaseInicio) {
+                    const inicio = new Date(filtrosData.supabaseInicio);
+                    inicio.setHours(0, 0, 0, 0);
+                    query = query.gte('data_solicitacao', inicio.toISOString());
+                }
+                
+                if (filtrosData.supabaseFim) {
+                    const fim = new Date(filtrosData.supabaseFim);
+                    fim.setHours(23, 59, 59, 999);
+                    query = query.lte('data_solicitacao', fim.toISOString());
+                }
+
+                const { data: solicitacoes, error: errorSol } = await query.limit(500);
 
                 if (errorSol) throw errorSol;
 
@@ -644,7 +773,8 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                     ...s,
                     etiquetaEncontrada: null,
                     matchScore: 0,
-                    conciliado: false
+                    conciliado: false,
+                    foraDoPeriodoSF: false
                 }));
 
                 // Tentar encontrar etiqueta para cada solicitação
@@ -652,6 +782,7 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
 
                 document.getElementById('resumoConciliacao').classList.remove('hidden');
                 atualizarResumo();
+                atualizarInfoPeriodo();
                 renderizarSolicitacoes(solicitacoesData);
 
             } catch (err) {
@@ -661,6 +792,33 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                 btn.disabled = false;
                 btn.innerHTML = '🔍 Buscar Solicitações do Supabase';
             }
+        }
+
+        // ============================================
+        // FILTRAR ETIQUETAS POR DATA
+        // ============================================
+        function filtrarEtiquetasPorData(etiquetas) {
+            if (!filtrosData.superfreteInicio && !filtrosData.superfreteFim) {
+                return etiquetas;
+            }
+
+            return etiquetas.filter(etq => {
+                const dataEtiqueta = new Date(etq.created_at);
+                
+                if (filtrosData.superfreteInicio) {
+                    const inicio = new Date(filtrosData.superfreteInicio);
+                    inicio.setHours(0, 0, 0, 0);
+                    if (dataEtiqueta < inicio) return false;
+                }
+                
+                if (filtrosData.superfreteFim) {
+                    const fim = new Date(filtrosData.superfreteFim);
+                    fim.setHours(23, 59, 59, 999);
+                    if (dataEtiqueta > fim) return false;
+                }
+                
+                return true;
+            });
         }
 
         // ============================================
@@ -675,7 +833,8 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                 let melhorMatch = null;
                 let melhorScore = 0;
 
-                etiquetasSuperFrete.forEach(etq => {
+                // Buscar nas etiquetas FILTRADAS por data
+                etiquetasFiltradas.forEach(etq => {
                     const nomeEtiqueta = normalizarTexto(etq.to?.name || '');
                     
                     if (!nomeEtiqueta) return;
@@ -698,8 +857,42 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                 if (melhorMatch) {
                     sol.etiquetaEncontrada = melhorMatch;
                     sol.matchScore = melhorScore;
+                    sol.foraDoPeriodoSF = false;
+                } else {
+                    // Tentar encontrar em TODAS as etiquetas (para marcar como fora do período)
+                    const matchForaPeriodo = encontrarEmTodasEtiquetas(nomeCliente);
+                    if (matchForaPeriodo) {
+                        sol.etiquetaEncontrada = matchForaPeriodo;
+                        sol.matchScore = 0; // Não mostrar score
+                        sol.foraDoPeriodoSF = true;
+                    }
                 }
             });
+        }
+
+        function encontrarEmTodasEtiquetas(nomeCliente) {
+            let melhorMatch = null;
+            let melhorScore = 0;
+
+            etiquetasSuperFrete.forEach(etq => {
+                const nomeEtiqueta = normalizarTexto(etq.to?.name || '');
+                if (!nomeEtiqueta) return;
+
+                const jaUsada = solicitacoesData.some(s => 
+                    s.etiquetaEncontrada && s.etiquetaEncontrada.order_id === etq.order_id && !s.foraDoPeriodoSF
+                );
+                
+                if (jaUsada) return;
+
+                const score = calcularSimilaridade(nomeCliente, nomeEtiqueta);
+                
+                if (score > melhorScore && score >= 0.5) {
+                    melhorScore = score;
+                    melhorMatch = etq;
+                }
+            });
+
+            return melhorMatch;
         }
 
         function normalizarTexto(texto) {
@@ -733,8 +926,9 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
 
             container.classList.remove('hidden');
 
-            const comEtiqueta = solicitacoes.filter(s => s.etiquetaEncontrada).length;
-            const semEtiqueta = solicitacoes.length - comEtiqueta;
+            const comEtiqueta = solicitacoes.filter(s => s.etiquetaEncontrada && !s.foraDoPeriodoSF).length;
+            const semEtiqueta = solicitacoes.filter(s => !s.etiquetaEncontrada).length;
+            const foraPeriodo = solicitacoes.filter(s => s.foraDoPeriodoSF).length;
 
             stats.innerHTML = `
                 <div class="stat-item">
@@ -743,23 +937,32 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                 </div>
                 <div class="stat-item">
                     <div class="stat-number" style="color:#11998e;">${comEtiqueta}</div>
-                    <div class="stat-label">Com Etiqueta</div>
+                    <div class="stat-label">No Período</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number" style="color:#ff6b6b;">${semEtiqueta}</div>
                     <div class="stat-label">Sem Etiqueta</div>
                 </div>
+                <div class="stat-item">
+                    <div class="stat-number" style="color:#ff9800;">${foraPeriodo}</div>
+                    <div class="stat-label">Fora do Período SF</div>
+                </div>
             `;
 
             lista.innerHTML = solicitacoes.map(sol => {
-                const temEtiqueta = !!sol.etiquetaEncontrada;
-                const cardClass = sol.conciliado ? 'solicitacao-card salvo' : 
-                                  temEtiqueta ? 'solicitacao-card matched' : 
-                                  'solicitacao-card unmatched';
+                const temEtiqueta = !!sol.etiquetaEncontrada && !sol.foraDoPeriodoSF;
+                const foraDoPeriodo = sol.foraDoPeriodoSF;
+                
+                let cardClass = 'solicitacao-card';
+                if (sol.conciliado) cardClass += ' salvo';
+                else if (foraDoPeriodo) cardClass += ' fora-do-periodo';
+                else if (temEtiqueta) cardClass += ' matched';
+                else cardClass += ' unmatched';
 
                 const numero = sol.numero_solicitacao || sol.id.substring(0, 8);
                 const nome = sol.clientes_pg?.nome || 'Sem nome';
                 const email = sol.clientes_pg?.email || '';
+                const dataSol = new Date(sol.data_solicitacao).toLocaleDateString('pt-BR');
 
                 // Renderizar etiqueta encontrada
                 let etiquetaHtml = '';
@@ -771,6 +974,7 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                     const destinatario = etq.to?.name || 'N/A';
                     const cidade = etq.to?.city || 'N/A';
                     const estado = etq.to?.state || etq.to?.state_abbr || 'N/A';
+                    const dataEtq = new Date(etq.created_at).toLocaleDateString('pt-BR');
 
                     let linkRastreio = '';
                     if (rastreio !== 'N/A') {
@@ -802,8 +1006,8 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                                     <p>${cidade}/${estado}</p>
                                 </div>
                                 <div class="info-item">
-                                    <label>Transportadora</label>
-                                    <p>${transportadora}</p>
+                                    <label>Data Etiqueta</label>
+                                    <p>${dataEtq}</p>
                                 </div>
                                 <div class="info-item">
                                     <label>Valor</label>
@@ -815,6 +1019,25 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                                 <button class="btn-success" onclick="salvarRastreamento('${sol.id}')" 
                                     ${sol.conciliado ? 'disabled' : ''} style="flex: 1;">
                                     ${sol.conciliado ? '✅ Salvo' : '💾 Salvar Rastreamento'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if (foraDoPeriodo) {
+                    const etq = sol.etiquetaEncontrada;
+                    const dataEtq = new Date(etq.created_at).toLocaleDateString('pt-BR');
+                    
+                    etiquetaHtml = `
+                        <div class="sem-etiqueta" style="background: #fff3e0; border: 1px solid #ff9800;">
+                            <div>⚠️ Etiqueta encontrada, mas FORA do período filtrado do SuperFrete</div>
+                            <div style="font-size: 13px; margin-top: 8px;">
+                                <strong>Etiqueta #${etq.order_id || etq.id}</strong> - ${etq.to?.name || 'N/A'}<br>
+                                <strong>Data:</strong> ${dataEtq}<br>
+                                <strong>Rastreio:</strong> ${etq.tracking || etq.tracking_code || 'N/A'}
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <button class="btn-warning" onclick="salvarRastreamento('${sol.id}')" style="font-size: 13px;">
+                                    💾 Salvar Mesmo Assim
                                 </button>
                             </div>
                         </div>
@@ -837,9 +1060,10 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                                 <div class="solicitacao-numero">#${numero}</div>
                                 <div class="solicitacao-cliente">${nome}</div>
                                 <div class="solicitacao-email">${email}</div>
+                                <div class="solicitacao-data">📅 Solicitação: ${dataSol}</div>
                             </div>
-                            <span class="status-badge ${temEtiqueta ? 'status-encontrado' : 'status-nao-encontrado'}">
-                                ${temEtiqueta ? '✓ Etiqueta Encontrada' : '✗ Sem Etiqueta'}
+                            <span class="status-badge ${temEtiqueta ? 'status-encontrado' : foraDoPeriodo ? 'status-fora-periodo' : 'status-nao-encontrado'}">
+                                ${temEtiqueta ? '✓ No Período' : foraDoPeriodo ? '⚠ Fora do Período' : '✗ Sem Etiqueta'}
                             </span>
                         </div>
                         ${etiquetaHtml}
@@ -853,34 +1077,65 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
         // ============================================
         function atualizarResumo() {
             const total = solicitacoesData.length;
-            const matched = solicitacoesData.filter(s => s.etiquetaEncontrada).length;
-            const unmatched = total - matched;
+            const matched = solicitacoesData.filter(s => s.etiquetaEncontrada && !s.foraDoPeriodoSF).length;
+            const unmatched = solicitacoesData.filter(s => !s.etiquetaEncontrada).length;
+            const foraPeriodo = solicitacoesData.filter(s => s.foraDoPeriodoSF).length;
 
             document.getElementById('totalSolicitacoes').textContent = total;
             document.getElementById('matchedSolicitacoes').textContent = matched;
             document.getElementById('unmatchedSolicitacoes').textContent = unmatched;
+            document.getElementById('foraPeriodoSolicitacoes').textContent = foraPeriodo;
+        }
+
+        function atualizarInfoPeriodo() {
+            let html = '<strong>📅 Períodos selecionados:</strong><br>';
+            
+            if (filtrosData.supabaseInicio || filtrosData.supabaseFim) {
+                html += `• Supabase: ${filtrosData.supabaseInicio || 'Início'} até ${filtrosData.supabaseFim || 'Hoje'}<br>`;
+            } else {
+                html += '• Supabase: Todas as datas<br>';
+            }
+            
+            if (filtrosData.superfreteInicio || filtrosData.superfreteFim) {
+                html += `• SuperFrete: ${filtrosData.superfreteInicio || 'Início'} até ${filtrosData.superfreteFim || 'Hoje'}`;
+            } else {
+                html += '• SuperFrete: Todas as datas';
+            }
+            
+            html += `<br>• Etiquetas carregadas: ${etiquetasSuperFrete.length} total, ${etiquetasFiltradas.length} no período`;
+            
+            document.getElementById('infoPeriodo').innerHTML = html;
         }
 
         function mostrarTodos() {
             mostrandoApenasNaoEncontrados = false;
+            mostrandoForaDoPeriodo = false;
             renderizarSolicitacoes(solicitacoesData);
         }
 
         function mostrarApenasNaoEncontrados() {
             mostrandoApenasNaoEncontrados = true;
+            mostrandoForaDoPeriodo = false;
             const naoEncontrados = solicitacoesData.filter(s => !s.etiquetaEncontrada);
             renderizarSolicitacoes(naoEncontrados);
         }
 
+        function mostrarForaDoPeriodo() {
+            mostrandoApenasNaoEncontrados = false;
+            mostrandoForaDoPeriodo = true;
+            const foraPeriodo = solicitacoesData.filter(s => s.foraDoPeriodoSF);
+            renderizarSolicitacoes(foraPeriodo);
+        }
+
         async function conciliarTodosAutomaticamente() {
-            const encontrados = solicitacoesData.filter(s => s.etiquetaEncontrada && !s.conciliado);
+            const encontrados = solicitacoesData.filter(s => s.etiquetaEncontrada && !s.foraDoPeriodoSF && !s.conciliado);
             
             if (encontrados.length === 0) {
-                alert('Nenhuma solicitação pendente de conciliação!');
+                alert('Nenhuma solicitação pendente de conciliação no período!');
                 return;
             }
 
-            if (!confirm(`Deseja conciliar automaticamente ${encontrados.length} solicitações encontradas?`)) {
+            if (!confirm(`Deseja conciliar automaticamente ${encontrados.length} solicitações encontradas no período?`)) {
                 return;
             }
 
@@ -943,7 +1198,7 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                     codigo_rastreio: codigoRastreio,
                     forma_envio: formaEnvio.toLowerCase(),
                     data_envio: new Date().toISOString().split('T')[0],
-                    observacoes: `Conciliado automaticamente do SuperFrete (match: ${Math.round(sol.matchScore * 100)}%)`
+                    observacoes: `Conciliado do SuperFrete (${sol.foraDoPeriodoSF ? 'FORA do período' : 'match: ' + Math.round(sol.matchScore * 100) + '%'})`
                 });
 
             if (errorRast) throw errorRast;
@@ -968,7 +1223,15 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
         function filtrarSolicitacoes() {
             const filtro = document.getElementById('filtroNome').value.toLowerCase();
             
-            const filtradas = solicitacoesData.filter(sol => {
+            let baseList = solicitacoesData;
+            
+            if (mostrandoApenasNaoEncontrados) {
+                baseList = baseList.filter(s => !s.etiquetaEncontrada);
+            } else if (mostrandoForaDoPeriodo) {
+                baseList = baseList.filter(s => s.foraDoPeriodoSF);
+            }
+            
+            const filtradas = baseList.filter(sol => {
                 const nome = (sol.clientes_pg?.nome || '').toLowerCase();
                 const email = (sol.clientes_pg?.email || '').toLowerCase();
                 const numero = (sol.numero_solicitacao || '').toLowerCase();
@@ -976,17 +1239,29 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                 return nome.includes(filtro) || email.includes(filtro) || numero.includes(filtro);
             });
 
-            if (mostrandoApenasNaoEncontrados) {
-                renderizarSolicitacoes(filtradas.filter(s => !s.etiquetaEncontrada));
-            } else {
-                renderizarSolicitacoes(filtradas);
-            }
+            renderizarSolicitacoes(filtradas);
+        }
+
+        // Inicializar datas padrão (últimos 30 dias)
+        function inicializarDatas() {
+            const hoje = new Date();
+            const trintaDiasAtras = new Date(hoje.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            document.getElementById('dataFinalSupabase').value = hoje.toISOString().split('T')[0];
+            document.getElementById('dataInicialSupabase').value = trintaDiasAtras.toISOString().split('T')[0];
+            
+            document.getElementById('dataFinalSuperfrete').value = hoje.toISOString().split('T')[0];
+            document.getElementById('dataInicialSuperfrete').value = trintaDiasAtras.toISOString().split('T')[0];
         }
 
         // Inicializar
         document.getElementById('tokenSuperfrete').addEventListener('input', atualizarComando);
         document.getElementById('emailUsuario').addEventListener('input', atualizarComando);
+        document.getElementById('dataInicialSuperfrete').addEventListener('change', atualizarComando);
+        document.getElementById('dataFinalSuperfrete').addEventListener('change', atualizarComando);
+        
         document.addEventListener('DOMContentLoaded', () => {
+            inicializarDatas();
             atualizarComando();
         });
     </script>
