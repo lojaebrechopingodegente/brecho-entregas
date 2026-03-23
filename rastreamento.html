@@ -385,7 +385,6 @@
             min-height: 100px;
         }
 
-        /* NOVO: Indicador de campo opcional */
         .campo-opcional {
             font-weight: normal;
             color: #95a5a6;
@@ -436,7 +435,7 @@
             white-space: pre-wrap;
         }
 
-        /* NOVO: Preview do código extraído */
+        /* Preview do código extraído */
         .codigo-preview {
             background: #E8F5E9;
             border: 2px solid #4CAF50;
@@ -458,6 +457,30 @@
             color: #4CAF50;
             text-transform: uppercase;
             margin-bottom: 5px;
+        }
+
+        /* NOVO: Estilo para URL de rastreamento */
+        .url-rastreamento {
+            background: #E3F2FD;
+            border: 2px solid #2196F3;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-top: 15px;
+            word-break: break-all;
+        }
+
+        .url-rastreamento-label {
+            font-size: 0.75rem;
+            color: #1565C0;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .url-rastreamento-link {
+            color: #1976D2;
+            font-size: 0.9rem;
+            text-decoration: none;
         }
 
         .empty-state {
@@ -622,7 +645,6 @@
                         <span class="campo-opcional">(cole a URL completa, ex: https://rastreio.superfrete.com/#/tracking/AN724853594BR)</span>
                     </label>
                     <input type="text" id="codigoRastreio" placeholder="Cole o código ou URL de rastreamento..." oninput="previewCodigoRastreio()">
-                    <!-- NOVO: Preview do código extraído -->
                     <div class="codigo-preview" id="codigoPreview">
                         <div class="codigo-preview-label">✅ Código extraído:</div>
                         <span id="codigoExtraido"></span>
@@ -671,6 +693,12 @@
             <div class="form-group">
                 <label>Cliente</label>
                 <input type="text" id="igClienteNome" readonly>
+            </div>
+
+            <!-- NOVO: Exibir URL de rastreamento -->
+            <div class="url-rastreamento" id="urlRastreamentoContainer" style="display: none;">
+                <div class="url-rastreamento-label">🔗 Link de Rastreamento</div>
+                <a href="#" target="_blank" class="url-rastreamento-link" id="urlRastreamentoLink"></a>
             </div>
 
             <div class="form-group">
@@ -728,6 +756,18 @@
         let supabaseClient = null;
         let solicitacoesData = [];
         let clientesCache = {};
+
+        // ============================================
+        // URLs DE RASTREAMENTO POR TRANSPORTADORA
+        // ============================================
+        const URLS_RASTREAMENTO = {
+            'correios': (codigo) => `https://www2.correios.com.br/sistemas/rastreamento/default.cfm?objeto=${codigo}`,
+            'jadlog': (codigo) => `https://www.jadlog.com.br/tracking?cnpj=&cte=${codigo}`,
+            'super_frete': (codigo) => `https://rastreio.superfrete.com/#/tracking/${codigo}`,
+            'melhor_envio': (codigo) => `https://www.melhorrastreio.com.br/rastreio/${codigo}`,
+            'transportadora': (codigo) => `https://www.google.com/search?q=rastreamento+${codigo}`,
+            'outro': (codigo) => `https://www.google.com/search?q=rastreamento+${codigo}`
+        };
 
         // ============================================
         // INICIALIZAÇÃO
@@ -1059,7 +1099,7 @@
         }
 
         // ============================================
-        // MODAL INSTAGRAM
+        // MODAL INSTAGRAM - COM URL DE RASTREAMENTO
         // ============================================
         function abrirModalInstagram(solicitacaoId) {
             const sol = solicitacoesData.find(s => s.id === solicitacaoId);
@@ -1073,8 +1113,21 @@
 
             document.getElementById('igClienteNome').value = cliente.nome;
 
-            // Gerar mensagem padrão
-            const mensagem = gerarMensagemInstagram(sol, cliente);
+            // NOVO: Gerar e exibir URL de rastreamento
+            const urlRastreamento = gerarUrlRastreamento(sol);
+            const urlContainer = document.getElementById('urlRastreamentoContainer');
+            const urlLink = document.getElementById('urlRastreamentoLink');
+            
+            if (urlRastreamento) {
+                urlLink.href = urlRastreamento;
+                urlLink.textContent = urlRastreamento;
+                urlContainer.style.display = 'block';
+            } else {
+                urlContainer.style.display = 'none';
+            }
+
+            // Gerar mensagem padrão com URL
+            const mensagem = gerarMensagemInstagram(sol, cliente, urlRastreamento);
             document.getElementById('igMensagem').value = mensagem;
             document.getElementById('igPreview').textContent = mensagem;
 
@@ -1086,7 +1139,27 @@
             document.getElementById('modalInstagram').classList.add('active');
         }
 
-        function gerarMensagemInstagram(sol, cliente) {
+        // ============================================
+        // NOVA FUNÇÃO: GERAR URL DE RASTREAMENTO
+        // ============================================
+        function gerarUrlRastreamento(sol) {
+            if (!sol.codigo_rastreio) return null;
+            
+            const formaEnvio = sol.forma_envio || 'correios';
+            const geradorUrl = URLS_RASTREAMENTO[formaEnvio];
+            
+            if (geradorUrl) {
+                return geradorUrl(sol.codigo_rastreio);
+            }
+            
+            // Fallback para URL genérica
+            return `https://www.google.com/search?q=rastreamento+${sol.codigo_rastreio}`;
+        }
+
+        // ============================================
+        // MENSAGEM INSTAGRAM ATUALIZADA COM URL
+        // ============================================
+        function gerarMensagemInstagram(sol, cliente, urlRastreamento) {
             const numero = sol.numero_solicitacao || 'N/A';
             const codigo = sol.codigo_rastreio || 'N/A';
             const formaEnvio = formatarFormaEnvio(sol.forma_envio);
@@ -1098,14 +1171,18 @@
             if (sol.codigo_rastreio) {
                 mensagem += `🔍 Código de Rastreio: ${codigo}\n`;
                 mensagem += `🚛 Transportadora: ${formaEnvio}\n`;
+                
+                // NOVO: Adicionar URL de rastreamento
+                if (urlRastreamento) {
+                    mensagem += `\n🔗 Acompanhe sua entrega:\n${urlRastreamento}\n`;
+                }
             }
             
             if (sol.data_entrega_prevista) {
-                mensagem += `📅 Previsão de Entrega: ${formatarDataBR(sol.data_entrega_prevista)}\n`;
+                mensagem += `\n📅 Previsão de Entrega: ${formatarDataBR(sol.data_entrega_prevista)}\n`;
             }
             
-            mensagem += `\nVocê pode acompanhar pelo site dos Correios ou app da transportadora. 📱\n\n`;
-            mensagem += `Qualquer dúvida, estou por aqui! 💕\n`;
+            mensagem += `\nQualquer dúvida, estou por aqui! 💕\n`;
             mensagem += `Obrigada pela preferência! 🥰`;
 
             return mensagem;
