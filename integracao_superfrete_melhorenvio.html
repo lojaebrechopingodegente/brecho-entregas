@@ -126,6 +126,7 @@
         .btn-ambos { background: linear-gradient(135deg, #11998e, #667eea); }
         .btn-debug { background: #6c757d; }
         .btn-entregas { background: linear-gradient(135deg, #28a745, #20c997); }
+        .btn-reconciliar { background: linear-gradient(135deg, #fd7e14, #e36209); }
 
         .comando-box {
             background: #1e1e1e;
@@ -223,6 +224,12 @@
             background: linear-gradient(135deg, #e6fcf5 0%, #c3fae8 100%);
         }
 
+        .solicitacao-card.ja-conciliado {
+            border-color: #6c757d;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            opacity: 0.8;
+        }
+
         .solicitacao-header {
             display: flex;
             justify-content: space-between;
@@ -269,6 +276,7 @@
         .status-encontrado-melhor { background: #ff6b6b; color: white; }
         .status-nao-encontrado { background: #FF7675; color: #D63031; }
         .status-entregue { background: #20c997; color: white; }
+        .status-ja-conciliado { background: #6c757d; color: white; }
 
         .etiqueta-encontrada {
             background: white;
@@ -442,6 +450,7 @@
         .unmatched { color: #ff6b6b; }
         .total { color: #667eea; }
         .entregues { color: #20c997; }
+        .ja-conciliados { color: #6c757d; }
 
         .rastreamento-link {
             display: inline-flex;
@@ -627,6 +636,52 @@
             border-top: 2px dashed #dee2e6;
         }
 
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e8e8e8;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .rastreamento-existente {
+            background: #e9ecef;
+            border: 2px solid #6c757d;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .rastreamento-existente h5 {
+            color: #6c757d;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .rastreamento-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 5px;
+        }
+
         @media (max-width: 768px) {
             .solicitacao-header {
                 flex-direction: column;
@@ -768,6 +823,21 @@
                 <input type="email" id="emailUsuario" class="email-input" placeholder="seu@email.com" value="marcobet@gmail.com">
             </div>
 
+            <!-- Opções avançadas -->
+            <div class="checkbox-group">
+                <input type="checkbox" id="incluirJaConciliados" onchange="atualizarComando()">
+                <label for="incluirJaConciliados">
+                    <strong>Incluir solicitações JÁ CONCILIADAS</strong> (mostrar mesmo que já tenham rastreamento)
+                </label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="permitirReconciliacao" onchange="atualizarComando()">
+                <label for="permitirReconciliacao">
+                    <strong>Permitir RE-CONCILIAÇÃO</strong> (permitir salvar novo rastreamento mesmo se já existir um)
+                </label>
+            </div>
+
             <!-- FILTROS DE DATA -->
             <div class="section-title" style="margin-top: 25px;">📅 Filtros por Data</div>
             
@@ -814,6 +884,10 @@
                         <div id="nomesSupabase"></div>
                     </div>
                     <div class="nomes-coluna melhor">
+                        <h5>📦 Etiquetas SuperFrete</h5>
+                        <div id="nomesSuperfrete"></div>
+                    </div>
+                    <div class="nomes-coluna melhor">
                         <h5>📦 Etiquetas Melhor Envio</h5>
                         <div id="nomesMelhorEnvio"></div>
                     </div>
@@ -828,15 +902,19 @@
             <div class="conciliacao-grid">
                 <div class="conciliacao-item">
                     <div class="conciliacao-number total" id="totalSolicitacoes">0</div>
-                    <div class="conciliacao-label">Solicitações no Período</div>
+                    <div class="conciliacao-label">Total Solicitações</div>
+                </div>
+                <div class="conciliacao-item">
+                    <div class="conciliacao-number ja-conciliados" id="jaConciliados">0</div>
+                    <div class="conciliacao-label">Já Conciliados</div>
                 </div>
                 <div class="conciliacao-item">
                     <div class="conciliacao-number matched" id="matchedSuperfrete">0</div>
-                    <div class="conciliacao-label">SuperFrete</div>
+                    <div class="conciliacao-label">SuperFrete (Novos)</div>
                 </div>
                 <div class="conciliacao-item">
                     <div class="conciliacao-number matched-melhor" id="matchedMelhorEnvio">0</div>
-                    <div class="conciliacao-label">Melhor Envio</div>
+                    <div class="conciliacao-label">Melhor Envio (Novos)</div>
                 </div>
                 <div class="conciliacao-item">
                     <div class="conciliacao-number unmatched" id="unmatchedSolicitacoes">0</div>
@@ -854,6 +932,9 @@
                 </button>
                 <button onclick="mostrarApenasNaoEncontrados()" class="btn-warning">
                     ⚠️ Sem Etiqueta
+                </button>
+                <button onclick="mostrarApenasJaConciliados()" class="btn-debug">
+                    🔒 Já Conciliados
                 </button>
                 <button onclick="mostrarApenasEntregues()" class="btn-success" style="background: #20c997;">
                     ✅ Entregues
@@ -936,6 +1017,7 @@
         let rastreamentosExistentes = [];
         let mostrandoApenasNaoEncontrados = false;
         let mostrandoApenasEntregues = false;
+        let mostrandoApenasJaConciliados = false;
 
         // Datas dos filtros
         let filtrosData = {
@@ -943,6 +1025,12 @@
             supabaseFim: null,
             transportadoraInicio: null,
             transportadoraFim: null
+        };
+
+        // Opções avançadas
+        let opcoesAvancadas = {
+            incluirJaConciliados: false,
+            permitirReconciliacao: false
         };
 
         // Debug logger
@@ -970,20 +1058,28 @@
             div.classList.remove('hidden');
             
             // Nomes das solicitações
-            const nomesSol = solicitacoesData.map(s => 
-                `<div class="nome-item">${s.clientes_pg?.nome || 'Sem nome'} <small style="color:#999">(${s.numero_solicitacao || s.id.substring(0,8)})</small></div>`
-            ).join('');
+            const nomesSol = solicitacoesData.map(s => {
+                const status = s.jaConciliado ? '✅' : (s.etiquetaEncontrada ? '🆕' : '❌');
+                return `<div class="nome-item">${status} ${s.clientes_pg?.nome || 'Sem nome'} <small style="color:#999">(${s.numero_solicitacao || s.id.substring(0,8)})</small></div>`;
+            }).join('');
             
             document.getElementById('nomesSupabase').innerHTML = nomesSol || '<div class="nome-item" style="color:#999">Nenhuma solicitação carregada</div>';
             
+            // Nomes das etiquetas SuperFrete
+            const nomesSF = dadosSuperfrete.etiquetasFiltradas.map(e => 
+                `<div class="nome-item">${e.to?.name || 'Sem nome'} <small style="color:#999">(${e.tracking || e.order_id})</small></div>`
+            ).join('');
+            
+            document.getElementById('nomesSuperfrete').innerHTML = nomesSF || '<div class="nome-item" style="color:#999">Nenhuma etiqueta carregada</div>';
+            
             // Nomes das etiquetas Melhor Envio
             const nomesME = dadosMelhorEnvio.etiquetasFiltradas.map(e => 
-                `<div class="nome-item">${e.to?.name || 'Sem nome'} <small style="color:#999">(${e.protocol || e.id})</small></div>`
+                `<div class="nome-item">${e.to?.name || 'Sem nome'} <small style="color:#999">(${e.tracking || e.protocol || e.id})</small></div>`
             ).join('');
             
             document.getElementById('nomesMelhorEnvio').innerHTML = nomesME || '<div class="nome-item" style="color:#999">Nenhuma etiqueta carregada</div>';
             
-            logDebug(`📊 Comparando ${solicitacoesData.length} solicitações com ${dadosMelhorEnvio.etiquetasFiltradas.length} etiquetas ME`);
+            logDebug(`📊 Comparando ${solicitacoesData.length} solicitações com ${dadosSuperfrete.etiquetasFiltradas.length} etiquetas SF e ${dadosMelhorEnvio.etiquetasFiltradas.length} ME`);
         }
 
         // ============================================
@@ -1151,6 +1247,10 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             document.getElementById('debugInfo').classList.remove('hidden');
             logDebug('Iniciando carregamento...', 'info');
 
+            // Atualizar opções avançadas
+            opcoesAvancadas.incluirJaConciliados = document.getElementById('incluirJaConciliados').checked;
+            opcoesAvancadas.permitirReconciliacao = document.getElementById('permitirReconciliacao').checked;
+
             let usarSuperfrete = currentTab === 'superfrete' || currentTab === 'ambos';
             let usarMelhorEnvio = currentTab === 'melhorenvio' || currentTab === 'ambos';
 
@@ -1233,14 +1333,24 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 }
 
-                // Buscar rastreamentos existentes
+                // Buscar rastreamentos existentes com mais detalhes
                 const { data: rastreamentos, error: errorRast } = await supabaseClient
                     .from('rastreamentos_pg')
-                    .select('codigo_rastreio, solicitacao_id');
+                    .select('codigo_rastreio, solicitacao_id, forma_envio, data_envio');
 
                 if (errorRast) throw errorRast;
+                
+                // Criar mapa de rastreamentos por solicitação
+                const rastreamentosMap = new Map();
+                rastreamentos.forEach(r => {
+                    rastreamentosMap.set(r.solicitacao_id, r);
+                });
+                
                 rastreamentosExistentes = rastreamentos.map(r => r.codigo_rastreio);
-                logDebug(`📦 Rastreamentos existentes: ${rastreamentosExistentes.length}`);
+                logDebug(`📦 Rastreamentos existentes: ${rastreamentos.length}`);
+                rastreamentos.slice(0, 5).forEach((r, i) => {
+                    logDebug(`   ${i+1}. ${r.codigo_rastreio} (${r.forma_envio})`);
+                });
 
                 // Buscar solicitações
                 let query = supabaseClient
@@ -1276,41 +1386,55 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
 
                 logDebug(`📋 Total de solicitações do Supabase: ${solicitacoes.length}`);
 
-                // Filtrar apenas sem rastreamento
-                solicitacoesData = solicitacoes.filter(s => {
-                    const semCodigo = !s.codigo_rastreio;
-                    const semRastreamento = !rastreamentos.some(r => r.solicitacao_id === s.id);
-                    return semCodigo && semRastreamento;
-                }).map(s => ({
-                    ...s,
-                    etiquetaEncontrada: null,
-                    matchScore: 0,
-                    conciliado: false,
-                    transportadora: null
-                }));
+                // Processar solicitações
+                solicitacoesData = solicitacoes.map(s => {
+                    const rastExistente = rastreamentosMap.get(s.id);
+                    const jaConciliado = !!rastExistente || !!s.codigo_rastreio;
+                    
+                    return {
+                        ...s,
+                        etiquetaEncontrada: null,
+                        matchScore: 0,
+                        conciliado: false,
+                        transportadora: null,
+                        jaConciliado: jaConciliado,
+                        rastreamentoExistente: rastExistente || null,
+                        dataSolicitacaoLocal: new Date(s.data_solicitacao).toLocaleDateString('pt-BR')
+                    };
+                });
 
-                logDebug(`📋 Solicitações sem rastreamento: ${solicitacoesData.length}`);
+                // Filtrar se necessário
+                if (!opcoesAvancadas.incluirJaConciliados) {
+                    const antes = solicitacoesData.length;
+                    solicitacoesData = solicitacoesData.filter(s => !s.jaConciliado);
+                    logDebug(`📋 Solicitações sem rastreamento: ${solicitacoesData.length} (filtradas ${antes - solicitacoesData.length} já conciliadas)`);
+                } else {
+                    logDebug(`📋 Mostrando TODAS as solicitações (${solicitacoesData.length}), incluindo já conciliadas`);
+                }
 
-                // Log primeiras solicitações
-                solicitacoesData.slice(0, 3).forEach((s, i) => {
-                    logDebug(`   Sol ${i+1}: nome="${s.clientes_pg?.nome}", id=${s.id.substring(0,8)}...`);
+                // Log primeiras solicitações com datas
+                solicitacoesData.slice(0, 5).forEach((s, i) => {
+                    const status = s.jaConciliado ? '✅' : '⏳';
+                    logDebug(`   Sol ${i+1}: ${status} ${s.clientes_pg?.nome} | Data: ${s.dataSolicitacaoLocal}`);
                 });
 
                 // Buscar etiquetas
                 buscarEtiquetasPorNome();
 
                 // Verificar resultados
-                const encontradosSF = solicitacoesData.filter(s => s.transportadora === 'superfrete').length;
-                const encontradosME = solicitacoesData.filter(s => s.transportadora === 'melhorenvio').length;
-                const naoEncontrados = solicitacoesData.filter(s => !s.etiquetaEncontrada).length;
+                const encontradosSF = solicitacoesData.filter(s => s.transportadora === 'superfrete' && !s.jaConciliado).length;
+                const encontradosME = solicitacoesData.filter(s => s.transportadora === 'melhorenvio' && !s.jaConciliado).length;
+                const jaConciliados = solicitacoesData.filter(s => s.jaConciliado).length;
+                const naoEncontrados = solicitacoesData.filter(s => !s.etiquetaEncontrada && !s.jaConciliado).length;
 
                 logDebug(`✅ Resultado da conciliação:`, 'success');
-                logDebug(`   SuperFrete: ${encontradosSF}`);
-                logDebug(`   Melhor Envio: ${encontradosME}`);
+                logDebug(`   Já conciliados: ${jaConciliados}`);
+                logDebug(`   SuperFrete (novos): ${encontradosSF}`);
+                logDebug(`   Melhor Envio (novos): ${encontradosME}`);
                 logDebug(`   Sem etiqueta: ${naoEncontrados}`);
 
-                if (encontradosSF === 0 && encontradosME === 0) {
-                    logDebug(`⚠️ Nenhuma etiqueta foi associada! Clique em "Ver Nomes (Debug)" para comparar.`, 'warning');
+                if (encontradosSF === 0 && encontradosME === 0 && jaConciliados === 0) {
+                    logDebug(`⚠️ Nenhuma etiqueta foi associada! Verifique se as datas das etiquetas correspondem às solicitações.`, 'warning');
                 }
 
                 document.getElementById('resumoConciliacao').classList.remove('hidden');
@@ -1365,6 +1489,14 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             logDebug(`🔍 Iniciando busca por nome...`);
 
             solicitacoesData.forEach((sol, index) => {
+                // Pular se já conciliado e não permitir re-conciliação
+                if (sol.jaConciliado && !opcoesAvancadas.permitirReconciliacao) {
+                    if (index < 3) {
+                        logDebug(`   ⏭️ ${sol.clientes_pg?.nome} → Já conciliado (pulando)`);
+                    }
+                    return;
+                }
+
                 const nomeCliente = normalizarTexto(sol.clientes_pg?.nome || '');
                 
                 if (!nomeCliente) {
@@ -1424,19 +1556,19 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                     sol.etiquetaEncontrada = melhorMatchSF;
                     sol.matchScore = melhorScoreSF;
                     sol.transportadora = 'superfrete';
-                    if (index < 3) {
+                    if (index < 5) {
                         logDebug(`   ✅ ${sol.clientes_pg?.nome} → SuperFrete (${Math.round(melhorScoreSF*100)}%)`);
                     }
                 } else if (melhorScoreME > 0) {
                     sol.etiquetaEncontrada = melhorMatchME;
                     sol.matchScore = melhorScoreME;
                     sol.transportadora = 'melhorenvio';
-                    if (index < 3) {
+                    if (index < 5) {
                         logDebug(`   ✅ ${sol.clientes_pg?.nome} → Melhor Envio (${Math.round(melhorScoreME*100)}%)`);
                     }
                 } else {
-                    if (index < 3) {
-                        logDebug(`   ❌ ${sol.clientes_pg?.nome} → Não encontrado (nome normalizado: "${nomeCliente}")`, 'warning');
+                    if (index < 5) {
+                        logDebug(`   ❌ ${sol.clientes_pg?.nome} → Não encontrado`, 'warning');
                     }
                 }
             });
@@ -1474,9 +1606,10 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
 
             container.classList.remove('hidden');
 
-            const comEtiquetaSF = solicitacoes.filter(s => s.transportadora === 'superfrete').length;
-            const comEtiquetaME = solicitacoes.filter(s => s.transportadora === 'melhorenvio').length;
-            const semEtiqueta = solicitacoes.filter(s => !s.etiquetaEncontrada).length;
+            const comEtiquetaSF = solicitacoes.filter(s => s.transportadora === 'superfrete' && !s.jaConciliado).length;
+            const comEtiquetaME = solicitacoes.filter(s => s.transportadora === 'melhorenvio' && !s.jaConciliado).length;
+            const jaConciliados = solicitacoes.filter(s => s.jaConciliado).length;
+            const semEtiqueta = solicitacoes.filter(s => !s.etiquetaEncontrada && !s.jaConciliado).length;
             const entregues = solicitacoes.filter(s => s.status === 'entregue').length;
 
             stats.innerHTML = `
@@ -1485,12 +1618,16 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                     <div class="stat-label">Exibindo</div>
                 </div>
                 <div class="stat-item">
+                    <div class="stat-number" style="color:#6c757d;">${jaConciliados}</div>
+                    <div class="stat-label">Já Conciliados</div>
+                </div>
+                <div class="stat-item">
                     <div class="stat-number" style="color:#667eea;">${comEtiquetaSF}</div>
-                    <div class="stat-label">SuperFrete</div>
+                    <div class="stat-label">SuperFrete (Novos)</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number" style="color:#ff6b6b;">${comEtiquetaME}</div>
-                    <div class="stat-label">Melhor Envio</div>
+                    <div class="stat-label">Melhor Envio (Novos)</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number" style="color:#ff9800;">${semEtiqueta}</div>
@@ -1511,9 +1648,11 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                 const temEtiqueta = !!sol.etiquetaEncontrada;
                 const isSuperfrete = sol.transportadora === 'superfrete';
                 const isEntregue = sol.status === 'entregue';
+                const isJaConciliado = sol.jaConciliado;
                 
                 let cardClass = 'solicitacao-card';
                 if (isEntregue) cardClass += ' entregue';
+                else if (isJaConciliado) cardClass += ' ja-conciliado';
                 else if (sol.conciliado) cardClass += ' salvo';
                 else if (temEtiqueta) cardClass += isSuperfrete ? ' matched' : ' matched-melhor';
                 else cardClass += ' unmatched';
@@ -1521,10 +1660,34 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                 const numero = sol.numero_solicitacao || sol.id.substring(0, 8);
                 const nome = sol.clientes_pg?.nome || 'Sem nome';
                 const email = sol.clientes_pg?.email || '';
-                const dataSol = new Date(sol.data_solicitacao).toLocaleDateString('pt-BR');
+                const dataSol = sol.dataSolicitacaoLocal;
 
                 let etiquetaHtml = '';
-                if (temEtiqueta) {
+                
+                // Mostrar rastreamento existente se houver
+                if (isJaConciliado && sol.rastreamentoExistente) {
+                    const rast = sol.rastreamentoExistente;
+                    etiquetaHtml = `
+                        <div class="rastreamento-existente">
+                            <h5>🔒 Já Conciliado</h5>
+                            <div class="rastreamento-item">
+                                <span>Código: <strong>${rast.codigo_rastreio}</strong></span>
+                                <span>Envio: ${new Date(rast.data_envio).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                                Forma: ${rast.forma_envio || 'N/A'}
+                            </div>
+                            ${temEtiqueta ? `
+                                <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 6px; font-size: 12px;">
+                                    ⚠️ Nova etiqueta encontrada: ${sol.etiquetaEncontrada.tracking || sol.etiquetaEncontrada.protocol}
+                                    ${opcoesAvancadas.permitirReconciliacao ? 
+                                        `<button onclick="salvarRastreamento('${sol.id}')" class="btn-reconciliar" style="margin-left: 10px; padding: 4px 8px; font-size: 11px;">🔄 Re-conciliar</button>` 
+                                        : ' (marque "Permitir RE-CONCILIAÇÃO" para atualizar)'}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                } else if (temEtiqueta) {
                     const etq = sol.etiquetaEncontrada;
                     
                     let rastreio, transportadora, valor, destinatario, cidade, estado, dataEtq, orderId;
@@ -1617,10 +1780,12 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
 
                 let statusClass = 'status-nao-encontrado';
                 if (isEntregue) statusClass = 'status-entregue';
+                else if (isJaConciliado) statusClass = 'status-ja-conciliado';
                 else if (temEtiqueta) statusClass = isSuperfrete ? 'status-encontrado' : 'status-encontrado-melhor';
 
                 let statusText = '✗ Sem Etiqueta';
                 if (isEntregue) statusText = '✅ Entregue';
+                else if (isJaConciliado) statusText = '🔒 Já Conciliado';
                 else if (temEtiqueta) statusText = isSuperfrete ? '✓ SuperFrete' : '✓ Melhor Envio';
 
                 return `
@@ -1648,12 +1813,14 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
         // ============================================
         function atualizarResumo() {
             const total = solicitacoesData.length;
-            const matchedSF = solicitacoesData.filter(s => s.transportadora === 'superfrete').length;
-            const matchedME = solicitacoesData.filter(s => s.transportadora === 'melhorenvio').length;
-            const unmatched = solicitacoesData.filter(s => !s.etiquetaEncontrada).length;
+            const jaConciliados = solicitacoesData.filter(s => s.jaConciliado).length;
+            const matchedSF = solicitacoesData.filter(s => s.transportadora === 'superfrete' && !s.jaConciliado).length;
+            const matchedME = solicitacoesData.filter(s => s.transportadora === 'melhorenvio' && !s.jaConciliado).length;
+            const unmatched = solicitacoesData.filter(s => !s.etiquetaEncontrada && !s.jaConciliado).length;
             const entregues = solicitacoesData.filter(s => s.status === 'entregue').length;
 
             document.getElementById('totalSolicitacoes').textContent = total;
+            document.getElementById('jaConciliados').textContent = jaConciliados;
             document.getElementById('matchedSuperfrete').textContent = matchedSF;
             document.getElementById('matchedMelhorEnvio').textContent = matchedME;
             document.getElementById('unmatchedSolicitacoes').textContent = unmatched;
@@ -1677,6 +1844,8 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             
             html += `<br>• SuperFrete: ${dadosSuperfrete.etiquetas.length} etiquetas (${dadosSuperfrete.etiquetasFiltradas.length} no período)`;
             html += `<br>• Melhor Envio: ${dadosMelhorEnvio.etiquetas.length} etiquetas (${dadosMelhorEnvio.etiquetasFiltradas.length} no período)`;
+            html += `<br>• Opções: ${opcoesAvancadas.incluirJaConciliados ? 'Mostrando já conciliados' : 'Apenas pendentes'}`;
+            html += ` | ${opcoesAvancadas.permitirReconciliacao ? 'Re-conciliação ATIVADA' : 'Re-conciliação desativada'}`;
             
             document.getElementById('infoPeriodo').innerHTML = html;
         }
@@ -1684,25 +1853,36 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
         function mostrarTodos() {
             mostrandoApenasNaoEncontrados = false;
             mostrandoApenasEntregues = false;
+            mostrandoApenasJaConciliados = false;
             renderizarSolicitacoes(solicitacoesData);
         }
 
         function mostrarApenasNaoEncontrados() {
             mostrandoApenasNaoEncontrados = true;
             mostrandoApenasEntregues = false;
-            const naoEncontrados = solicitacoesData.filter(s => !s.etiquetaEncontrada);
+            mostrandoApenasJaConciliados = false;
+            const naoEncontrados = solicitacoesData.filter(s => !s.etiquetaEncontrada && !s.jaConciliado);
             renderizarSolicitacoes(naoEncontrados);
+        }
+
+        function mostrarApenasJaConciliados() {
+            mostrandoApenasNaoEncontrados = false;
+            mostrandoApenasEntregues = false;
+            mostrandoApenasJaConciliados = true;
+            const jaConciliados = solicitacoesData.filter(s => s.jaConciliado);
+            renderizarSolicitacoes(jaConciliados);
         }
 
         function mostrarApenasEntregues() {
             mostrandoApenasNaoEncontrados = false;
             mostrandoApenasEntregues = true;
+            mostrandoApenasJaConciliados = false;
             const entregues = solicitacoesData.filter(s => s.status === 'entregue');
             renderizarSolicitacoes(entregues);
         }
 
         async function conciliarTodosAutomaticamente() {
-            const encontrados = solicitacoesData.filter(s => s.etiquetaEncontrada && !s.conciliado && s.status !== 'entregue');
+            const encontrados = solicitacoesData.filter(s => s.etiquetaEncontrada && !s.conciliado && s.status !== 'entregue' && !s.jaConciliado);
             
             if (encontrados.length === 0) {
                 alert('Nenhuma solicitação pendente de conciliação!');
@@ -1736,6 +1916,7 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             if (!sol || !sol.etiquetaEncontrada) return;
 
             const btn = event.target;
+            const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<span class="loading"></span> Salvando...';
 
@@ -1743,6 +1924,7 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                 await salvarRastreamentoSilencioso(sol);
                 
                 sol.conciliado = true;
+                sol.jaConciliado = true;
                 document.getElementById(`sol-${solicitacaoId}`).classList.add('salvo');
                 btn.innerHTML = '✅ Salvo';
                 
@@ -1751,7 +1933,7 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             } catch (err) {
                 alert('Erro ao salvar: ' + err.message);
                 btn.disabled = false;
-                btn.innerHTML = '💾 Salvar Rastreamento';
+                btn.innerHTML = originalText;
             }
         }
 
@@ -1773,6 +1955,17 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                 throw new Error('Sem código de rastreio');
             }
 
+            // Se já existe rastreamento e permitir re-conciliação, deletar o antigo primeiro
+            if (sol.jaConciliado && opcoesAvancadas.permitirReconciliacao && sol.rastreamentoExistente) {
+                const { error: deleteError } = await supabaseClient
+                    .from('rastreamentos_pg')
+                    .delete()
+                    .eq('solicitacao_id', sol.id);
+                
+                if (deleteError) throw deleteError;
+                logDebug(`🗑️ Rastreamento antigo removido: ${sol.rastreamentoExistente.codigo_rastreio}`, 'warning');
+            }
+
             const { error: errorRast } = await supabaseClient
                 .from('rastreamentos_pg')
                 .insert({
@@ -1780,7 +1973,7 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                     codigo_rastreio: codigoRastreio,
                     forma_envio: formaEnvio.toLowerCase(),
                     data_envio: new Date().toISOString().split('T')[0],
-                    observacoes: `Conciliado ${isSuperfrete ? 'SuperFrete' : 'Melhor Envio'} (match: ${Math.round(sol.matchScore * 100)}%)`
+                    observacoes: `Conciliado ${isSuperfrete ? 'SuperFrete' : 'Melhor Envio'} (match: ${Math.round(sol.matchScore * 100)}%)${sol.jaConciliado ? ' [RE-CONCILIAÇÃO]' : ''}`
                 });
 
             if (errorRast) throw errorRast;
@@ -1799,6 +1992,12 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             if (errorSol) throw errorSol;
 
             sol.conciliado = true;
+            sol.jaConciliado = true;
+            sol.rastreamentoExistente = {
+                codigo_rastreio: codigoRastreio,
+                forma_envio: formaEnvio.toLowerCase(),
+                data_envio: new Date().toISOString().split('T')[0]
+            };
         }
 
         function filtrarSolicitacoes() {
@@ -1807,11 +2006,15 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             let baseList = solicitacoesData;
             
             if (mostrandoApenasNaoEncontrados) {
-                baseList = baseList.filter(s => !s.etiquetaEncontrada);
+                baseList = baseList.filter(s => !s.etiquetaEncontrada && !s.jaConciliado);
             }
             
             if (mostrandoApenasEntregues) {
                 baseList = baseList.filter(s => s.status === 'entregue');
+            }
+            
+            if (mostrandoApenasJaConciliados) {
+                baseList = baseList.filter(s => s.jaConciliado);
             }
             
             const filtradas = baseList.filter(sol => {
