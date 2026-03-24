@@ -687,6 +687,9 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
         // ============================================
 // CARREGAR SOLICITAÇÕES DO SUPABASE - CORRIGIDO
 // ============================================
+// ============================================
+// CARREGAR SOLICITAÇÕES DO SUPABASE - CORRIGIDO (com token automático)
+// ============================================
 async function carregarSolicitacoes() {
     const jsonText = document.getElementById('jsonEtiquetas').value.trim();
     
@@ -726,6 +729,27 @@ async function carregarSolicitacoes() {
     try {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // 🔥 NOVO: Buscar token do SuperFrete automaticamente da tabela
+        const { data: configData, error: configError } = await supabaseClient
+            .from('superfrete_config')
+            .select('api_token, environment')
+            .eq('is_active', true)
+            .eq('environment', 'production')
+            .maybeSingle();
+
+        if (configError) {
+            console.error('Erro ao buscar config:', configError);
+        }
+
+        // Se encontrou configuração ativa, preenche o campo automaticamente
+        if (configData && configData.api_token) {
+            document.getElementById('tokenSuperfrete').value = configData.api_token;
+            atualizarComando(); // Atualiza o comando PowerShell com o novo token
+            console.log('✅ Token carregado automaticamente do banco (ambiente: ' + configData.environment + ')');
+        } else {
+            console.log('⚠️ Nenhuma configuração ativa encontrada. Usando token manual se informado.');
+        }
+
         // Buscar rastreamentos existentes
         const { data: rastreamentos, error: errorRast } = await supabaseClient
             .from('rastreamentos_pg')
@@ -752,13 +776,11 @@ async function carregarSolicitacoes() {
 
         // Aplicar filtros de data em UTC (CORRIGIDO)
         if (filtrosData.supabaseInicio) {
-            // Criar data no início do dia em UTC (00:00:00)
             const inicioUTC = new Date(filtrosData.supabaseInicio + 'T00:00:00.000Z');
             query = query.gte('data_solicitacao', inicioUTC.toISOString());
         }
         
         if (filtrosData.supabaseFim) {
-            // Criar data no final do dia em UTC (23:59:59.999)
             const fimUTC = new Date(filtrosData.supabaseFim + 'T23:59:59.999Z');
             query = query.lte('data_solicitacao', fimUTC.toISOString());
         }
