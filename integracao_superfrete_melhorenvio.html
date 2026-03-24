@@ -550,13 +550,27 @@
 
         .debug-info {
             background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 10px;
-            margin-top: 10px;
-            font-size: 12px;
-            color: #666;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #495057;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
         }
+
+        .debug-info h4 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .debug-success { color: #28a745; }
+        .debug-error { color: #dc3545; }
+        .debug-warning { color: #ffc107; }
+        .debug-info-text { color: #17a2b8; }
 
         @media (max-width: 768px) {
             .solicitacao-header {
@@ -717,8 +731,11 @@
                 🔍 Buscar e Conciliar
             </button>
 
-            <!-- Debug info -->
-            <div id="debugInfo" class="debug-info hidden"></div>
+            <!-- Debug info expandido -->
+            <div id="debugInfo" class="debug-info hidden">
+                <h4>🐛 Debug da Conciliação</h4>
+                <div id="debugContent"></div>
+            </div>
         </div>
 
         <!-- RESUMO -->
@@ -833,13 +850,29 @@
             transportadoraFim: null
         };
 
+        // Debug logger
+        let debugLogs = [];
+
+        function logDebug(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const typeClass = type === 'success' ? 'debug-success' : type === 'error' ? 'debug-error' : type === 'warning' ? 'debug-warning' : 'debug-info-text';
+            debugLogs.push(`<span class="${typeClass}">[${timestamp}] ${message}</span>`);
+            atualizarDebug();
+        }
+
+        function atualizarDebug() {
+            const debugEl = document.getElementById('debugContent');
+            if (debugEl) {
+                debugEl.innerHTML = debugLogs.join('<br>');
+            }
+        }
+
         // ============================================
         // TABS
         // ============================================
         function switchTab(tab) {
             currentTab = tab;
             
-            // Atualizar botões
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active', 'active-melhor');
             });
@@ -849,7 +882,6 @@
                 event.target.classList.add('active-melhor');
             }
             
-            // Mostrar conteúdo correto
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
@@ -995,6 +1027,11 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
         // CARREGAR SOLICITAÇÕES
         // ============================================
         async function carregarSolicitacoes() {
+            // Reset debug
+            debugLogs = [];
+            document.getElementById('debugInfo').classList.remove('hidden');
+            logDebug('Iniciando carregamento...', 'info');
+
             let usarSuperfrete = currentTab === 'superfrete' || currentTab === 'ambos';
             let usarMelhorEnvio = currentTab === 'melhorenvio' || currentTab === 'ambos';
 
@@ -1009,55 +1046,50 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                 jsonME = document.getElementById('jsonEtiquetasMelhorEnvio').value.trim();
             }
 
-            // Debug
-            const debugEl = document.getElementById('debugInfo');
-            debugEl.classList.remove('hidden');
-            let debugText = '';
-
-            // Parse JSONs com tratamento diferente
+            // Parse JSONs
             try {
                 if (usarSuperfrete && jsonSF) {
                     const dataSF = JSON.parse(jsonSF);
                     dadosSuperfrete.etiquetas = dataSF.data || dataSF.orders || [];
-                    debugText += `✅ SuperFrete: ${dadosSuperfrete.etiquetas.length} etiquetas\n`;
+                    logDebug(`✅ SuperFrete: ${dadosSuperfrete.etiquetas.length} etiquetas carregadas`, 'success');
+                    
+                    // Log exemplo
+                    if (dadosSuperfrete.etiquetas.length > 0) {
+                        const ex = dadosSuperfrete.etiquetas[0];
+                        logDebug(`   Exemplo SF: to.name="${ex.to?.name}", tracking="${ex.tracking || ex.tracking_code}"`);
+                    }
                 }
 
                 if (usarMelhorEnvio && jsonME) {
                     const dataME = JSON.parse(jsonME);
                     
-                    // Melhor Envio pode retornar array direto ou objeto com 'data'
                     if (Array.isArray(dataME)) {
                         dadosMelhorEnvio.etiquetas = dataME;
                     } else if (dataME.data && Array.isArray(dataME.data)) {
                         dadosMelhorEnvio.etiquetas = dataME.data;
                     } else {
-                        // Se for um único objeto, converter para array
                         dadosMelhorEnvio.etiquetas = [dataME];
                     }
                     
-                    debugText += `✅ Melhor Envio: ${dadosMelhorEnvio.etiquetas.length} etiquetas\n`;
+                    logDebug(`✅ Melhor Envio: ${dadosMelhorEnvio.etiquetas.length} etiquetas carregadas`, 'success');
                     
-                    // Mostrar exemplo da primeira etiqueta para debug
+                    // Log exemplo
                     if (dadosMelhorEnvio.etiquetas.length > 0) {
-                        const primeira = dadosMelhorEnvio.etiquetas[0];
-                        debugText += `   Exemplo: ID=${primeira.id}, Protocol=${primeira.protocol}, To=${primeira.to?.name}\n`;
+                        const ex = dadosMelhorEnvio.etiquetas[0];
+                        logDebug(`   Exemplo ME: to.name="${ex.to?.name}", tracking="${ex.tracking}", protocol="${ex.protocol}"`);
                     }
                 }
 
-                debugEl.textContent = debugText;
-
-                if ((!usarSuperfrete || dadosSuperfrete.etiquetas.length > 0) && 
-                    (!usarMelhorEnvio || dadosMelhorEnvio.etiquetas.length > 0)) {
-                    // OK
-                } else if ((usarSuperfrete && dadosSuperfrete.etiquetas.length === 0) ||
-                          (usarMelhorEnvio && dadosMelhorEnvio.etiquetas.length === 0)) {
-                    alert('Nenhuma etiqueta encontrada no(s) JSON(s)!\n\nVerifique o debug abaixo do botão.');
+                if ((usarSuperfrete && dadosSuperfrete.etiquetas.length === 0) &&
+                    (usarMelhorEnvio && dadosMelhorEnvio.etiquetas.length === 0)) {
+                    logDebug('❌ Nenhuma etiqueta encontrada nos JSONs!', 'error');
+                    alert('Nenhuma etiqueta encontrada!');
                     return;
                 }
 
             } catch (err) {
+                logDebug('❌ Erro ao parsear JSON: ' + err.message, 'error');
                 alert('JSON inválido: ' + err.message);
-                debugEl.textContent = '❌ Erro: ' + err.message;
                 return;
             }
 
@@ -1070,6 +1102,10 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             // Filtrar por data
             dadosSuperfrete.etiquetasFiltradas = filtrarEtiquetasPorData(dadosSuperfrete.etiquetas, 'superfrete');
             dadosMelhorEnvio.etiquetasFiltradas = filtrarEtiquetasPorData(dadosMelhorEnvio.etiquetas, 'melhorenvio');
+
+            logDebug(`📅 Filtros de data aplicados:`);
+            logDebug(`   SuperFrete: ${dadosSuperfrete.etiquetasFiltradas.length} de ${dadosSuperfrete.etiquetas.length}`);
+            logDebug(`   Melhor Envio: ${dadosMelhorEnvio.etiquetasFiltradas.length} de ${dadosMelhorEnvio.etiquetas.length}`);
 
             const btn = document.getElementById('btnCarregar');
             btn.disabled = true;
@@ -1087,6 +1123,7 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
 
                 if (errorRast) throw errorRast;
                 rastreamentosExistentes = rastreamentos.map(r => r.codigo_rastreio);
+                logDebug(`📦 Rastreamentos existentes: ${rastreamentosExistentes.length}`);
 
                 // Buscar solicitações
                 let query = supabaseClient
@@ -1117,6 +1154,8 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                 const { data: solicitacoes, error: errorSol } = await query.limit(500);
                 if (errorSol) throw errorSol;
 
+                logDebug(`📋 Total de solicitações do Supabase: ${solicitacoes.length}`);
+
                 // Filtrar apenas sem rastreamento
                 solicitacoesData = solicitacoes.filter(s => {
                     const semCodigo = !s.codigo_rastreio;
@@ -1130,11 +1169,29 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                     transportadora: null
                 }));
 
-                debugText += `\n📋 Solicitações do Supabase: ${solicitacoesData.length}`;
-                document.getElementById('debugInfo').textContent = debugText;
+                logDebug(`📋 Solicitações sem rastreamento: ${solicitacoesData.length}`);
+
+                // Log primeiras solicitações
+                solicitacoesData.slice(0, 3).forEach((s, i) => {
+                    logDebug(`   Sol ${i+1}: nome="${s.clientes_pg?.nome}", id=${s.id.substring(0,8)}...`);
+                });
 
                 // Buscar etiquetas
                 buscarEtiquetasPorNome();
+
+                // Verificar resultados
+                const encontradosSF = solicitacoesData.filter(s => s.transportadora === 'superfrete').length;
+                const encontradosME = solicitacoesData.filter(s => s.transportadora === 'melhorenvio').length;
+                const naoEncontrados = solicitacoesData.filter(s => !s.etiquetaEncontrada).length;
+
+                logDebug(`✅ Resultado da conciliação:`, 'success');
+                logDebug(`   SuperFrete: ${encontradosSF}`);
+                logDebug(`   Melhor Envio: ${encontradosME}`);
+                logDebug(`   Sem etiqueta: ${naoEncontrados}`);
+
+                if (encontradosSF === 0 && encontradosME === 0) {
+                    logDebug(`⚠️ Nenhuma etiqueta foi associada! Verifique se os nomes coincidem.`, 'warning');
+                }
 
                 document.getElementById('resumoConciliacao').classList.remove('hidden');
                 atualizarResumo();
@@ -1142,9 +1199,9 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                 renderizarSolicitacoes(solicitacoesData);
 
             } catch (err) {
+                logDebug('❌ Erro: ' + err.message, 'error');
                 alert('Erro: ' + err.message);
                 console.error(err);
-                debugEl.textContent += '\n❌ Erro: ' + err.message;
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '🔍 Buscar e Conciliar';
@@ -1160,8 +1217,6 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             }
 
             return etiquetas.filter(etq => {
-                // Melhor Envio usa created_at no formato "2026-03-06 15:21:26"
-                // SuperFrete também usa created_at
                 const dataField = etq.created_at || etq.created || etq.date_created;
                 if (!dataField) return true;
                 
@@ -1187,9 +1242,15 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
         // BUSCAR ETIQUETAS POR NOME (CONCILIAÇÃO)
         // ============================================
         function buscarEtiquetasPorNome() {
-            solicitacoesData.forEach(sol => {
+            logDebug(`🔍 Iniciando busca por nome...`);
+
+            solicitacoesData.forEach((sol, index) => {
                 const nomeCliente = normalizarTexto(sol.clientes_pg?.nome || '');
-                if (!nomeCliente) return;
+                
+                if (!nomeCliente) {
+                    logDebug(`   Sol ${index+1}: Sem nome de cliente`, 'warning');
+                    return;
+                }
 
                 let melhorMatchSF = null;
                 let melhorScoreSF = 0;
@@ -1243,15 +1304,27 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                     sol.etiquetaEncontrada = melhorMatchSF;
                     sol.matchScore = melhorScoreSF;
                     sol.transportadora = 'superfrete';
+                    if (index < 3) {
+                        logDebug(`   ✅ ${sol.clientes_pg?.nome} → SuperFrete (${Math.round(melhorScoreSF*100)}%)`);
+                    }
                 } else if (melhorScoreME > 0) {
                     sol.etiquetaEncontrada = melhorMatchME;
                     sol.matchScore = melhorScoreME;
                     sol.transportadora = 'melhorenvio';
+                    if (index < 3) {
+                        logDebug(`   ✅ ${sol.clientes_pg?.nome} → Melhor Envio (${Math.round(melhorScoreME*100)}%)`);
+                    }
+                } else {
+                    // Log os primeiros não encontrados para debug
+                    if (index < 3) {
+                        logDebug(`   ❌ ${sol.clientes_pg?.nome} → Não encontrado (nome normalizado: "${nomeCliente}")`, 'warning');
+                    }
                 }
             });
         }
 
         function normalizarTexto(texto) {
+            if (!texto) return '';
             return texto
                 .toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -1305,6 +1378,11 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                 </div>
             `;
 
+            if (solicitacoes.length === 0) {
+                lista.innerHTML = '<div class="alert alert-warning">Nenhuma solicitação para exibir.</div>';
+                return;
+            }
+
             lista.innerHTML = solicitacoes.map(sol => {
                 const temEtiqueta = !!sol.etiquetaEncontrada;
                 const isSuperfrete = sol.transportadora === 'superfrete';
@@ -1335,7 +1413,6 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                         dataEtq = new Date(etq.created_at).toLocaleDateString('pt-BR');
                         orderId = etq.order_id || etq.id;
                     } else {
-                        // Melhor Envio - campos do JSON que você enviou
                         rastreio = etq.tracking || 'N/A';
                         transportadora = etq.service?.company?.name || etq.carrier || 'correios';
                         valor = etq.price || 0;
@@ -1546,7 +1623,6 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                 codigoRastreio = etq.tracking || etq.tracking_code || etq.code;
                 formaEnvio = etq.carrier || 'correios';
             } else {
-                // Melhor Envio
                 codigoRastreio = etq.tracking;
                 formaEnvio = etq.service?.company?.name || etq.carrier || 'correios';
             }
@@ -1555,7 +1631,6 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                 throw new Error('Sem código de rastreio');
             }
 
-            // Inserir rastreamento
             const { error: errorRast } = await supabaseClient
                 .from('rastreamentos_pg')
                 .insert({
@@ -1568,7 +1643,6 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
 
             if (errorRast) throw errorRast;
 
-            // Atualizar solicitação
             const { error: errorSol } = await supabaseClient
                 .from('solicitacoes_pg')
                 .update({
@@ -1605,7 +1679,6 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             renderizarSolicitacoes(filtradas);
         }
 
-        // Inicializar datas padrão (últimos 30 dias)
         function inicializarDatas() {
             const hoje = new Date();
             const trintaDiasAtras = new Date(hoje.getTime() - (30 * 24 * 60 * 60 * 1000));
@@ -1619,7 +1692,6 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             });
         }
 
-        // Listeners
         document.getElementById('emailUsuario').addEventListener('input', atualizarComando);
         document.getElementById('dataInicialTransportadora').addEventListener('change', atualizarComando);
         document.getElementById('dataFinalTransportadora').addEventListener('change', atualizarComando);
