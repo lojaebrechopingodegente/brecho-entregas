@@ -1122,14 +1122,21 @@
             atualizarContadores(); atualizarBotoes();
         }
 
-        function toggleSelecionarTodos() {
-            const checked = document.getElementById('checkboxHeader').checked || document.getElementById('selecionarTodos').checked;
-            document.getElementById('checkboxHeader').checked = checked;
-            document.getElementById('selecionarTodos').checked = checked;
-            idsSelecionados.clear();
-            if (checked) dadosCarregados.forEach(item => idsSelecionados.add(item.index));
-            renderizarTabela(); atualizarContadores();
-        }
+     function toggleSelecionarTodos() {
+    const checked = document.getElementById('checkboxHeader').checked || document.getElementById('selecionarTodos').checked;
+    document.getElementById('checkboxHeader').checked = checked;
+    document.getElementById('selecionarTodos').checked = checked;
+    
+    idsSelecionados.clear();
+    if (checked) {
+        dadosCarregados.forEach(item => idsSelecionados.add(item.index));
+    }
+    
+    // ✅ CORREÇÃO: Sempre re-renderizar a tabela para atualizar o estado visual
+    renderizarTabela();
+    atualizarContadores();
+    atualizarBotoes();
+}
 
         function atualizarContadores() {
             document.getElementById('statSelecionadas').textContent = idsSelecionados.size;
