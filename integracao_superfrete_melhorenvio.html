@@ -112,13 +112,20 @@
         button:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .btn-success { background: #28a745; }
+        .btn-success:hover:not(:disabled) { background: #218838; box-shadow: 0 10px 30px rgba(40, 167, 69, 0.4); }
+        
         .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover:not(:disabled) { background: #e0a800; }
+        
         .btn-info { background: #17a2b8; }
+        .btn-info:hover:not(:disabled) { background: #138496; box-shadow: 0 10px 30px rgba(23, 162, 184, 0.4); }
+        
         .btn-auto { background: linear-gradient(135deg, #11998e, #38ef7d); }
         .btn-superfrete { background: linear-gradient(135deg, #667eea, #764ba2); }
         .btn-melhorenvio { background: linear-gradient(135deg, #ff6b6b, #ee5a5a); }
         .btn-ambos { background: linear-gradient(135deg, #11998e, #667eea); }
         .btn-debug { background: #6c757d; }
+        .btn-entregas { background: linear-gradient(135deg, #28a745, #20c997); }
 
         .comando-box {
             background: #1e1e1e;
@@ -211,6 +218,11 @@
             opacity: 0.7;
         }
 
+        .solicitacao-card.entregue {
+            border-color: #20c997;
+            background: linear-gradient(135deg, #e6fcf5 0%, #c3fae8 100%);
+        }
+
         .solicitacao-header {
             display: flex;
             justify-content: space-between;
@@ -256,6 +268,7 @@
         .status-encontrado { background: #55EFC4; color: #00B894; }
         .status-encontrado-melhor { background: #ff6b6b; color: white; }
         .status-nao-encontrado { background: #FF7675; color: #D63031; }
+        .status-entregue { background: #20c997; color: white; }
 
         .etiqueta-encontrada {
             background: white;
@@ -428,6 +441,7 @@
         .matched-melhor { color: #ff6b6b; }
         .unmatched { color: #ff6b6b; }
         .total { color: #667eea; }
+        .entregues { color: #20c997; }
 
         .rastreamento-link {
             display: inline-flex;
@@ -604,6 +618,15 @@
             font-family: monospace;
         }
 
+        .acoes-rapidas {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px dashed #dee2e6;
+        }
+
         @media (max-width: 768px) {
             .solicitacao-header {
                 flex-direction: column;
@@ -619,6 +642,10 @@
 
             .nomes-comparacao {
                 grid-template-columns: 1fr;
+            }
+
+            .acoes-rapidas {
+                flex-direction: column;
             }
         }
     </style>
@@ -815,16 +842,27 @@
                     <div class="conciliacao-number unmatched" id="unmatchedSolicitacoes">0</div>
                     <div class="conciliacao-label">Sem Etiqueta</div>
                 </div>
+                <div class="conciliacao-item">
+                    <div class="conciliacao-number entregues" id="totalEntregues">0</div>
+                    <div class="conciliacao-label">Entregues</div>
+                </div>
             </div>
-            <div style="margin-top: 15px; text-align: center;">
-                <button onclick="mostrarTodos()" class="btn-info" style="margin-right: 10px;">
+            
+            <div class="acoes-rapidas">
+                <button onclick="mostrarTodos()" class="btn-info">
                     👁️ Mostrar Todos
                 </button>
-                <button onclick="mostrarApenasNaoEncontrados()" class="btn-warning" style="margin-right: 10px;">
+                <button onclick="mostrarApenasNaoEncontrados()" class="btn-warning">
                     ⚠️ Sem Etiqueta
+                </button>
+                <button onclick="mostrarApenasEntregues()" class="btn-success" style="background: #20c997;">
+                    ✅ Entregues
                 </button>
                 <button onclick="conciliarTodosAutomaticamente()" class="btn-success">
                     🤖 Conciliar Todos Encontrados
+                </button>
+                <button onclick="verificarEntregasEAtualizar()" id="btnVerificarEntregas" class="btn-entregas">
+                    📬 Verificar Entregas
                 </button>
             </div>
         </div>
@@ -897,6 +935,7 @@
         let solicitacoesData = [];
         let rastreamentosExistentes = [];
         let mostrandoApenasNaoEncontrados = false;
+        let mostrandoApenasEntregues = false;
 
         // Datas dos filtros
         let filtrosData = {
@@ -1211,6 +1250,9 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                         numero_solicitacao, 
                         codigo_rastreio,
                         data_solicitacao,
+                        data_envio,
+                        data_entrega,
+                        status,
                         clientes_pg (
                             nome, 
                             email,
@@ -1435,6 +1477,7 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             const comEtiquetaSF = solicitacoes.filter(s => s.transportadora === 'superfrete').length;
             const comEtiquetaME = solicitacoes.filter(s => s.transportadora === 'melhorenvio').length;
             const semEtiqueta = solicitacoes.filter(s => !s.etiquetaEncontrada).length;
+            const entregues = solicitacoes.filter(s => s.status === 'entregue').length;
 
             stats.innerHTML = `
                 <div class="stat-item">
@@ -1453,6 +1496,10 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                     <div class="stat-number" style="color:#ff9800;">${semEtiqueta}</div>
                     <div class="stat-label">Sem Etiqueta</div>
                 </div>
+                <div class="stat-item">
+                    <div class="stat-number" style="color:#20c997;">${entregues}</div>
+                    <div class="stat-label">Entregues</div>
+                </div>
             `;
 
             if (solicitacoes.length === 0) {
@@ -1463,9 +1510,11 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             lista.innerHTML = solicitacoes.map(sol => {
                 const temEtiqueta = !!sol.etiquetaEncontrada;
                 const isSuperfrete = sol.transportadora === 'superfrete';
+                const isEntregue = sol.status === 'entregue';
                 
                 let cardClass = 'solicitacao-card';
-                if (sol.conciliado) cardClass += ' salvo';
+                if (isEntregue) cardClass += ' entregue';
+                else if (sol.conciliado) cardClass += ' salvo';
                 else if (temEtiqueta) cardClass += isSuperfrete ? ' matched' : ' matched-melhor';
                 else cardClass += ' unmatched';
 
@@ -1549,8 +1598,8 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                             <div style="display: flex; gap: 10px; margin-top: 10px;">
                                 ${linkRastreio ? `<a href="${linkRastreio}" target="_blank" class="rastreamento-link">🔍 Rastrear</a>` : ''}
                                 <button class="btn-success" onclick="salvarRastreamento('${sol.id}')" 
-                                    ${sol.conciliado ? 'disabled' : ''} style="flex: 1;">
-                                    ${sol.conciliado ? '✅ Salvo' : '💾 Salvar Rastreamento'}
+                                    ${sol.conciliado || isEntregue ? 'disabled' : ''} style="flex: 1;">
+                                    ${isEntregue ? '✅ Entregue' : (sol.conciliado ? '✅ Salvo' : '💾 Salvar Rastreamento')}
                                 </button>
                             </div>
                         </div>
@@ -1566,9 +1615,13 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                     `;
                 }
 
-                const statusClass = temEtiqueta 
-                    ? (isSuperfrete ? 'status-encontrado' : 'status-encontrado-melhor')
-                    : 'status-nao-encontrado';
+                let statusClass = 'status-nao-encontrado';
+                if (isEntregue) statusClass = 'status-entregue';
+                else if (temEtiqueta) statusClass = isSuperfrete ? 'status-encontrado' : 'status-encontrado-melhor';
+
+                let statusText = '✗ Sem Etiqueta';
+                if (isEntregue) statusText = '✅ Entregue';
+                else if (temEtiqueta) statusText = isSuperfrete ? '✓ SuperFrete' : '✓ Melhor Envio';
 
                 return `
                     <div class="${cardClass}" id="sol-${sol.id}">
@@ -1578,9 +1631,10 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                                 <div class="solicitacao-cliente">${nome}</div>
                                 <div class="solicitacao-email">${email}</div>
                                 <div class="solicitacao-data">📅 Solicitação: ${dataSol}</div>
+                                ${sol.data_entrega ? `<div class="solicitacao-data">📬 Entrega: ${new Date(sol.data_entrega).toLocaleDateString('pt-BR')}</div>` : ''}
                             </div>
                             <span class="status-badge ${statusClass}">
-                                ${temEtiqueta ? (isSuperfrete ? '✓ SuperFrete' : '✓ Melhor Envio') : '✗ Sem Etiqueta'}
+                                ${statusText}
                             </span>
                         </div>
                         ${etiquetaHtml}
@@ -1597,11 +1651,13 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             const matchedSF = solicitacoesData.filter(s => s.transportadora === 'superfrete').length;
             const matchedME = solicitacoesData.filter(s => s.transportadora === 'melhorenvio').length;
             const unmatched = solicitacoesData.filter(s => !s.etiquetaEncontrada).length;
+            const entregues = solicitacoesData.filter(s => s.status === 'entregue').length;
 
             document.getElementById('totalSolicitacoes').textContent = total;
             document.getElementById('matchedSuperfrete').textContent = matchedSF;
             document.getElementById('matchedMelhorEnvio').textContent = matchedME;
             document.getElementById('unmatchedSolicitacoes').textContent = unmatched;
+            document.getElementById('totalEntregues').textContent = entregues;
         }
 
         function atualizarInfoPeriodo() {
@@ -1627,17 +1683,26 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
 
         function mostrarTodos() {
             mostrandoApenasNaoEncontrados = false;
+            mostrandoApenasEntregues = false;
             renderizarSolicitacoes(solicitacoesData);
         }
 
         function mostrarApenasNaoEncontrados() {
             mostrandoApenasNaoEncontrados = true;
+            mostrandoApenasEntregues = false;
             const naoEncontrados = solicitacoesData.filter(s => !s.etiquetaEncontrada);
             renderizarSolicitacoes(naoEncontrados);
         }
 
+        function mostrarApenasEntregues() {
+            mostrandoApenasNaoEncontrados = false;
+            mostrandoApenasEntregues = true;
+            const entregues = solicitacoesData.filter(s => s.status === 'entregue');
+            renderizarSolicitacoes(entregues);
+        }
+
         async function conciliarTodosAutomaticamente() {
-            const encontrados = solicitacoesData.filter(s => s.etiquetaEncontrada && !s.conciliado);
+            const encontrados = solicitacoesData.filter(s => s.etiquetaEncontrada && !s.conciliado && s.status !== 'entregue');
             
             if (encontrados.length === 0) {
                 alert('Nenhuma solicitação pendente de conciliação!');
@@ -1745,6 +1810,10 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                 baseList = baseList.filter(s => !s.etiquetaEncontrada);
             }
             
+            if (mostrandoApenasEntregues) {
+                baseList = baseList.filter(s => s.status === 'entregue');
+            }
+            
             const filtradas = baseList.filter(sol => {
                 const nome = (sol.clientes_pg?.nome || '').toLowerCase();
                 const email = (sol.clientes_pg?.email || '').toLowerCase();
@@ -1754,6 +1823,248 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             });
 
             renderizarSolicitacoes(filtradas);
+        }
+
+        // ============================================
+        // VERIFICAR ENTREGAS
+        // ============================================
+        async function verificarEntregasEAtualizar() {
+            const btn = document.getElementById('btnVerificarEntregas');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Verificando...';
+
+            try {
+                if (!supabaseClient) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                }
+
+                // Buscar solicitações enviadas mas não entregues
+                const { data: solicitacoes, error: errorSol } = await supabaseClient
+                    .from('solicitacoes_pg')
+                    .select(`
+                        id,
+                        numero_solicitacao,
+                        codigo_rastreio,
+                        forma_envio,
+                        data_envio,
+                        status,
+                        clientes_pg (nome)
+                    `)
+                    .eq('status', 'enviado')
+                    .not('codigo_rastreio', 'is', null)
+                    .order('data_envio', { ascending: false });
+
+                if (errorSol) throw errorSol;
+
+                logDebug(`📦 Encontradas ${solicitacoes.length} solicitações para verificar entrega`, 'info');
+
+                let atualizadas = 0;
+                let pendentes = 0;
+                let erros = 0;
+
+                for (const sol of solicitacoes) {
+                    try {
+                        const codigo = sol.codigo_rastreio.trim();
+                        const forma = (sol.forma_envio || '').toLowerCase();
+                        
+                        let entregue = false;
+                        let dataEntrega = null;
+
+                        // Verificar na API apropriada
+                        if (forma.includes('melhor') || forma.includes('jadlog') || forma.includes('azul') || forma.includes('latam')) {
+                            // Tentar Melhor Envio primeiro
+                            const resultado = await verificarRastreamentoMelhorEnvio(codigo);
+                            entregue = resultado.entregue;
+                            dataEntrega = resultado.dataEntrega;
+                        } else {
+                            // SuperFrete ou Correios
+                            const resultado = await verificarRastreamentoSuperFrete(codigo);
+                            entregue = resultado.entregue;
+                            dataEntrega = resultado.dataEntrega;
+                        }
+
+                        if (entregue) {
+                            // Atualizar no Supabase
+                            const { error: updateError } = await supabaseClient
+                                .from('solicitacoes_pg')
+                                .update({
+                                    status: 'entregue',
+                                    data_entrega: dataEntrega || new Date().toISOString(),
+                                    atualizado_em: new Date().toISOString()
+                                })
+                                .eq('id', sol.id);
+
+                            if (updateError) throw updateError;
+
+                            logDebug(`✅ ${sol.clientes_pg?.nome || sol.numero_solicitacao} marcado como ENTREGUE`, 'success');
+                            atualizadas++;
+                        } else {
+                            logDebug(`⏳ ${sol.clientes_pg?.nome || sol.numero_solicitacao} ainda em trânsito`);
+                            pendentes++;
+                        }
+
+                        // Delay para não sobrecarregar a API
+                        await new Promise(resolve => setTimeout(resolve, 500));
+
+                    } catch (err) {
+                        logDebug(`❌ Erro ao verificar ${sol.codigo_rastreio}: ${err.message}`, 'error');
+                        erros++;
+                    }
+                }
+
+                const mensagem = `Verificação concluída!\n\n✅ ${atualizadas} entregas atualizadas\n⏳ ${pendentes} ainda em trânsito\n❌ ${erros} erros`;
+                alert(mensagem);
+                logDebug(mensagem, 'success');
+
+                // Recarregar a lista se estiver visível
+                if (document.getElementById('secaoResultados').classList.contains('hidden') === false) {
+                    await carregarSolicitacoes();
+                }
+
+            } catch (err) {
+                logDebug('❌ Erro geral: ' + err.message, 'error');
+                alert('Erro: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '📬 Verificar Entregas';
+            }
+        }
+
+        async function verificarRastreamentoSuperFrete(codigo) {
+            const token = dadosSuperfrete.token || document.getElementById('tokenSuperfrete').value;
+            
+            if (!token) {
+                throw new Error('Token SuperFrete não configurado');
+            }
+
+            try {
+                const response = await fetch(`https://api.superfrete.com/api/v0/tracking/${codigo}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                        'User-Agent': `LojaPingoDeGente (${document.getElementById('emailUsuario').value || 'marcobet@gmail.com'})`
+                    }
+                });
+
+                if (!response.ok) {
+                    // Se não encontrar no SuperFrete, tentar via tracking correios direto
+                    return await verificarRastreamentoCorreios(codigo);
+                }
+
+                const data = await response.json();
+                
+                // Verificar se há eventos de entrega
+                const eventos = data.events || data.tracking?.events || [];
+                const eventoEntrega = eventos.find(e => 
+                    e.status?.toLowerCase().includes('entregue') ||
+                    e.description?.toLowerCase().includes('entregue') ||
+                    e.status?.toLowerCase().includes('delivered')
+                );
+
+                if (eventoEntrega) {
+                    return {
+                        entregue: true,
+                        dataEntrega: eventoEntrega.date || eventoEntrega.created_at
+                    };
+                }
+
+                return { entregue: false, dataEntrega: null };
+
+            } catch (err) {
+                // Fallback para rastreamento dos Correios
+                return await verificarRastreamentoCorreios(codigo);
+            }
+        }
+
+        async function verificarRastreamentoMelhorEnvio(codigo) {
+            const token = dadosMelhorEnvio.token || document.getElementById('tokenMelhorEnvio').value;
+            
+            if (!token) {
+                throw new Error('Token Melhor Envio não configurado');
+            }
+
+            try {
+                const response = await fetch(`https://melhorenvio.com.br/api/v2/me/tracking/${codigo}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                        'User-Agent': `LojaPingoDeGente (${document.getElementById('emailUsuario').value || 'marcobet@gmail.com'})`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Verificar status no Melhor Envio
+                const status = data.status?.toLowerCase() || '';
+                const tracking = data.tracking || [];
+                
+                const entregue = status.includes('delivered') || 
+                                status.includes('entregue') ||
+                                tracking.some(t => 
+                                    t.status?.toLowerCase().includes('entregue') ||
+                                    t.description?.toLowerCase().includes('entregue')
+                                );
+
+                if (entregue) {
+                    // Pegar a data do último evento de entrega
+                    const eventoEntrega = tracking.find(t => 
+                        t.status?.toLowerCase().includes('entregue') ||
+                        t.description?.toLowerCase().includes('entregue')
+                    );
+                    
+                    return {
+                        entregue: true,
+                        dataEntrega: eventoEntrega?.date || data.updated_at || new Date().toISOString()
+                    };
+                }
+
+                return { entregue: false, dataEntrega: null };
+
+            } catch (err) {
+                throw new Error('Erro Melhor Envio: ' + err.message);
+            }
+        }
+
+        async function verificarRastreamentoCorreios(codigo) {
+            // Fallback usando a API pública dos Correios (ou scraping)
+            try {
+                // Tentar via API do Melhor Envio (que funciona para Correios também)
+                const tokenME = dadosMelhorEnvio.token || document.getElementById('tokenMelhorEnvio').value;
+                
+                if (tokenME) {
+                    const response = await fetch(`https://melhorenvio.com.br/api/v2/me/tracking/${codigo}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${tokenME}`,
+                            'Accept': 'application/json',
+                            'User-Agent': `LojaPingoDeGente (${document.getElementById('emailUsuario').value || 'marcobet@gmail.com'})`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const entregue = data.status?.toLowerCase().includes('delivered') || 
+                                        data.tracking?.some(t => t.status?.toLowerCase().includes('entregue'));
+                        
+                        if (entregue) {
+                            return { entregue: true, dataEntrega: new Date().toISOString() };
+                        }
+                    }
+                }
+
+                // Se não conseguir verificar, assume não entregue
+                return { entregue: false, dataEntrega: null };
+
+            } catch (err) {
+                return { entregue: false, dataEntrega: null };
+            }
         }
 
         function inicializarDatas() {
