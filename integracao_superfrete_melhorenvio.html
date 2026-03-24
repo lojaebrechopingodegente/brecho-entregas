@@ -684,115 +684,118 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
         // ============================================
         // CARREGAR SOLICITAÇÕES DO SUPABASE
         // ============================================
-        async function carregarSolicitacoes() {
-            const jsonText = document.getElementById('jsonEtiquetas').value.trim();
-            
-            if (!jsonText) {
-                alert('Cole o JSON das etiquetas primeiro!');
-                return;
-            }
+        // ============================================
+// CARREGAR SOLICITAÇÕES DO SUPABASE - CORRIGIDO
+// ============================================
+async function carregarSolicitacoes() {
+    const jsonText = document.getElementById('jsonEtiquetas').value.trim();
+    
+    if (!jsonText) {
+        alert('Cole o JSON das etiquetas primeiro!');
+        return;
+    }
 
-            // Obter datas dos filtros
-            filtrosData.supabaseInicio = document.getElementById('dataInicialSupabase').value;
-            filtrosData.supabaseFim = document.getElementById('dataFinalSupabase').value;
-            filtrosData.superfreteInicio = document.getElementById('dataInicialSuperfrete').value;
-            filtrosData.superfreteFim = document.getElementById('dataFinalSuperfrete').value;
+    // Obter datas dos filtros
+    filtrosData.supabaseInicio = document.getElementById('dataInicialSupabase').value;
+    filtrosData.supabaseFim = document.getElementById('dataFinalSupabase').value;
+    filtrosData.superfreteInicio = document.getElementById('dataInicialSuperfrete').value;
+    filtrosData.superfreteFim = document.getElementById('dataFinalSuperfrete').value;
 
-            // Parse JSON do SuperFrete
-            try {
-                const data = JSON.parse(jsonText);
-                etiquetasSuperFrete = data.data || data.orders || [];
-                
-                if (!Array.isArray(etiquetasSuperFrete) || etiquetasSuperFrete.length === 0) {
-                    alert('Nenhuma etiqueta encontrada no JSON!');
-                    return;
-                }
-
-                // Filtrar etiquetas por data do SuperFrete
-                etiquetasFiltradas = filtrarEtiquetasPorData(etiquetasSuperFrete);
-                
-            } catch (err) {
-                alert('JSON inválido: ' + err.message);
-                return;
-            }
-
-            const btn = document.getElementById('btnCarregar');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span> Carregando...';
-
-            try {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-                // Buscar rastreamentos existentes
-                const { data: rastreamentos, error: errorRast } = await supabaseClient
-                    .from('rastreamentos_pg')
-                    .select('codigo_rastreio, solicitacao_id');
-
-                if (errorRast) throw errorRast;
-                rastreamentosExistentes = rastreamentos.map(r => r.codigo_rastreio);
-
-                // Construir query do Supabase com filtros de data
-                let query = supabaseClient
-                    .from('solicitacoes_pg')
-                    .select(`
-                        id, 
-                        numero_solicitacao, 
-                        codigo_rastreio,
-                        data_solicitacao,
-                        clientes_pg (
-                            nome, 
-                            email,
-                            instagram
-                        )
-                    `)
-                    .order('data_solicitacao', { ascending: false });
-
-                // Aplicar filtros de data
-                if (filtrosData.supabaseInicio) {
-                    const inicio = new Date(filtrosData.supabaseInicio);
-                    inicio.setHours(0, 0, 0, 0);
-                    query = query.gte('data_solicitacao', inicio.toISOString());
-                }
-                
-                if (filtrosData.supabaseFim) {
-                    const fim = new Date(filtrosData.supabaseFim);
-                    fim.setHours(23, 59, 59, 999);
-                    query = query.lte('data_solicitacao', fim.toISOString());
-                }
-
-                const { data: solicitacoes, error: errorSol } = await query.limit(500);
-
-                if (errorSol) throw errorSol;
-
-                // Filtrar apenas solicitações sem rastreamento
-                solicitacoesData = solicitacoes.filter(s => {
-                    const semCodigo = !s.codigo_rastreio;
-                    const semRastreamento = !rastreamentos.some(r => r.solicitacao_id === s.id);
-                    return semCodigo && semRastreamento;
-                }).map(s => ({
-                    ...s,
-                    etiquetaEncontrada: null,
-                    matchScore: 0,
-                    conciliado: false,
-                    foraDoPeriodoSF: false
-                }));
-
-                // Tentar encontrar etiqueta para cada solicitação
-                buscarEtiquetasPorNome();
-
-                document.getElementById('resumoConciliacao').classList.remove('hidden');
-                atualizarResumo();
-                atualizarInfoPeriodo();
-                renderizarSolicitacoes(solicitacoesData);
-
-            } catch (err) {
-                alert('Erro: ' + err.message);
-                console.error(err);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '🔍 Buscar Solicitações do Supabase';
-            }
+    // Parse JSON do SuperFrete
+    try {
+        const data = JSON.parse(jsonText);
+        etiquetasSuperFrete = data.data || data.orders || [];
+        
+        if (!Array.isArray(etiquetasSuperFrete) || etiquetasSuperFrete.length === 0) {
+            alert('Nenhuma etiqueta encontrada no JSON!');
+            return;
         }
+
+        // Filtrar etiquetas por data do SuperFrete
+        etiquetasFiltradas = filtrarEtiquetasPorData(etiquetasSuperFrete);
+        
+    } catch (err) {
+        alert('JSON inválido: ' + err.message);
+        return;
+    }
+
+    const btn = document.getElementById('btnCarregar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading"></span> Carregando...';
+
+    try {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Buscar rastreamentos existentes
+        const { data: rastreamentos, error: errorRast } = await supabaseClient
+            .from('rastreamentos_pg')
+            .select('codigo_rastreio, solicitacao_id');
+
+        if (errorRast) throw errorRast;
+        rastreamentosExistentes = rastreamentos.map(r => r.codigo_rastreio);
+
+        // Construir query do Supabase com filtros de data UTC
+        let query = supabaseClient
+            .from('solicitacoes_pg')
+            .select(`
+                id, 
+                numero_solicitacao, 
+                codigo_rastreio,
+                data_solicitacao,
+                clientes_pg (
+                    nome, 
+                    email,
+                    instagram
+                )
+            `)
+            .order('data_solicitacao', { ascending: false });
+
+        // Aplicar filtros de data em UTC (CORRIGIDO)
+        if (filtrosData.supabaseInicio) {
+            // Criar data no início do dia em UTC (00:00:00)
+            const inicioUTC = new Date(filtrosData.supabaseInicio + 'T00:00:00.000Z');
+            query = query.gte('data_solicitacao', inicioUTC.toISOString());
+        }
+        
+        if (filtrosData.supabaseFim) {
+            // Criar data no final do dia em UTC (23:59:59.999)
+            const fimUTC = new Date(filtrosData.supabaseFim + 'T23:59:59.999Z');
+            query = query.lte('data_solicitacao', fimUTC.toISOString());
+        }
+
+        const { data: solicitacoes, error: errorSol } = await query.limit(500);
+
+        if (errorSol) throw errorSol;
+
+        // Filtrar apenas solicitações sem rastreamento
+        solicitacoesData = solicitacoes.filter(s => {
+            const semCodigo = !s.codigo_rastreio;
+            const semRastreamento = !rastreamentos.some(r => r.solicitacao_id === s.id);
+            return semCodigo && semRastreamento;
+        }).map(s => ({
+            ...s,
+            etiquetaEncontrada: null,
+            matchScore: 0,
+            conciliado: false,
+            foraDoPeriodoSF: false
+        }));
+
+        // Tentar encontrar etiqueta para cada solicitação
+        buscarEtiquetasPorNome();
+
+        document.getElementById('resumoConciliacao').classList.remove('hidden');
+        atualizarResumo();
+        atualizarInfoPeriodo();
+        renderizarSolicitacoes(solicitacoesData);
+
+    } catch (err) {
+        alert('Erro: ' + err.message);
+        console.error(err);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '🔍 Buscar Solicitações do Supabase';
+    }
+}
 
         // ============================================
         // FILTRAR ETIQUETAS POR DATA
