@@ -471,6 +471,11 @@
             border-color: #ff9800;
         }
 
+        .token-status {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
         @media (max-width: 768px) {
             .solicitacao-header {
                 flex-direction: column;
@@ -484,7 +489,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- CORREÇÃO: Removido target="_blank" do base, usando onclick para navegação na mesma aba -->
         <a href="rastreamento.html" class="btn-voltar" onclick="window.location.href='rastreamento.html'; return false;">← Voltar para Rastreamento</a>
 
         <h1>🔄 Conciliação Inversa SuperFrete</h1>
@@ -495,8 +499,14 @@
             <div class="section-title">📥 Dados do SuperFrete</div>
 
             <div class="form-group">
-                <label>Token SuperFrete (Produção): <span class="campo-opcional">(opcional - carregado automaticamente do banco)</span></label>
-                <input type="password" id="tokenSuperfrete" placeholder="Deixe em branco para usar o token do banco..." class="token-manual">
+                <label>Token SuperFrete (Produção): <span class="campo-opcional">(carregado automaticamente do banco)</span></label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="password" id="tokenSuperfrete" placeholder="Buscando do banco..." class="token-manual" style="flex: 1;" readonly>
+                    <button type="button" onclick="buscarTokenManualmente()" class="btn-info" style="width: auto; padding: 14px 20px;">
+                        🔄 Recarregar
+                    </button>
+                </div>
+                <p id="tokenStatus" class="token-status">⏳ Buscando token do banco...</p>
             </div>
 
             <div class="form-group">
@@ -653,6 +663,60 @@
         };
 
         // ============================================
+        // BUSCAR TOKEN DO BANCO (função separada)
+        // ============================================
+        async function buscarTokenDoBanco() {
+            try {
+                if (!supabaseClient) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                }
+
+                const { data: configData, error: configError } = await supabaseClient
+                    .from('superfrete_config')
+                    .select('api_token, environment')
+                    .eq('is_active', true)
+                    .eq('environment', 'production')
+                    .maybeSingle();
+
+                if (configError) {
+                    console.error('Erro ao buscar config:', configError);
+                    document.getElementById('tokenStatus').textContent = '❌ Erro ao buscar: ' + configError.message;
+                    document.getElementById('tokenStatus').style.color = '#e74c3c';
+                    return false;
+                }
+
+                if (configData && configData.api_token) {
+                    const tokenInput = document.getElementById('tokenSuperfrete');
+                    tokenInput.value = configData.api_token;
+                    tokenInput.classList.remove('token-manual');
+                    tokenInput.classList.add('token-auto');
+                    
+                    document.getElementById('tokenStatus').textContent = '✅ Token carregado do banco (ambiente: ' + configData.environment + ')';
+                    document.getElementById('tokenStatus').style.color = '#27ae60';
+                    
+                    atualizarComando(); // Atualiza o comando PowerShell
+                    return true;
+                } else {
+                    document.getElementById('tokenStatus').textContent = '⚠️ Nenhuma configuração ativa encontrada';
+                    document.getElementById('tokenStatus').style.color = '#f39c12';
+                    return false;
+                }
+            } catch (err) {
+                console.error('Erro:', err);
+                document.getElementById('tokenStatus').textContent = '❌ Erro: ' + err.message;
+                document.getElementById('tokenStatus').style.color = '#e74c3c';
+                return false;
+            }
+        }
+
+        // Função para recarregar manualmente
+        async function buscarTokenManualmente() {
+            document.getElementById('tokenStatus').textContent = '⏳ Recarregando...';
+            document.getElementById('tokenStatus').style.color = '#666';
+            await buscarTokenDoBanco();
+        }
+
+        // ============================================
         // INICIALIZAÇÃO
         // ============================================
         function atualizarComando() {
@@ -737,30 +801,9 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
             btn.innerHTML = '<span class="loading"></span> Carregando...';
 
             try {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-                // 🔥 NOVO: Buscar token do SuperFrete automaticamente da tabela
-                const { data: configData, error: configError } = await supabaseClient
-                    .from('superfrete_config')
-                    .select('api_token, environment')
-                    .eq('is_active', true)
-                    .eq('environment', 'production')
-                    .maybeSingle();
-
-                if (configError) {
-                    console.error('Erro ao buscar config:', configError);
-                }
-
-                // Se encontrou configuração ativa, preenche o campo automaticamente
-                if (configData && configData.api_token) {
-                    const tokenInput = document.getElementById('tokenSuperfrete');
-                    tokenInput.value = configData.api_token;
-                    tokenInput.classList.remove('token-manual');
-                    tokenInput.classList.add('token-auto');
-                    atualizarComando(); // Atualiza o comando PowerShell com o novo token
-                    console.log('✅ Token carregado automaticamente do banco (ambiente: ' + configData.environment + ')');
-                } else {
-                    console.log('⚠️ Nenhuma configuração ativa encontrada. Usando token manual se informado.');
+                // Inicializa client se necessário
+                if (!supabaseClient) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 }
 
                 // Buscar rastreamentos existentes
@@ -787,15 +830,13 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
                     `)
                     .order('data_solicitacao', { ascending: false });
 
-                // Aplicar filtros de data em UTC (CORRIGIDO - mesmo problema do rastreamento.html)
+                // Aplicar filtros de data em UTC (CORRIGIDO)
                 if (filtrosData.supabaseInicio) {
-                    // Criar data no início do dia em UTC (00:00:00)
                     const inicioUTC = new Date(filtrosData.supabaseInicio + 'T00:00:00.000Z');
                     query = query.gte('data_solicitacao', inicioUTC.toISOString());
                 }
                 
                 if (filtrosData.supabaseFim) {
-                    // Criar data no final do dia em UTC (23:59:59.999)
                     const fimUTC = new Date(filtrosData.supabaseFim + 'T23:59:59.999Z');
                     query = query.lte('data_solicitacao', fimUTC.toISOString());
                 }
@@ -1295,14 +1336,16 @@ Write-Host "✅ JSON copiado para a área de transferência!" -ForegroundColor G
         }
 
         // Inicializar
-        document.getElementById('tokenSuperfrete').addEventListener('input', atualizarComando);
         document.getElementById('emailUsuario').addEventListener('input', atualizarComando);
         document.getElementById('dataInicialSuperfrete').addEventListener('change', atualizarComando);
         document.getElementById('dataFinalSuperfrete').addEventListener('change', atualizarComando);
-        
+
         document.addEventListener('DOMContentLoaded', () => {
             inicializarDatas();
-            atualizarComando();
+            // Buscar token assim que a página carrega
+            buscarTokenDoBanco().then(() => {
+                atualizarComando();
+            });
         });
     </script>
 </body>
