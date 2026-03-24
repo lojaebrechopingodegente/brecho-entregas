@@ -934,70 +934,53 @@
         }
 
         // ============================================
-        // CARREGAR SOLICITAÇÕES - ATUALIZADO (filtros da tela prevalecem)
+        // CARREGAR SOLICITAÇÕES - CORRIGIDO (filtros de data UTC)
         // ============================================
-       // ============================================
-// CARREGAR SOLICITAÇÕES - CORRIGIDO (filtros de data UTC)
-// ============================================
-async function carregarSolicitacoes() {
-    if (!supabaseClient) return;
+        async function carregarSolicitacoes() {
+            if (!supabaseClient) return;
 
-    const dataInicial = document.getElementById('dataInicial').value;
-    const dataFinal = document.getElementById('dataFinal').value;
+            const dataInicial = document.getElementById('dataInicial').value;
+            const dataFinal = document.getElementById('dataFinal').value;
 
-    try {
-        let query = supabaseClient
-            .from('solicitacoes_pg')
-            .select(`
-                *,
-                enderecos_pg (
-                    cep,
-                    rua,
-                    numero,
-                    complemento,
-                    bairro,
-                    cidade,
-                    estado
-                )
-            `)
-            .order('data_solicitacao', { ascending: false });
+            try {
+                let query = supabaseClient
+                    .from('solicitacoes_pg')
+                    .select(`
+                        *,
+                        enderecos_pg (
+                            cep,
+                            rua,
+                            numero,
+                            complemento,
+                            bairro,
+                            cidade,
+                            estado
+                        )
+                    `)
+                    .order('data_solicitacao', { ascending: false });
 
-        if (dataInicial) {
-            // Criar data no início do dia em UTC (00:00:00)
-            const inicioUTC = new Date(dataInicial + 'T00:00:00.000Z');
-            query = query.gte('data_solicitacao', inicioUTC.toISOString());
-        }
-        
-        if (dataFinal) {
-            // Criar data no final do dia em UTC (23:59:59.999)
-            const fimUTC = new Date(dataFinal + 'T23:59:59.999Z');
-            query = query.lte('data_solicitacao', fimUTC.toISOString());
-        }
-
-        const { data, error } = await query;
-
-        if (error) {
-            console.error('Erro na query:', error);
-            throw error;
-        }
-
-        solicitacoesData = data || [];
-        
-        // NOVO: Carregar rastreamentos para todas as solicitações
-        await carregarRastreamentos();
-        
-        atualizarStats();
-        
-        // Aplicar filtros da tela (status/busca) nos dados carregados
-        aplicarFiltrosLocal();
-        
-    } catch (e) {
-        console.error('Erro ao carregar solicitações:', e);
-        mostrarErro('Erro ao carregar solicitações: ' + e.message);
-    }
-}
+                if (dataInicial) {
+                    // Criar data no início do dia em UTC (00:00:00)
+                    const inicioUTC = new Date(dataInicial + 'T00:00:00.000Z');
+                    query = query.gte('data_solicitacao', inicioUTC.toISOString());
+                }
                 
-                // NOVO: Carregar rastreamentos para todas as solicitações
+                if (dataFinal) {
+                    // Criar data no final do dia em UTC (23:59:59.999)
+                    const fimUTC = new Date(dataFinal + 'T23:59:59.999Z');
+                    query = query.lte('data_solicitacao', fimUTC.toISOString());
+                }
+
+                const { data, error } = await query;
+
+                if (error) {
+                    console.error('Erro na query:', error);
+                    throw error;
+                }
+
+                solicitacoesData = data || [];
+                
+                // Carregar rastreamentos para todas as solicitações
                 await carregarRastreamentos();
                 
                 atualizarStats();
@@ -1012,7 +995,7 @@ async function carregarSolicitacoes() {
         }
 
         // ============================================
-        // NOVO: CARREGAR RASTREAMENTOS DA TABELA rastreamentos_pg
+        // CARREGAR RASTREAMENTOS DA TABELA rastreamentos_pg
         // ============================================
         async function carregarRastreamentos() {
             if (!supabaseClient || solicitacoesData.length === 0) return;
@@ -1139,15 +1122,14 @@ async function carregarSolicitacoes() {
         }
 
         // ============================================
-        // FILTROS - ATUALIZADO (filtros da tela prevalecem)
+        // FILTROS
         // ============================================
         function aplicarFiltros() {
             // Recarrega dados do banco com as datas selecionadas
-            // e aplica filtros automaticamente no final via aplicarFiltrosLocal()
             carregarSolicitacoes();
         }
 
-        // NOVO: Aplica filtros localmente sem bater no banco
+        // Aplica filtros localmente sem bater no banco
         function aplicarFiltrosLocal() {
             const status = document.getElementById('filtroStatus').value;
             const busca = document.getElementById('filtroBusca').value.toLowerCase();
@@ -1219,7 +1201,7 @@ async function carregarSolicitacoes() {
         }
 
         // ============================================
-        // MODAL RASTREIO - ATUALIZADO COM HISTÓRICO
+        // MODAL RASTREIO COM HISTÓRICO
         // ============================================
         async function abrirModalRastreio(solicitacaoId) {
             const sol = solicitacoesData.find(s => s.id === solicitacaoId);
@@ -1228,7 +1210,7 @@ async function carregarSolicitacoes() {
             document.getElementById('rastreioSolicitacaoId').value = solicitacaoId;
             document.getElementById('rastreioId').value = sol.rastreamento_id || '';
             
-            // NOVO: Mostrar histórico de rastreamentos
+            // Mostrar histórico de rastreamentos
             await mostrarHistoricoRastreamentos(solicitacaoId);
             
             // Preencher com dados do rastreamento mais recente se existir
@@ -1254,7 +1236,7 @@ async function carregarSolicitacoes() {
             document.getElementById('modalRastreio').classList.add('active');
         }
 
-        // NOVO: Mostrar histórico de rastreamentos
+        // Mostrar histórico de rastreamentos
         async function mostrarHistoricoRastreamentos(solicitacaoId) {
             const historicoDiv = document.getElementById('historicoRastreamentos');
             const listaDiv = document.getElementById('listaHistorico');
@@ -1285,90 +1267,86 @@ async function carregarSolicitacoes() {
         }
 
         // ============================================
-        // SALVAR RASTREIO - ATUALIZADO PARA NOVA TABELA
+        // SALVAR RASTREIO - CORRIGIDO (permite apagar)
         // ============================================
         async function salvarRastreio(event) {
-    event.preventDefault();
-    
-    const solicitacaoId = document.getElementById('rastreioSolicitacaoId').value;
-    const rastreioId = document.getElementById('rastreioId').value;
-    const codigoInput = document.getElementById('codigoRastreio').value.trim();
-    
-    const codigo = extrairCodigoRastreio(codigoInput);
-    
-    const dataEnvio = document.getElementById('dataEnvio').value || null;
-    const dataPrevista = document.getElementById('dataPrevista').value || null;
-    const formaEnvio = document.getElementById('formaEnvio').value;
-    const observacoes = document.getElementById('observacoesRastreio').value || null;
+            event.preventDefault();
+            
+            const solicitacaoId = document.getElementById('rastreioSolicitacaoId').value;
+            const rastreioId = document.getElementById('rastreioId').value;
+            const codigoInput = document.getElementById('codigoRastreio').value.trim();
+            
+            const codigo = extrairCodigoRastreio(codigoInput);
+            
+            const dataEnvio = document.getElementById('dataEnvio').value || null;
+            const dataPrevista = document.getElementById('dataPrevista').value || null;
+            const formaEnvio = document.getElementById('formaEnvio').value;
+            const observacoes = document.getElementById('observacoesRastreio').value || null;
 
-    // REMOVIDA A VALIDAÇÃO OBRIGATÓRIA - agora permite salvar com código vazio (apagar rastreamento)
-    // if (!codigo) {
-    //     alert('⚠️ Por favor, informe o código de rastreio ou URL');
-    //     return;
-    // }
+            // REMOVIDA A VALIDAÇÃO OBRIGATÓRIA - agora permite salvar com código vazio (apagar rastreamento)
 
-    try {
-        let result;
-        
-        if (rastreioId) {
-            // ATUALIZAR rastreamento existente
-            result = await supabaseClient
-                .from('rastreamentos_pg')
-                .update({
-                    codigo_rastreio: codigo, // pode ser vazio/null agora
-                    forma_envio: formaEnvio,
-                    data_envio: dataEnvio,
-                    data_entrega_prevista: dataPrevista,
-                    observacoes: observacoes
-                })
-                .eq('id', rastreioId)
-                .select();
-        } else {
-            // Só insere novo se tiver código
-            if (codigo) {
-                result = await supabaseClient
-                    .from('rastreamentos_pg')
-                    .insert({
-                        solicitacao_id: solicitacaoId,
-                        codigo_rastreio: codigo,
-                        forma_envio: formaEnvio,
-                        data_envio: dataEnvio,
-                        data_entrega_prevista: dataPrevista,
-                        observacoes: observacoes
-                    })
-                    .select();
+            try {
+                let result;
+                
+                if (rastreioId) {
+                    // ATUALIZAR rastreamento existente (permite código vazio)
+                    result = await supabaseClient
+                        .from('rastreamentos_pg')
+                        .update({
+                            codigo_rastreio: codigo || null, // pode ser vazio/null agora
+                            forma_envio: formaEnvio,
+                            data_envio: dataEnvio,
+                            data_entrega_prevista: dataPrevista,
+                            observacoes: observacoes
+                        })
+                        .eq('id', rastreioId)
+                        .select();
+                } else {
+                    // Só insere novo se tiver código
+                    if (codigo) {
+                        result = await supabaseClient
+                            .from('rastreamentos_pg')
+                            .insert({
+                                solicitacao_id: solicitacaoId,
+                                codigo_rastreio: codigo,
+                                forma_envio: formaEnvio,
+                                data_envio: dataEnvio,
+                                data_entrega_prevista: dataPrevista,
+                                observacoes: observacoes
+                            })
+                            .select();
+                    }
+                }
+
+                if (result && result.error) throw result.error;
+
+                // Se código ficou vazio, atualiza status da solicitação para 'pendente'
+                if (!codigo) {
+                    await supabaseClient
+                        .from('solicitacoes_pg')
+                        .update({ status: 'pendente' })
+                        .eq('id', solicitacaoId);
+                } else {
+                    // Atualizar status da solicitação para 'enviado'
+                    await supabaseClient
+                        .from('solicitacoes_pg')
+                        .update({ status: 'enviado' })
+                        .eq('id', solicitacaoId);
+                }
+
+                fecharModal('modalRastreio');
+                await carregarSolicitacoes();
+                
+                if (codigo) {
+                    alert('✅ Rastreio salvo com sucesso!\n\nCódigo: ' + codigo);
+                } else {
+                    alert('✅ Rastreio removido com sucesso!\n\nA solicitação voltou para o status "Pendente".');
+                }
+            } catch (e) {
+                console.error('Erro ao salvar rastreio:', e);
+                alert('❌ Erro ao salvar rastreio: ' + e.message);
             }
         }
-
-        if (result && result.error) throw result.error;
-
-        // Se código ficou vazio, atualiza status da solicitação para 'pendente'
-        if (!codigo) {
-            await supabaseClient
-                .from('solicitacoes_pg')
-                .update({ status: 'pendente' })
-                .eq('id', solicitacaoId);
-        } else {
-            // Atualizar status da solicitação para 'enviado'
-            await supabaseClient
-                .from('solicitacoes_pg')
-                .update({ status: 'enviado' })
-                .eq('id', solicitacaoId);
-        }
-
-        fecharModal('modalRastreio');
-        await carregarSolicitacoes();
-        
-        if (codigo) {
-            alert('✅ Rastreio salvo com sucesso!\n\nCódigo: ' + codigo);
-        } else {
-            alert('✅ Rastreio removido com sucesso!\n\nA solicitação voltou para o status "Pendente".');
-        }
-    } catch (e) {
-        console.error('Erro ao salvar rastreio:', e);
-        alert('❌ Erro ao salvar rastreio: ' + e.message);
-    }
-}
 
         // ============================================
         // MODAL INSTAGRAM
