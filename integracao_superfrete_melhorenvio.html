@@ -326,7 +326,7 @@
 
         @keyframes slideOutRight {
             from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(100px); opacity: 1; }
         }
 
         .tabs {
@@ -365,34 +365,6 @@
 
         .tab-content.active {
             display: block;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-
-        .modal {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal h3 {
-            margin-bottom: 20px;
-            color: #333;
         }
 
         .timeline {
@@ -452,6 +424,25 @@
             color: #666;
             margin-top: 5px;
         }
+
+        .environment-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .environment-production {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .environment-sandbox {
+            background: #fff3cd;
+            color: #856404;
+        }
     </style>
 <base target="_blank">
 </head>
@@ -489,25 +480,45 @@
                 <div class="grid-2">
                     <div>
                         <div class="form-group">
-                            <label>Token SuperFrete</label>
+                            <label>
+                                Token SuperFrete
+                                <span id="envSuperfrete" class="environment-badge hidden"></span>
+                            </label>
                             <div style="display: flex; gap: 10px;">
                                 <input type="text" id="tokenSuperfrete" placeholder="Cole o token do SuperFrete">
-                                <button class="btn btn-primary" onclick="salvarToken('superfrete')">Salvar</button>
+                                <button class="btn btn-primary" onclick="salvarTokenSuperfrete()">Salvar</button>
                             </div>
                             <div style="margin-top: 10px;">
                                 <span id="statusSuperfrete" class="token-status error">Não configurado</span>
+                            </div>
+                            <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center;">
+                                <label style="margin: 0; font-weight: normal;">Ambiente:</label>
+                                <select id="ambienteSuperfrete" style="width: auto; padding: 5px 10px;">
+                                    <option value="production">Produção</option>
+                                    <option value="sandbox">Sandbox</option>
+                                </select>
                             </div>
                         </div>
                     </div>
                     <div>
                         <div class="form-group">
-                            <label>Token Melhor Envio</label>
+                            <label>
+                                Token Melhor Envio
+                                <span id="envMelhorEnvio" class="environment-badge hidden"></span>
+                            </label>
                             <div style="display: flex; gap: 10px;">
                                 <input type="text" id="tokenMelhorEnvio" placeholder="Cole o token do Melhor Envio">
-                                <button class="btn btn-primary" onclick="salvarToken('melhorenvio')">Salvar</button>
+                                <button class="btn btn-primary" onclick="salvarTokenMelhorEnvio()">Salvar</button>
                             </div>
                             <div style="margin-top: 10px;">
                                 <span id="statusMelhorEnvio" class="token-status error">Não configurado</span>
+                            </div>
+                            <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center;">
+                                <label style="margin: 0; font-weight: normal;">Ambiente:</label>
+                                <select id="ambienteMelhorEnvio" style="width: auto; padding: 5px 10px;">
+                                    <option value="production">Produção</option>
+                                    <option value="sandbox">Sandbox</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -634,11 +645,11 @@
         // ============================================
 
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI3NjE3MTAsImV4cCI6MjA1ODMzNzcxMH0.0lDq_9NtNVR5hVn_8zI9jB8q_L9C9z3q2Y7Xn9X9X9X';
 
         let supabaseClient = null;
-        let dadosSuperfrete = { token: null, valido: false };
-        let dadosMelhorEnvio = { token: null, valido: false };
+        let dadosSuperfrete = { token: null, valido: false, environment: 'production' };
+        let dadosMelhorEnvio = { token: null, valido: false, environment: 'production' };
         let solicitacoesCache = [];
         let verificacaoAutomaticaRealizada = false;
 
@@ -649,10 +660,10 @@
         document.addEventListener('DOMContentLoaded', () => {
             inicializarDatas();
             Promise.all([
-                buscarTokenDoBanco('superfrete'),
-                buscarTokenDoBanco('melhorenvio')
+                buscarTokenSuperfrete(),
+                buscarTokenMelhorEnvio()
             ]).then(() => {
-                atualizarComando();
+                logDebug('Sistema pronto para uso', 'success');
                 // Iniciar verificação automática após 2 segundos
                 setTimeout(verificarEntregasAutomaticamente, 2000);
             });
@@ -668,52 +679,89 @@
         }
 
         // ============================================
-        // SUPABASE - TOKENS
+        // SUPABASE - TOKENS (TABELAS CORRETAS)
         // ============================================
 
-        async function buscarTokenDoBanco(tipo) {
+        async function buscarTokenSuperfrete() {
             try {
                 if (!supabaseClient) {
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 }
 
+                // Buscar da tabela superfrente_config
                 const { data, error } = await supabaseClient
-                    .from('configuracoes')
-                    .select('valor')
-                    .eq('chave', `token_${tipo}`)
+                    .from('superfrete_config')
+                    .select('api_token, environment, is_active')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
                     .single();
 
                 if (error) {
                     if (error.code !== 'PGRST116') {
-                        logDebug(`Erro ao buscar token ${tipo}: ${error.message}`, 'error');
+                        logDebug(`Erro ao buscar token SuperFrete: ${error.message}`, 'error');
                     }
                     return;
                 }
 
-                if (data && data.valor) {
-                    if (tipo === 'superfrete') {
-                        dadosSuperfrete.token = data.valor;
-                        dadosSuperfrete.valido = true;
-                        document.getElementById('tokenSuperfrete').value = data.valor;
-                        atualizarStatusToken('superfrete', true);
-                        logDebug('Token SuperFrete carregado do banco', 'success');
-                    } else {
-                        dadosMelhorEnvio.token = data.valor;
-                        dadosMelhorEnvio.valido = true;
-                        document.getElementById('tokenMelhorEnvio').value = data.valor;
-                        atualizarStatusToken('melhorenvio', true);
-                        logDebug('Token Melhor Envio carregado do banco', 'success');
-                    }
+                if (data && data.api_token) {
+                    dadosSuperfrete.token = data.api_token;
+                    dadosSuperfrete.valido = true;
+                    dadosSuperfrete.environment = data.environment || 'production';
+
+                    document.getElementById('tokenSuperfrete').value = data.api_token;
+                    document.getElementById('ambienteSuperfrete').value = dadosSuperfrete.environment;
+
+                    atualizarStatusToken('superfrete', true, dadosSuperfrete.environment);
+                    logDebug(`Token SuperFrete carregado (${dadosSuperfrete.environment})`, 'success');
                 }
             } catch (err) {
-                logDebug(`Erro ao buscar token ${tipo}: ${err.message}`, 'error');
+                logDebug(`Erro ao buscar token SuperFrete: ${err.message}`, 'error');
             }
         }
 
-        async function salvarToken(tipo) {
+        async function buscarTokenMelhorEnvio() {
             try {
-                const inputId = tipo === 'superfrete' ? 'tokenSuperfrete' : 'tokenMelhorEnvio';
-                const token = document.getElementById(inputId).value.trim();
+                if (!supabaseClient) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                }
+
+                // Buscar da tabela melhorenvio_config
+                const { data, error } = await supabaseClient
+                    .from('melhorenvio_config')
+                    .select('access_token, environment, is_active')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (error) {
+                    if (error.code !== 'PGRST116') {
+                        logDebug(`Erro ao buscar token Melhor Envio: ${error.message}`, 'error');
+                    }
+                    return;
+                }
+
+                if (data && data.access_token) {
+                    dadosMelhorEnvio.token = data.access_token;
+                    dadosMelhorEnvio.valido = true;
+                    dadosMelhorEnvio.environment = data.environment || 'production';
+
+                    document.getElementById('tokenMelhorEnvio').value = data.access_token;
+                    document.getElementById('ambienteMelhorEnvio').value = dadosMelhorEnvio.environment;
+
+                    atualizarStatusToken('melhorenvio', true, dadosMelhorEnvio.environment);
+                    logDebug(`Token Melhor Envio carregado (${dadosMelhorEnvio.environment})`, 'success');
+                }
+            } catch (err) {
+                logDebug(`Erro ao buscar token Melhor Envio: ${err.message}`, 'error');
+            }
+        }
+
+        async function salvarTokenSuperfrete() {
+            try {
+                const token = document.getElementById('tokenSuperfrete').value.trim();
+                const environment = document.getElementById('ambienteSuperfrete').value;
 
                 if (!token) {
                     alert('Por favor, insira um token válido');
@@ -724,45 +772,102 @@
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 }
 
-                // Upsert do token
+                // Desativar tokens anteriores
+                await supabaseClient
+                    .from('superfrete_config')
+                    .update({ is_active: false })
+                    .eq('is_active', true);
+
+                // Inserir novo token
                 const { error } = await supabaseClient
-                    .from('configuracoes')
-                    .upsert({ 
-                        chave: `token_${tipo}`, 
-                        valor: token,
-                        atualizado_em: new Date().toISOString()
+                    .from('superfrete_config')
+                    .insert({
+                        api_token: token,
+                        environment: environment,
+                        is_active: true,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
                     });
 
                 if (error) throw error;
 
-                if (tipo === 'superfrete') {
-                    dadosSuperfrete.token = token;
-                    dadosSuperfrete.valido = true;
-                } else {
-                    dadosMelhorEnvio.token = token;
-                    dadosMelhorEnvio.valido = true;
-                }
+                dadosSuperfrete.token = token;
+                dadosSuperfrete.valido = true;
+                dadosSuperfrete.environment = environment;
 
-                atualizarStatusToken(tipo, true);
-                logDebug(`Token ${tipo} salvo com sucesso!`, 'success');
-                alert('Token salvo com sucesso!');
+                atualizarStatusToken('superfrete', true, environment);
+                logDebug(`Token SuperFrete salvo (${environment})`, 'success');
+                alert('Token SuperFrete salvo com sucesso!');
 
             } catch (err) {
-                logDebug(`Erro ao salvar token: ${err.message}`, 'error');
+                logDebug(`Erro ao salvar token SuperFrete: ${err.message}`, 'error');
                 alert('Erro ao salvar token: ' + err.message);
             }
         }
 
-        function atualizarStatusToken(tipo, valido) {
+        async function salvarTokenMelhorEnvio() {
+            try {
+                const token = document.getElementById('tokenMelhorEnvio').value.trim();
+                const environment = document.getElementById('ambienteMelhorEnvio').value;
+
+                if (!token) {
+                    alert('Por favor, insira um token válido');
+                    return;
+                }
+
+                if (!supabaseClient) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                }
+
+                // Desativar tokens anteriores
+                await supabaseClient
+                    .from('melhorenvio_config')
+                    .update({ is_active: false })
+                    .eq('is_active', true);
+
+                // Inserir novo token
+                const { error } = await supabaseClient
+                    .from('melhorenvio_config')
+                    .insert({
+                        access_token: token,
+                        environment: environment,
+                        is_active: true,
+                        created_at: new Date().toISOString()
+                    });
+
+                if (error) throw error;
+
+                dadosMelhorEnvio.token = token;
+                dadosMelhorEnvio.valido = true;
+                dadosMelhorEnvio.environment = environment;
+
+                atualizarStatusToken('melhorenvio', true, environment);
+                logDebug(`Token Melhor Envio salvo (${environment})`, 'success');
+                alert('Token Melhor Envio salvo com sucesso!');
+
+            } catch (err) {
+                logDebug(`Erro ao salvar token Melhor Envio: ${err.message}`, 'error');
+                alert('Erro ao salvar token: ' + err.message);
+            }
+        }
+
+        function atualizarStatusToken(tipo, valido, environment) {
             const elementId = tipo === 'superfrete' ? 'statusSuperfrete' : 'statusMelhorEnvio';
+            const badgeId = tipo === 'superfrete' ? 'envSuperfrete' : 'envMelhorEnvio';
             const element = document.getElementById(elementId);
+            const badge = document.getElementById(badgeId);
 
             if (valido) {
                 element.textContent = 'Configurado';
                 element.className = 'token-status ok';
+
+                badge.textContent = environment === 'production' ? 'Produção' : 'Sandbox';
+                badge.className = `environment-badge environment-${environment}`;
+                badge.classList.remove('hidden');
             } else {
                 element.textContent = 'Não configurado';
                 element.className = 'token-status error';
+                badge.classList.add('hidden');
             }
         }
 
@@ -777,12 +882,6 @@
                 if (!supabaseClient) {
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 }
-
-                // Buscar tokens primeiro
-                await Promise.all([
-                    buscarTokenDoBanco('superfrete'),
-                    buscarTokenDoBanco('melhorenvio')
-                ]);
 
                 // Verificar se temos pelo menos um token válido
                 const temTokenSF = dadosSuperfrete.token || document.getElementById('tokenSuperfrete').value;
@@ -873,7 +972,8 @@
                     mostrarNotificacaoVerificacao(`🎉 ${atualizadas} entrega(s) atualizada(s)!`, 'success');
 
                     // Recarregar lista se estiver aberta
-                    if (!document.getElementById('secaoResultados').classList.contains('hidden')) {
+                    const secaoResultados = document.getElementById('secaoResultados');
+                    if (secaoResultados && !secaoResultados.classList.contains('hidden')) {
                         await carregarSolicitacoes();
                     }
                 } else {
@@ -1371,11 +1471,6 @@
 
         function limparConsole() {
             document.getElementById('debugConsole').innerHTML = '<div class="info">Console limpo.</div>';
-        }
-
-        function atualizarComando() {
-            // Função placeholder para compatibilidade
-            logDebug('Sistema pronto para uso', 'success');
         }
     </script>
 </body>
