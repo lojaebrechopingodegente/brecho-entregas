@@ -1251,7 +1251,7 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                         codigo_rastreio,
                         data_solicitacao,
                         data_envio,
-                        data_entrega,
+                        data_entrega_real,
                         status,
                         clientes_pg (
                             nome, 
@@ -1631,7 +1631,7 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                                 <div class="solicitacao-cliente">${nome}</div>
                                 <div class="solicitacao-email">${email}</div>
                                 <div class="solicitacao-data">📅 Solicitação: ${dataSol}</div>
-                                ${sol.data_entrega ? `<div class="solicitacao-data">📬 Entrega: ${new Date(sol.data_entrega).toLocaleDateString('pt-BR')}</div>` : ''}
+                                ${sol.data_entrega_real ? `<div class="solicitacao-data">📬 Entrega: ${new Date(sol.data_entrega_real).toLocaleDateString('pt-BR')}</div>` : ''}
                             </div>
                             <span class="status-badge ${statusClass}">
                                 ${statusText}
@@ -1848,6 +1848,7 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                         forma_envio,
                         data_envio,
                         status,
+                        data_entrega_real,
                         clientes_pg (nome)
                     `)
                     .eq('status', 'enviado')
@@ -1889,7 +1890,7 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                                 .from('solicitacoes_pg')
                                 .update({
                                     status: 'entregue',
-                                    data_entrega: dataEntrega || new Date().toISOString(),
+                                    data_entrega_real: dataEntrega || new Date().toISOString(),
                                     atualizado_em: new Date().toISOString()
                                 })
                                 .eq('id', sol.id);
