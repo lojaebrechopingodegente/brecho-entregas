@@ -115,8 +115,6 @@
         .btn-warning { background: #ffc107; color: #212529; }
         .btn-info { background: #17a2b8; }
         .btn-auto { background: linear-gradient(135deg, #11998e, #38ef7d); }
-        
-        /* Botões específicos por transportadora */
         .btn-superfrete { background: linear-gradient(135deg, #667eea, #764ba2); }
         .btn-melhorenvio { background: linear-gradient(135deg, #ff6b6b, #ee5a5a); }
         .btn-ambos { background: linear-gradient(135deg, #11998e, #667eea); }
@@ -157,7 +155,6 @@
         .alert-info { background: #e7f3ff; border: 1px solid #b3d9ff; color: #004085; }
         .alert-warning { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; }
 
-        /* Filtros de data */
         .filtros-data {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -213,11 +210,6 @@
             opacity: 0.7;
         }
 
-        .solicitacao-card.fora-do-periodo {
-            opacity: 0.5;
-            border-style: dashed;
-        }
-
         .solicitacao-header {
             display: flex;
             justify-content: space-between;
@@ -263,7 +255,6 @@
         .status-encontrado { background: #55EFC4; color: #00B894; }
         .status-encontrado-melhor { background: #ff6b6b; color: white; }
         .status-nao-encontrado { background: #FF7675; color: #D63031; }
-        .status-fora-periodo { background: #e0e0e0; color: #666; }
 
         .etiqueta-encontrada {
             background: white;
@@ -500,7 +491,6 @@
             margin-top: 5px;
         }
 
-        /* Tabs para alternar entre SuperFrete e Melhor Envio */
         .tabs-container {
             display: flex;
             gap: 10px;
@@ -556,6 +546,16 @@
         .badge-melhor {
             background: #ff6b6b;
             color: white;
+        }
+
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
         }
 
         @media (max-width: 768px) {
@@ -620,7 +620,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Cole o JSON das etiquetas do SuperFrete:</label>
+                    <label>Cole o JSON das etiquetas:</label>
                     <textarea id="jsonEtiquetasSuperfrete" placeholder='{"data":[...]}'></textarea>
                 </div>
             </div>
@@ -639,7 +639,7 @@
                 </div>
 
                 <div class="alert alert-info" style="background: #fff5f5; border-color: #ff6b6b; color: #c0392b;">
-                    <strong>💡 Como obter o JSON do Melhor Envio:</strong> Copie o comando abaixo, cole no PowerShell e execute.
+                    <strong>💡 Como obter o JSON do Melhor Envio:</strong> Cole o array JSON diretamente (o Melhor Envio retorna um array, não um objeto).
                 </div>
 
                 <div class="comando-box">
@@ -648,15 +648,15 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Cole o JSON das etiquetas do Melhor Envio:</label>
-                    <textarea id="jsonEtiquetasMelhorEnvio" placeholder='{"data":[...]}'></textarea>
+                    <label>Cole o JSON das etiquetas (array direto):</label>
+                    <textarea id="jsonEtiquetasMelhorEnvio" placeholder='[{...}, {...}]'></textarea>
                 </div>
             </div>
 
             <!-- Conteúdo Ambos -->
             <div id="tab-ambos" class="tab-content">
                 <div class="alert alert-info">
-                    <strong>⚡ Modo combinado:</strong> Cole os JSONs de ambas as transportadoras. O sistema buscará etiquetas em ambas e mostrará a melhor correspondência.
+                    <strong>⚡ Modo combinado:</strong> Cole os JSONs de ambas as transportadoras.
                 </div>
                 
                 <!-- SuperFrete -->
@@ -680,8 +680,8 @@
                         <input type="password" id="tokenMelhorEnvioAmbos" placeholder="Buscando do banco..." readonly>
                     </div>
                     <div class="form-group">
-                        <label>JSON das etiquetas:</label>
-                        <textarea id="jsonEtiquetasMelhorEnvioAmbos" placeholder='{"data":[...]}'></textarea>
+                        <label>JSON das etiquetas (array direto):</label>
+                        <textarea id="jsonEtiquetasMelhorEnvioAmbos" placeholder='[{...}, {...}]'></textarea>
                     </div>
                 </div>
             </div>
@@ -716,6 +716,9 @@
             <button onclick="carregarSolicitacoes()" id="btnCarregar" class="btn-ambos">
                 🔍 Buscar e Conciliar
             </button>
+
+            <!-- Debug info -->
+            <div id="debugInfo" class="debug-info hidden"></div>
         </div>
 
         <!-- RESUMO -->
@@ -853,7 +856,6 @@
             
             if (tab === 'ambos') {
                 document.getElementById('tab-ambos').classList.add('active');
-                // Copiar tokens para os campos do modo ambos
                 document.getElementById('tokenSuperfreteAmbos').value = document.getElementById('tokenSuperfrete').value;
                 document.getElementById('tokenMelhorEnvioAmbos').value = document.getElementById('tokenMelhorEnvio').value;
             } else {
@@ -900,7 +902,6 @@
                     statusEl.textContent = `✅ Token carregado do banco (ambiente: ${configData.environment})`;
                     statusEl.style.color = '#27ae60';
                     
-                    // Salvar nos dados
                     if (tipo === 'superfrete') {
                         dadosSuperfrete.token = configData[campoToken];
                     } else {
@@ -959,10 +960,7 @@ Write-Host "✅ SuperFrete copiado!" -ForegroundColor Green`;
 
             // Comando Melhor Envio
             const tokenME = document.getElementById('tokenMelhorEnvio').value.trim() || 'SEU_TOKEN';
-            let urlME = "https://melhorenvio.com.br/api/v2/me/orders";
-            if (dataInicio) urlME += `?created_at=${dataInicio}`;
-            // Melhor Envio usa paginação diferente, ajustar conforme necessário
-
+            
             const comandoME = `$headers = @{
     "Authorization" = "Bearer ${tokenME}"
     "Accept" = "application/json"
@@ -970,18 +968,16 @@ Write-Host "✅ SuperFrete copiado!" -ForegroundColor Green`;
     "Content-Type" = "application/json"
 }
 
-# Primeiro, buscar pedidos
-$response = Invoke-RestMethod -Uri "${urlME}" -Method GET -Headers $headers
+# Buscar pedidos do Melhor Envio
+$response = Invoke-RestMethod -Uri "https://melhorenvio.com.br/api/v2/me/orders" -Method GET -Headers $headers
 
-# Buscar detalhes de cada pedido (se necessário)
-$detalhes = @()
-foreach ($order in $response.data) {
-    $detalhes += $order
-}
+# O Melhor Envio retorna um array direto ou um objeto com 'data'
+$pedidos = if ($response.data) { $response.data } else { $response }
 
-$detalhes | ConvertTo-Json -Depth 10 | Set-Clipboard
+# Filtrar por data se necessário
+$pedidos | ConvertTo-Json -Depth 10 | Set-Clipboard
 
-Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
+Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor Green`;
 
             document.getElementById('comandoTextoMelhorEnvio').textContent = comandoME;
         }
@@ -999,11 +995,9 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
         // CARREGAR SOLICITAÇÕES
         // ============================================
         async function carregarSolicitacoes() {
-            // Determinar qual modo está ativo
             let usarSuperfrete = currentTab === 'superfrete' || currentTab === 'ambos';
             let usarMelhorEnvio = currentTab === 'melhorenvio' || currentTab === 'ambos';
 
-            // Obter JSONs
             let jsonSF = '';
             let jsonME = '';
 
@@ -1015,13 +1009,55 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
                 jsonME = document.getElementById('jsonEtiquetasMelhorEnvio').value.trim();
             }
 
-            // Validar
-            if (usarSuperfrete && !jsonSF) {
-                alert('Cole o JSON do SuperFrete primeiro!');
-                return;
-            }
-            if (usarMelhorEnvio && !jsonME) {
-                alert('Cole o JSON do Melhor Envio primeiro!');
+            // Debug
+            const debugEl = document.getElementById('debugInfo');
+            debugEl.classList.remove('hidden');
+            let debugText = '';
+
+            // Parse JSONs com tratamento diferente
+            try {
+                if (usarSuperfrete && jsonSF) {
+                    const dataSF = JSON.parse(jsonSF);
+                    dadosSuperfrete.etiquetas = dataSF.data || dataSF.orders || [];
+                    debugText += `✅ SuperFrete: ${dadosSuperfrete.etiquetas.length} etiquetas\n`;
+                }
+
+                if (usarMelhorEnvio && jsonME) {
+                    const dataME = JSON.parse(jsonME);
+                    
+                    // Melhor Envio pode retornar array direto ou objeto com 'data'
+                    if (Array.isArray(dataME)) {
+                        dadosMelhorEnvio.etiquetas = dataME;
+                    } else if (dataME.data && Array.isArray(dataME.data)) {
+                        dadosMelhorEnvio.etiquetas = dataME.data;
+                    } else {
+                        // Se for um único objeto, converter para array
+                        dadosMelhorEnvio.etiquetas = [dataME];
+                    }
+                    
+                    debugText += `✅ Melhor Envio: ${dadosMelhorEnvio.etiquetas.length} etiquetas\n`;
+                    
+                    // Mostrar exemplo da primeira etiqueta para debug
+                    if (dadosMelhorEnvio.etiquetas.length > 0) {
+                        const primeira = dadosMelhorEnvio.etiquetas[0];
+                        debugText += `   Exemplo: ID=${primeira.id}, Protocol=${primeira.protocol}, To=${primeira.to?.name}\n`;
+                    }
+                }
+
+                debugEl.textContent = debugText;
+
+                if ((!usarSuperfrete || dadosSuperfrete.etiquetas.length > 0) && 
+                    (!usarMelhorEnvio || dadosMelhorEnvio.etiquetas.length > 0)) {
+                    // OK
+                } else if ((usarSuperfrete && dadosSuperfrete.etiquetas.length === 0) ||
+                          (usarMelhorEnvio && dadosMelhorEnvio.etiquetas.length === 0)) {
+                    alert('Nenhuma etiqueta encontrada no(s) JSON(s)!\n\nVerifique o debug abaixo do botão.');
+                    return;
+                }
+
+            } catch (err) {
+                alert('JSON inválido: ' + err.message);
+                debugEl.textContent = '❌ Erro: ' + err.message;
                 return;
             }
 
@@ -1031,24 +1067,9 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
             filtrosData.transportadoraInicio = document.getElementById('dataInicialTransportadora').value;
             filtrosData.transportadoraFim = document.getElementById('dataFinalTransportadora').value;
 
-            // Parse JSONs
-            try {
-                if (usarSuperfrete && jsonSF) {
-                    const dataSF = JSON.parse(jsonSF);
-                    dadosSuperfrete.etiquetas = dataSF.data || dataSF.orders || [];
-                    dadosSuperfrete.etiquetasFiltradas = filtrarEtiquetasPorData(dadosSuperfrete.etiquetas, 'superfrete');
-                }
-
-                if (usarMelhorEnvio && jsonME) {
-                    const dataME = JSON.parse(jsonME);
-                    // Melhor Envio retorna estrutura diferente, ajustar conforme necessário
-                    dadosMelhorEnvio.etiquetas = dataME.data || dataME.orders || dataME || [];
-                    dadosMelhorEnvio.etiquetasFiltradas = filtrarEtiquetasPorData(dadosMelhorEnvio.etiquetas, 'melhorenvio');
-                }
-            } catch (err) {
-                alert('JSON inválido: ' + err.message);
-                return;
-            }
+            // Filtrar por data
+            dadosSuperfrete.etiquetasFiltradas = filtrarEtiquetasPorData(dadosSuperfrete.etiquetas, 'superfrete');
+            dadosMelhorEnvio.etiquetasFiltradas = filtrarEtiquetasPorData(dadosMelhorEnvio.etiquetas, 'melhorenvio');
 
             const btn = document.getElementById('btnCarregar');
             btn.disabled = true;
@@ -1067,7 +1088,7 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
                 if (errorRast) throw errorRast;
                 rastreamentosExistentes = rastreamentos.map(r => r.codigo_rastreio);
 
-                // Buscar solicitações do Supabase
+                // Buscar solicitações
                 let query = supabaseClient
                     .from('solicitacoes_pg')
                     .select(`
@@ -1083,7 +1104,6 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
                     `)
                     .order('data_solicitacao', { ascending: false });
 
-                // Aplicar filtros de data
                 if (filtrosData.supabaseInicio) {
                     const inicioUTC = new Date(filtrosData.supabaseInicio + 'T00:00:00.000Z');
                     query = query.gte('data_solicitacao', inicioUTC.toISOString());
@@ -1107,10 +1127,13 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
                     etiquetaEncontrada: null,
                     matchScore: 0,
                     conciliado: false,
-                    transportadora: null // 'superfrete' ou 'melhorenvio'
+                    transportadora: null
                 }));
 
-                // Buscar etiquetas em ambas as transportadoras
+                debugText += `\n📋 Solicitações do Supabase: ${solicitacoesData.length}`;
+                document.getElementById('debugInfo').textContent = debugText;
+
+                // Buscar etiquetas
                 buscarEtiquetasPorNome();
 
                 document.getElementById('resumoConciliacao').classList.remove('hidden');
@@ -1121,6 +1144,7 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
             } catch (err) {
                 alert('Erro: ' + err.message);
                 console.error(err);
+                debugEl.textContent += '\n❌ Erro: ' + err.message;
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '🔍 Buscar e Conciliar';
@@ -1136,7 +1160,8 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
             }
 
             return etiquetas.filter(etq => {
-                // SuperFrete usa created_at, Melhor Envio pode usar created_at ou outro campo
+                // Melhor Envio usa created_at no formato "2026-03-06 15:21:26"
+                // SuperFrete também usa created_at
                 const dataField = etq.created_at || etq.created || etq.date_created;
                 if (!dataField) return true;
                 
@@ -1185,6 +1210,7 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
                     if (jaUsada) return;
 
                     const score = calcularSimilaridade(nomeCliente, nomeEtiqueta);
+                    
                     if (score > melhorScoreSF && score >= 0.5) {
                         melhorScoreSF = score;
                         melhorMatchSF = etq;
@@ -1193,31 +1219,26 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
 
                 // Buscar no Melhor Envio
                 dadosMelhorEnvio.etiquetasFiltradas.forEach(etq => {
-                    // Melhor Envio tem estrutura diferente - ajustar campos
-                    const nomeEtiqueta = normalizarTexto(
-                        etq.to?.name || 
-                        etq.recipient?.name || 
-                        etq.destination?.name || 
-                        ''
-                    );
+                    const nomeEtiqueta = normalizarTexto(etq.to?.name || '');
                     if (!nomeEtiqueta) return;
 
                     const jaUsada = solicitacoesData.some(s => 
                         s.etiquetaEncontrada && 
                         s.transportadora === 'melhorenvio' &&
-                        (s.etiquetaEncontrada.id === etq.id || s.etiquetaEncontrada.order_id === etq.order_id)
+                        (s.etiquetaEncontrada.id === etq.id || s.etiquetaEncontrada.protocol === etq.protocol)
                     );
                     
                     if (jaUsada) return;
 
                     const score = calcularSimilaridade(nomeCliente, nomeEtiqueta);
+                    
                     if (score > melhorScoreME && score >= 0.5) {
                         melhorScoreME = score;
                         melhorMatchME = etq;
                     }
                 });
 
-                // Escolher o melhor match entre as duas transportadoras
+                // Escolher o melhor match
                 if (melhorScoreSF >= melhorScoreME && melhorScoreSF > 0) {
                     sol.etiquetaEncontrada = melhorMatchSF;
                     sol.matchScore = melhorScoreSF;
@@ -1298,12 +1319,10 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
                 const email = sol.clientes_pg?.email || '';
                 const dataSol = new Date(sol.data_solicitacao).toLocaleDateString('pt-BR');
 
-                // Renderizar etiqueta encontrada
                 let etiquetaHtml = '';
                 if (temEtiqueta) {
                     const etq = sol.etiquetaEncontrada;
                     
-                    // Campos diferem entre SuperFrete e Melhor Envio
                     let rastreio, transportadora, valor, destinatario, cidade, estado, dataEtq, orderId;
                     
                     if (isSuperfrete) {
@@ -1316,15 +1335,15 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
                         dataEtq = new Date(etq.created_at).toLocaleDateString('pt-BR');
                         orderId = etq.order_id || etq.id;
                     } else {
-                        // Melhor Envio - ajustar conforme a estrutura real da API
-                        rastreio = etq.tracking || etq.code || etq.tracking_code || 'N/A';
-                        transportadora = etq.carrier?.name || etq.company?.name || 'correios';
-                        valor = etq.price || etq.total || etq.cost || 0;
-                        destinatario = etq.to?.name || etq.recipient?.name || 'N/A';
-                        cidade = etq.to?.city?.name || etq.destination?.city || 'N/A';
-                        estado = etq.to?.state?.abbr || etq.to?.state || 'N/A';
+                        // Melhor Envio - campos do JSON que você enviou
+                        rastreio = etq.tracking || 'N/A';
+                        transportadora = etq.service?.company?.name || etq.carrier || 'correios';
+                        valor = etq.price || 0;
+                        destinatario = etq.to?.name || 'N/A';
+                        cidade = etq.to?.city || 'N/A';
+                        estado = etq.to?.state_abbr || 'N/A';
                         dataEtq = etq.created_at ? new Date(etq.created_at).toLocaleDateString('pt-BR') : 'N/A';
-                        orderId = etq.id || etq.order_id;
+                        orderId = etq.protocol || etq.id;
                     }
 
                     let linkRastreio = '';
@@ -1387,7 +1406,7 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
                         <div class="sem-etiqueta">
                             <div>🔍 Nenhuma etiqueta encontrada para este cliente</div>
                             <div style="font-size: 12px; margin-top: 5px;">
-                                Verifique se o nome está igual nas transportadoras ou se a etiqueta já foi usada
+                                Nome buscado: <strong>${sol.clientes_pg?.nome || 'N/A'}</strong>
                             </div>
                         </div>
                     `;
@@ -1528,8 +1547,8 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
                 formaEnvio = etq.carrier || 'correios';
             } else {
                 // Melhor Envio
-                codigoRastreio = etq.tracking || etq.code || etq.tracking_code;
-                formaEnvio = etq.carrier?.name || etq.company?.name || 'correios';
+                codigoRastreio = etq.tracking;
+                formaEnvio = etq.service?.company?.name || etq.carrier || 'correios';
             }
 
             if (!codigoRastreio) {
@@ -1607,7 +1626,6 @@ Write-Host "✅ Melhor Envio copiado!" -ForegroundColor Green`;
 
         document.addEventListener('DOMContentLoaded', () => {
             inicializarDatas();
-            // Buscar tokens assim que a página carrega
             Promise.all([
                 buscarTokenDoBanco('superfrete'),
                 buscarTokenDoBanco('melhorenvio')
