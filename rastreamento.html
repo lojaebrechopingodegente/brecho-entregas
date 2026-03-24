@@ -1271,71 +1271,87 @@
         // SALVAR RASTREIO - ATUALIZADO PARA NOVA TABELA
         // ============================================
         async function salvarRastreio(event) {
-            event.preventDefault();
-            
-            const solicitacaoId = document.getElementById('rastreioSolicitacaoId').value;
-            const rastreioId = document.getElementById('rastreioId').value;
-            const codigoInput = document.getElementById('codigoRastreio').value.trim();
-            
-            const codigo = extrairCodigoRastreio(codigoInput);
-            
-            const dataEnvio = document.getElementById('dataEnvio').value || null;
-            const dataPrevista = document.getElementById('dataPrevista').value || null;
-            const formaEnvio = document.getElementById('formaEnvio').value;
-            const observacoes = document.getElementById('observacoesRastreio').value || null;
+    event.preventDefault();
+    
+    const solicitacaoId = document.getElementById('rastreioSolicitacaoId').value;
+    const rastreioId = document.getElementById('rastreioId').value;
+    const codigoInput = document.getElementById('codigoRastreio').value.trim();
+    
+    const codigo = extrairCodigoRastreio(codigoInput);
+    
+    const dataEnvio = document.getElementById('dataEnvio').value || null;
+    const dataPrevista = document.getElementById('dataPrevista').value || null;
+    const formaEnvio = document.getElementById('formaEnvio').value;
+    const observacoes = document.getElementById('observacoesRastreio').value || null;
 
-            if (!codigo) {
-                alert('⚠️ Por favor, informe o código de rastreio ou URL');
-                return;
-            }
+    // REMOVIDA A VALIDAÇÃO OBRIGATÓRIA - agora permite salvar com código vazio (apagar rastreamento)
+    // if (!codigo) {
+    //     alert('⚠️ Por favor, informe o código de rastreio ou URL');
+    //     return;
+    // }
 
-            try {
-                let result;
-                
-                if (rastreioId) {
-                    // ATUALIZAR rastreamento existente
-                    result = await supabaseClient
-                        .from('rastreamentos_pg')
-                        .update({
-                            codigo_rastreio: codigo,
-                            forma_envio: formaEnvio,
-                            data_envio: dataEnvio,
-                            data_entrega_prevista: dataPrevista,
-                            observacoes: observacoes
-                        })
-                        .eq('id', rastreioId)
-                        .select();
-                } else {
-                    // INSERIR novo rastreamento
-                    result = await supabaseClient
-                        .from('rastreamentos_pg')
-                        .insert({
-                            solicitacao_id: solicitacaoId,
-                            codigo_rastreio: codigo,
-                            forma_envio: formaEnvio,
-                            data_envio: dataEnvio,
-                            data_entrega_prevista: dataPrevista,
-                            observacoes: observacoes
-                        })
-                        .select();
-                }
-
-                if (result.error) throw result.error;
-
-                // Atualizar status da solicitação para 'enviado'
-                await supabaseClient
-                    .from('solicitacoes_pg')
-                    .update({ status: 'enviado' })
-                    .eq('id', solicitacaoId);
-
-                fecharModal('modalRastreio');
-                await carregarSolicitacoes();
-                alert('✅ Rastreio salvo com sucesso!\n\nCódigo: ' + codigo);
-            } catch (e) {
-                console.error('Erro ao salvar rastreio:', e);
-                alert('❌ Erro ao salvar rastreio: ' + e.message);
+    try {
+        let result;
+        
+        if (rastreioId) {
+            // ATUALIZAR rastreamento existente
+            result = await supabaseClient
+                .from('rastreamentos_pg')
+                .update({
+                    codigo_rastreio: codigo, // pode ser vazio/null agora
+                    forma_envio: formaEnvio,
+                    data_envio: dataEnvio,
+                    data_entrega_prevista: dataPrevista,
+                    observacoes: observacoes
+                })
+                .eq('id', rastreioId)
+                .select();
+        } else {
+            // Só insere novo se tiver código
+            if (codigo) {
+                result = await supabaseClient
+                    .from('rastreamentos_pg')
+                    .insert({
+                        solicitacao_id: solicitacaoId,
+                        codigo_rastreio: codigo,
+                        forma_envio: formaEnvio,
+                        data_envio: dataEnvio,
+                        data_entrega_prevista: dataPrevista,
+                        observacoes: observacoes
+                    })
+                    .select();
             }
         }
+
+        if (result && result.error) throw result.error;
+
+        // Se código ficou vazio, atualiza status da solicitação para 'pendente'
+        if (!codigo) {
+            await supabaseClient
+                .from('solicitacoes_pg')
+                .update({ status: 'pendente' })
+                .eq('id', solicitacaoId);
+        } else {
+            // Atualizar status da solicitação para 'enviado'
+            await supabaseClient
+                .from('solicitacoes_pg')
+                .update({ status: 'enviado' })
+                .eq('id', solicitacaoId);
+        }
+
+        fecharModal('modalRastreio');
+        await carregarSolicitacoes();
+        
+        if (codigo) {
+            alert('✅ Rastreio salvo com sucesso!\n\nCódigo: ' + codigo);
+        } else {
+            alert('✅ Rastreio removido com sucesso!\n\nA solicitação voltou para o status "Pendente".');
+        }
+    } catch (e) {
+        console.error('Erro ao salvar rastreio:', e);
+        alert('❌ Erro ao salvar rastreio: ' + e.message);
+    }
+}
 
         // ============================================
         // MODAL INSTAGRAM
