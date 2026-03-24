@@ -1122,22 +1122,41 @@
             atualizarContadores(); atualizarBotoes();
         }
 
-     function toggleSelecionarTodos() {
-    const checked = document.getElementById('checkboxHeader').checked || document.getElementById('selecionarTodos').checked;
-    document.getElementById('checkboxHeader').checked = checked;
-    document.getElementById('selecionarTodos').checked = checked;
+    function toggleSelecionarTodos() {
+    // Pega o estado do checkbox que foi clicado
+    const checkboxHeader = document.getElementById('checkboxHeader');
+    const checkboxMassa = document.getElementById('selecionarTodos');
     
+    // Sincroniza ambos os checkboxes
+    const checked = checkboxHeader.checked;
+    checkboxMassa.checked = checked;
+    
+    // Limpa ou preenche o Set de seleção
     idsSelecionados.clear();
     if (checked) {
         dadosCarregados.forEach(item => idsSelecionados.add(item.index));
     }
     
-    // ✅ CORREÇÃO: Sempre re-renderizar a tabela para atualizar o estado visual
-    renderizarTabela();
+    // ✅ CORREÇÃO: Atualiza visualmente todas as linhas SEM recriar a tabela toda
+    const todasLinhas = document.querySelectorAll('#tabelaBody tr[data-index]');
+    todasLinhas.forEach(tr => {
+        const index = parseInt(tr.dataset.index);
+        const checkbox = tr.querySelector('.checkbox-selecao');
+        
+        if (checkbox) {
+            checkbox.checked = checked;
+        }
+        
+        if (checked) {
+            tr.classList.add('selecionado');
+        } else {
+            tr.classList.remove('selecionado');
+        }
+    });
+    
     atualizarContadores();
     atualizarBotoes();
 }
-
         function atualizarContadores() {
             document.getElementById('statSelecionadas').textContent = idsSelecionados.size;
             document.getElementById('infoSelecao').textContent = idsSelecionados.size > 0 ? `${idsSelecionados.size} de ${dadosCarregados.length}` : '';
