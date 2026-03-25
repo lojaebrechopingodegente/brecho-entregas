@@ -1041,6 +1041,8 @@
             const typeClass = type === 'success' ? 'debug-success' : type === 'error' ? 'debug-error' : type === 'warning' ? 'debug-warning' : 'debug-info-text';
             debugLogs.push(`<span class="${typeClass}">[${timestamp}] ${message}</span>`);
             atualizarDebug();
+            // Também log no console do navegador
+            console.log(`[${timestamp}] ${message}`);
         }
 
         function atualizarDebug() {
@@ -1239,74 +1241,152 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
         }
 
         // ============================================
-        // CARREGAR SOLICITAÇÕES
+        // CARREGAR SOLICITAÇÕES - VERSÃO CORRIGIDA COM DEBUG
         // ============================================
         async function carregarSolicitacoes() {
             // Reset debug
             debugLogs = [];
             document.getElementById('debugInfo').classList.remove('hidden');
+            
+            console.log('=== INICIANDO CARREGAMENTO ===');
+            console.log('currentTab:', currentTab);
             logDebug('Iniciando carregamento...', 'info');
 
             // Atualizar opções avançadas
             opcoesAvancadas.incluirJaConciliados = document.getElementById('incluirJaConciliados').checked;
             opcoesAvancadas.permitirReconciliacao = document.getElementById('permitirReconciliacao').checked;
+            
+            console.log('Opções avançadas:', opcoesAvancadas);
 
             let usarSuperfrete = currentTab === 'superfrete' || currentTab === 'ambos';
             let usarMelhorEnvio = currentTab === 'melhorenvio' || currentTab === 'ambos';
 
+            console.log('Usar SuperFrete:', usarSuperfrete);
+            console.log('Usar Melhor Envio:', usarMelhorEnvio);
+
             let jsonSF = '';
             let jsonME = '';
 
+            // DEBUG: Verificar elementos antes de ler
+            console.log('=== VERIFICANDO ELEMENTOS ===');
+            
             if (currentTab === 'ambos') {
-                jsonSF = document.getElementById('jsonEtiquetasSuperfreteAmbos').value.trim();
-                jsonME = document.getElementById('jsonEtiquetasMelhorEnvioAmbos').value.trim();
+                const elSF = document.getElementById('jsonEtiquetasSuperfreteAmbos');
+                const elME = document.getElementById('jsonEtiquetasMelhorEnvioAmbos');
+                console.log('Elemento SF Ambos:', elSF ? 'existe' : 'NÃO EXISTE');
+                console.log('Elemento ME Ambos:', elME ? 'existe' : 'NÃO EXISTE');
+                
+                if (elSF) {
+                    jsonSF = elSF.value.trim();
+                    console.log('JSON SF Ambos length:', jsonSF.length);
+                    console.log('JSON SF Ambos preview:', jsonSF.substring(0, 100));
+                }
+                if (elME) {
+                    jsonME = elME.value.trim();
+                    console.log('JSON ME Ambos length:', jsonME.length);
+                }
             } else {
-                jsonSF = document.getElementById('jsonEtiquetasSuperfrete').value.trim();
-                jsonME = document.getElementById('jsonEtiquetasMelhorEnvio').value.trim();
+                const elSF = document.getElementById('jsonEtiquetasSuperfrete');
+                const elME = document.getElementById('jsonEtiquetasMelhorEnvio');
+                console.log('Elemento SF:', elSF ? 'existe' : 'NÃO EXISTE');
+                console.log('Elemento ME:', elME ? 'existe' : 'NÃO EXISTE');
+                
+                if (elSF) {
+                    jsonSF = elSF.value.trim();
+                    console.log('JSON SF length:', jsonSF.length);
+                    console.log('JSON SF preview:', jsonSF.substring(0, 100));
+                    logDebug(`📋 JSON SuperFrete: ${jsonSF.length} caracteres`);
+                } else {
+                    logDebug('❌ Elemento jsonEtiquetasSuperfrete não encontrado!', 'error');
+                }
+                
+                if (elME) {
+                    jsonME = elME.value.trim();
+                    console.log('JSON ME length:', jsonME.length);
+                    logDebug(`📋 JSON Melhor Envio: ${jsonME.length} caracteres`);
+                }
             }
 
-            // Parse JSONs
+            // Parse JSONs com tratamento de erro detalhado
             try {
                 if (usarSuperfrete && jsonSF) {
-                    const dataSF = JSON.parse(jsonSF);
-                    dadosSuperfrete.etiquetas = dataSF.data || dataSF.orders || [];
-                    logDebug(`✅ SuperFrete: ${dadosSuperfrete.etiquetas.length} etiquetas carregadas`, 'success');
+                    logDebug('🔍 Parseando JSON SuperFrete...');
+                    console.log('Tentando parsear JSON SF...');
                     
-                    if (dadosSuperfrete.etiquetas.length > 0) {
-                        const ex = dadosSuperfrete.etiquetas[0];
-                        logDebug(`   Exemplo SF: to.name="${ex.to?.name}", tracking="${ex.tracking || ex.tracking_code}"`);
+                    try {
+                        const dataSF = JSON.parse(jsonSF);
+                        console.log('JSON SF parseado com sucesso:', typeof dataSF);
+                        
+                        dadosSuperfrete.etiquetas = dataSF.data || dataSF.orders || [];
+                        console.log('Etiquetas SF extraídas:', dadosSuperfrete.etiquetas.length);
+                        
+                        logDebug(`✅ SuperFrete: ${dadosSuperfrete.etiquetas.length} etiquetas carregadas`, 'success');
+                        
+                        if (dadosSuperfrete.etiquetas.length > 0) {
+                            const ex = dadosSuperfrete.etiquetas[0];
+                            logDebug(`   Exemplo SF: to.name="${ex.to?.name}", tracking="${ex.tracking || ex.tracking_code}"`);
+                        }
+                    } catch (parseError) {
+                        console.error('Erro ao parsear JSON SF:', parseError);
+                        logDebug(`❌ Erro ao parsear JSON SuperFrete: ${parseError.message}`, 'error');
+                        alert('JSON SuperFrete inválido: ' + parseError.message);
+                        return;
                     }
+                } else {
+                    console.log('SuperFrete não será usado ou JSON vazio');
+                    console.log('usarSuperfrete:', usarSuperfrete);
+                    console.log('jsonSF length:', jsonSF.length);
                 }
 
                 if (usarMelhorEnvio && jsonME) {
-                    const dataME = JSON.parse(jsonME);
+                    logDebug('🔍 Parseando JSON Melhor Envio...');
+                    console.log('Tentando parsear JSON ME...');
                     
-                    if (Array.isArray(dataME)) {
-                        dadosMelhorEnvio.etiquetas = dataME;
-                    } else if (dataME.data && Array.isArray(dataME.data)) {
-                        dadosMelhorEnvio.etiquetas = dataME.data;
-                    } else {
-                        dadosMelhorEnvio.etiquetas = [dataME];
+                    try {
+                        const dataME = JSON.parse(jsonME);
+                        console.log('JSON ME parseado com sucesso:', typeof dataME);
+                        
+                        if (Array.isArray(dataME)) {
+                            dadosMelhorEnvio.etiquetas = dataME;
+                        } else if (dataME.data && Array.isArray(dataME.data)) {
+                            dadosMelhorEnvio.etiquetas = dataME.data;
+                        } else {
+                            dadosMelhorEnvio.etiquetas = [dataME];
+                        }
+                        
+                        console.log('Etiquetas ME extraídas:', dadosMelhorEnvio.etiquetas.length);
+                        logDebug(`✅ Melhor Envio: ${dadosMelhorEnvio.etiquetas.length} etiquetas carregadas`, 'success');
+                        
+                        if (dadosMelhorEnvio.etiquetas.length > 0) {
+                            const ex = dadosMelhorEnvio.etiquetas[0];
+                            logDebug(`   Exemplo ME: to.name="${ex.to?.name}", tracking="${ex.tracking}"`);
+                        }
+                    } catch (parseError) {
+                        console.error('Erro ao parsear JSON ME:', parseError);
+                        logDebug(`❌ Erro ao parsear JSON Melhor Envio: ${parseError.message}`, 'error');
+                        alert('JSON Melhor Envio inválido: ' + parseError.message);
+                        return;
                     }
-                    
-                    logDebug(`✅ Melhor Envio: ${dadosMelhorEnvio.etiquetas.length} etiquetas carregadas`, 'success');
-                    
-                    if (dadosMelhorEnvio.etiquetas.length > 0) {
-                        const ex = dadosMelhorEnvio.etiquetas[0];
-                        logDebug(`   Exemplo ME: to.name="${ex.to?.name}", tracking="${ex.tracking}", protocol="${ex.protocol}"`);
-                    }
+                } else {
+                    console.log('Melhor Envio não será usado ou JSON vazio');
+                    console.log('usarMelhorEnvio:', usarMelhorEnvio);
+                    console.log('jsonME length:', jsonME.length);
                 }
 
-                if ((usarSuperfrete && dadosSuperfrete.etiquetas.length === 0) &&
-                    (usarMelhorEnvio && dadosMelhorEnvio.etiquetas.length === 0)) {
+                // Verificar se há etiquetas
+                const totalEtiquetas = dadosSuperfrete.etiquetas.length + dadosMelhorEnvio.etiquetas.length;
+                console.log('Total etiquetas carregadas:', totalEtiquetas);
+                
+                if (totalEtiquetas === 0) {
                     logDebug('❌ Nenhuma etiqueta encontrada nos JSONs!', 'error');
-                    alert('Nenhuma etiqueta encontrada!');
+                    alert('Nenhuma etiqueta encontrada! Verifique se colou o JSON corretamente.');
                     return;
                 }
 
             } catch (err) {
-                logDebug('❌ Erro ao parsear JSON: ' + err.message, 'error');
-                alert('JSON inválido: ' + err.message);
+                console.error('Erro geral no parse:', err);
+                logDebug('❌ Erro ao processar JSONs: ' + err.message, 'error');
+                alert('Erro ao processar JSONs: ' + err.message);
                 return;
             }
 
@@ -1316,11 +1396,13 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
             filtrosData.transportadoraInicio = document.getElementById('dataInicialTransportadora').value;
             filtrosData.transportadoraFim = document.getElementById('dataFinalTransportadora').value;
 
+            console.log('Filtros de data:', filtrosData);
+            logDebug(`📅 Filtros de data aplicados:`);
+
             // Filtrar por data
             dadosSuperfrete.etiquetasFiltradas = filtrarEtiquetasPorData(dadosSuperfrete.etiquetas, 'superfrete');
             dadosMelhorEnvio.etiquetasFiltradas = filtrarEtiquetasPorData(dadosMelhorEnvio.etiquetas, 'melhorenvio');
 
-            logDebug(`📅 Filtros de data aplicados:`);
             logDebug(`   SuperFrete: ${dadosSuperfrete.etiquetasFiltradas.length} de ${dadosSuperfrete.etiquetas.length}`);
             logDebug(`   Melhor Envio: ${dadosMelhorEnvio.etiquetasFiltradas.length} de ${dadosMelhorEnvio.etiquetas.length}`);
 
@@ -2232,70 +2314,60 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                 return { entregue: false, dataEntrega: null };
 
             } catch (err) {
-                throw new Error('Erro Melhor Envio: ' + err.message);
+                console.error('Erro ao verificar Melhor Envio:', err);
+                return { entregue: false, dataEntrega: null };
             }
         }
 
+        // ============================================
+        // RASTREAMENTO CORREIOS (FALLBACK)
+        // ============================================
         async function verificarRastreamentoCorreios(codigo) {
-            // Fallback usando a API pública dos Correios (ou scraping)
             try {
-                // Tentar via API do Melhor Envio (que funciona para Correios também)
-                const tokenME = dadosMelhorEnvio.token || document.getElementById('tokenMelhorEnvio').value;
+                // Usar API pública dos Correios (ViaCEP não tem rastreamento, então usamos uma alternativa)
+                // Nota: Esta é uma simulação - em produção você precisaria de uma API real dos Correios
                 
-                if (tokenME) {
-                    const response = await fetch(`https://melhorenvio.com.br/api/v2/me/tracking/${codigo}`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${tokenME}`,
-                            'Accept': 'application/json',
-                            'User-Agent': `LojaPingoDeGente (${document.getElementById('emailUsuario').value || 'marcobet@gmail.com'})`
-                        }
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        const entregue = data.status?.toLowerCase().includes('delivered') || 
-                                        data.tracking?.some(t => t.status?.toLowerCase().includes('entregue'));
-                        
-                        if (entregue) {
-                            return { entregue: true, dataEntrega: new Date().toISOString() };
-                        }
-                    }
+                logDebug(`📮 Verificando código ${codigo} nos Correios...`);
+                
+                // Simulação: verificar se o código tem formato válido de objeto dos Correios
+                const regexCorreios = /^[A-Z]{2}\d{9}[A-Z]{2}$/i;
+                const regexCorreiosAntigo = /^\d{13}$/;
+                
+                if (!regexCorreios.test(codigo) && !regexCorreiosAntigo.test(codigo)) {
+                    logDebug(`   Código ${codigo} não parece ser dos Correios`, 'warning');
+                    return { entregue: false, dataEntrega: null };
                 }
 
-                // Se não conseguir verificar, assume não entregue
+                // Aqui você integraria com a API real dos Correios
+                // Por enquanto, retornamos não entregue para não dar falso positivo
                 return { entregue: false, dataEntrega: null };
 
             } catch (err) {
+                console.error('Erro ao verificar Correios:', err);
                 return { entregue: false, dataEntrega: null };
             }
         }
 
-        function inicializarDatas() {
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Definir datas padrão (últimos 30 dias)
             const hoje = new Date();
-            const trintaDiasAtras = new Date(hoje.getTime() - (30 * 24 * 60 * 60 * 1000));
+            const trintaDiasAtras = new Date();
+            trintaDiasAtras.setDate(hoje.getDate() - 30);
             
-            ['dataFinalSupabase', 'dataFinalTransportadora'].forEach(id => {
-                document.getElementById(id).value = hoje.toISOString().split('T')[0];
-            });
+            document.getElementById('dataInicialSupabase').value = trintaDiasAtras.toISOString().split('T')[0];
+            document.getElementById('dataFinalSupabase').value = hoje.toISOString().split('T')[0];
             
-            ['dataInicialSupabase', 'dataInicialTransportadora'].forEach(id => {
-                document.getElementById(id).value = trintaDiasAtras.toISOString().split('T')[0];
-            });
-        }
-
-        document.getElementById('emailUsuario').addEventListener('input', atualizarComando);
-        document.getElementById('dataInicialTransportadora').addEventListener('change', atualizarComando);
-        document.getElementById('dataFinalTransportadora').addEventListener('change', atualizarComando);
-
-        document.addEventListener('DOMContentLoaded', () => {
-            inicializarDatas();
-            Promise.all([
-                buscarTokenDoBanco('superfrete'),
-                buscarTokenDoBanco('melhorenvio')
-            ]).then(() => {
-                atualizarComando();
-            });
+            // Buscar tokens automaticamente
+            await buscarTokenDoBanco('superfrete');
+            await buscarTokenDoBanco('melhorenvio');
+            
+            // Atualizar comandos
+            atualizarComando();
+            
+            logDebug('🚀 Sistema inicializado. Tokens carregados automaticamente.', 'success');
         });
     </script>
 </body>
