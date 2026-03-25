@@ -578,36 +578,40 @@
         // ============================================
         // CARREGAR DADOS - PADRONIZADO COM ENTREGAS
         // ============================================
-        async function aplicarFiltros() {
-            if (!supabaseClient) { alert('⚠️ Conecte-se primeiro!'); return; }
-            
-            const dataInicial = document.getElementById('dataInicial').value;
-            const horaInicial = document.getElementById('horaInicial').value || '00:00';
-            const dataFinal = document.getElementById('dataFinal').value;
-            const horaFinal = document.getElementById('horaFinal').value || '23:59';
-            
-            if (!dataInicial || !dataFinal) { alert('⚠️ Selecione as datas'); return; }
-            if (new Date(dataInicial) > new Date(dataFinal)) { alert('⚠️ Data inicial maior que final'); return; }
+       async function aplicarFiltros() {
+    if (!supabaseClient) { alert('⚠️ Conecte-se primeiro!'); return; }
+    
+    const dataInicial = document.getElementById('dataInicial').value;
+    const horaInicial = document.getElementById('horaInicial').value || '00:00';
+    const dataFinal = document.getElementById('dataFinal').value;
+    const horaFinal = document.getElementById('horaFinal').value || '23:59';
+    
+    if (!dataInicial || !dataFinal) { alert('⚠️ Selecione as datas'); return; }
+    if (new Date(dataInicial) > new Date(dataFinal)) { alert('⚠️ Data inicial maior que final'); return; }
 
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('tabelaContainer').style.display = 'none';
-            document.getElementById('statsContainer').style.display = 'none';
-            document.getElementById('loading').style.display = 'block';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('tabelaContainer').style.display = 'none';
+    document.getElementById('statsContainer').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
 
-            try {
-                // ✅ PADRONIZADO: Mesmo formato da página de Entregas (UTC)
-                const dataHoraInicial = new Date(dataInicial + 'T' + horaInicial + ':00.000Z');
-                const dataHoraFinal = new Date(dataFinal + 'T' + horaFinal + ':59.999Z');
+    try {
+        // ✅ CORREÇÃO: Usar horário local do Brasil (sem .000Z)
+        const dataHoraInicial = new Date(dataInicial + 'T' + horaInicial + ':00');
+        const dataHoraFinal = new Date(dataFinal + 'T' + horaFinal + ':59.999');
 
-                let query = supabaseClient
-                    .from('solicitacoes_pg')
-                    .select(`*, clientes_pg (id, nome, cpf, whatsapp, instagram), enderecos_pg (cep, rua, numero, complemento, bairro, cidade, estado, regiao)`)
-                    .gte('data_solicitacao', dataHoraInicial.toISOString())
-                    .lte('data_solicitacao', dataHoraFinal.toISOString())
-                    .order('data_solicitacao', { ascending: false });
+        let query = supabaseClient
+            .from('solicitacoes_pg')
+            .select(`*, clientes_pg (id, nome, cpf, whatsapp, instagram), enderecos_pg (cep, rua, numero, complemento, bairro, cidade, estado, regiao)`)
+            .gte('data_solicitacao', dataHoraInicial.toISOString())
+            .lte('data_solicitacao', dataHoraFinal.toISOString())
+            .order('data_solicitacao', { ascending: false });
 
-                const { data, error } = await query;
-                if (error) throw error;
+        const { data, error } = await query;
+        if (error) throw error;
+        
+        // ... resto do código
+    }
+}
 
                 solicitacoesData = (data || []).map((item, index) => ({
                     index,
