@@ -443,6 +443,26 @@
             background: #fff3cd;
             color: #856404;
         }
+
+        .alert-box {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-box.success {
+            background: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+
+        .config-input {
+            background: #fff3cd;
+            border: 2px dashed #ffc107;
+        }
     </style>
 <base target="_blank">
 </head>
@@ -454,6 +474,23 @@
         </div>
 
         <div class="content">
+            <!-- Configuração Inicial -->
+            <div id="alertaConfig" class="alert-box">
+                <strong>⚠️ Configuração Necessária:</strong> Insira seu Supabase Anon Key abaixo para conectar ao banco de dados.
+            </div>
+
+            <div class="section" id="secaoConfig">
+                <h2>⚙️ Configuração do Supabase</h2>
+                <div class="form-group">
+                    <label>Supabase Anon Key</label>
+                    <input type="text" id="supabaseKey" class="config-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        Encontre em: Supabase Dashboard → Project Settings → API → Project API keys
+                    </small>
+                </div>
+                <button class="btn btn-primary" onclick="salvarConfigSupabase()">💾 Salvar Configuração</button>
+            </div>
+
             <!-- Estatísticas -->
             <div class="stats-grid">
                 <div class="stat-card">
@@ -630,7 +667,7 @@
             <div class="section">
                 <h2>🖥️ Console de Log</h2>
                 <div class="debug-console" id="debugConsole">
-                    <div class="info">Sistema inicializado. Aguardando comandos...</div>
+                    <div class="info">Sistema inicializado. Aguardando configuração do Supabase...</div>
                 </div>
                 <button class="btn btn-secondary" onclick="limparConsole()" style="margin-top: 10px;">
                     Limpar Console
@@ -645,7 +682,7 @@
         // ============================================
 
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
+        let SUPABASE_ANON_KEY = localStorage.getItem('supabase_anon_key') || '';
 
         let supabaseClient = null;
         let dadosSuperfrete = { token: null, valido: false, environment: 'production' };
@@ -658,16 +695,66 @@
         // ============================================
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Verificar se já tem configuração salva
+            if (SUPABASE_ANON_KEY) {
+                document.getElementById('supabaseKey').value = SUPABASE_ANON_KEY;
+                inicializarSistema();
+            } else {
+                logDebug('⚠️ Supabase Anon Key não configurada. Insira a chave acima.', 'warning');
+            }
+
             inicializarDatas();
-            Promise.all([
-                buscarTokenSuperfrete(),
-                buscarTokenMelhorEnvio()
-            ]).then(() => {
-                logDebug('Sistema pronto para uso', 'success');
+        });
+
+        function salvarConfigSupabase() {
+            const key = document.getElementById('supabaseKey').value.trim();
+
+            if (!key || !key.startsWith('eyJ')) {
+                alert('Por favor, insira uma chave válida do Supabase (deve começar com eyJ)');
+                return;
+            }
+
+            SUPABASE_ANON_KEY = key;
+            localStorage.setItem('supabase_anon_key', key);
+
+            document.getElementById('alertaConfig').classList.add('hidden');
+            document.getElementById('secaoConfig').style.display = 'none';
+
+            logDebug('✅ Configuração do Supabase salva no localStorage', 'success');
+
+            inicializarSistema();
+        }
+
+        async function inicializarSistema() {
+            try {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+                // Testar conexão
+                const { error } = await supabaseClient.from('superfrete_config').select('count').limit(1);
+
+                if (error && error.message.includes('Invalid API key')) {
+                    throw new Error('Chave de API inválida');
+                }
+
+                logDebug('✅ Conectado ao Supabase com sucesso', 'success');
+
+                await Promise.all([
+                    buscarTokenSuperfrete(),
+                    buscarTokenMelhorEnvio()
+                ]);
+
                 // Iniciar verificação automática após 2 segundos
                 setTimeout(verificarEntregasAutomaticamente, 2000);
-            });
-        });
+
+            } catch (err) {
+                logDebug(`❌ Erro ao conectar: ${err.message}`, 'error');
+                alert('Erro ao conectar ao Supabase. Verifique sua chave e tente novamente.');
+
+                // Mostrar configuração novamente
+                document.getElementById('alertaConfig').classList.remove('hidden');
+                document.getElementById('secaoConfig').style.display = 'block';
+            }
+        }
 
         function inicializarDatas() {
             const hoje = new Date();
@@ -679,16 +766,13 @@
         }
 
         // ============================================
-        // SUPABASE - TOKENS (TABELAS CORRETAS)
+        // SUPABASE - TOKENS
         // ============================================
 
         async function buscarTokenSuperfrete() {
             try {
-                if (!supabaseClient) {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                }
+                if (!supabaseClient) return;
 
-                // Buscar da tabela superfrente_config
                 const { data, error } = await supabaseClient
                     .from('superfrete_config')
                     .select('api_token, environment, is_active')
@@ -722,11 +806,8 @@
 
         async function buscarTokenMelhorEnvio() {
             try {
-                if (!supabaseClient) {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                }
+                if (!supabaseClient) return;
 
-                // Buscar da tabela melhorenvio_config
                 const { data, error } = await supabaseClient
                     .from('melhorenvio_config')
                     .select('access_token, environment, is_active')
@@ -769,7 +850,8 @@
                 }
 
                 if (!supabaseClient) {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    alert('Supabase não conectado. Configure a chave primeiro.');
+                    return;
                 }
 
                 // Desativar tokens anteriores
@@ -816,7 +898,8 @@
                 }
 
                 if (!supabaseClient) {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    alert('Supabase não conectado. Configure a chave primeiro.');
+                    return;
                 }
 
                 // Desativar tokens anteriores
@@ -880,7 +963,8 @@
 
             try {
                 if (!supabaseClient) {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    logDebug('Supabase não conectado. Pulando verificação automática.', 'warning');
+                    return;
                 }
 
                 // Verificar se temos pelo menos um token válido
@@ -913,7 +997,7 @@
                     .order('data_envio', { ascending: false });
 
                 if (errorSol) throw errorSol;
-                if (solicitacoes.length === 0) {
+                if (!solicitacoes || solicitacoes.length === 0) {
                     logDebug('✅ Nenhuma entrega pendente para verificar', 'success');
                     return;
                 }
@@ -931,6 +1015,11 @@
 
                 for (const sol of paraVerificar) {
                     try {
+                        if (!sol.codigo_rastreio) {
+                            logDebug(`Solicitação ${sol.numero_solicitacao} sem código de rastreio`, 'warning');
+                            continue;
+                        }
+
                         const codigo = sol.codigo_rastreio.trim();
                         const forma = (sol.forma_envio || '').toLowerCase();
 
@@ -961,7 +1050,7 @@
                         await new Promise(resolve => setTimeout(resolve, 300));
 
                     } catch (err) {
-                        logDebug(`❌ Auto: erro em ${sol.codigo_rastreio}`, 'error');
+                        logDebug(`❌ Auto: erro em ${sol.codigo_rastreio || sol.numero_solicitacao} - ${err.message}`, 'error');
                     }
                 }
 
@@ -991,7 +1080,6 @@
         }
 
         function mostrarNotificacaoVerificacao(mensagem, tipo = 'info') {
-            // Remover notificação anterior se existir
             const anterior = document.getElementById('notificacaoAuto');
             if (anterior) anterior.remove();
 
@@ -1036,7 +1124,7 @@
         }
 
         // ============================================
-        // API - RASTREAMENTO
+        // API - RASTREAMENTO (COM PROXY CORS)
         // ============================================
 
         async function verificarRastreamentoSuperFrete(codigo) {
@@ -1047,13 +1135,31 @@
             }
 
             try {
-                const response = await fetch(`https://api.superfrete.com/v1/trackings/${codigo}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                // Usar proxy CORS se necessário
+                const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                const apiUrl = `https://api.superfrete.com/v1/trackings/${codigo}`;
+
+                let response;
+                try {
+                    // Tentar direto primeiro
+                    response = await fetch(apiUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                } catch (corsError) {
+                    // Se falhar por CORS, usar proxy
+                    logDebug('Tentando com proxy CORS...', 'warning');
+                    response = await fetch(proxyUrl + encodeURIComponent(apiUrl), {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                }
 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
@@ -1061,7 +1167,6 @@
 
                 const data = await response.json();
 
-                // Verificar se foi entregue
                 const entregue = data.status === 'delivered' || 
                                 (data.events && data.events.some(e => 
                                     e.status.toLowerCase().includes('entregue') || 
@@ -1090,7 +1195,8 @@
             }
 
             try {
-                const response = await fetch(`https://api.melhorenvio.com/v2/trackings/${codigo}`, {
+                // Melhor Envio pode precisar de endpoint diferente
+                const response = await fetch(`https://api.melhorenvio.com/v2/me/orders`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -1103,23 +1209,22 @@
                     throw new Error(`HTTP ${response.status}`);
                 }
 
-                const data = await response.json();
+                const orders = await response.json();
 
-                // Verificar se foi entregue
-                const entregue = data.status === 'delivered' || 
-                                data.delivery_status === 'delivered' ||
-                                (data.tracking && data.tracking.some(e => 
-                                    e.status.toLowerCase().includes('entregue') || 
-                                    e.status.toLowerCase().includes('delivered')
-                                ));
+                // Procurar pedido pelo código de rastreio
+                const order = orders.data?.find(o => o.tracking === codigo);
 
-                const ultimoEvento = data.tracking && data.tracking.length > 0 ? data.tracking[0] : null;
+                if (!order) {
+                    throw new Error('Pedido não encontrado');
+                }
+
+                const entregue = order.status === 'delivered' || order.delivery_status === 'delivered';
 
                 return {
                     entregue: entregue,
-                    dataEntrega: entregue ? (ultimoEvento?.date || new Date().toISOString()) : null,
-                    eventos: data.tracking || [],
-                    status: data.status || data.delivery_status
+                    dataEntrega: entregue ? (order.delivered_at || new Date().toISOString()) : null,
+                    eventos: order.tracking || [],
+                    status: order.status
                 };
 
             } catch (err) {
@@ -1143,12 +1248,10 @@
                 let resultado;
 
                 if (transportadora === 'auto') {
-                    // Tentar SuperFrete primeiro
                     try {
                         resultado = await verificarRastreamentoSuperFrete(codigo);
                         logDebug(`Rastreamento SuperFrete: ${resultado.entregue ? 'ENTREGUE' : 'EM TRÂNSITO'}`, 'success');
                     } catch (err) {
-                        // Se falhar, tentar Melhor Envio
                         logDebug('SuperFrete falhou, tentando Melhor Envio...', 'warning');
                         resultado = await verificarRastreamentoMelhorEnvio(codigo);
                         logDebug(`Rastreamento Melhor Envio: ${resultado.entregue ? 'ENTREGUE' : 'EM TRÂNSITO'}`, 'success');
@@ -1207,7 +1310,8 @@
         async function carregarSolicitacoes() {
             try {
                 if (!supabaseClient) {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    alert('Supabase não conectado. Configure a chave primeiro.');
+                    return;
                 }
 
                 const dataInicio = document.getElementById('filtroDataInicio').value;
@@ -1408,7 +1512,6 @@
                 logDebug(`${selecionados.length} solicitações marcadas como entregue`, 'success');
                 alert('Solicitações atualizadas com sucesso!');
 
-                // Desmarcar todos
                 document.getElementById('selectAll').checked = false;
                 toggleSelectAll();
 
@@ -1448,11 +1551,9 @@
         // ============================================
 
         function mudarAba(aba) {
-            // Esconder todas as abas
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
 
-            // Mostrar aba selecionada
             document.getElementById(`aba${aba.charAt(0).toUpperCase() + aba.slice(1)}`).classList.add('active');
             event.target.classList.add('active');
         }
