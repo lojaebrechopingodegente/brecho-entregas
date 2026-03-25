@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -37,11 +37,6 @@
         .header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1em;
         }
 
         .tabs {
@@ -94,18 +89,18 @@
             color: #333;
         }
 
-        .form-group input, .form-group select, .form-group textarea {
+        .form-group input, .form-group textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #e9ecef;
             border-radius: 8px;
             font-size: 1em;
-            transition: border-color 0.3s;
+            font-family: 'Consolas', monospace;
         }
 
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
+        .form-group textarea {
+            min-height: 300px;
+            resize: vertical;
         }
 
         .btn {
@@ -125,19 +120,9 @@
             color: white;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
         .btn-success {
             background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             color: white;
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
         }
 
         .btn-warning {
@@ -157,11 +142,11 @@
             border-radius: 10px;
             overflow-x: auto;
             font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.9em;
+            font-size: 0.85em;
             line-height: 1.5;
             margin: 20px 0;
             position: relative;
-            max-height: 500px;
+            max-height: 600px;
             overflow-y: auto;
         }
 
@@ -217,162 +202,172 @@
             color: #155724;
         }
 
-        .alert-danger {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
         }
 
-        .grid-2 {
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 2px solid #e9ecef;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .api-status-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
+            margin-bottom: 30px;
         }
 
         @media (max-width: 768px) {
-            .grid-2 {
+            .api-status-grid {
                 grid-template-columns: 1fr;
             }
         }
 
+        .api-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid #667eea;
+        }
+
+        .api-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .status-badge {
-            display: inline-block;
-            padding: 5px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 15px;
             border-radius: 20px;
-            font-size: 0.85em;
+            font-size: 0.9em;
             font-weight: 600;
         }
 
-        .status-active {
+        .status-success {
             background: #d4edda;
             color: #155724;
         }
 
-        .status-inactive {
+        .status-error {
             background: #f8d7da;
             color: #721c24;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-delivered {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-transit {
-            background: #cce5ff;
-            color: #004085;
-        }
-
-        .card {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-left: 4px solid #667eea;
-        }
-
-        .card h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-
-        textarea#jsonInput {
-            min-height: 300px;
-            font-family: 'Consolas', monospace;
         }
 
         .result-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .result-table th, .result-table td {
-            padding: 12px;
+            padding: 15px;
             text-align: left;
-            border-bottom: 1px solid #dee2e6;
+            border-bottom: 1px solid #e9ecef;
         }
 
         .result-table th {
-            background: #f8f9fa;
+            background: #667eea;
+            color: white;
             font-weight: 600;
-            color: #495057;
         }
 
         .result-table tr:hover {
             background: #f8f9fa;
         }
 
-        .config-saved {
-            background: #d4edda;
-            border: 2px solid #28a745;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            display: none;
+        .result-table tr:last-child td {
+            border-bottom: none;
         }
 
-        .config-saved.show {
-            display: block;
+        .transport-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
         }
 
-        .powershell-output {
-            background: #f8f9fa;
-            border: 2px dashed #667eea;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: center;
+        .transport-correios {
+            background: #ffd700;
+            color: #333;
         }
 
-        .auto-copy-info {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .transport-jadlog {
+            background: #ff6b35;
             color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
         }
 
-        .error-box {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 5px;
+        .transport-jet {
+            background: #4ecdc4;
+            color: white;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin: 30px 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .stat-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
+        .empty-state {
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .stat-label {
+            padding: 40px;
             color: #6c757d;
-            margin-top: 5px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .tracking-code {
+            font-family: 'Consolas', monospace;
+            background: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .date-field {
+            color: #6c757d;
+            font-size: 0.9em;
         }
     </style>
-<base target="_blank">
 </head>
 <body>
     <div class="container">
@@ -389,155 +384,69 @@
 
         <!-- Aba Configuração -->
         <div id="config" class="content active">
-            <div class="alert alert-info">
-                <strong>ℹ️ Configuração Inicial:</strong> Preencha os dados do Supabase uma vez. 
-                Eles serão usados automaticamente no PowerShell gerado.
+            <div class="alert alert-warning">
+                <strong>⚠️ Use a Service Role Key!</strong> A anon key não funciona devido ao RLS.
             </div>
 
-            <div class="config-saved" id="configStatus">
-                <strong>✅ Configuração salva!</strong> Os dados estão armazenados no navegador.
+            <div class="form-group">
+                <label>URL do Supabase:</label>
+                <input type="text" id="sbUrl" value="https://ytnfjzngalfapfnbobfm.supabase.co" readonly>
             </div>
-
-            <div class="card">
-                <h3>🔗 Configuração do Supabase</h3>
-                <div class="form-group">
-                    <label>URL do Supabase:</label>
-                    <input type="text" id="sbUrl" placeholder="https://seu-projeto.supabase.co" value="https://ytnfjzngalfapfnbobfm.supabase.co">
-                </div>
-                <div class="form-group">
-                    <label>API Key (anon/public):</label>
-                    <input type="password" id="sbKey" placeholder="eyJhbGciOiJIUzI1NiIs..." value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls">
-                </div>
-                <button class="btn btn-success" onclick="salvarConfiguracao()">💾 Salvar Configuração</button>
-                <button class="btn btn-warning" onclick="limparConfiguracao()">🗑️ Limpar</button>
+            <div class="form-group">
+                <label>Service Role Key (obrigatória):</label>
+                <input type="password" id="sbKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSJ9...">
             </div>
-
-            <div class="grid-2" style="margin-top: 20px;">
-                <div class="card">
-                    <h3>🚚 SuperFrete</h3>
-                    <div class="form-group">
-                        <label>Token de API:</label>
-                        <input type="text" id="sfToken" placeholder="Cole o token do SuperFrete aqui...">
-                    </div>
-                    <div class="form-group">
-                        <label>Ambiente:</label>
-                        <select id="sfEnv">
-                            <option value="production" selected>Produção</option>
-                            <option value="sandbox">Sandbox</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Status:</label>
-                        <select id="sfActive">
-                            <option value="true" selected>Ativo</option>
-                            <option value="false">Inativo</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-success" onclick="salvarSuperFrete()">💾 Salvar SuperFrete</button>
-                </div>
-
-                <div class="card">
-                    <h3>📮 Melhor Envio</h3>
-                    <div class="form-group">
-                        <label>Token de API:</label>
-                        <input type="text" id="meToken" placeholder="Cole o token do Melhor Envio aqui...">
-                    </div>
-                    <div class="form-group">
-                        <label>Ambiente:</label>
-                        <select id="meEnv">
-                            <option value="production" selected>Produção</option>
-                            <option value="sandbox">Sandbox</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Status:</label>
-                        <select id="meActive">
-                            <option value="true" selected>Ativo</option>
-                            <option value="false">Inativo</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-success" onclick="salvarMelhorEnvio()">💾 Salvar Melhor Envio</button>
-                </div>
-            </div>
+            <button class="btn btn-success" onclick="salvarConfiguracao()">💾 Salvar Configuração</button>
+            <button class="btn btn-primary" onclick="gerarPowerShell()">🔄 Atualizar Script</button>
         </div>
 
         <!-- Aba PowerShell -->
         <div id="powershell" class="content">
-            <div class="auto-copy-info">
-                <strong>🚀 Novidade:</strong> O PowerShell gerado já inclui suas credenciais do Supabase! 
-                E ao final, o resultado JSON é copiado automaticamente para a área de transferência.
-            </div>
-
-            <div class="error-box">
-                <strong>⚠️ Importante:</strong> Clique no botão "📋 Copiar Script" para copiar o código limpo. 
-                Não selecione o texto manualmente para evitar copiar tags HTML.
-            </div>
-
-            <div class="alert alert-warning">
+            <div class="alert alert-info">
                 <strong>📋 Como usar:</strong>
                 <ol style="margin-top: 10px; margin-left: 20px;">
-                    <li>Configure o Supabase na aba "Configuração" primeiro</li>
-                    <li>Clique em "📋 Copiar Script" (código limpo, sem HTML)</li>
-                    <li>Cole no PowerShell como Administrador e execute</li>
-                    <li>O script irá: buscar tokens → buscar entregas pendentes → consultar APIs → retornar resultado</li>
-                    <li>O resultado JSON será copiado <strong>automaticamente</strong>!</li>
-                    <li>Vá direto para aba "Resultado" e cole (Ctrl+V)</li>
+                    <li>Configure a Service Role Key na aba "Configuração"</li>
+                    <li>Clique em "📋 Copiar Script"</li>
+                    <li>Cole no PowerShell como Administrador</li>
+                    <li>O resultado JSON será copiado automaticamente</li>
                 </ol>
             </div>
 
-            <div class="card">
-                <h3>📜 Script PowerShell (completo - busca entregas e consulta APIs)</h3>
-                <div class="code-block" id="powershellCodeBlock">
-                    <button class="copy-btn" onclick="copyPowerShell()">📋 Copiar Script</button>
-                    <pre id="psCode"></pre>
-                </div>
-                <button class="btn btn-info" onclick="gerarPowerShell()">🔄 Gerar/Atualizar Script</button>
-            </div>
-
-            <div class="powershell-output" id="powershellOutput" style="display: none;">
-                <h4>✅ Script copiado!</h4>
-                <p>Cole no PowerShell (Admin) e execute. O resultado será copiado automaticamente.</p>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyPowerShell()">📋 Copiar Script</button>
+                <pre id="psCode"></pre>
             </div>
         </div>
 
         <!-- Aba Resultado -->
         <div id="resultado" class="content">
-            <div class="alert alert-info">
-                <strong>📋 Cole o resultado:</strong> O PowerShell já copiou o JSON automaticamente. 
-                Apenas pressione <strong>Ctrl+V</strong> no campo abaixo ou clique em "Colar da Área de Transferência".
-            </div>
-
             <div class="form-group">
-                <label>JSON de Resultado (cole aqui):</label>
+                <label>Cole o JSON de resultado:</label>
                 <textarea id="jsonInput" placeholder='{
   "data_verificacao": "2026-03-25 10:00:00",
+  "solicitacoes": [...],
+  "rastreamentos": [...],
   "superfrete": {...},
-  "melhor_envio": {...},
-  "entregas": [...]
+  "melhor_envio": {...}
 }'></textarea>
             </div>
-
             <button class="btn btn-primary" onclick="processarJSON()">⚙️ Processar Resultado</button>
             <button class="btn btn-success" onclick="colarClipboard()">📋 Colar da Área de Transferência</button>
             <button class="btn btn-warning" onclick="limparResultado()">🗑️ Limpar</button>
-
-            <div id="resultadoContainer" style="margin-top: 30px; display: none;">
-                <h3>📊 Resumo da Verificação</h3>
-                <div id="resumoCards"></div>
-
-                <h3 style="margin-top: 30px;">📋 Detalhes das Entregas</h3>
-                <div id="tabelaContainer"></div>
-            </div>
+            
+            <div id="resultadoContainer" style="margin-top: 30px;"></div>
         </div>
     </div>
 
     <script>
-        // Variável global para armazenar o código limpo (sem HTML)
         let cleanPowerShellCode = '';
 
-        // Carregar configuração ao iniciar
         window.onload = function() {
-            carregarConfiguracao();
+            const saved = localStorage.getItem('supabaseConfig');
+            if (saved) {
+                const config = JSON.parse(saved);
+                document.getElementById('sbKey').value = config.key || '';
+            }
             gerarPowerShell();
         };
 
@@ -546,323 +455,146 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
-
-            if (tabName === 'powershell') {
-                gerarPowerShell();
-            }
         }
 
-        // Salvar configuração no localStorage
         function salvarConfiguracao() {
             const config = {
                 url: document.getElementById('sbUrl').value,
                 key: document.getElementById('sbKey').value
             };
-
-            if (!config.url || !config.key) {
-                alert('Por favor, preencha URL e API Key!');
-                return;
-            }
-
             localStorage.setItem('supabaseConfig', JSON.stringify(config));
-            document.getElementById('configStatus').classList.add('show');
-
-            // Atualizar PowerShell automaticamente
+            alert('✅ Configuração salva!');
             gerarPowerShell();
-
-            alert('✅ Configuração salva com sucesso!');
         }
 
-        function carregarConfiguracao() {
-            const saved = localStorage.getItem('supabaseConfig');
-            if (saved) {
-                const config = JSON.parse(saved);
-                document.getElementById('sbUrl').value = config.url || '';
-                document.getElementById('sbKey').value = config.key || '';
-                document.getElementById('configStatus').classList.add('show');
-            }
-        }
-
-        function limparConfiguracao() {
-            localStorage.removeItem('supabaseConfig');
-            document.getElementById('sbUrl').value = '';
-            document.getElementById('sbKey').value = '';
-            document.getElementById('configStatus').classList.remove('show');
-            alert('Configuração removida!');
-        }
-
-        // Gerar PowerShell completo com busca de entregas e APIs
         function gerarPowerShell() {
-            const url = document.getElementById('sbUrl').value || 'https://ytnfjzngalfapfnbobfm.supabase.co';
-            const key = document.getElementById('sbKey').value || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
+            const url = document.getElementById('sbUrl').value;
+            const key = document.getElementById('sbKey').value || 'SUA_SERVICE_ROLE_KEY_AQUI';
 
-            // Código LIMPO (sem HTML) - será usado para copiar
             cleanPowerShellCode = `# ============================================
-# Verificador de Entregas - PowerShell Completo
-# Busca tokens → Busca entregas → Consulta APIs
+# VERIFICADOR DE ENTREGAS - SCHEMA CORRETO
+# Tabelas: solicitacoes_pg, rastreamentos_pg
 # ============================================
 
-# Configurações do Supabase
 $url = "${url}"
 $apiKey = "${key}"
 
-# Headers para requisição Supabase
 $headers = @{
     "apikey" = $apiKey
     "Authorization" = "Bearer $apiKey"
     "Content-Type" = "application/json"
 }
 
-Write-Host "🔍 Iniciando verificação de entregas..." -ForegroundColor Cyan
+Write-Host "🔍 Iniciando verificação..." -ForegroundColor Cyan
 Write-Host ""
 
-# ============================================
-# 1. BUSCAR TOKENS DAS APIs (PRODUÇÃO + ATIVO)
-# ============================================
-
-# Buscar token SuperFrete
-$urlSF = "$url/rest/v1/superfrete_config?select=api_token,environment,is_active&environment=eq.production&is_active=eq.true&limit=1"
+# 1. Buscar token SuperFrete
+Write-Host "📦 Buscando SuperFrete..." -ForegroundColor Yellow
 $tokenSF = $null
-$sfEnv = "production"
 try {
-    $responseSF = Invoke-RestMethod -Uri $urlSF -Headers $headers -Method Get
-    if ($responseSF -and $responseSF.Count -gt 0) {
-        $tokenSF = $responseSF[0].api_token
-        Write-Host "✅ Token SuperFrete encontrado!" -ForegroundColor Green
+    $sfUrl = "$url/rest/v1/superfrete_config?select=api_token&environment=eq.production&is_active=eq.true&limit=1"
+    $sfResponse = Invoke-RestMethod -Uri $sfUrl -Headers $headers -Method Get
+    if ($sfResponse -and $sfResponse.Count -gt 0) {
+        $tokenSF = $sfResponse[0].api_token
+        Write-Host "  ✅ Token SuperFrete encontrado" -ForegroundColor Green
     } else {
-        Write-Host "❌ Token SuperFrete não encontrado" -ForegroundColor Red
+        Write-Host "  ⚠️ Token SuperFrete não encontrado (production+ativo)" -ForegroundColor Yellow
     }
 } catch {
-    Write-Host "❌ Erro ao buscar SuperFrete: $_" -ForegroundColor Red
+    Write-Host "  ❌ Erro: $_" -ForegroundColor Red
 }
 
-# Buscar token Melhor Envio
-$urlME = "$url/rest/v1/melhor_envio_config?select=api_token,environment,is_active&environment=eq.production&is_active=eq.true&limit=1"
+# 2. Buscar token Melhor Envio
+Write-Host "📦 Buscando Melhor Envio..." -ForegroundColor Yellow
 $tokenME = $null
-$meEnv = "production"
 try {
-    $responseME = Invoke-RestMethod -Uri $urlME -Headers $headers -Method Get
-    if ($responseME -and $responseME.Count -gt 0) {
-        $tokenME = $responseME[0].api_token
-        Write-Host "✅ Token Melhor Envio encontrado!" -ForegroundColor Green
+    $meUrl = "$url/rest/v1/melhorenvio_config?select=access_token&environment=eq.production&is_active=eq.true&limit=1"
+    $meResponse = Invoke-RestMethod -Uri $meUrl -Headers $headers -Method Get
+    if ($meResponse -and $meResponse.Count -gt 0) {
+        $tokenME = $meResponse[0].access_token
+        Write-Host "  ✅ Token Melhor Envio encontrado" -ForegroundColor Green
     } else {
-        Write-Host "❌ Token Melhor Envio não encontrado" -ForegroundColor Red
+        Write-Host "  ⚠️ Token Melhor Envio não encontrado (production+ativo)" -ForegroundColor Yellow
     }
 } catch {
-    Write-Host "❌ Erro ao buscar Melhor Envio: $_" -ForegroundColor Red
+    Write-Host "  ❌ Erro: $_" -ForegroundColor Red
 }
 
 Write-Host ""
 
-# ============================================
-# 2. BUSCAR ENTREGAS PENDENTES NO SUPABASE
-# ============================================
-
-Write-Host "📦 Buscando entregas pendentes..." -ForegroundColor Cyan
-
-# Buscar entregas com status pendente ou em trânsito
-$urlEntregas = "$url/rest/v1/entregas?select=*&status=in.(pendente,em_transito,postado,enviado)&order=data_envio.desc&limit=100"
-$entregas = @()
-
+# 3. Buscar solicitações com código de rastreio
+Write-Host "📋 Buscando solicitações com rastreio..." -ForegroundColor Yellow
+$solicitacoes = @()
 try {
-    $responseEntregas = Invoke-RestMethod -Uri $urlEntregas -Headers $headers -Method Get
-    if ($responseEntregas) {
-        $entregas = $responseEntregas
-        Write-Host "✅ $($entregas.Count) entregas encontradas" -ForegroundColor Green
-    } else {
-        Write-Host "⚠️ Nenhuma entrega pendente encontrada" -ForegroundColor Yellow
+    $solUrl = "$url/rest/v1/solicitacoes_pg?select=id,numero_solicitacao,codigo_rastreio,forma_envio,status,data_envio&codigo_rastreio=not.is.null&limit=200"
+    $solResponse = Invoke-RestMethod -Uri $solUrl -Headers $headers -Method Get
+    if ($solResponse) {
+        $solicitacoes = $solResponse
+        Write-Host "  ✅ $($solicitacoes.Count) solicitações com rastreio encontradas" -ForegroundColor Green
     }
 } catch {
-    Write-Host "❌ Erro ao buscar entregas: $_" -ForegroundColor Red
-    # Tentar com nome alternativo da tabela
-    try {
-        $urlEntregas2 = "$url/rest/v1/delivery?select=*&status=in.(pendente,em_transito,postado,enviado)&limit=100"
-        $responseEntregas2 = Invoke-RestMethod -Uri $urlEntregas2 -Headers $headers -Method Get
-        if ($responseEntregas2) {
-            $entregas = $responseEntregas2
-            Write-Host "✅ $($entregas.Count) entregas encontradas (tabela: delivery)" -ForegroundColor Green
-        }
-    } catch {
-        Write-Host "❌ Tabela alternativa também não encontrada" -ForegroundColor Red
-    }
+    Write-Host "  ❌ Erro ao buscar solicitacoes_pg: $_" -ForegroundColor Red
 }
 
-# ============================================
-# 3. CONSULTAR APIs DE RASTREAMENTO
-# ============================================
-
-$entregasProcessadas = @()
-
-foreach ($entrega in $entregas) {
-    $entregaResult = @{
-        id = $entrega.id
-        codigo_rastreio = $entrega.codigo_rastreio
-        transportadora = $entrega.transportadora
-        status_anterior = $entrega.status
-        status_atual = $entrega.status
-        data_ultima_atualizacao = $entrega.data_ultima_atualizacao
-        origem = $entrega.origem
-        destino = $entrega.destino
-        atualizado_na_api = $false
-        erro_api = $null
-        eventos = @()
+# 4. Buscar rastreamentos históricos
+Write-Host "📋 Buscando histórico de rastreamentos..." -ForegroundColor Yellow
+$rastreamentos = @()
+try {
+    $rasUrl = "$url/rest/v1/rastreamentos_pg?select=*&limit=200"
+    $rasResponse = Invoke-RestMethod -Uri $rasUrl -Headers $headers -Method Get
+    if ($rasResponse) {
+        $rastreamentos = $rasResponse
+        Write-Host "  ✅ $($rastreamentos.Count) registros de rastreamento encontrados" -ForegroundColor Green
     }
-
-    # Verificar se tem código de rastreio
-    if (-not $entrega.codigo_rastreio) {
-        $entregaResult.erro_api = "Sem código de rastreio"
-        $entregasProcessadas += $entregaResult
-        continue
-    }
-
-    # Consultar SuperFrete (se for transportadora SuperFrete e tiver token)
-    if ($entrega.transportadora -like "*SuperFrete*" -or $entrega.transportadora -like "*superfrete*") {
-        if ($tokenSF) {
-            try {
-                $sfHeaders = @{
-                    "Authorization" = "Bearer $tokenSF"
-                    "Content-Type" = "application/json"
-                    "Accept" = "application/json"
-                }
-                
-                # Endpoint de rastreamento SuperFrete (ajustar conforme documentação real)
-                $sfTrackingUrl = "https://api.superfrete.com/api/v0/tracking?tracking_code=$($entrega.codigo_rastreio)"
-                
-                $sfResponse = Invoke-RestMethod -Uri $sfTrackingUrl -Headers $sfHeaders -Method Get -TimeoutSec 30
-                
-                $entregaResult.status_atual = $sfResponse.status
-                $entregaResult.atualizado_na_api = $true
-                
-                if ($sfResponse.events) {
-                    $entregaResult.eventos = $sfResponse.events
-                }
-                
-                Write-Host "  ✅ SuperFrete: $($entrega.codigo_rastreio) - $($sfResponse.status)" -ForegroundColor Green
-            } catch {
-                $entregaResult.erro_api = "Erro SF: $($_.Exception.Message)"
-                Write-Host "  ❌ SuperFrete: $($entrega.codigo_rastreio) - Erro" -ForegroundColor Red
-            }
-        } else {
-            $entregaResult.erro_api = "Token SuperFrete não disponível"
-        }
-    }
-    
-    # Consultar Melhor Envio (se for transportadora Melhor Envio e tiver token)
-    elseif ($entrega.transportadora -like "*Melhor Envio*" -or $entrega.transportadora -like "*melhor_envio*") {
-        if ($tokenME) {
-            try {
-                $meHeaders = @{
-                    "Authorization" = "Bearer $tokenME"
-                    "Accept" = "application/json"
-                    "Content-Type" = "application/json"
-                    "User-Agent" = "Aplicacao (email@exemplo.com)"
-                }
-                
-                # Endpoint de rastreamento Melhor Envio
-                $meTrackingUrl = "https://api.melhorenvio.com.br/api/v2/me/shipment/tracking"
-                
-                # Body com os códigos de rastreio (pode ser necessário ajustar)
-                $meBody = @{
-                    orders = @(@{id = $entrega.codigo_rastreio})
-                } | ConvertTo-Json -Depth 3
-                
-                $meResponse = Invoke-RestMethod -Uri $meTrackingUrl -Headers $meHeaders -Method Post -Body $meBody -TimeoutSec 30
-                
-                if ($meResponse -and $meResponse.Count -gt 0) {
-                    $tracking = $meResponse[0]
-                    $entregaResult.status_atual = $tracking.status
-                    $entregaResult.atualizado_na_api = $true
-                    
-                    if ($tracking.tracking) {
-                        $entregaResult.eventos = $tracking.tracking
-                    }
-                    
-                    Write-Host "  ✅ Melhor Envio: $($entrega.codigo_rastreio) - $($tracking.status)" -ForegroundColor Green
-                }
-            } catch {
-                $entregaResult.erro_api = "Erro ME: $($_.Exception.Message)"
-                Write-Host "  ❌ Melhor Envio: $($entrega.codigo_rastreio) - Erro" -ForegroundColor Red
-            }
-        } else {
-            $entregaResult.erro_api = "Token Melhor Envio não disponível"
-        }
-    }
-    
-    # Outras transportadoras (Correios, etc) - pode adicionar lógica específica
-    else {
-        $entregaResult.erro_api = "Transportadora não reconhecida para API: $($entrega.transportadora)"
-        Write-Host "  ⚠️ Transportadora não reconhecida: $($entrega.transportadora)" -ForegroundColor Yellow
-    }
-
-    $entregasProcessadas += $entregaResult
+} catch {
+    Write-Host "  ❌ Erro ao buscar rastreamentos_pg: $_" -ForegroundColor Red
 }
 
 Write-Host ""
-Write-Host "========================================" -ForegroundColor Yellow
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "📊 RESUMO" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
 
-# ============================================
-# 4. MONTAR RESULTADO FINAL
-# ============================================
-
+# Montar resultado
 $resultado = @{
     data_verificacao = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
     superfrete = @{
         token_encontrado = $tokenSF -ne $null
-        ambiente = $sfEnv
-        entregas_processadas = ($entregasProcessadas | Where-Object { $_.transportadora -like "*SuperFrete*" }).Count
+        ambiente = "production"
     }
     melhor_envio = @{
         token_encontrado = $tokenME -ne $null
-        ambiente = $meEnv
-        entregas_processadas = ($entregasProcessadas | Where-Object { $_.transportadora -like "*Melhor Envio*" }).Count
+        ambiente = "production"
     }
     estatisticas = @{
-        total_entregas = $entregas.Count
-        processadas_com_sucesso = ($entregasProcessadas | Where-Object { $_.atualizado_na_api -eq $true }).Count
-        com_erro = ($entregasProcessadas | Where-Object { $_.erro_api -ne $null }).Count
+        total_solicitacoes_com_rastreio = $solicitacoes.Count
+        total_rastreamentos_historicos = $rastreamentos.Count
     }
-    entregas = $entregasProcessadas
+    solicitacoes = $solicitacoes
+    rastreamentos = $rastreamentos
 }
 
-Write-Host "📊 RESULTADO:" -ForegroundColor Cyan
-Write-Host "  Total: $($resultado.estatisticas.total_entregas)" -ForegroundColor White
-Write-Host "  Sucesso: $($resultado.estatisticas.processadas_com_sucesso)" -ForegroundColor Green
-Write-Host "  Erros: $($resultado.estatisticas.com_erro)" -ForegroundColor Red
-Write-Host "========================================" -ForegroundColor Yellow
-
-# Converter para JSON
 $jsonResultado = $resultado | ConvertTo-Json -Depth 10
-Write-Host ""
 Write-Host $jsonResultado
 
-# COPIAR AUTOMATICAMENTE PARA ÁREA DE TRANSFERÊNCIA
+# Copiar para clipboard
 $jsonResultado | Set-Clipboard
 Write-Host ""
-Write-Host "✅ JSON copiado automaticamente para a área de transferência!" -ForegroundColor Green
-Write-Host "📋 Cole no navegador (Ctrl+V)" -ForegroundColor Green
-Write-Host "========================================" -ForegroundColor Yellow`;
+Write-Host "✅ JSON copiado para área de transferência!" -ForegroundColor Green`;
 
-            // Mostrar na tela
             document.getElementById('psCode').textContent = cleanPowerShellCode;
         }
 
         function copyPowerShell() {
-            if (!cleanPowerShellCode) {
-                gerarPowerShell();
-            }
-
+            if (!cleanPowerShellCode) gerarPowerShell();
             navigator.clipboard.writeText(cleanPowerShellCode).then(() => {
                 const btn = document.querySelector('.copy-btn');
                 btn.textContent = '✅ Copiado!';
                 btn.classList.add('copied');
-                document.getElementById('powershellOutput').style.display = 'block';
-
                 setTimeout(() => {
                     btn.textContent = '📋 Copiar Script';
                     btn.classList.remove('copied');
                 }, 2000);
-            }).catch(err => {
-                alert('Erro ao copiar: ' + err);
             });
         }
 
@@ -871,160 +603,156 @@ Write-Host "========================================" -ForegroundColor Yellow`;
                 document.getElementById('jsonInput').value = text;
                 processarJSON();
             }).catch(err => {
-                alert('Não foi possível acessar a área de transferência. Cole manualmente com Ctrl+V');
+                alert('Erro ao acessar clipboard: ' + err);
             });
-        }
-
-        function salvarSuperFrete() {
-            const token = document.getElementById('sfToken').value;
-            const env = document.getElementById('sfEnv').value;
-            const active = document.getElementById('sfActive').value;
-
-            if (!token) {
-                alert('Por favor, insira o token do SuperFrete!');
-                return;
-            }
-
-            console.log('Salvando SuperFrete:', { token, env, active });
-            alert('✅ Configuração do SuperFrete salva!\nAmbiente: ' + env + '\nAtivo: ' + active);
-        }
-
-        function salvarMelhorEnvio() {
-            const token = document.getElementById('meToken').value;
-            const env = document.getElementById('meEnv').value;
-            const active = document.getElementById('meActive').value;
-
-            if (!token) {
-                alert('Por favor, insira o token do Melhor Envio!');
-                return;
-            }
-
-            console.log('Salvando Melhor Envio:', { token, env, active });
-            alert('✅ Configuração do Melhor Envio salva!\nAmbiente: ' + env + '\nAtivo: ' + active);
-        }
-
-        function processarJSON() {
-            const jsonInput = document.getElementById('jsonInput').value;
-
-            try {
-                const data = JSON.parse(jsonInput);
-
-                // Cards de resumo
-                let resumoHTML = '<div class="stats-grid">';
-                
-                // Total de entregas
-                const totalEntregas = data.estatisticas?.total_entregas || data.entregas?.length || 0;
-                resumoHTML += `
-                    <div class="stat-card">
-                        <div class="stat-number">${totalEntregas}</div>
-                        <div class="stat-label">Total de Entregas</div>
-                    </div>
-                `;
-
-                // Processadas com sucesso
-                const sucesso = data.estatisticas?.processadas_com_sucesso || 
-                    (data.entregas ? data.entregas.filter(e => e.atualizado_na_api === true).length : 0);
-                resumoHTML += `
-                    <div class="stat-card">
-                        <div class="stat-number" style="color: #28a745;">${sucesso}</div>
-                        <div class="stat-label">Atualizadas com Sucesso</div>
-                    </div>
-                `;
-
-                // Com erro
-                const erros = data.estatisticas?.com_erro || 
-                    (data.entregas ? data.entregas.filter(e => e.erro_api !== null).length : 0);
-                resumoHTML += `
-                    <div class="stat-card">
-                        <div class="stat-number" style="color: #dc3545;">${erros}</div>
-                        <div class="stat-label">Com Erro</div>
-                    </div>
-                `;
-
-                resumoHTML += '</div>';
-
-                // Status das APIs
-                resumoHTML += '<div class="grid-2" style="margin-top: 20px;">';
-
-                const sfStatus = data.superfrete?.token_encontrado ? 
-                    '<span class="status-badge status-active">✅ Conectado</span>' : 
-                    '<span class="status-badge status-inactive">❌ Não encontrado</span>';
-                resumoHTML += `
-                    <div class="card">
-                        <h3>🚚 SuperFrete</h3>
-                        <p><strong>Status:</strong> ${sfStatus}</p>
-                        <p><strong>Ambiente:</strong> ${data.superfrete?.ambiente || 'N/A'}</p>
-                        <p><strong>Entregas:</strong> ${data.superfrete?.entregas_processadas || 0}</p>
-                    </div>
-                `;
-
-                const meStatus = data.melhor_envio?.token_encontrado ? 
-                    '<span class="status-badge status-active">✅ Conectado</span>' : 
-                    '<span class="status-badge status-inactive">❌ Não encontrado</span>';
-                resumoHTML += `
-                    <div class="card">
-                        <h3>📮 Melhor Envio</h3>
-                        <p><strong>Status:</strong> ${meStatus}</p>
-                        <p><strong>Ambiente:</strong> ${data.melhor_envio?.ambiente || 'N/A'}</p>
-                        <p><strong>Entregas:</strong> ${data.melhor_envio?.entregas_processadas || 0}</p>
-                    </div>
-                `;
-                resumoHTML += '</div>';
-
-                document.getElementById('resumoCards').innerHTML = resumoHTML;
-
-                // Tabela de entregas
-                if (data.entregas && data.entregas.length > 0) {
-                    let tabelaHTML = `
-                        <table class="result-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Rastreio</th>
-                                    <th>Transportadora</th>
-                                    <th>Status Anterior</th>
-                                    <th>Status Atual</th>
-                                    <th>Atualizado</th>
-                                    <th>Erro</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-                    data.entregas.forEach(entrega => {
-                        const statusClass = entrega.atualizado_na_api ? 'status-delivered' : 
-                            (entrega.erro_api ? 'status-inactive' : 'status-pending');
-                        
-                        tabelaHTML += `
-                            <tr>
-                                <td>${entrega.id || '-'}</td>
-                                <td><code>${entrega.codigo_rastreio || '-'}</code></td>
-                                <td>${entrega.transportadora || '-'}</td>
-                                <td>${entrega.status_anterior || '-'}</td>
-                                <td><span class="status-badge ${statusClass}">${entrega.status_atual || '-'}</span></td>
-                                <td>${entrega.atualizado_na_api ? '✅' : '❌'}</td>
-                                <td>${entrega.erro_api ? `<span style="color: #dc3545; font-size: 0.9em;">${entrega.erro_api}</span>` : '-'}</td>
-                            </tr>
-                        `;
-                    });
-
-                    tabelaHTML += '</tbody></table>';
-                    document.getElementById('tabelaContainer').innerHTML = tabelaHTML;
-                } else {
-                    document.getElementById('tabelaContainer').innerHTML = 
-                        '<div class="alert alert-warning">Nenhuma entrega encontrada no JSON.</div>';
-                }
-
-                document.getElementById('resultadoContainer').style.display = 'block';
-
-            } catch (e) {
-                alert('❌ Erro ao processar JSON: ' + e.message);
-            }
         }
 
         function limparResultado() {
             document.getElementById('jsonInput').value = '';
-            document.getElementById('resultadoContainer').style.display = 'none';
+            document.getElementById('resultadoContainer').innerHTML = '';
+        }
+
+        function getTransportClass(formaEnvio) {
+            if (!formaEnvio) return '';
+            const forma = formaEnvio.toLowerCase();
+            if (forma.includes('correios')) return 'transport-correios';
+            if (forma.includes('jadlog')) return 'transport-jadlog';
+            if (forma.includes('jet')) return 'transport-jet';
+            return '';
+        }
+
+        function processarJSON() {
+            const input = document.getElementById('jsonInput').value;
+            if (!input.trim()) {
+                alert('Por favor, cole o JSON primeiro!');
+                return;
+            }
+
+            try {
+                const data = JSON.parse(input);
+                let html = '';
+
+                // Estatísticas
+                const totalSolicitacoes = data.estatisticas?.total_solicitacoes_com_rastreio || 
+                                         (data.solicitacoes?.length || 0);
+                const totalRastreamentos = data.estatisticas?.total_rastreamentos_historicos || 
+                                          (data.rastreamentos?.length || 0);
+
+                html += '<div class="stats-grid">';
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-number">${totalSolicitacoes}</div>
+                        <div class="stat-label">📦 Solicitações com Rastreio</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${totalRastreamentos}</div>
+                        <div class="stat-label">📝 Registros de Rastreamento</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${data.superfrete?.token_encontrado ? '✅' : '❌'}</div>
+                        <div class="stat-label">🚚 SuperFrete Conectado</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${data.melhor_envio?.token_encontrado ? '✅' : '❌'}</div>
+                        <div class="stat-label">📮 Melhor Envio Conectado</div>
+                    </div>
+                `;
+                html += '</div>';
+
+                // Status das APIs
+                html += '<div class="api-status-grid">';
+                
+                // SuperFrete
+                const sfStatus = data.superfrete?.token_encontrado 
+                    ? '<span class="status-badge status-success">✅ Conectado</span>' 
+                    : '<span class="status-badge status-error">❌ Não Conectado</span>';
+                html += `
+                    <div class="api-card">
+                        <h3>🚚 SuperFrete</h3>
+                        <p><strong>Status:</strong> ${sfStatus}</p>
+                        <p><strong>Ambiente:</strong> ${data.superfrete?.ambiente || 'N/A'}</p>
+                    </div>
+                `;
+
+                // Melhor Envio
+                const meStatus = data.melhor_envio?.token_encontrado 
+                    ? '<span class="status-badge status-success">✅ Conectado</span>' 
+                    : '<span class="status-badge status-error">❌ Não Conectado</span>';
+                html += `
+                    <div class="api-card">
+                        <h3>📮 Melhor Envio</h3>
+                        <p><strong>Status:</strong> ${meStatus}</p>
+                        <p><strong>Ambiente:</strong> ${data.melhor_envio?.ambiente || 'N/A'}</p>
+                    </div>
+                `;
+                html += '</div>';
+
+                // Tabela de Solicitações
+                if (data.solicitacoes && data.solicitacoes.length > 0) {
+                    html += '<h3 class="section-title">📦 Solicitações com Código de Rastreio</h3>';
+                    html += '<div style="overflow-x: auto;">';
+                    html += '<table class="result-table">';
+                    html += '<thead><tr><th>Nº Solicitação</th><th>Código Rastreio</th><th>Transportadora</th><th>Status</th><th>Data Envio</th></tr></thead>';
+                    html += '<tbody>';
+                    
+                    data.solicitacoes.forEach(sol => {
+                        const transportClass = getTransportClass(sol.forma_envio);
+                        html += `
+                            <tr>
+                                <td>${sol.numero_solicitacao || '-'}</td>
+                                <td><span class="tracking-code">${sol.codigo_rastreio || '-'}</span></td>
+                                <td><span class="transport-badge ${transportClass}">${sol.forma_envio || '-'}</span></td>
+                                <td>${sol.status || '-'}</td>
+                                <td class="date-field">${sol.data_envio || '-'}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                    html += '</div>';
+                } else {
+                    html += '<div class="empty-state">📭 Nenhuma solicitação com rastreio encontrada</div>';
+                }
+
+                // Tabela de Rastreamentos
+                if (data.rastreamentos && data.rastreamentos.length > 0) {
+                    html += '<h3 class="section-title">📝 Histórico de Rastreamentos</h3>';
+                    html += '<div style="overflow-x: auto;">';
+                    html += '<table class="result-table">';
+                    html += '<thead><tr><th>Código</th><th>Transportadora</th><th>Data Envio</th><th>Observações</th></tr></thead>';
+                    html += '<tbody>';
+                    
+                    data.rastreamentos.forEach(rast => {
+                        const transportClass = getTransportClass(rast.forma_envio);
+                        html += `
+                            <tr>
+                                <td><span class="tracking-code">${rast.codigo_rastreio || '-'}</span></td>
+                                <td><span class="transport-badge ${transportClass}">${rast.forma_envio || '-'}</span></td>
+                                <td class="date-field">${rast.data_envio || '-'}</td>
+                                <td>${rast.observacoes || '-'}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                    html += '</div>';
+                } else {
+                    html += '<div class="empty-state">📭 Nenhum rastreamento histórico encontrado</div>';
+                }
+
+                // Data da verificação
+                if (data.data_verificacao) {
+                    html += `<p style="text-align: center; color: #6c757d; margin-top: 30px; font-size: 0.9em;">
+                        🕐 Verificação realizada em: ${data.data_verificacao}
+                    </p>`;
+                }
+
+                document.getElementById('resultadoContainer').innerHTML = html;
+                
+            } catch (e) {
+                alert('❌ Erro ao processar JSON: ' + e.message);
+                console.error(e);
+            }
         }
     </script>
 </body>
