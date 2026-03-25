@@ -84,6 +84,7 @@
             border-radius: 10px;
             font-size: 1rem;
             transition: all 0.3s ease;
+            font-family: 'Consolas', 'Courier New', monospace;
         }
 
         input[type="text"]:focus,
@@ -93,6 +94,13 @@
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
 
         .btn {
@@ -344,6 +352,7 @@
             margin-bottom: 25px;
             border-bottom: 2px solid #e0e0e0;
             padding-bottom: 10px;
+            flex-wrap: wrap;
         }
 
         .tab {
@@ -479,65 +488,45 @@
             border: 2px dashed #ffc107;
         }
 
-        .powershell-box {
+        .script-box {
             background: #012456;
             color: #fff;
             padding: 20px;
             border-radius: 10px;
             font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             margin: 20px 0;
             position: relative;
+            border: 2px solid #4ec9b0;
         }
 
-        .powershell-box::before {
-            content: 'POWERSHELL';
-            position: absolute;
-            top: -10px;
-            left: 20px;
-            background: #012456;
-            padding: 0 10px;
-            font-size: 0.8rem;
-            color: #fff;
-        }
-
-        .powershell-box code {
-            color: #fff;
-            display: block;
-            margin: 5px 0;
-        }
-
-        .powershell-box .comment {
-            color: #6a9955;
-        }
-
-        .powershell-box .cmd {
-            color: #4ec9b0;
-        }
-
-        .file-upload-area {
-            border: 3px dashed #667eea;
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            background: #f8f9ff;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .file-upload-area:hover {
-            background: #e8eaff;
-            border-color: #764ba2;
-        }
-
-        .file-upload-area.dragover {
-            background: #e8eaff;
-            border-color: #28a745;
-        }
-
-        .upload-icon {
-            font-size: 3rem;
+        .script-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #4ec9b0;
+        }
+
+        .script-box h4 {
+            color: #4ec9b0;
+            margin: 0;
+        }
+
+        .copy-btn {
+            background: #4ec9b0;
+            color: #012456;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .copy-btn:hover {
+            background: #3db89f;
         }
 
         .resultado-powershell {
@@ -577,6 +566,59 @@
         .resultado-item.erro {
             background: #f8d7da;
             border-left-color: #dc3545;
+        }
+
+        .instruction-step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .step-content p {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .output-area {
+            background: #f4f4f4;
+            border: 2px dashed #999;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 100px;
+        }
+
+        .paste-hint {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
         }
     </style>
 <base target="_blank">
@@ -721,45 +763,250 @@
             <!-- Aba: PowerShell -->
             <div id="abaPowershell" class="tab-content">
                 <div class="section">
-                    <h2>🖥️ Rastreamento via PowerShell</h2>
-                    <p style="margin-bottom: 20px; color: #666;">
-                        Use o PowerShell para rastrear sem limitações de CORS. Baixe o script abaixo e execute no seu computador.
-                    </p>
+                    <h2>🖥️ Rastreamento via PowerShell (Copiar & Colar)</h2>
 
-                    <div class="powershell-box">
-                        <code class="comment"># 1. Baixe o script rastreamento.ps1</code>
-                        <code class="comment"># 2. Abra o PowerShell como Administrador</code>
-                        <code class="comment"># 3. Navegue até a pasta do arquivo:</code>
-                        <code class="cmd">cd C:\caminho\para\o\script</code>
-                        <code class="comment"># 4. Execute a verificação automática:</code>
-                        <code class="cmd">.\rastreamento.ps1 -Acao verificar</code>
-                        <code class="comment"># 5. Ou rastreie um código específico:</code>
-                        <code class="cmd">.\rastreamento.ps1 -Acao rastrear -CodigoRastreio "SF123456789BR"</code>
+                    <div class="alert-box info">
+                        <strong>📋 Instruções:</strong> Siga os 3 passos abaixo para verificar as entregas usando PowerShell.
                     </div>
 
-                    <button class="btn btn-info" onclick="baixarScriptPowerShell()">
-                        📥 Baixar Script PowerShell
-                    </button>
+                    <!-- PASSO 1 -->
+                    <div class="instruction-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>📋 Copie o script PowerShell abaixo</h4>
+                            <p>Clique no botão "Copiar Script" e cole no PowerShell (como Administrador)</p>
+                            <div class="script-box">
+                                <div class="script-box-header">
+                                    <h4>📜 Script de Verificação Automática</h4>
+                                    <button class="copy-btn" onclick="copiarScript()">📋 Copiar Script</button>
+                                </div>
+                                <textarea id="powershellScript" readonly style="width: 100%; height: 300px; background: #001122; color: #4ec9b0; border: 1px solid #4ec9b0; padding: 10px; font-family: Consolas, monospace; font-size: 0.8rem;">
+# ============================================
+# RASTREAMENTO DE ENTREGAS - LOJA PINGO DE GENTE
+# ============================================
 
-                    <h3 style="margin-top: 30px; margin-bottom: 20px;">📤 Importar Resultados do PowerShell</h3>
-                    <p style="margin-bottom: 20px; color: #666;">
-                        Após executar o script, arraste o arquivo <strong>resultado_rastreamento.json</strong> gerado 
-                        para a área abaixo, ou clique para selecionar.
-                    </p>
+# Configuracoes - SUBSTITUA PELA SUA CHAVE REAL
+$SUPABASE_URL = "https://ytnfjzngalfapfnbobfm.supabase.co"
+$SUPABASE_ANON_KEY = "INSIRA_SUA_CHAVE_AQUI"
 
-                    <div class="file-upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
-                        <div class="upload-icon">📁</div>
-                        <h3>Arraste o arquivo JSON aqui</h3>
-                        <p style="color: #666; margin-top: 10px;">ou clique para selecionar</p>
-                        <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="processarArquivoJSON(this.files[0])">
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "  RASTREAMENTO DE ENTREGAS" -ForegroundColor Cyan
+Write-Host "  Loja Pingo de Gente" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+
+# Funcoes de Log
+function Log-Info { param([string]$Mensagem) Write-Host "[INFO] $Mensagem" -ForegroundColor Cyan }
+function Log-Success { param([string]$Mensagem) Write-Host "[OK] $Mensagem" -ForegroundColor Green }
+function Log-Error { param([string]$Mensagem) Write-Host "[ERRO] $Mensagem" -ForegroundColor Red }
+
+# Buscar tokens do Supabase
+Log-Info "Buscando tokens configurados..."
+
+$headers = @{ 
+    "apikey" = $SUPABASE_ANON_KEY
+    "Authorization" = "Bearer $SUPABASE_ANON_KEY"
+}
+
+# Token SuperFrete
+try {
+    $urlSF = "$SUPABASE_URL/rest/v1/superfrete_config?select=api_token&is_active=eq.true&limit=1"
+    $responseSF = Invoke-RestMethod -Uri $urlSF -Headers $headers -Method GET
+    $tokenSF = $responseSF[0].api_token
+    if ($tokenSF) { Log-Success "Token SuperFrete carregado" }
+} catch {
+    Log-Error "Erro ao buscar token SuperFrete: $($_.Exception.Message)"
+    $tokenSF = $null
+}
+
+# Token Melhor Envio
+try {
+    $urlME = "$SUPABASE_URL/rest/v1/melhorenvio_config?select=access_token&is_active=eq.true&limit=1"
+    $responseME = Invoke-RestMethod -Uri $urlME -Headers $headers -Method GET
+    $tokenME = $responseME[0].access_token
+    if ($tokenME) { Log-Success "Token Melhor Envio carregado" }
+} catch {
+    Log-Error "Erro ao buscar token Melhor Envio: $($_.Exception.Message)"
+    $tokenME = $null
+}
+
+if (-not $tokenSF -and -not $tokenME) {
+    Log-Error "Nenhum token configurado! Configure os tokens primeiro no HTML."
+    exit
+}
+
+# Buscar solicitacoes pendentes
+Log-Info "Buscando entregas pendentes..."
+
+try {
+    $dataLimite = (Get-Date).AddDays(-30).ToString("yyyy-MM-dd")
+    $urlSol = "$SUPABASE_URL/rest/v1/solicitacoes_pg?select=id,numero_solicitacao,codigo_rastreio,forma_envio,clientes_pg(nome)&status=eq.enviado&codigo_rastreio=not.is.null&data_envio=gte.$dataLimite&order=data_envio.desc"
+    $solicitacoes = Invoke-RestMethod -Uri $urlSol -Headers $headers -Method GET
+
+    Log-Success "Encontradas $($solicitacoes.Count) solicitacoes pendentes"
+} catch {
+    Log-Error "Erro ao buscar solicitacoes: $($_.Exception.Message)"
+    exit
+}
+
+# Resultados
+$resultados = @()
+$atualizadas = 0
+
+foreach ($sol in $solicitacoes | Select-Object -First 10) {
+    $codigo = $sol.codigo_rastreio
+    $forma = $sol.forma_envio.ToLower()
+    $cliente = $sol.clientes_pg.nome
+
+    Log-Info "Verificando: $codigo (Cliente: $cliente)"
+
+    $entregue = $false
+    $erro = $null
+
+    try {
+        if ($forma -match "melhor|jadlog|azul" -and $tokenME) {
+            # Melhor Envio
+            $apiHeaders = @{ 
+                "Authorization" = "Bearer $tokenME"
+                "Content-Type" = "application/json"
+            }
+            $url = "https://api.melhorenvio.com/v2/me/orders"
+            $response = Invoke-RestMethod -Uri $url -Headers $apiHeaders -Method GET
+            $pedido = $response.data | Where-Object { $_.tracking -eq $codigo }
+
+            if ($pedido) {
+                $entregue = ($pedido.status -eq "delivered" -or $pedido.delivery_status -eq "delivered")
+            } else {
+                throw "Pedido nao encontrado na API"
+            }
+
+        } elseif ($tokenSF) {
+            # SuperFrete
+            $apiHeaders = @{ 
+                "Authorization" = "Bearer $tokenSF"
+                "Content-Type" = "application/json"
+            }
+            $url = "https://api.superfrete.com/v1/trackings/$codigo"
+            $response = Invoke-RestMethod -Uri $url -Headers $apiHeaders -Method GET
+
+            $entregue = ($response.status -eq "delivered")
+            if (-not $entregue -and $response.events) {
+                $entregue = ($response.events | Where-Object { $_.status -match "entregue|delivered" } | Measure-Object).Count -gt 0
+            }
+        }
+
+        if ($entregue) {
+            Log-Success "ENTREGUE: $codigo"
+
+            # Atualizar no banco
+            $updateHeaders = $headers.Clone()
+            $updateHeaders["Content-Type"] = "application/json"
+            $updateHeaders["Prefer"] = "return=minimal"
+
+            $body = @{ 
+                status = "entregue"
+                data_entrega_real = (Get-Date).ToString("o")
+                atualizado_em = (Get-Date).ToString("o")
+            } | ConvertTo-Json
+
+            $updateUrl = "$SUPABASE_URL/rest/v1/solicitacoes_pg?id=eq.$($sol.id)"
+            Invoke-RestMethod -Uri $updateUrl -Headers $updateHeaders -Method PATCH -Body $body
+            $atualizadas++
+        } else {
+            Log-Info "Em transito: $codigo"
+        }
+
+    } catch {
+        $erro = $_.Exception.Message
+        Log-Error "Erro em $codigo : $erro"
+    }
+
+    $resultados += [PSCustomObject]@{
+        codigo = $codigo
+        cliente = $cliente
+        entregue = $entregue
+        erro = $erro
+        numero_solicitacao = $sol.numero_solicitacao
+    }
+
+    Start-Sleep -Milliseconds 500
+}
+
+# Exibir resumo
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "  RESUMO DA VERIFICACAO" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "Total verificados: $($resultados.Count)" -ForegroundColor White
+Write-Host "Entregues encontradas: $atualizadas" -ForegroundColor Green
+Write-Host "Em transito: $($resultados.Count - $atualizadas)" -ForegroundColor Yellow
+Write-Host ""
+
+# Gerar JSON para copiar de volta ao HTML
+$output = @{
+    data_verificacao = (Get-Date).ToString("o")
+    total_verificados = $resultados.Count
+    total_atualizados = $atualizadas
+    resultados = $resultados
+} | ConvertTo-Json -Depth 10
+
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "  JSON PARA COPIAR NO HTML:" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host $output -ForegroundColor White
+Write-Host ""
+Log-Success "Copie o JSON acima e cole na aba PowerShell do HTML!"
+
+# Tambem salvar em arquivo
+$output | Out-File -FilePath "resultado_rastreamento.json" -Encoding UTF8
+Log-Success "Resultados tambem salvos em: resultado_rastreamento.json"
+                                </textarea>
+                            </div>
+                        </div>
                     </div>
 
-                    <div id="resultadoImportacao" class="resultado-powershell hidden">
+                    <!-- PASSO 2 -->
+                    <div class="instruction-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>▶️ Execute no PowerShell</h4>
+                            <p>Abra o PowerShell <strong>como Administrador</strong>, cole o script e pressione Enter</p>
+                            <div style="background: #f4f4f4; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                                <code style="color: #333;">1. Clique com botão direito no ícone do Windows</code><br>
+                                <code style="color: #333;">2. Selecione "Windows PowerShell (Admin)" ou "Terminal (Admin)"</code><br>
+                                <code style="color: #333;">3. Cole o script (Ctrl+V) e pressione Enter</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PASSO 3 -->
+                    <div class="instruction-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>📋 Cole o resultado JSON aqui</h4>
+                            <p>Copie o JSON gerado pelo PowerShell (aparece no final da execução) e cole abaixo:</p>
+                            <textarea id="jsonInput" placeholder='Cole aqui o JSON gerado pelo PowerShell...
+
+Exemplo:
+{
+  "data_verificacao": "2026-03-25T10:30:00",
+  "total_verificados": 5,
+  "total_atualizados": 2,
+  "resultados": [...]
+}'></textarea>
+                            <button class="btn btn-success" onclick="processarJSONColado()" style="margin-top: 10px;">
+                                📊 Processar Resultados
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- RESULTADOS -->
+                    <div id="resultadoProcessamento" class="resultado-powershell hidden">
                         <div class="resultado-header">
                             <h3>📊 Resultados da Verificação</h3>
-                            <span id="resumoImportacao"></span>
+                            <span id="resumoResultado"></span>
                         </div>
-                        <div id="listaResultados"></div>
+                        <div id="listaResultadosProcessados"></div>
                     </div>
                 </div>
             </div>
@@ -816,7 +1063,7 @@
                     <h2>Verificação em Lote</h2>
                     <div class="alert-box info">
                         <strong>ℹ️ Informação:</strong> A verificação via navegador pode ter limitações de CORS. 
-                        Para melhor resultado, use o <strong>PowerShell</strong> e importe os resultados.
+                        Para melhor resultado, use a aba <strong>PowerShell</strong> e importe os resultados.
                     </div>
                     <p style="margin-bottom: 20px; color: #666;">
                         Selecione as solicitações na aba "Lista de Envios" e clique em "Verificar Selecionados".
@@ -869,33 +1116,7 @@
             }
 
             inicializarDatas();
-            setupDragAndDrop();
         });
-
-        function setupDragAndDrop() {
-            const dropZone = document.getElementById('dropZone');
-
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.classList.add('dragover');
-            });
-
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.classList.remove('dragover');
-            });
-
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('dragover');
-
-                const files = e.dataTransfer.files;
-                if (files.length > 0 && files[0].name.endsWith('.json')) {
-                    processarArquivoJSON(files[0]);
-                } else {
-                    alert('Por favor, arraste um arquivo JSON válido.');
-                }
-            });
-        }
 
         function salvarConfigSupabase() {
             const key = document.getElementById('supabaseKey').value.trim();
@@ -949,159 +1170,71 @@
         }
 
         // ============================================
-        // POWERSHELL INTEGRATION
+        // POWERSHELL INTEGRATION - COPIAR E COLAR
         // ============================================
 
-        function baixarScriptPowerShell() {
-            // Script PowerShell embutido
-            const psScript = `@'
-# RASTREAMENTO DE ENTREGAS - SUPORTE POWERSHELL
-# Loja Pingo de Gente
+        function copiarScript() {
+            const textarea = document.getElementById('powershellScript');
+            textarea.select();
+            document.execCommand('copy');
 
-param(
-    [string]$Acao = "verificar",
-    [string]$CodigoRastreio = "",
-    [string]$ArquivoSaida = "resultado_rastreamento.json"
-)
+            // Feedback visual
+            const btn = event.target;
+            const textoOriginal = btn.textContent;
+            btn.textContent = '✅ Copiado!';
+            btn.style.background = '#28a745';
 
-$SUPABASE_URL = "${SUPABASE_URL}"
-$SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY}"
+            setTimeout(() => {
+                btn.textContent = textoOriginal;
+                btn.style.background = '#4ec9b0';
+            }, 2000);
 
-function Log-Info { param([string]$Mensagem) Write-Host "[INFO] $Mensagem" -ForegroundColor Cyan }
-function Log-Success { param([string]$Mensagem) Write-Host "[OK] $Mensagem" -ForegroundColor Green }
-function Log-Error { param([string]$Mensagem) Write-Host "[ERRO] $Mensagem" -ForegroundColor Red }
-
-function Buscar-TokenSuperFrete {
-    $headers = @{ "apikey" = $SUPABASE_ANON_KEY; "Authorization" = "Bearer $SUPABASE_ANON_KEY" }
-    $url = "$SUPABASE_URL/rest/v1/superfrete_config?select=api_token&is_active=eq.true&limit=1"
-    try { $response = Invoke-RestMethod -Uri $url -Headers $headers -Method GET; return $response[0].api_token } catch { return $null }
-}
-
-function Buscar-TokenMelhorEnvio {
-    $headers = @{ "apikey" = $SUPABASE_ANON_KEY; "Authorization" = "Bearer $SUPABASE_ANON_KEY" }
-    $url = "$SUPABASE_URL/rest/v1/melhorenvio_config?select=access_token&is_active=eq.true&limit=1"
-    try { $response = Invoke-RestMethod -Uri $url -Headers $headers -Method GET; return $response[0].access_token } catch { return $null }
-}
-
-function Buscar-Solicitacoes {
-    $headers = @{ "apikey" = $SUPABASE_ANON_KEY; "Authorization" = "Bearer $SUPABASE_ANON_KEY" }
-    $dataLimite = (Get-Date).AddDays(-30).ToString("yyyy-MM-dd")
-    $url = "$SUPABASE_URL/rest/v1/solicitacoes_pg?select=id,numero_solicitacao,codigo_rastreio,forma_envio,clientes_pg(nome)&status=eq.enviado&codigo_rastreio=not.is.null&data_envio=gte.$dataLimite"
-    try { return Invoke-RestMethod -Uri $url -Headers $headers -Method GET } catch { return @() }
-}
-
-function Rastrear-SuperFrete {
-    param([string]$Codigo, [string]$Token)
-    $headers = @{ "Authorization" = "Bearer $Token"; "Content-Type" = "application/json" }
-    $url = "https://api.superfrete.com/v1/trackings/$Codigo"
-    return Invoke-RestMethod -Uri $url -Headers $headers -Method GET
-}
-
-function Rastrear-MelhorEnvio {
-    param([string]$Codigo, [string]$Token)
-    $headers = @{ "Authorization" = "Bearer $Token"; "Content-Type" = "application/json" }
-    $url = "https://api.melhorenvio.com/v2/me/orders"
-    $response = Invoke-RestMethod -Uri $url -Headers $headers -Method GET
-    return $response.data | Where-Object { $_.tracking -eq $Codigo }
-}
-
-function Atualizar-Status {
-    param([string]$Id, [string]$DataEntrega)
-    $headers = @{ 
-        "apikey" = $SUPABASE_ANON_KEY
-        "Authorization" = "Bearer $SUPABASE_ANON_KEY"
-        "Content-Type" = "application/json"
-        "Prefer" = "return=minimal"
-    }
-    $body = @{ status = "entregue"; data_entrega_real = $DataEntrega; atualizado_em = (Get-Date).ToString("o") } | ConvertTo-Json
-    $url = "$SUPABASE_URL/rest/v1/solicitacoes_pg?id=eq.$Id"
-    Invoke-RestMethod -Uri $url -Headers $headers -Method PATCH -Body $body
-}
-
-# Execução principal
-$tokenSF = Buscar-TokenSuperFrete
-$tokenME = Buscar-TokenMelhorEnvio
-$solicitacoes = Buscar-Solicitacoes
-
-$resultados = @()
-$atualizadas = 0
-
-foreach ($sol in $solicitacoes | Select-Object -First 10) {
-    $codigo = $sol.codigo_rastreio
-    $forma = $sol.forma_envio.ToLower()
-
-    try {
-        if ($forma -match "melhor|jadlog|azul" -and $tokenME) {
-            $dados = Rastrear-MelhorEnvio -Codigo $codigo -Token $tokenME
-            $entregue = ($dados.status -eq "delivered")
-        } elseif ($tokenSF) {
-            $dados = Rastrear-SuperFrete -Codigo $codigo -Token $tokenSF
-            $entregue = ($dados.status -eq "delivered" -or ($dados.events | Where-Object { $_.status -match "entregue|delivered" }))
+            logDebug('📋 Script PowerShell copiado para área de transferência', 'success');
         }
 
-        if ($entregue) {
-            Atualizar-Status -Id $sol.id -DataEntrega (Get-Date).ToString("o")
-            $atualizadas++
-            Log-Success "$codigo entregue"
-        }
+        function processarJSONColado() {
+            const jsonText = document.getElementById('jsonInput').value.trim();
 
-        $resultados += @{ codigo = $codigo; entregue = $entregue; cliente = $sol.clientes_pg.nome }
-    } catch {
-        Log-Error "Erro em $codigo : $($_.Exception.Message)"
-        $resultados += @{ codigo = $codigo; erro = $_.Exception.Message }
-    }
+            if (!jsonText) {
+                alert('Por favor, cole o JSON gerado pelo PowerShell');
+                return;
+            }
 
-    Start-Sleep -Milliseconds 500
-}
-
-$output = @{ data_verificacao = (Get-Date).ToString("o"); total_atualizados = $atualizadas; resultados = $resultados } | ConvertTo-Json -Depth 10
-$output | Out-File -FilePath $ArquivoSaida -Encoding UTF8
-Log-Success "Concluído! $atualizadas atualizadas. Resultados em: $ArquivoSaida"
-'@`
-
-            const blob = new Blob([psScript], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'rastreamento.ps1';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            logDebug('📥 Script PowerShell baixado', 'success');
-        }
-
-        async function processarArquivoJSON(file) {
             try {
-                const text = await file.text();
-                const dados = JSON.parse(text);
+                const dados = JSON.parse(jsonText);
 
                 if (!dados.resultados || !Array.isArray(dados.resultados)) {
-                    throw new Error('Formato de arquivo inválido');
+                    throw new Error('Formato inválido: array "resultados" não encontrado');
                 }
 
-                exibirResultadosImportacao(dados);
+                exibirResultadosProcessados(dados);
 
-                // Atualizar lista se necessário
+                // Recarregar lista se houver atualizações
                 if (dados.total_atualizados > 0) {
-                    await carregarSolicitacoes();
+                    carregarSolicitacoes();
                 }
 
-                logDebug(`📊 Importados ${dados.resultados.length} resultados do PowerShell`, 'success');
+                logDebug(`📊 Processados ${dados.resultados.length} resultados do PowerShell`, 'success');
 
             } catch (err) {
-                logDebug(`❌ Erro ao processar arquivo: ${err.message}`, 'error');
-                alert('Erro ao processar arquivo: ' + err.message);
+                logDebug(`❌ Erro ao processar JSON: ${err.message}`, 'error');
+                alert('Erro ao processar JSON: ' + err.message + '
+
+Verifique se copiou o JSON completo do PowerShell.');
             }
         }
 
-        function exibirResultadosImportacao(dados) {
-            const container = document.getElementById('resultadoImportacao');
-            const lista = document.getElementById('listaResultados');
-            const resumo = document.getElementById('resumoImportacao');
+        function exibirResultadosProcessados(dados) {
+            const container = document.getElementById('resultadoProcessamento');
+            const lista = document.getElementById('listaResultadosProcessados');
+            const resumo = document.getElementById('resumoResultado');
 
-            resumo.textContent = `${dados.total_atualizados} de ${dados.resultados.length} entregues`;
+            resumo.innerHTML = `
+                <span style="color: #28a745; font-weight: bold;">${dados.total_atualizados} entregues</span> 
+                de 
+                <span style="font-weight: bold;">${dados.resultados.length}</span> 
+                verificados
+            `;
 
             lista.innerHTML = '';
 
@@ -1112,22 +1245,40 @@ Log-Success "Concluído! $atualizadas atualizadas. Resultados em: $ArquivoSaida"
                 if (r.entregue) {
                     item.classList.add('entregue');
                     item.innerHTML = `
-                        <strong>✅ ${r.codigo}</strong><br>
-                        <small>Cliente: ${r.cliente || 'N/A'}</small><br>
-                        <span style="color: #28a745;">Entregue</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="color: #28a745;">✅ ${r.codigo}</strong>
+                                ${r.numero_solicitacao ? `<span style="color: #666; margin-left: 10px;">(${r.numero_solicitacao})</span>` : ''}
+                            </div>
+                            <span style="background: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem;">ENTREGUE</span>
+                        </div>
+                        <div style="margin-top: 8px; color: #555;">
+                            <small>👤 Cliente: ${r.cliente || 'N/A'}</small>
+                        </div>
                     `;
                 } else if (r.erro) {
                     item.classList.add('erro');
                     item.innerHTML = `
-                        <strong>❌ ${r.codigo}</strong><br>
-                        <small style="color: #dc3545;">${r.erro}</small>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong style="color: #dc3545;">❌ ${r.codigo}</strong>
+                        </div>
+                        <div style="margin-top: 5px; color: #dc3545; font-size: 0.9rem;">
+                            <small>Erro: ${r.erro}</small>
+                        </div>
                     `;
                 } else {
                     item.classList.add('transito');
                     item.innerHTML = `
-                        <strong>⏳ ${r.codigo}</strong><br>
-                        <small>Cliente: ${r.cliente || 'N/A'}</small><br>
-                        <span style="color: #856404;">Em trânsito</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="color: #856404;">⏳ ${r.codigo}</strong>
+                                ${r.numero_solicitacao ? `<span style="color: #666; margin-left: 10px;">(${r.numero_solicitacao})</span>` : ''}
+                            </div>
+                            <span style="background: #ffc107; color: #212529; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem;">EM TRÂNSITO</span>
+                        </div>
+                        <div style="margin-top: 8px; color: #555;">
+                            <small>👤 Cliente: ${r.cliente || 'N/A'}</small>
+                        </div>
                     `;
                 }
 
@@ -1135,10 +1286,13 @@ Log-Success "Concluído! $atualizadas atualizadas. Resultados em: $ArquivoSaida"
             });
 
             container.classList.remove('hidden');
+
+            // Scroll para resultados
+            container.scrollIntoView({ behavior: 'smooth' });
         }
 
         // ============================================
-        // SUPABASE - TOKENS (restante do código...)
+        // SUPABASE - TOKENS
         // ============================================
 
         async function buscarTokenSuperfrete() {
@@ -1312,7 +1466,7 @@ Log-Success "Concluído! $atualizadas atualizadas. Resultados em: $ArquivoSaida"
         }
 
         // ============================================
-        // LISTA DE SOLICITAÇÕES (simplificado)
+        // LISTA DE SOLICITAÇÕES
         // ============================================
 
         async function carregarSolicitacoes() {
@@ -1460,9 +1614,17 @@ Log-Success "Concluído! $atualizadas atualizadas. Resultados em: $ArquivoSaida"
         }
 
         // Placeholders para funções não implementadas
-        function rastrearEncomenda() { alert('Use a aba PowerShell para rastreamento em tempo real'); }
-        function verificarSelecionados() { alert('Use a aba PowerShell para verificação em lote'); }
-        function rastrearIndividual() { mudarAba('powershell'); }
+        function rastrearEncomenda() { 
+            alert('Use a aba PowerShell para rastreamento em tempo real sem limitações de CORS'); 
+            mudarAba('powershell');
+        }
+        function verificarSelecionados() { 
+            alert('Use a aba PowerShell para verificação em lote mais confiável'); 
+            mudarAba('powershell');
+        }
+        function rastrearIndividual() { 
+            mudarAba('powershell'); 
+        }
     </script>
 </body>
 </html>
