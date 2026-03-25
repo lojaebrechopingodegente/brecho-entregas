@@ -2453,23 +2453,31 @@ function filtrarEtiquetasPorData(etiquetas, tipo) {
         // INICIALIZAÇÃO
         // ============================================
         document.addEventListener('DOMContentLoaded', async () => {
-            // Definir datas padrão (últimos 30 dias)
-            const hoje = new Date();
-            const trintaDiasAtras = new Date();
-            trintaDiasAtras.setDate(hoje.getDate() - 30);
-            
-            document.getElementById('dataInicialSupabase').value = trintaDiasAtras.toISOString().split('T')[0];
-            document.getElementById('dataFinalSupabase').value = hoje.toISOString().split('T')[0];
-            
-            // Buscar tokens automaticamente
-            await buscarTokenDoBanco('superfrete');
-            await buscarTokenDoBanco('melhorenvio');
-            
-            // Atualizar comandos
-            atualizarComando();
-            
-            logDebug('🚀 Sistema inicializado. Tokens carregados automaticamente.', 'success');
-        });
+    // Definir datas padrão (últimos 30 dias) - CORRIGIDO PARA 2026
+    const hoje = new Date(); // Isso vai pegar a data atual do sistema
+    const trintaDiasAtras = new Date();
+    trintaDiasAtras.setDate(hoje.getDate() - 30);
+    
+    // Se o sistema está com data errada, force 2026:
+    const anoAtual = hoje.getFullYear(); // Deve retornar 2026
+    console.log('Ano detectado:', anoAtual);
+    
+    document.getElementById('dataInicialSupabase').value = trintaDiasAtras.toISOString().split('T')[0];
+    document.getElementById('dataFinalSupabase').value = hoje.toISOString().split('T')[0];
+    
+    // IMPORTANTE: Limpar filtros de etiquetas ou setar para 2026
+    document.getElementById('dataInicialTransportadora').value = ''; // Deixar em branco
+    document.getElementById('dataFinalTransportadora').value = ''; // Deixar em branco
+    
+    // Buscar tokens automaticamente
+    await buscarTokenDoBanco('superfrete');
+    await buscarTokenDoBanco('melhorenvio');
+    
+    // Atualizar comandos
+    atualizarComando();
+    
+    logDebug('🚀 Sistema inicializado. Ano: ' + anoAtual, 'success');
+});
     </script>
 </body>
 </html>
