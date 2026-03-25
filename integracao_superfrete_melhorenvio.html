@@ -1533,36 +1533,137 @@ Write-Host "✅ Melhor Envio copiado! Total: $($pedidos.Count)" -ForegroundColor
                 btn.innerHTML = '🔍 Buscar e Conciliar';
             }
         }
-
+// Adicione esta função após a função atualizarInfoPeriodo
+function verificarDivergenciaDatas() {
+    if (solicitacoesData.length === 0 || 
+        (dadosSuperfrete.etiquetasFiltradas.length === 0 && dadosMelhorEnvio.etiquetasFiltradas.length === 0)) {
+        return;
+    }
+    
+    // Pegar datas das solicitações
+    const datasSolicitacoes = solicitacoesData.map(s => new Date(s.data_solicitacao).toDateString());
+    const datasUnicasSol = [...new Set(datasSolicitacoes)].sort();
+    
+    // Pegar datas das etiquetas
+    const datasEtiquetas = [];
+    dadosSuperfrete.etiquetasFiltradas.forEach(e => {
+        const d = new Date(e.created_at || e.created || e.date_created);
+        if (!isNaN(d)) datasEtiquetas.push(d.toDateString());
+    });
+    dadosMelhorEnvio.etiquetasFiltradas.forEach(e => {
+        const d = new Date(e.created_at || e.created || e.date_created);
+        if (!isNaN(d)) datasEtiquetas.push(d.toDateString());
+    });
+    const datasUnicasEtq = [...new Set(datasEtiquetas)].sort();
+    
+    // Verificar se há interseção
+    const temIntersecao = datasUnicasSol.some(d => datasUnicasEtq.includes(d));
+    
+    if (!temIntersecao && datasUnicasEtq.length > 0) {
+        const msg = `⚠️ ATENÇÃO: Datas não coincidem!\n\n` +
+                   `📋 Solicitações: ${datasUnicasSol.slice(0, 3).join(', ')}${datasUnicasSol.length > 3 ? '...' : ''}\n` +
+                   `📦 Etiquetas: ${datasUnicasEtq.slice(0, 3).join(', ')}${datasUnicasEtq.length > 3 ? '...' : ''}\n\n` +
+                   `Isso explica por que nenhuma etiqueta foi encontrada.`;
+        
+        logDebug(msg, 'warning');
+        
+        // Adicionar alerta visual na página
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-warning';
+        alertDiv.style.cssText = 'margin-top: 15px; border: 2px solid #ff9800;';
+        alertDiv.innerHTML = `
+            <strong>⚠️ Divergência de Datas Detectada!</strong><br>
+            As datas das etiquetas não coincidem com as datas das solicitações.<br>
+            <strong>Solicitações:</strong> ${datasUnicasSol.slice(0, 3).join(', ')}${datasUnicasSol.length > 3 ? '...' : ''}<br>
+            <strong>Etiquetas:</strong> ${datasUnicasEtq.slice(0, 3).join(', ')}${datasUnicasEtq.length > 3 ? '...' : ''}<br>
+            <button onclick="this.parentElement.remove()" style="margin-top: 10px; padding: 5px 10px; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer;">Entendi</button>
+        `;
+        
+        const resumoDiv = document.getElementById('resumoConciliacao');
+        if (resumoDiv && !resumoDiv.querySelector('.alert-warning')) {
+            resumoDiv.insertBefore(alertDiv, resumoDiv.firstChild);
+        }
+    }
+}
         // ============================================
         // FILTRAR ETIQUETAS POR DATA
         // ============================================
-        function filtrarEtiquetasPorData(etiquetas, tipo) {
-            if (!filtrosData.transportadoraInicio && !filtrosData.transportadoraFim) {
-                return etiquetas;
-            }
+        // ============================================
+// FILTRAR ETIQUETAS POR DATA - VERSÃO CORRIGIDA
+// ============================================
+function filtrarEtiquetasPorData(etiquetas, tipo) {
+    logDebug(`📅 Filtrando ${etiquetas.length} etiquetas ${tipo}...`);
+    
+    if (!filtrosData.transportadoraInicio && !filtrosData.transportadoraFim) {
+        logDebug(`   Sem filtros de data definidos, retornando todas`);
+        return etiquetas;
+    }
 
-            return etiquetas.filter(etq => {
-                const dataField = etq.created_at || etq.created || etq.date_created;
-                if (!dataField) return true;
-                
-                const dataEtiqueta = new Date(dataField);
-                
-                if (filtrosData.transportadoraInicio) {
-                    const inicio = new Date(filtrosData.transportadoraInicio);
-                    inicio.setHours(0, 0, 0, 0);
-                    if (dataEtiqueta < inicio) return false;
-                }
-                
-                if (filtrosData.transportadoraFim) {
-                    const fim = new Date(filtrosData.transportadoraFim);
-                    fim.setHours(23, 59, 59, 999);
-                    if (dataEtiqueta > fim) return false;
-                }
-                
-                return true;
-            });
+    const filtradas = etiquetas.filter((etq, index) => {
+        // Tentar vários campos de data possíveis
+        const dataField = etq.created_at || etq.created || etq.date_created || etq.createdAt;
+        const nomeCliente = etq.to?.name || 'Sem nome';
+        
+        if (!dataField) {
+            logDebug(`   Etq ${index + 1} (${nomeCliente}): Sem data, mantida`);
+            return true; // Se não tiver data, mantém a etiqueta
         }
+        
+        const dataEtiqueta = new Date(dataField);
+        
+        // Verificar se a data é válida
+        if (isNaN(dataEtiqueta.getTime())) {
+            logDebug(`   Etq ${index + 1} (${nomeCliente}): Data inválida (${dataField}), mantida`);
+            return true;
+        }
+        
+        // Converter para formato local para comparação
+        const dataEtiquetaLocal = new Date(dataEtiqueta.getTime() - (dataEtiqueta.getTimezoneOffset() * 60000));
+        const dataEtiquetaStr = dataEtiquetaLocal.toISOString().split('T')[0];
+        const horaEtiqueta = dataEtiquetaLocal.toTimeString().split(' ')[0];
+        
+        let incluir = true;
+        let motivo = '';
+        
+        if (filtrosData.transportadoraInicio) {
+            const inicio = new Date(filtrosData.transportadoraInicio + 'T00:00:00');
+            if (dataEtiqueta < inicio) {
+                incluir = false;
+                motivo = `data (${dataEtiquetaStr} ${horaEtiqueta}) < início (${filtrosData.transportadoraInicio})`;
+            }
+        }
+        
+        if (incluir && filtrosData.transportadoraFim) {
+            const fim = new Date(filtrosData.transportadoraFim + 'T23:59:59.999');
+            if (dataEtiqueta > fim) {
+                incluir = false;
+                motivo = `data (${dataEtiquetaStr} ${horaEtiqueta}) > fim (${filtrosData.transportadoraFim})`;
+            }
+        }
+        
+        if (!incluir && index < 10) {
+            logDebug(`   ❌ Etq ${index + 1} (${nomeCliente}): ${motivo}`);
+        } else if (incluir && index < 5) {
+            logDebug(`   ✅ Etq ${index + 1} (${nomeCliente}): ${dataEtiquetaStr} - mantida`);
+        }
+        
+        return incluir;
+    });
+    
+    logDebug(`   Resultado: ${filtradas.length} de ${etiquetas.length} etiquetas mantidas`);
+    
+    // Mostrar datas das etiquetas filtradas
+    if (filtradas.length > 0) {
+        const datas = filtradas.map(e => {
+            const d = new Date(e.created_at || e.created || e.date_created);
+            return d.toLocaleDateString('pt-BR');
+        });
+        const datasUnicas = [...new Set(datas)].sort();
+        logDebug(`   📅 Datas das etiquetas: ${datasUnicas.join(', ')}`);
+    }
+    
+    return filtradas;
+}
 
         // ============================================
         // BUSCAR ETIQUETAS POR NOME (CONCILIAÇÃO)
