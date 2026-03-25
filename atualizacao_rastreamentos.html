@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -130,11 +131,6 @@
             color: white;
         }
 
-        .btn-info {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-        }
-
         .code-block {
             background: #1e1e1e;
             color: #d4d4d4;
@@ -194,12 +190,6 @@
             background: #fff3cd;
             border: 1px solid #ffeaa7;
             color: #856404;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
         }
 
         .stats-grid {
@@ -424,8 +414,8 @@
                 <label>Cole o JSON de resultado:</label>
                 <textarea id="jsonInput" placeholder='{
   "data_verificacao": "2026-03-25 10:00:00",
-  "solicitacoes": [...],
-  "rastreamentos": [...],
+  "solicitacoes": { "value": [...], "Count": 26 },
+  "rastreamentos": { "value": [...], "Count": 43 },
   "superfrete": {...},
   "melhor_envio": {...}
 }'></textarea>
@@ -621,6 +611,18 @@ Write-Host "✅ JSON copiado para área de transferência!" -ForegroundColor Gre
             return '';
         }
 
+        // FUNÇÃO CRÍTICA: Extrai array de qualquer formato (PowerShell ou normal)
+        function extrairArray(dados) {
+            if (!dados) return [];
+            // Se for array direto
+            if (Array.isArray(dados)) return dados;
+            // Se for objeto do PowerShell com propriedade 'value'
+            if (dados.value && Array.isArray(dados.value)) return dados.value;
+            // Se for objeto do PowerShell com propriedade 'Value' (maiúsculo)
+            if (dados.Value && Array.isArray(dados.Value)) return dados.Value;
+            return [];
+        }
+
         function processarJSON() {
             const input = document.getElementById('jsonInput').value;
             if (!input.trim()) {
@@ -632,11 +634,13 @@ Write-Host "✅ JSON copiado para área de transferência!" -ForegroundColor Gre
                 const data = JSON.parse(input);
                 let html = '';
 
+                // Extrair arrays corretamente (lida com formato PowerShell)
+                const solicitacoes = extrairArray(data.solicitacoes);
+                const rastreamentos = extrairArray(data.rastreamentos);
+
                 // Estatísticas
-                const totalSolicitacoes = data.estatisticas?.total_solicitacoes_com_rastreio || 
-                                         (data.solicitacoes?.length || 0);
-                const totalRastreamentos = data.estatisticas?.total_rastreamentos_historicos || 
-                                          (data.rastreamentos?.length || 0);
+                const totalSolicitacoes = data.estatisticas?.total_solicitacoes_com_rastreio || solicitacoes.length;
+                const totalRastreamentos = data.estatisticas?.total_rastreamentos_historicos || rastreamentos.length;
 
                 html += '<div class="stats-grid">';
                 html += `
@@ -688,14 +692,14 @@ Write-Host "✅ JSON copiado para área de transferência!" -ForegroundColor Gre
                 html += '</div>';
 
                 // Tabela de Solicitações
-                if (data.solicitacoes && data.solicitacoes.length > 0) {
+                if (solicitacoes.length > 0) {
                     html += '<h3 class="section-title">📦 Solicitações com Código de Rastreio</h3>';
                     html += '<div style="overflow-x: auto;">';
                     html += '<table class="result-table">';
                     html += '<thead><tr><th>Nº Solicitação</th><th>Código Rastreio</th><th>Transportadora</th><th>Status</th><th>Data Envio</th></tr></thead>';
                     html += '<tbody>';
                     
-                    data.solicitacoes.forEach(sol => {
+                    solicitacoes.forEach(sol => {
                         const transportClass = getTransportClass(sol.forma_envio);
                         html += `
                             <tr>
@@ -715,14 +719,14 @@ Write-Host "✅ JSON copiado para área de transferência!" -ForegroundColor Gre
                 }
 
                 // Tabela de Rastreamentos
-                if (data.rastreamentos && data.rastreamentos.length > 0) {
+                if (rastreamentos.length > 0) {
                     html += '<h3 class="section-title">📝 Histórico de Rastreamentos</h3>';
                     html += '<div style="overflow-x: auto;">';
                     html += '<table class="result-table">';
                     html += '<thead><tr><th>Código</th><th>Transportadora</th><th>Data Envio</th><th>Observações</th></tr></thead>';
                     html += '<tbody>';
                     
-                    data.rastreamentos.forEach(rast => {
+                    rastreamentos.forEach(rast => {
                         const transportClass = getTransportClass(rast.forma_envio);
                         html += `
                             <tr>
