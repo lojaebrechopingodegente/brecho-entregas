@@ -40,11 +40,6 @@
             margin-bottom: 10px;
         }
 
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1rem;
-        }
-
         .content {
             padding: 30px;
         }
@@ -88,8 +83,6 @@
         }
 
         input[type="text"]:focus,
-        input[type="date"]:focus,
-        select:focus,
         textarea:focus {
             outline: none;
             border-color: #667eea;
@@ -99,7 +92,7 @@
         textarea {
             min-height: 200px;
             resize: vertical;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             line-height: 1.5;
         }
 
@@ -120,9 +113,14 @@
             color: white;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .btn-secondary {
@@ -130,17 +128,9 @@
             color: white;
         }
 
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
         .btn-success {
             background: #28a745;
             color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
         }
 
         .btn-warning {
@@ -148,17 +138,9 @@
             color: #212529;
         }
 
-        .btn-warning:hover {
-            background: #e0a800;
-        }
-
         .btn-info {
             background: #17a2b8;
             color: white;
-        }
-
-        .btn-info:hover {
-            background: #138496;
         }
 
         .grid-2 {
@@ -199,14 +181,6 @@
             color: #721c24;
         }
 
-        .token-status::before {
-            content: "";
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: currentColor;
-        }
-
         .hidden {
             display: none !important;
         }
@@ -234,10 +208,6 @@
             font-weight: 600;
         }
 
-        .results-table tr:hover {
-            background: #f8f9fa;
-        }
-
         .status-badge {
             display: inline-block;
             padding: 5px 12px;
@@ -246,20 +216,9 @@
             font-weight: 600;
         }
 
-        .status-enviado {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-entregue {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-pendente {
-            background: #cce5ff;
-            color: #004085;
-        }
+        .status-enviado { background: #fff3cd; color: #856404; }
+        .status-entregue { background: #d4edda; color: #155724; }
+        .status-pendente { background: #cce5ff; color: #004085; }
 
         .debug-console {
             background: #1e1e1e;
@@ -277,12 +236,6 @@
         .debug-console .success { color: #4ec9b0; }
         .debug-console .error { color: #f48771; }
         .debug-console .warning { color: #dcdcaa; }
-
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
 
         .custom-checkbox {
             width: 20px;
@@ -303,11 +256,6 @@
             border-radius: 15px;
             text-align: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
         }
 
         .stat-number {
@@ -315,35 +263,6 @@
             font-weight: bold;
             color: #667eea;
             margin-bottom: 5px;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 0.95rem;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes slideInRight {
-            from { transform: translateX(100px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes slideOutRight {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100px); opacity: 1; }
         }
 
         .tabs {
@@ -385,83 +304,6 @@
             display: block;
         }
 
-        .timeline {
-            position: relative;
-            padding-left: 30px;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 8px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: #e0e0e0;
-        }
-
-        .timeline-item {
-            position: relative;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: -26px;
-            top: 20px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #667eea;
-            border: 2px solid white;
-            box-shadow: 0 0 0 2px #667eea;
-        }
-
-        .timeline-item.entregue::before {
-            background: #28a745;
-            box-shadow: 0 0 0 2px #28a745;
-        }
-
-        .timeline-date {
-            font-size: 0.85rem;
-            color: #666;
-            margin-bottom: 5px;
-        }
-
-        .timeline-status {
-            font-weight: 600;
-            color: #333;
-        }
-
-        .timeline-local {
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .environment-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-
-        .environment-production {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .environment-sandbox {
-            background: #fff3cd;
-            color: #856404;
-        }
-
         .alert-box {
             background: #f8d7da;
             color: #721c24;
@@ -496,7 +338,6 @@
             font-family: 'Consolas', 'Courier New', monospace;
             font-size: 0.85rem;
             margin: 20px 0;
-            position: relative;
             border: 2px solid #4ec9b0;
         }
 
@@ -527,45 +368,6 @@
 
         .copy-btn:hover {
             background: #3db89f;
-        }
-
-        .resultado-powershell {
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .resultado-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .resultado-item {
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border-left: 4px solid #ccc;
-        }
-
-        .resultado-item.entregue {
-            background: #d4edda;
-            border-left-color: #28a745;
-        }
-
-        .resultado-item.transito {
-            background: #fff3cd;
-            border-left-color: #ffc107;
-        }
-
-        .resultado-item.erro {
-            background: #f8d7da;
-            border-left-color: #dc3545;
         }
 
         .instruction-step {
@@ -601,24 +403,30 @@
             color: #333;
         }
 
-        .step-content p {
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .output-area {
-            background: #f4f4f4;
-            border: 2px dashed #999;
-            border-radius: 8px;
+        .diagnostic-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
             padding: 15px;
-            min-height: 100px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
         }
 
-        .paste-hint {
-            color: #999;
-            font-style: italic;
-            text-align: center;
-            padding: 20px;
+        .diagnostic-item {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .diagnostic-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .diagnostic-error {
+            background: #f8d7da;
+            color: #721c24;
         }
     </style>
 <base target="_blank">
@@ -631,13 +439,21 @@
         </div>
 
         <div class="content">
-            <!-- Configuração Inicial -->
+            <!-- Configuração -->
             <div id="alertaConfig" class="alert-box">
                 <strong>⚠️ Configuração Necessária:</strong> Insira seu Supabase Anon Key abaixo.
+                <div id="erroDetalhe" style="margin-top: 10px; font-size: 0.9rem;"></div>
             </div>
 
             <div class="section" id="secaoConfig">
                 <h2>⚙️ Configuração do Supabase</h2>
+
+                <!-- Diagnóstico -->
+                <div class="diagnostic-box" id="diagnostico" style="display: none;">
+                    <strong>🔍 Diagnóstico:</strong>
+                    <div id="diagnosticoContent"></div>
+                </div>
+
                 <div class="form-group">
                     <label>Supabase Anon Key</label>
                     <input type="text" id="supabaseKey" class="config-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
@@ -645,7 +461,20 @@
                         Encontre em: Supabase Dashboard → Project Settings → API → Project API keys
                     </small>
                 </div>
-                <button class="btn btn-primary" onclick="salvarConfigSupabase()">💾 Salvar Configuração</button>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" id="btnSalvar" onclick="salvarConfigSupabase()">
+                        💾 Salvar Configuração
+                    </button>
+                    <button class="btn btn-secondary" onclick="testarDiagnostico()">
+                        🔍 Testar/Diagnóstico
+                    </button>
+                    <button class="btn btn-info" onclick="usarChaveMemoria()">
+                        📝 Usar Chave (sem salvar)
+                    </button>
+                </div>
+
+                <div id="statusSalvamento" style="margin-top: 15px; padding: 10px; border-radius: 5px; display: none;"></div>
             </div>
 
             <!-- Estatísticas -->
@@ -668,188 +497,83 @@
                 </div>
             </div>
 
-            <!-- Tokens -->
-            <div class="section">
-                <h2>🔐 Configuração de Tokens</h2>
-                <div class="grid-2">
-                    <div>
-                        <div class="form-group">
-                            <label>
-                                Token SuperFrete
-                                <span id="envSuperfrete" class="environment-badge hidden"></span>
-                            </label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="text" id="tokenSuperfrete" placeholder="Cole o token do SuperFrete">
-                                <button class="btn btn-primary" onclick="salvarTokenSuperfrete()">Salvar</button>
-                            </div>
-                            <div style="margin-top: 10px;">
-                                <span id="statusSuperfrete" class="token-status error">Não configurado</span>
-                            </div>
-                            <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center;">
-                                <label style="margin: 0; font-weight: normal;">Ambiente:</label>
-                                <select id="ambienteSuperfrete" style="width: auto; padding: 5px 10px;">
-                                    <option value="production">Produção</option>
-                                    <option value="sandbox">Sandbox</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="form-group">
-                            <label>
-                                Token Melhor Envio
-                                <span id="envMelhorEnvio" class="environment-badge hidden"></span>
-                            </label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="text" id="tokenMelhorEnvio" placeholder="Cole o token do Melhor Envio">
-                                <button class="btn btn-primary" onclick="salvarTokenMelhorEnvio()">Salvar</button>
-                            </div>
-                            <div style="margin-top: 10px;">
-                                <span id="statusMelhorEnvio" class="token-status error">Não configurado</span>
-                            </div>
-                            <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center;">
-                                <label style="margin: 0; font-weight: normal;">Ambiente:</label>
-                                <select id="ambienteMelhorEnvio" style="width: auto; padding: 5px 10px;">
-                                    <option value="production">Produção</option>
-                                    <option value="sandbox">Sandbox</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Abas -->
             <div class="tabs">
-                <button class="tab active" onclick="mudarAba('rastrear')">📍 Rastrear</button>
+                <button class="tab active" onclick="mudarAba('powershell')">🖥️ PowerShell</button>
                 <button class="tab" onclick="mudarAba('lista')">📋 Lista de Envios</button>
-                <button class="tab" onclick="mudarAba('powershell')">🖥️ PowerShell</button>
-                <button class="tab" onclick="mudarAba('verificar')">✅ Verificação em Lote</button>
-            </div>
-
-            <!-- Aba: Rastrear -->
-            <div id="abaRastrear" class="tab-content active">
-                <div class="section">
-                    <h2>Rastreamento Individual</h2>
-                    <div class="alert-box info">
-                        <strong>💡 Dica:</strong> Para rastreamento em tempo real, use a aba <strong>PowerShell</strong> 
-                        que não tem limitações de CORS.
-                    </div>
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label>Código de Rastreio</label>
-                            <input type="text" id="codigoRastreio" placeholder="Ex: SF123456789BR">
-                        </div>
-                        <div class="form-group">
-                            <label>Transportadora</label>
-                            <select id="transportadora">
-                                <option value="auto">Detectar Automaticamente</option>
-                                <option value="superfrete">SuperFrete</option>
-                                <option value="melhorenvio">Melhor Envio</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" onclick="rastrearEncomenda()">
-                        <span id="btnRastrearTexto">Rastrear (via API)</span>
-                    </button>
-
-                    <div id="resultadoRastreio" class="hidden" style="margin-top: 30px;">
-                        <h3 style="margin-bottom: 20px;">📦 Histórico de Rastreamento</h3>
-                        <div id="timelineRastreio" class="timeline"></div>
-                    </div>
-                </div>
+                <button class="tab" onclick="mudarAba('tokens')">🔐 Tokens</button>
             </div>
 
             <!-- Aba: PowerShell -->
-            <div id="abaPowershell" class="tab-content">
+            <div id="abaPowershell" class="tab-content active">
                 <div class="section">
                     <h2>🖥️ Rastreamento via PowerShell (Copiar & Colar)</h2>
 
                     <div class="alert-box info">
-                        <strong>📋 Instruções:</strong> Siga os 3 passos abaixo para verificar as entregas usando PowerShell.
+                        <strong>📋 Instruções:</strong> Siga os 3 passos abaixo.
                     </div>
 
                     <!-- PASSO 1 -->
                     <div class="instruction-step">
                         <div class="step-number">1</div>
                         <div class="step-content">
-                            <h4>📋 Copie o script PowerShell abaixo</h4>
+                            <h4>📋 Copie o script PowerShell</h4>
                             <p>Clique no botão "Copiar Script" e cole no PowerShell (como Administrador)</p>
                             <div class="script-box">
                                 <div class="script-box-header">
-                                    <h4>📜 Script de Verificação Automática</h4>
+                                    <h4>📜 Script de Verificação</h4>
                                     <button class="copy-btn" onclick="copiarScript()">📋 Copiar Script</button>
                                 </div>
-                                <textarea id="powershellScript" readonly style="width: 100%; height: 300px; background: #001122; color: #4ec9b0; border: 1px solid #4ec9b0; padding: 10px; font-family: Consolas, monospace; font-size: 0.8rem;">
+                                <textarea id="powershellScript" readonly style="width: 100%; height: 250px; background: #001122; color: #4ec9b0; border: 1px solid #4ec9b0; padding: 10px; font-family: Consolas, monospace; font-size: 0.75rem;">
 # ============================================
-# RASTREAMENTO DE ENTREGAS - LOJA PINGO DE GENTE
+# RASTREAMENTO - LOJA PINGO DE GENTE
 # ============================================
 
-# Configuracoes - SUBSTITUA PELA SUA CHAVE REAL
+# SUBSTITUA PELA SUA CHAVE:
 $SUPABASE_URL = "https://ytnfjzngalfapfnbobfm.supabase.co"
 $SUPABASE_ANON_KEY = "INSIRA_SUA_CHAVE_AQUI"
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  RASTREAMENTO DE ENTREGAS" -ForegroundColor Cyan
-Write-Host "  Loja Pingo de Gente" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
 
-# Funcoes de Log
-function Log-Info { param([string]$Mensagem) Write-Host "[INFO] $Mensagem" -ForegroundColor Cyan }
-function Log-Success { param([string]$Mensagem) Write-Host "[OK] $Mensagem" -ForegroundColor Green }
-function Log-Error { param([string]$Mensagem) Write-Host "[ERRO] $Mensagem" -ForegroundColor Red }
+function Log-Info { param([string]$M) Write-Host "[INFO] $M" -ForegroundColor Cyan }
+function Log-Ok { param([string]$M) Write-Host "[OK] $M" -ForegroundColor Green }
+function Log-Erro { param([string]$M) Write-Host "[ERRO] $M" -ForegroundColor Red }
 
-# Buscar tokens do Supabase
-Log-Info "Buscando tokens configurados..."
+$headers = @{ "apikey" = $SUPABASE_ANON_KEY; "Authorization" = "Bearer $SUPABASE_ANON_KEY" }
 
-$headers = @{ 
-    "apikey" = $SUPABASE_ANON_KEY
-    "Authorization" = "Bearer $SUPABASE_ANON_KEY"
-}
-
-# Token SuperFrete
+# Buscar tokens
+Log-Info "Buscando tokens..."
 try {
     $urlSF = "$SUPABASE_URL/rest/v1/superfrete_config?select=api_token&is_active=eq.true&limit=1"
-    $responseSF = Invoke-RestMethod -Uri $urlSF -Headers $headers -Method GET
-    $tokenSF = $responseSF[0].api_token
-    if ($tokenSF) { Log-Success "Token SuperFrete carregado" }
-} catch {
-    Log-Error "Erro ao buscar token SuperFrete: $($_.Exception.Message)"
-    $tokenSF = $null
-}
+    $tokenSF = (Invoke-RestMethod -Uri $urlSF -Headers $headers -Method GET)[0].api_token
+    if ($tokenSF) { Log-Ok "Token SuperFrete OK" }
+} catch { $tokenSF = $null; Log-Erro "SuperFrete: $($_.Exception.Message)" }
 
-# Token Melhor Envio
 try {
     $urlME = "$SUPABASE_URL/rest/v1/melhorenvio_config?select=access_token&is_active=eq.true&limit=1"
-    $responseME = Invoke-RestMethod -Uri $urlME -Headers $headers -Method GET
-    $tokenME = $responseME[0].access_token
-    if ($tokenME) { Log-Success "Token Melhor Envio carregado" }
-} catch {
-    Log-Error "Erro ao buscar token Melhor Envio: $($_.Exception.Message)"
-    $tokenME = $null
-}
+    $tokenME = (Invoke-RestMethod -Uri $urlME -Headers $headers -Method GET)[0].access_token
+    if ($tokenME) { Log-Ok "Token Melhor Envio OK" }
+} catch { $tokenME = $null; Log-Erro "Melhor Envio: $($_.Exception.Message)" }
 
 if (-not $tokenSF -and -not $tokenME) {
-    Log-Error "Nenhum token configurado! Configure os tokens primeiro no HTML."
+    Log-Erro "Nenhum token configurado!"
     exit
 }
 
-# Buscar solicitacoes pendentes
+# Buscar solicitacoes
 Log-Info "Buscando entregas pendentes..."
-
 try {
     $dataLimite = (Get-Date).AddDays(-30).ToString("yyyy-MM-dd")
     $urlSol = "$SUPABASE_URL/rest/v1/solicitacoes_pg?select=id,numero_solicitacao,codigo_rastreio,forma_envio,clientes_pg(nome)&status=eq.enviado&codigo_rastreio=not.is.null&data_envio=gte.$dataLimite&order=data_envio.desc"
     $solicitacoes = Invoke-RestMethod -Uri $urlSol -Headers $headers -Method GET
-
-    Log-Success "Encontradas $($solicitacoes.Count) solicitacoes pendentes"
+    Log-Ok "Encontradas $($solicitacoes.Count) solicitacoes"
 } catch {
-    Log-Error "Erro ao buscar solicitacoes: $($_.Exception.Message)"
+    Log-Erro "Erro ao buscar: $($_.Exception.Message)"
     exit
 }
 
-# Resultados
 $resultados = @()
 $atualizadas = 0
 
@@ -858,108 +582,56 @@ foreach ($sol in $solicitacoes | Select-Object -First 10) {
     $forma = $sol.forma_envio.ToLower()
     $cliente = $sol.clientes_pg.nome
 
-    Log-Info "Verificando: $codigo (Cliente: $cliente)"
+    Log-Info "Verificando: $codigo"
 
     $entregue = $false
     $erro = $null
 
     try {
         if ($forma -match "melhor|jadlog|azul" -and $tokenME) {
-            # Melhor Envio
-            $apiHeaders = @{ 
-                "Authorization" = "Bearer $tokenME"
-                "Content-Type" = "application/json"
-            }
-            $url = "https://api.melhorenvio.com/v2/me/orders"
-            $response = Invoke-RestMethod -Uri $url -Headers $apiHeaders -Method GET
-            $pedido = $response.data | Where-Object { $_.tracking -eq $codigo }
-
-            if ($pedido) {
-                $entregue = ($pedido.status -eq "delivered" -or $pedido.delivery_status -eq "delivered")
-            } else {
-                throw "Pedido nao encontrado na API"
-            }
-
+            $h = @{ "Authorization" = "Bearer $tokenME"; "Content-Type" = "application/json" }
+            $r = Invoke-RestMethod -Uri "https://api.melhorenvio.com/v2/me/orders" -Headers $h -Method GET
+            $p = $r.data | Where-Object { $_.tracking -eq $codigo }
+            if ($p) { $entregue = ($p.status -eq "delivered") } else { throw "Nao encontrado" }
         } elseif ($tokenSF) {
-            # SuperFrete
-            $apiHeaders = @{ 
-                "Authorization" = "Bearer $tokenSF"
-                "Content-Type" = "application/json"
-            }
-            $url = "https://api.superfrete.com/v1/trackings/$codigo"
-            $response = Invoke-RestMethod -Uri $url -Headers $apiHeaders -Method GET
-
-            $entregue = ($response.status -eq "delivered")
-            if (-not $entregue -and $response.events) {
-                $entregue = ($response.events | Where-Object { $_.status -match "entregue|delivered" } | Measure-Object).Count -gt 0
+            $h = @{ "Authorization" = "Bearer $tokenSF"; "Content-Type" = "application/json" }
+            $r = Invoke-RestMethod -Uri "https://api.superfrete.com/v1/trackings/$codigo" -Headers $h -Method GET
+            $entregue = ($r.status -eq "delivered")
+            if (-not $entregue -and $r.events) {
+                $entregue = ($r.events | Where-Object { $_.status -match "entregue|delivered" } | Measure-Object).Count -gt 0
             }
         }
 
         if ($entregue) {
-            Log-Success "ENTREGUE: $codigo"
-
-            # Atualizar no banco
-            $updateHeaders = $headers.Clone()
-            $updateHeaders["Content-Type"] = "application/json"
-            $updateHeaders["Prefer"] = "return=minimal"
-
-            $body = @{ 
-                status = "entregue"
-                data_entrega_real = (Get-Date).ToString("o")
-                atualizado_em = (Get-Date).ToString("o")
-            } | ConvertTo-Json
-
-            $updateUrl = "$SUPABASE_URL/rest/v1/solicitacoes_pg?id=eq.$($sol.id)"
-            Invoke-RestMethod -Uri $updateUrl -Headers $updateHeaders -Method PATCH -Body $body
+            Log-Ok "ENTREGUE: $codigo"
+            $uh = $headers.Clone(); $uh["Content-Type"] = "application/json"; $uh["Prefer"] = "return=minimal"
+            $b = @{ status = "entregue"; data_entrega_real = (Get-Date).ToString("o"); atualizado_em = (Get-Date).ToString("o") } | ConvertTo-Json
+            Invoke-RestMethod -Uri "$SUPABASE_URL/rest/v1/solicitacoes_pg?id=eq.$($sol.id)" -Headers $uh -Method PATCH -Body $b
             $atualizadas++
         } else {
             Log-Info "Em transito: $codigo"
         }
-
     } catch {
         $erro = $_.Exception.Message
-        Log-Error "Erro em $codigo : $erro"
+        Log-Erro "Erro em $codigo : $erro"
     }
 
-    $resultados += [PSCustomObject]@{
-        codigo = $codigo
-        cliente = $cliente
-        entregue = $entregue
-        erro = $erro
-        numero_solicitacao = $sol.numero_solicitacao
-    }
-
+    $resultados += @{ codigo = $codigo; cliente = $cliente; entregue = $entregue; erro = $erro; numero_solicitacao = $sol.numero_solicitacao }
     Start-Sleep -Milliseconds 500
 }
 
-# Exibir resumo
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  RESUMO DA VERIFICACAO" -ForegroundColor Cyan
+Write-Host "RESUMO: $($resultados.Count) verificados, $atualizadas entregues" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Total verificados: $($resultados.Count)" -ForegroundColor White
-Write-Host "Entregues encontradas: $atualizadas" -ForegroundColor Green
-Write-Host "Em transito: $($resultados.Count - $atualizadas)" -ForegroundColor Yellow
+
+# JSON para copiar
+$output = @{ data_verificacao = (Get-Date).ToString("o"); total_verificados = $resultados.Count; total_atualizados = $atualizadas; resultados = $resultados } | ConvertTo-Json -Depth 10
 Write-Host ""
-
-# Gerar JSON para copiar de volta ao HTML
-$output = @{
-    data_verificacao = (Get-Date).ToString("o")
-    total_verificados = $resultados.Count
-    total_atualizados = $atualizadas
-    resultados = $resultados
-} | ConvertTo-Json -Depth 10
-
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  JSON PARA COPIAR NO HTML:" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "=== COPIE O JSON ABAIXO ===" -ForegroundColor Yellow
 Write-Host $output -ForegroundColor White
-Write-Host ""
-Log-Success "Copie o JSON acima e cole na aba PowerShell do HTML!"
-
-# Tambem salvar em arquivo
 $output | Out-File -FilePath "resultado_rastreamento.json" -Encoding UTF8
-Log-Success "Resultados tambem salvos em: resultado_rastreamento.json"
+Log-Ok "Tambem salvo em: resultado_rastreamento.json"
                                 </textarea>
                             </div>
                         </div>
@@ -969,13 +641,8 @@ Log-Success "Resultados tambem salvos em: resultado_rastreamento.json"
                     <div class="instruction-step">
                         <div class="step-number">2</div>
                         <div class="step-content">
-                            <h4>▶️ Execute no PowerShell</h4>
-                            <p>Abra o PowerShell <strong>como Administrador</strong>, cole o script e pressione Enter</p>
-                            <div style="background: #f4f4f4; padding: 10px; border-radius: 5px; margin-top: 10px;">
-                                <code style="color: #333;">1. Clique com botão direito no ícone do Windows</code><br>
-                                <code style="color: #333;">2. Selecione "Windows PowerShell (Admin)" ou "Terminal (Admin)"</code><br>
-                                <code style="color: #333;">3. Cole o script (Ctrl+V) e pressione Enter</code>
-                            </div>
+                            <h4>▶️ Execute no PowerShell (Admin)</h4>
+                            <p>Abra PowerShell como Administrador, cole o script e pressione Enter</p>
                         </div>
                     </div>
 
@@ -984,16 +651,8 @@ Log-Success "Resultados tambem salvos em: resultado_rastreamento.json"
                         <div class="step-number">3</div>
                         <div class="step-content">
                             <h4>📋 Cole o resultado JSON aqui</h4>
-                            <p>Copie o JSON gerado pelo PowerShell (aparece no final da execução) e cole abaixo:</p>
-                            <textarea id="jsonInput" placeholder='Cole aqui o JSON gerado pelo PowerShell...
-
-Exemplo:
-{
-  "data_verificacao": "2026-03-25T10:30:00",
-  "total_verificados": 5,
-  "total_atualizados": 2,
-  "resultados": [...]
-}'></textarea>
+                            <p>Copie o JSON do final da execução do PowerShell:</p>
+                            <textarea id="jsonInput" placeholder='Cole aqui o JSON gerado pelo PowerShell...' style="min-height: 150px;"></textarea>
                             <button class="btn btn-success" onclick="processarJSONColado()" style="margin-top: 10px;">
                                 📊 Processar Resultados
                             </button>
@@ -1001,11 +660,8 @@ Exemplo:
                     </div>
 
                     <!-- RESULTADOS -->
-                    <div id="resultadoProcessamento" class="resultado-powershell hidden">
-                        <div class="resultado-header">
-                            <h3>📊 Resultados da Verificação</h3>
-                            <span id="resumoResultado"></span>
-                        </div>
+                    <div id="resultadoProcessamento" style="margin-top: 20px; display: none;">
+                        <h3>📊 Resultados</h3>
                         <div id="listaResultadosProcessados"></div>
                     </div>
                 </div>
@@ -1048,7 +704,6 @@ Exemplo:
                                     <th>Forma Envio</th>
                                     <th>Data Envio</th>
                                     <th>Status</th>
-                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelaResultados"></tbody>
@@ -1057,104 +712,245 @@ Exemplo:
                 </div>
             </div>
 
-            <!-- Aba: Verificação em Lote -->
-            <div id="abaVerificar" class="tab-content">
+            <!-- Aba: Tokens -->
+            <div id="abaTokens" class="tab-content">
                 <div class="section">
-                    <h2>Verificação em Lote</h2>
-                    <div class="alert-box info">
-                        <strong>ℹ️ Informação:</strong> A verificação via navegador pode ter limitações de CORS. 
-                        Para melhor resultado, use a aba <strong>PowerShell</strong> e importe os resultados.
-                    </div>
-                    <p style="margin-bottom: 20px; color: #666;">
-                        Selecione as solicitações na aba "Lista de Envios" e clique em "Verificar Selecionados".
+                    <h2>🔐 Configuração de Tokens</h2>
+                    <p style="color: #666; margin-bottom: 20px;">
+                        Configure os tokens das transportadoras. Eles serão usados pelo script PowerShell.
                     </p>
-                    <button class="btn btn-success" onclick="verificarSelecionados()">
-                        ✅ Verificar Selecionados (API)
-                    </button>
-                    <button class="btn btn-warning" onclick="marcarComoEntregue()">
-                        📦 Marcar como Entregue
-                    </button>
-
-                    <div id="resultadoVerificacao" style="margin-top: 20px;"></div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Token SuperFrete</label>
+                            <input type="text" id="tokenSuperfrete" placeholder="Cole o token do SuperFrete">
+                            <select id="ambienteSuperfrete" style="margin-top: 10px; width: auto;">
+                                <option value="production">Produção</option>
+                                <option value="sandbox">Sandbox</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="salvarTokenSuperfrete()" style="margin-top: 10px;">Salvar SuperFrete</button>
+                        </div>
+                        <div class="form-group">
+                            <label>Token Melhor Envio</label>
+                            <input type="text" id="tokenMelhorEnvio" placeholder="Cole o token do Melhor Envio">
+                            <select id="ambienteMelhorEnvio" style="margin-top: 10px; width: auto;">
+                                <option value="production">Produção</option>
+                                <option value="sandbox">Sandbox</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="salvarTokenMelhorEnvio()" style="margin-top: 10px;">Salvar Melhor Envio</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Console de Debug -->
+            <!-- Console -->
             <div class="section">
                 <h2>🖥️ Console de Log</h2>
                 <div class="debug-console" id="debugConsole">
-                    <div class="info">Sistema inicializado. Aguardando configuração...</div>
+                    <div class="info">Sistema pronto. Aguardando configuração...</div>
                 </div>
-                <button class="btn btn-secondary" onclick="limparConsole()" style="margin-top: 10px;">
-                    Limpar Console
-                </button>
+                <button class="btn btn-secondary" onclick="limparConsole()" style="margin-top: 10px;">Limpar Console</button>
             </div>
         </div>
     </div>
 
     <script>
         // ============================================
-        // CONFIGURAÇÃO E VARIÁVEIS GLOBAIS
+        // CONFIGURAÇÃO COM DIAGNÓSTICO
         // ============================================
 
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
-        let SUPABASE_ANON_KEY = localStorage.getItem('supabase_anon_key') || '';
-
+        let SUPABASE_ANON_KEY = '';
         let supabaseClient = null;
-        let dadosSuperfrete = { token: null, valido: false, environment: 'production' };
-        let dadosMelhorEnvio = { token: null, valido: false, environment: 'production' };
         let solicitacoesCache = [];
 
-        // ============================================
-        // INICIALIZAÇÃO
-        // ============================================
+        // Tentar carregar de várias fontes
+        function tentarCarregarChave() {
+            let chave = null;
+            let fonte = null;
+
+            // Tentar localStorage
+            try {
+                chave = localStorage.getItem('supabase_anon_key');
+                if (chave) fonte = 'localStorage';
+            } catch (e) {
+                logDebug('localStorage não disponível: ' + e.message, 'warning');
+            }
+
+            // Tentar sessionStorage
+            if (!chave) {
+                try {
+                    chave = sessionStorage.getItem('supabase_anon_key');
+                    if (chave) fonte = 'sessionStorage';
+                } catch (e) {}
+            }
+
+            // Tentar cookie
+            if (!chave) {
+                const match = document.cookie.match(/supabase_key=([^;]+)/);
+                if (match) {
+                    chave = decodeURIComponent(match[1]);
+                    fonte = 'cookie';
+                }
+            }
+
+            return { chave, fonte };
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (SUPABASE_ANON_KEY) {
-                document.getElementById('supabaseKey').value = SUPABASE_ANON_KEY;
+            const { chave, fonte } = tentarCarregarChave();
+
+            if (chave) {
+                SUPABASE_ANON_KEY = chave;
+                document.getElementById('supabaseKey').value = chave;
+                logDebug(`Chave carregada de ${fonte}`, 'success');
                 inicializarSistema();
+            } else {
+                logDebug('Nenhuma chave salva encontrada', 'info');
             }
 
             inicializarDatas();
         });
 
+        function testarDiagnostico() {
+            const div = document.getElementById('diagnostico');
+            const content = document.getElementById('diagnosticoContent');
+
+            div.style.display = 'block';
+            content.innerHTML = '';
+
+            const tests = [
+                { name: 'JavaScript ativo', test: () => true },
+                { name: 'localStorage disponível', test: () => {
+                    try { localStorage.setItem('test', '1'); localStorage.removeItem('test'); return true; } catch(e) { return false; }
+                }},
+                { name: 'sessionStorage disponível', test: () => {
+                    try { sessionStorage.setItem('test', '1'); sessionStorage.removeItem('test'); return true; } catch(e) { return false; }
+                }},
+                { name: 'Cookies habilitados', test: () => navigator.cookieEnabled },
+                { name: 'Supabase JS carregado', test: () => typeof window.supabase !== 'undefined' }
+            ];
+
+            tests.forEach(t => {
+                const result = t.test();
+                const el = document.createElement('div');
+                el.className = `diagnostic-item ${result ? 'diagnostic-ok' : 'diagnostic-error'}`;
+                el.textContent = `${result ? '✅' : '❌'} ${t.name}`;
+                content.appendChild(el);
+            });
+
+            logDebug('Diagnóstico executado', 'info');
+        }
+
         function salvarConfigSupabase() {
             const key = document.getElementById('supabaseKey').value.trim();
+            const btn = document.getElementById('btnSalvar');
+            const status = document.getElementById('statusSalvamento');
 
-            if (!key || !key.startsWith('eyJ')) {
-                alert('Por favor, insira uma chave válida do Supabase (deve começar com eyJ)');
+            if (!key) {
+                alert('Por favor, insira uma chave');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Salvando...';
+
+            let salvou = false;
+            let erros = [];
+
+            // Tentar localStorage
+            try {
+                localStorage.setItem('supabase_anon_key', key);
+                salvou = true;
+                logDebug('Chave salva no localStorage', 'success');
+            } catch (e) {
+                erros.push('localStorage: ' + e.message);
+            }
+
+            // Tentar sessionStorage (backup)
+            if (!salvou) {
+                try {
+                    sessionStorage.setItem('supabase_anon_key', key);
+                    salvou = true;
+                    logDebug('Chave salva no sessionStorage (backup)', 'success');
+                } catch (e) {
+                    erros.push('sessionStorage: ' + e.message);
+                }
+            }
+
+            // Tentar cookie (último recurso)
+            if (!salvou) {
+                try {
+                    document.cookie = `supabase_key=${encodeURIComponent(key)}; path=/; max-age=31536000`;
+                    salvou = true;
+                    logDebug('Chave salva em cookie (backup)', 'success');
+                } catch (e) {
+                    erros.push('Cookie: ' + e.message);
+                }
+            }
+
+            btn.disabled = false;
+            btn.textContent = '💾 Salvar Configuração';
+
+            if (salvou) {
+                SUPABASE_ANON_KEY = key;
+                status.style.display = 'block';
+                status.className = 'alert-box success';
+                status.innerHTML = '<strong>✅ Sucesso!</strong> Chave salva. Inicializando sistema...';
+
+                document.getElementById('alertaConfig').classList.add('hidden');
+
+                setTimeout(() => {
+                    document.getElementById('secaoConfig').style.display = 'none';
+                    inicializarSistema();
+                }, 1000);
+            } else {
+                status.style.display = 'block';
+                status.className = 'alert-box';
+                status.innerHTML = '<strong>❌ Erro ao salvar:</strong><br>' + erros.join('<br>');
+                logDebug('Falha ao salvar: ' + erros.join(', '), 'error');
+            }
+        }
+
+        function usarChaveMemoria() {
+            const key = document.getElementById('supabaseKey').value.trim();
+            if (!key) {
+                alert('Por favor, insira uma chave primeiro');
                 return;
             }
 
             SUPABASE_ANON_KEY = key;
-            localStorage.setItem('supabase_anon_key', key);
+            logDebug('Usando chave em memória (não salva)', 'warning');
 
             document.getElementById('alertaConfig').classList.add('hidden');
             document.getElementById('secaoConfig').style.display = 'none';
 
-            logDebug('✅ Configuração do Supabase salva', 'success');
             inicializarSistema();
         }
 
         async function inicializarSistema() {
             try {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-                const { error } = await supabaseClient.from('superfrete_config').select('count').limit(1);
-
-                if (error && error.message.includes('Invalid API key')) {
-                    throw new Error('Chave de API inválida');
+                if (!SUPABASE_ANON_KEY) {
+                    throw new Error('Chave não configurada');
                 }
 
-                logDebug('✅ Conectado ao Supabase', 'success');
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-                await Promise.all([
-                    buscarTokenSuperfrete(),
-                    buscarTokenMelhorEnvio()
-                ]);
+                // Testar conexão
+                const { data, error } = await supabaseClient.from('superfrete_config').select('count').limit(1);
+
+                if (error) {
+                    if (error.message.includes('Invalid API key')) {
+                        throw new Error('Chave de API inválida ou expirada');
+                    }
+                    throw error;
+                }
+
+                logDebug('✅ Conectado ao Supabase com sucesso!', 'success');
+                carregarSolicitacoes();
 
             } catch (err) {
-                logDebug(`❌ Erro ao conectar: ${err.message}`, 'error');
+                logDebug('❌ Erro: ' + err.message, 'error');
+                document.getElementById('erroDetalhe').textContent = 'Erro: ' + err.message;
                 document.getElementById('alertaConfig').classList.remove('hidden');
                 document.getElementById('secaoConfig').style.display = 'block';
             }
@@ -1170,346 +966,33 @@ Exemplo:
         }
 
         // ============================================
-        // POWERSHELL INTEGRATION - COPIAR E COLAR
-        // ============================================
-
-        function copiarScript() {
-            const textarea = document.getElementById('powershellScript');
-            textarea.select();
-            document.execCommand('copy');
-
-            // Feedback visual
-            const btn = event.target;
-            const textoOriginal = btn.textContent;
-            btn.textContent = '✅ Copiado!';
-            btn.style.background = '#28a745';
-
-            setTimeout(() => {
-                btn.textContent = textoOriginal;
-                btn.style.background = '#4ec9b0';
-            }, 2000);
-
-            logDebug('📋 Script PowerShell copiado para área de transferência', 'success');
-        }
-
-        function processarJSONColado() {
-            const jsonText = document.getElementById('jsonInput').value.trim();
-
-            if (!jsonText) {
-                alert('Por favor, cole o JSON gerado pelo PowerShell');
-                return;
-            }
-
-            try {
-                const dados = JSON.parse(jsonText);
-
-                if (!dados.resultados || !Array.isArray(dados.resultados)) {
-                    throw new Error('Formato inválido: array "resultados" não encontrado');
-                }
-
-                exibirResultadosProcessados(dados);
-
-                // Recarregar lista se houver atualizações
-                if (dados.total_atualizados > 0) {
-                    carregarSolicitacoes();
-                }
-
-                logDebug(`📊 Processados ${dados.resultados.length} resultados do PowerShell`, 'success');
-
-            } catch (err) {
-                logDebug(`❌ Erro ao processar JSON: ${err.message}`, 'error');
-                alert('Erro ao processar JSON: ' + err.message + '
-
-Verifique se copiou o JSON completo do PowerShell.');
-            }
-        }
-
-        function exibirResultadosProcessados(dados) {
-            const container = document.getElementById('resultadoProcessamento');
-            const lista = document.getElementById('listaResultadosProcessados');
-            const resumo = document.getElementById('resumoResultado');
-
-            resumo.innerHTML = `
-                <span style="color: #28a745; font-weight: bold;">${dados.total_atualizados} entregues</span> 
-                de 
-                <span style="font-weight: bold;">${dados.resultados.length}</span> 
-                verificados
-            `;
-
-            lista.innerHTML = '';
-
-            dados.resultados.forEach(r => {
-                const item = document.createElement('div');
-                item.className = 'resultado-item';
-
-                if (r.entregue) {
-                    item.classList.add('entregue');
-                    item.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <strong style="color: #28a745;">✅ ${r.codigo}</strong>
-                                ${r.numero_solicitacao ? `<span style="color: #666; margin-left: 10px;">(${r.numero_solicitacao})</span>` : ''}
-                            </div>
-                            <span style="background: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem;">ENTREGUE</span>
-                        </div>
-                        <div style="margin-top: 8px; color: #555;">
-                            <small>👤 Cliente: ${r.cliente || 'N/A'}</small>
-                        </div>
-                    `;
-                } else if (r.erro) {
-                    item.classList.add('erro');
-                    item.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <strong style="color: #dc3545;">❌ ${r.codigo}</strong>
-                        </div>
-                        <div style="margin-top: 5px; color: #dc3545; font-size: 0.9rem;">
-                            <small>Erro: ${r.erro}</small>
-                        </div>
-                    `;
-                } else {
-                    item.classList.add('transito');
-                    item.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <strong style="color: #856404;">⏳ ${r.codigo}</strong>
-                                ${r.numero_solicitacao ? `<span style="color: #666; margin-left: 10px;">(${r.numero_solicitacao})</span>` : ''}
-                            </div>
-                            <span style="background: #ffc107; color: #212529; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem;">EM TRÂNSITO</span>
-                        </div>
-                        <div style="margin-top: 8px; color: #555;">
-                            <small>👤 Cliente: ${r.cliente || 'N/A'}</small>
-                        </div>
-                    `;
-                }
-
-                lista.appendChild(item);
-            });
-
-            container.classList.remove('hidden');
-
-            // Scroll para resultados
-            container.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // ============================================
-        // SUPABASE - TOKENS
-        // ============================================
-
-        async function buscarTokenSuperfrete() {
-            try {
-                if (!supabaseClient) return;
-
-                const { data, error } = await supabaseClient
-                    .from('superfrete_config')
-                    .select('api_token, environment, is_active')
-                    .eq('is_active', true)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .single();
-
-                if (error) {
-                    if (error.code !== 'PGRST116') {
-                        logDebug(`Erro ao buscar token SuperFrete: ${error.message}`, 'error');
-                    }
-                    return;
-                }
-
-                if (data && data.api_token) {
-                    dadosSuperfrete.token = data.api_token;
-                    dadosSuperfrete.valido = true;
-                    dadosSuperfrete.environment = data.environment || 'production';
-
-                    document.getElementById('tokenSuperfrete').value = data.api_token;
-                    document.getElementById('ambienteSuperfrete').value = dadosSuperfrete.environment;
-
-                    atualizarStatusToken('superfrete', true, dadosSuperfrete.environment);
-                    logDebug(`Token SuperFrete carregado (${dadosSuperfrete.environment})`, 'success');
-                }
-            } catch (err) {
-                logDebug(`Erro ao buscar token SuperFrete: ${err.message}`, 'error');
-            }
-        }
-
-        async function buscarTokenMelhorEnvio() {
-            try {
-                if (!supabaseClient) return;
-
-                const { data, error } = await supabaseClient
-                    .from('melhorenvio_config')
-                    .select('access_token, environment, is_active')
-                    .eq('is_active', true)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .single();
-
-                if (error) {
-                    if (error.code !== 'PGRST116') {
-                        logDebug(`Erro ao buscar token Melhor Envio: ${error.message}`, 'error');
-                    }
-                    return;
-                }
-
-                if (data && data.access_token) {
-                    dadosMelhorEnvio.token = data.access_token;
-                    dadosMelhorEnvio.valido = true;
-                    dadosMelhorEnvio.environment = data.environment || 'production';
-
-                    document.getElementById('tokenMelhorEnvio').value = data.access_token;
-                    document.getElementById('ambienteMelhorEnvio').value = dadosMelhorEnvio.environment;
-
-                    atualizarStatusToken('melhorenvio', true, dadosMelhorEnvio.environment);
-                    logDebug(`Token Melhor Envio carregado (${dadosMelhorEnvio.environment})`, 'success');
-                }
-            } catch (err) {
-                logDebug(`Erro ao buscar token Melhor Envio: ${err.message}`, 'error');
-            }
-        }
-
-        async function salvarTokenSuperfrete() {
-            try {
-                const token = document.getElementById('tokenSuperfrete').value.trim();
-                const environment = document.getElementById('ambienteSuperfrete').value;
-
-                if (!token) {
-                    alert('Por favor, insira um token válido');
-                    return;
-                }
-
-                if (!supabaseClient) {
-                    alert('Supabase não conectado. Configure a chave primeiro.');
-                    return;
-                }
-
-                await supabaseClient.from('superfrete_config').update({ is_active: false }).eq('is_active', true);
-
-                const { error } = await supabaseClient.from('superfrete_config').insert({
-                    api_token: token,
-                    environment: environment,
-                    is_active: true,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                });
-
-                if (error) throw error;
-
-                dadosSuperfrete.token = token;
-                dadosSuperfrete.valido = true;
-                dadosSuperfrete.environment = environment;
-
-                atualizarStatusToken('superfrete', true, environment);
-                logDebug(`Token SuperFrete salvo (${environment})`, 'success');
-                alert('Token SuperFrete salvo com sucesso!');
-
-            } catch (err) {
-                logDebug(`Erro ao salvar token SuperFrete: ${err.message}`, 'error');
-                alert('Erro ao salvar token: ' + err.message);
-            }
-        }
-
-        async function salvarTokenMelhorEnvio() {
-            try {
-                const token = document.getElementById('tokenMelhorEnvio').value.trim();
-                const environment = document.getElementById('ambienteMelhorEnvio').value;
-
-                if (!token) {
-                    alert('Por favor, insira um token válido');
-                    return;
-                }
-
-                if (!supabaseClient) {
-                    alert('Supabase não conectado. Configure a chave primeiro.');
-                    return;
-                }
-
-                await supabaseClient.from('melhorenvio_config').update({ is_active: false }).eq('is_active', true);
-
-                const { error } = await supabaseClient.from('melhorenvio_config').insert({
-                    access_token: token,
-                    environment: environment,
-                    is_active: true,
-                    created_at: new Date().toISOString()
-                });
-
-                if (error) throw error;
-
-                dadosMelhorEnvio.token = token;
-                dadosMelhorEnvio.valido = true;
-                dadosMelhorEnvio.environment = environment;
-
-                atualizarStatusToken('melhorenvio', true, environment);
-                logDebug(`Token Melhor Envio salvo (${environment})`, 'success');
-                alert('Token Melhor Envio salvo com sucesso!');
-
-            } catch (err) {
-                logDebug(`Erro ao salvar token Melhor Envio: ${err.message}`, 'error');
-                alert('Erro ao salvar token: ' + err.message);
-            }
-        }
-
-        function atualizarStatusToken(tipo, valido, environment) {
-            const elementId = tipo === 'superfrete' ? 'statusSuperfrete' : 'statusMelhorEnvio';
-            const badgeId = tipo === 'superfrete' ? 'envSuperfrete' : 'envMelhorEnvio';
-            const element = document.getElementById(elementId);
-            const badge = document.getElementById(badgeId);
-
-            if (valido) {
-                element.textContent = 'Configurado';
-                element.className = 'token-status ok';
-                badge.textContent = environment === 'production' ? 'Produção' : 'Sandbox';
-                badge.className = `environment-badge environment-${environment}`;
-                badge.classList.remove('hidden');
-            } else {
-                element.textContent = 'Não configurado';
-                element.className = 'token-status error';
-                badge.classList.add('hidden');
-            }
-        }
-
-        // ============================================
-        // LISTA DE SOLICITAÇÕES
+        // FUNÇÕES DE DADOS
         // ============================================
 
         async function carregarSolicitacoes() {
             try {
                 if (!supabaseClient) {
-                    alert('Supabase não conectado.');
+                    logDebug('Supabase não conectado', 'error');
                     return;
                 }
 
-                const dataInicio = document.getElementById('filtroDataInicio').value;
-                const dataFim = document.getElementById('filtroDataFim').value;
-                const status = document.getElementById('filtroStatus').value;
-
-                let query = supabaseClient
+                const { data, error } = await supabaseClient
                     .from('solicitacoes_pg')
-                    .select(`
-                        id,
-                        numero_solicitacao,
-                        codigo_rastreio,
-                        forma_envio,
-                        data_envio,
-                        data_entrega_real,
-                        status,
-                        clientes_pg (nome)
-                    `)
-                    .order('data_envio', { ascending: false });
+                    .select(`id, numero_solicitacao, codigo_rastreio, forma_envio, data_envio, status, clientes_pg(nome)`)
+                    .order('data_envio', { ascending: false })
+                    .limit(100);
 
-                if (dataInicio) query = query.gte('data_envio', dataInicio);
-                if (dataFim) query = query.lte('data_envio', dataFim);
-                if (status) query = query.eq('status', status);
-
-                const { data, error } = await query;
                 if (error) throw error;
 
                 solicitacoesCache = data || [];
                 renderizarTabela(solicitacoesCache);
-                atualizarEstatisticas(solicitacoesCache);
+                atualizarEstatisticas();
 
                 document.getElementById('secaoResultados').classList.remove('hidden');
                 logDebug(`${solicitacoesCache.length} solicitações carregadas`, 'success');
 
             } catch (err) {
-                logDebug('Erro ao carregar solicitações: ' + err.message, 'error');
+                logDebug('Erro ao carregar: ' + err.message, 'error');
             }
         }
 
@@ -1522,32 +1005,25 @@ Verifique se copiou o JSON completo do PowerShell.');
                 const statusClass = item.status === 'entregue' ? 'status-entregue' : 
                                    item.status === 'enviado' ? 'status-enviado' : 'status-pendente';
                 const dataEnvio = item.data_envio ? new Date(item.data_envio).toLocaleDateString('pt-BR') : '-';
-                const clienteNome = item.clientes_pg?.nome || 'N/A';
 
                 tr.innerHTML = `
                     <td><input type="checkbox" class="custom-checkbox checkbox-item" value="${item.id}"></td>
                     <td>${item.numero_solicitacao || '-'}</td>
-                    <td>${clienteNome}</td>
+                    <td>${item.clientes_pg?.nome || 'N/A'}</td>
                     <td>${item.codigo_rastreio || '-'}</td>
                     <td>${item.forma_envio || '-'}</td>
                     <td>${dataEnvio}</td>
                     <td><span class="status-badge ${statusClass}">${item.status || 'pendente'}</span></td>
-                    <td>
-                        <button class="btn btn-primary" style="padding: 5px 15px; font-size: 0.85rem;" 
-                                onclick="rastrearIndividual('${item.codigo_rastreio}', '${item.forma_envio}')">
-                            Rastrear
-                        </button>
-                    </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function atualizarEstatisticas(dados) {
-            const total = dados.length;
-            const enviados = dados.filter(d => d.status === 'enviado').length;
-            const entregues = dados.filter(d => d.status === 'entregue').length;
-            const pendentes = dados.filter(d => d.status === 'pendente' || !d.status).length;
+        function atualizarEstatisticas() {
+            const total = solicitacoesCache.length;
+            const enviados = solicitacoesCache.filter(d => d.status === 'enviado').length;
+            const entregues = solicitacoesCache.filter(d => d.status === 'entregue').length;
+            const pendentes = solicitacoesCache.filter(d => !d.status || d.status === 'pendente').length;
 
             document.getElementById('statTotal').textContent = total;
             document.getElementById('statEnviados').textContent = enviados;
@@ -1566,36 +1042,117 @@ Verifique se copiou o JSON completo do PowerShell.');
             document.querySelectorAll('.checkbox-item').forEach(cb => cb.checked = selectAll.checked);
         }
 
-        function obterSelecionados() {
-            return Array.from(document.querySelectorAll('.checkbox-item:checked')).map(cb => cb.value);
+        // ============================================
+        // POWERSHELL INTEGRATION
+        // ============================================
+
+        function copiarScript() {
+            const textarea = document.getElementById('powershellScript');
+            textarea.select();
+            document.execCommand('copy');
+
+            const btn = event.target;
+            btn.textContent = '✅ Copiado!';
+            setTimeout(() => btn.textContent = '📋 Copiar Script', 2000);
+
+            logDebug('Script copiado', 'success');
         }
 
-        async function marcarComoEntregue() {
-            const selecionados = obterSelecionados();
-            if (selecionados.length === 0) { alert('Selecione pelo menos uma solicitação'); return; }
-            if (!confirm(`Marcar ${selecionados.length} como entregue?`)) return;
+        function processarJSONColado() {
+            const jsonText = document.getElementById('jsonInput').value.trim();
+
+            if (!jsonText) {
+                alert('Cole o JSON primeiro');
+                return;
+            }
 
             try {
-                const { error } = await supabaseClient.from('solicitacoes_pg').update({
-                    status: 'entregue',
-                    data_entrega_real: new Date().toISOString(),
-                    atualizado_em: new Date().toISOString()
-                }).in('id', selecionados);
+                const dados = JSON.parse(jsonText);
 
-                if (error) throw error;
-                logDebug(`${selecionados.length} marcadas como entregue`, 'success');
-                document.getElementById('selectAll').checked = false;
-                toggleSelectAll();
-                await carregarSolicitacoes();
+                if (!dados.resultados) {
+                    throw new Error('JSON inválido: campo "resultados" não encontrado');
+                }
+
+                const container = document.getElementById('resultadoProcessamento');
+                const lista = document.getElementById('listaResultadosProcessados');
+
+                lista.innerHTML = `<h4>Total: ${dados.total_atualizados || 0} entregues de ${dados.resultados.length} verificados</h4>`;
+
+                dados.resultados.forEach(r => {
+                    const div = document.createElement('div');
+                    div.style.cssText = 'padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid ' + (r.entregue ? '#28a745' : r.erro ? '#dc3545' : '#ffc107') + '; background: ' + (r.entregue ? '#d4edda' : r.erro ? '#f8d7da' : '#fff3cd') + ';';
+
+                    div.innerHTML = `
+                        <strong>${r.codigo}</strong> - ${r.cliente || 'N/A'}<br>
+                        <small>${r.entregue ? '✅ Entregue' : r.erro ? '❌ Erro: ' + r.erro : '⏳ Em trânsito'}</small>
+                    `;
+                    lista.appendChild(div);
+                });
+
+                container.style.display = 'block';
+                logDebug('Resultados processados: ' + dados.resultados.length, 'success');
+
+                // Recarregar lista
+                if (dados.total_atualizados > 0) {
+                    carregarSolicitacoes();
+                }
+
             } catch (err) {
-                logDebug('Erro: ' + err.message, 'error');
+                logDebug('Erro no JSON: ' + err.message, 'error');
+                alert('Erro ao processar JSON: ' + err.message);
             }
         }
+
+        // ============================================
+        // TOKENS
+        // ============================================
+
+        async function salvarTokenSuperfrete() {
+            const token = document.getElementById('tokenSuperfrete').value.trim();
+            if (!token) { alert('Token vazio'); return; }
+
+            try {
+                await supabaseClient.from('superfrete_config').update({ is_active: false }).eq('is_active', true);
+                await supabaseClient.from('superfrete_config').insert({
+                    api_token: token,
+                    environment: document.getElementById('ambienteSuperfrete').value,
+                    is_active: true,
+                    created_at: new Date().toISOString()
+                });
+                logDebug('Token SuperFrete salvo', 'success');
+                alert('Token SuperFrete salvo!');
+            } catch (err) {
+                logDebug('Erro ao salvar token: ' + err.message, 'error');
+            }
+        }
+
+        async function salvarTokenMelhorEnvio() {
+            const token = document.getElementById('tokenMelhorEnvio').value.trim();
+            if (!token) { alert('Token vazio'); return; }
+
+            try {
+                await supabaseClient.from('melhorenvio_config').update({ is_active: false }).eq('is_active', true);
+                await supabaseClient.from('melhorenvio_config').insert({
+                    access_token: token,
+                    environment: document.getElementById('ambienteMelhorEnvio').value,
+                    is_active: true,
+                    created_at: new Date().toISOString()
+                });
+                logDebug('Token Melhor Envio salvo', 'success');
+                alert('Token Melhor Envio salvo!');
+            } catch (err) {
+                logDebug('Erro ao salvar token: ' + err.message, 'error');
+            }
+        }
+
+        // ============================================
+        // UTILITÁRIOS
+        // ============================================
 
         function mudarAba(aba) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-            document.getElementById(`aba${aba.charAt(0).toUpperCase() + aba.slice(1)}`).classList.add('active');
+            document.getElementById('aba' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
             event.target.classList.add('active');
         }
 
@@ -1611,19 +1168,6 @@ Verifique se copiou o JSON completo do PowerShell.');
 
         function limparConsole() {
             document.getElementById('debugConsole').innerHTML = '<div class="info">Console limpo.</div>';
-        }
-
-        // Placeholders para funções não implementadas
-        function rastrearEncomenda() { 
-            alert('Use a aba PowerShell para rastreamento em tempo real sem limitações de CORS'); 
-            mudarAba('powershell');
-        }
-        function verificarSelecionados() { 
-            alert('Use a aba PowerShell para verificação em lote mais confiável'); 
-            mudarAba('powershell');
-        }
-        function rastrearIndividual() { 
-            mudarAba('powershell'); 
         }
     </script>
 </body>
