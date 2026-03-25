@@ -4,44 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rastreamento de Entregas - Pingo de Gente</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #FFF5F7 0%, #F0FFF4 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        /* Header */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #FFF5F7 0%, #F0FFF4 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
         .header {
             background: white;
-            padding: 30px;
+            padding: 25px;
             border-radius: 20px;
-            box-shadow: 0 5px 20px rgba(225, 112, 85, 0.15);
-            margin-bottom: 30px;
-            position: relative;
+            box-shadow: 0 5px 20px rgba(255, 139, 167, 0.15);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
-        /* Container para os botões do header */
-        .header-buttons {
-            position: absolute;
-            top: 20px;
-            left: 20px;
+        .header-left {
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px;
         }
 
         .btn-voltar {
@@ -53,11 +40,11 @@
             cursor: pointer;
             font-size: 0.95rem;
             font-weight: 600;
-            transition: all 0.3s;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            transition: all 0.3s;
         }
 
         .btn-voltar:hover {
@@ -65,9 +52,11 @@
             box-shadow: 0 5px 15px rgba(168, 230, 207, 0.4);
         }
 
-        /* NOVO: Botão de integração */
-        .btn-integracao {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+        .header h1 { color: #FF6B8A; font-size: 1.8rem; margin-bottom: 5px; }
+        .header p { color: #636E72; font-size: 0.9rem; }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #FF6B6B, #EE5A6F);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -76,708 +65,280 @@
             font-size: 0.95rem;
             font-weight: 600;
             transition: all 0.3s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
         }
 
-        .btn-integracao:hover {
+        .btn-logout:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(238, 90, 111, 0.4);
         }
 
-        .header-content {
-            text-align: center;
-            margin-top: 10px;
+        .filtros-container { background: white; padding: 25px; border-radius: 20px; margin-bottom: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
+        .filtros-titulo { color: #2D3436; font-size: 1.3rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .filtros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .campo-filtro { display: flex; flex-direction: column; gap: 8px; }
+        .campo-filtro label { font-weight: 600; color: #2D3436; font-size: 0.9rem; }
+        .campo-filtro input, .campo-filtro select { padding: 12px 15px; border: 2px solid #E0E0E0; border-radius: 12px; font-size: 1rem; transition: all 0.3s; }
+        .campo-filtro input:focus, .campo-filtro select:focus { outline: none; border-color: #FF8BA7; box-shadow: 0 0 0 4px rgba(255, 139, 167, 0.1); }
+        .botoes-filtro { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; }
+        .btn { padding: 14px 28px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 107, 138, 0.4); }
+        .btn-secondary { background: linear-gradient(135deg, #A8E6CF, #7FCDCD); color: #2D3436; }
+        .btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(168, 230, 207, 0.4); }
+        .btn-pdf { background: linear-gradient(135deg, #FF6B6B, #EE5A6F); color: white; }
+        .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(238, 90, 111, 0.4); }
+        .btn-pdf:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-emitir { background: linear-gradient(135deg, #9C27B0, #E91E63); color: white; }
+        .btn-emitir:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(156, 39, 176, 0.4); }
+        .btn-emitir:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; }
+            .header-left { flex-direction: column; }
         }
 
-        .header h1 {
-            color: #e17055;
-            font-size: 2rem;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .header p {
-            color: #636E72;
-            font-size: 1rem;
-        }
-
-        /* Filtros */
-        .filtros-section {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 25px;
-            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-items: end;
-        }
-
-        .filtro-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .filtro-group label {
-            font-weight: 600;
-            color: #2D3436;
-            font-size: 0.9rem;
-        }
-
-        .filtro-group input,
-        .filtro-group select {
-            padding: 12px 15px;
-            border: 2px solid #E0E0E0;
-            border-radius: 10px;
-            font-size: 1rem;
-            min-width: 200px;
-            transition: all 0.3s;
-        }
-
-        .filtro-group input:focus,
-        .filtro-group select:focus {
-            outline: none;
-            border-color: #e17055;
-        }
-
-        /* NOVO: Estilo para grupo de data/hora */
-        .datetime-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .datetime-group input[type="date"] {
-            min-width: 150px;
-        }
-
-        .datetime-group input[type="time"] {
-            min-width: 100px;
-        }
-
-        .btn-filtrar {
-            background: linear-gradient(135deg, #e17055, #d63031);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s;
-            height: fit-content;
-        }
-
-        .btn-filtrar:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(225, 112, 85, 0.4);
-        }
-
-        /* Stats */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
-            border-top: 4px solid #e17055;
-        }
-
-        .stat-number {
-            font-size: 2.5rem;
+        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 3px 15px rgba(0,0,0,0.08); border-left: 4px solid #FF6B8A; }
+        .stat-card h3 { color: #636E72; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .stat-card .valor { color: #FF6B8A; font-size: 2rem; font-weight: bold; }
+        .tabela-container { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
+        .tabela-header { padding: 20px 25px; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .tabela-header h2 { font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        thead { background: #F8F9FA; }
+        th { padding: 15px; text-align: left; font-weight: 600; color: #2D3436; border-bottom: 2px solid #E0E0E0; white-space: nowrap; position: sticky; top: 0; background: #F8F9FA; z-index: 10; }
+        td { padding: 15px; border-bottom: 1px solid #E0E0E0; color: #636E72; }
+        tr:hover { background: #FFF5F7; }
+        tr.selecionado { background: #E8F5E9 !important; border-left: 4px solid #4CAF50; }
+        .checkbox-selecao { width: 20px; height: 20px; cursor: pointer; accent-color: #FF6B8A; }
+        .tag-regiao { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .tag-floripa { background: #E3F2FD; color: #1565C0; }
+        .tag-sc { background: #E8F5E9; color: #2E7D32; }
+        .tag-outros { background: #FFF3E0; color: #E65100; }
+        .numero-pedido { 
+            display: inline-block; 
+            background: linear-gradient(135deg, #FF6B8A, #FF8BA7); 
+            color: white; 
+            padding: 5px 12px; 
+            border-radius: 8px; 
+            font-size: 0.85rem; 
             font-weight: bold;
-            color: #e17055;
-        }
-
-        .stat-label {
-            color: #636E72;
-            font-size: 0.9rem;
-            margin-top: 5px;
-        }
-
-        /* Tabela */
-        .tabela-section {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-        }
-
-        .tabela-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .tabela-header h2 {
-            color: #2D3436;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .table-container {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead {
-            background: linear-gradient(135deg, #e17055, #d63031);
-            color: white;
-        }
-
-        th {
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.9rem;
-            text-transform: uppercase;
+            font-family: monospace;
             letter-spacing: 0.5px;
         }
-
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #E0E0E0;
-            color: #2D3436;
-        }
-
-        tr:hover {
-            background: #FFF5F2;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
+        .whatsapp-link { color: #25D366; text-decoration: none; font-weight: 600; }
+        .whatsapp-link:hover { text-decoration: underline; }
+        .instagram-link { color: #E1306C; text-decoration: none; font-weight: 600; }
+        .instagram-link:hover { text-decoration: underline; }
+        .acoes-container { display: flex; gap: 5px; flex-wrap: nowrap; }
+        .btn-acao { padding: 6px 10px; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-acao:hover { transform: scale(1.05); }
+        .btn-rastreio { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; }
+        .btn-instagram:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
         .status-pendente { background: #FFEAA7; color: #B7791F; }
         .status-enviado { background: #74B9FF; color: #0984E3; }
         .status-entregue { background: #55EFC4; color: #00B894; }
         .status-cancelado { background: #FF7675; color: #D63031; }
-
-        /* Botões de Ação */
-        .acoes-cell {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .btn-acao {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .btn-rastreio {
-            background: linear-gradient(135deg, #e17055, #d63031);
-            color: white;
-        }
-
-        .btn-rastreio:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 10px rgba(225, 112, 85, 0.4);
-        }
-
-        .btn-instagram {
-            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-            color: white;
-        }
-
-        .btn-instagram:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 10px rgba(220, 39, 67, 0.4);
-        }
-
-        .btn-instagram:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 600px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: modalSlideIn 0.3s ease;
-        }
-
-        @keyframes modalSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .modal-header h3 {
-            color: #2D3436;
-            font-size: 1.3rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-fechar {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #636E72;
-            padding: 5px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2D3436;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #E0E0E0;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: all 0.3s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #e17055;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .campo-opcional {
-            font-weight: normal;
-            color: #95a5a6;
-            font-size: 0.85rem;
-        }
-
-        /* NOVO: Botão apagar rastreamento */
-        .btn-apagar-rastreio {
-            width: 100%;
-            background: linear-gradient(135deg, #ff7675, #d63031);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s;
-            margin-top: 10px;
-        }
-
-        .btn-apagar-rastreio:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 118, 117, 0.4);
-        }
-
-        .btn-salvar {
-            width: 100%;
-            background: linear-gradient(135deg, #e17055, #d63031);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .btn-salvar:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(225, 112, 85, 0.4);
-        }
-
-        /* Preview Instagram */
-        .preview-instagram {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-            border: 2px dashed #e17055;
-        }
-
-        .preview-instagram h4 {
-            color: #e17055;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-        }
-
-        .preview-texto {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: #2D3436;
-            white-space: pre-wrap;
-        }
-
-        /* Preview do código extraído */
-        .codigo-preview {
-            background: #E8F5E9;
-            border: 2px solid #4CAF50;
-            border-radius: 8px;
-            padding: 10px 15px;
-            margin-top: 10px;
-            font-family: monospace;
-            font-size: 1.1rem;
-            color: #2E7D32;
-            display: none;
-        }
-
-        .codigo-preview.active {
-            display: block;
-        }
-
-        .codigo-preview-label {
-            font-size: 0.75rem;
-            color: #4CAF50;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-
-        /* Histórico de rastreamentos */
-        .historico-rastreamentos {
-            background: #F5F5F5;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .historico-item {
-            background: white;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            border-left: 4px solid #e17055;
-        }
-
-        .historico-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .historico-codigo {
-            font-family: monospace;
-            font-weight: bold;
-            color: #e17055;
-        }
-
-        .historico-data {
-            font-size: 0.8rem;
-            color: #636E72;
-        }
-
-        /* Botão abrir Instagram do cliente */
-        .btn-abrir-instagram {
-            width: 100%;
-            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-abrir-instagram:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(220, 39, 67, 0.4);
-        }
-
-        .instagram-info {
-            background: #FFF3E0;
-            border: 2px solid #FF9800;
-            border-radius: 8px;
-            padding: 12px 15px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            color: #E65100;
-        }
-
-        .instagram-info strong {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #636E72;
-        }
-
-        .empty-state-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #636E72;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #e17055;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .numero-pedido {
-            display: inline-block;
-            background: linear-gradient(135deg, #e17055, #d63031);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 0.85rem;
-            font-weight: bold;
-        }
-
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; overflow-y: auto; }
+        .modal-overlay.ativo { display: flex; }
+        .modal { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 600px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; margin: 20px auto; }
+        .modal-etiquetas { background: white; padding: 0; border-radius: 20px; width: 95%; max-width: 900px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; margin: 20px auto; }
+        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .modal-header h3 { color: #FF6B8A; font-size: 1.3rem; display: flex; align-items: center; gap: 10px; }
+        .btn-fechar { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #636E72; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #2D3436; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 15px; border: 2px solid #E0E0E0; border-radius: 10px; font-size: 1rem; font-family: inherit; transition: all 0.3s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #FF8BA7; box-shadow: 0 0 0 4px rgba(255, 139, 167, 0.1); }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+        .campo-opcional { font-weight: normal; color: #95a5a6; font-size: 0.85rem; }
+        
+        .btn-salvar { width: 100%; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s; }
+        .btn-salvar:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 107, 138, 0.4); }
+        .btn-apagar-rastreio { width: 100%; background: linear-gradient(135deg, #ff7675, #d63031); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s; margin-top: 10px; }
+        .btn-apagar-rastreio:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 118, 117, 0.4); }
+        .btn-cancelar { background: #E0E0E0; color: #2D3436; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-cancelar:hover { background: #D0D0D0; }
+        
+        .preview-instagram { background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 15px; padding: 20px; margin-top: 20px; border: 2px dashed #FF8BA7; }
+        .preview-instagram h4 { color: #FF6B8A; margin-bottom: 10px; font-size: 0.9rem; text-transform: uppercase; }
+        .preview-texto { background: white; padding: 15px; border-radius: 10px; font-size: 0.95rem; line-height: 1.6; color: #2D3436; white-space: pre-wrap; }
+        
+        .codigo-preview { background: #E8F5E9; border: 2px solid #4CAF50; border-radius: 8px; padding: 10px 15px; margin-top: 10px; font-family: monospace; font-size: 1.1rem; color: #2E7D32; display: none; }
+        .codigo-preview.active { display: block; }
+        .codigo-preview-label { font-size: 0.75rem; color: #4CAF50; text-transform: uppercase; margin-bottom: 5px; }
+        
+        .historico-rastreamentos { background: #F5F5F5; border-radius: 10px; padding: 15px; margin-bottom: 20px; max-height: 200px; overflow-y: auto; }
+        .historico-item { background: white; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #FF6B8A; }
+        .historico-item:last-child { margin-bottom: 0; }
+        .historico-codigo { font-family: monospace; font-weight: bold; color: #FF6B8A; }
+        .historico-data { font-size: 0.8rem; color: #636E72; }
+        
+        .btn-abrir-instagram { width: 100%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-abrir-instagram:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(220, 39, 67, 0.4); }
+        
+        .instagram-info { background: #FFF3E0; border: 2px solid #FF9800; border-radius: 8px; padding: 12px 15px; margin-bottom: 20px; font-size: 0.9rem; color: #E65100; }
+        .instagram-info strong { display: block; margin-bottom: 5px; }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: #636E72; }
+        .empty-state-icon { font-size: 4rem; margin-bottom: 20px; }
+        .loading { text-align: center; padding: 40px; color: #FF6B8A; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #FF6B8A; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .selecao-massa { display: flex; align-items: center; gap: 15px; padding: 15px 25px; background: #F8F9FA; border-bottom: 1px solid #E0E0E0; }
+        .selecao-massa label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #2D3436; }
+        
+        /* Estilos do modal de etiquetas */
+        .etiquetas-header { background: linear-gradient(135deg, #9C27B0, #E91E63); color: white; padding: 25px 30px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .etiquetas-header h3 { font-size: 1.4rem; display: flex; align-items: center; gap: 10px; }
+        .etiquetas-header .subtitulo { font-size: 0.9rem; opacity: 0.9; margin-top: 5px; }
+        .etiquetas-body { padding: 30px; }
+        .etiqueta-card { background: #F8F9FA; border: 2px solid #E0E0E0; border-radius: 15px; padding: 25px; margin-bottom: 25px; transition: all 0.3s; }
+        .etiqueta-card:hover { border-color: #9C27B0; box-shadow: 0 5px 20px rgba(156, 39, 176, 0.1); }
+        .etiqueta-numero { background: linear-gradient(135deg, #FF6B8A, #FF8BA7); color: white; padding: 8px 16px; border-radius: 8px; font-family: monospace; font-size: 1.1rem; font-weight: bold; display: inline-block; margin-bottom: 20px; }
+        .etiqueta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .campo-copiar { background: white; border: 2px solid #E0E0E0; border-radius: 10px; padding: 12px 15px; display: flex; align-items: center; gap: 10px; transition: all 0.3s; }
+        .campo-copiar:hover { border-color: #9C27B0; }
+        .campo-copiar.copiado { border-color: #4CAF50; background: #E8F5E9; }
+        .campo-label { font-size: 0.75rem; color: #636E72; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; min-width: 80px; }
+        .campo-valor { flex: 1; font-size: 0.95rem; color: #2D3436; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .btn-copiar-campo { background: linear-gradient(135deg, #9C27B0, #E91E63); color: white; border: none; padding: 8px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 5px; }
+        .btn-copiar-campo:hover { transform: scale(1.05); box-shadow: 0 3px 10px rgba(156, 39, 176, 0.3); }
+        .btn-copiar-campo.copiado { background: linear-gradient(135deg, #4CAF50, #66BB6A); }
+        .etiqueta-secao { margin-top: 20px; padding-top: 20px; border-top: 1px dashed #E0E0E0; }
+        .etiqueta-secao-titulo { font-size: 0.9rem; color: #9C27B0; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .etiquetas-footer { padding: 20px 30px; background: #F8F9FA; border-radius: 0 0 20px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .etiquetas-info { color: #636E72; font-size: 0.9rem; }
+        .btn-fechar-etiquetas { background: linear-gradient(135deg, #FF6B6B, #EE5A6F); color: white; border: none; padding: 12px 30px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-fechar-etiquetas:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(238, 90, 111, 0.4); }
+        .campo-endereco-completo { grid-column: 1 / -1; }
+        .campo-endereco-completo .campo-valor { white-space: normal; line-height: 1.4; }
+        
         @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.5rem;
-            }
-
-            .header-buttons {
-                position: relative;
-                top: auto;
-                left: auto;
-                margin-bottom: 15px;
-                justify-content: center;
-            }
-
-            .filtros-section {
-                flex-direction: column;
-            }
-
-            .filtro-group input,
-            .filtro-group select {
-                min-width: 100%;
-            }
-
-            /* NOVO: Ajuste para mobile no datetime */
-            .datetime-group {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .datetime-group input[type="date"],
-            .datetime-group input[type="time"] {
-                min-width: 100%;
-            }
-
-            th, td {
-                padding: 10px;
-                font-size: 0.9rem;
-            }
-
-            .acoes-cell {
-                flex-direction: column;
-            }
-
-            .btn-acao {
-                width: 100%;
-                justify-content: center;
-            }
+            .header h1 { font-size: 1.5rem; }
+            .filtros-grid { grid-template-columns: 1fr; }
+            .modal-body { grid-template-columns: 1fr; }
+            th, td { padding: 10px; font-size: 0.85rem; }
+            .botoes-filtro { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+            .etiqueta-grid { grid-template-columns: 1fr; }
         }
+        
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
-<base target="_blank">
-<base target="_blank">
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
-            <!-- NOVO: Container para botões do header -->
-            <div class="header-buttons">
-                <!-- CORRIGIDO: Adicionado target="_self" para abrir na mesma aba -->
-                <a href="dashboard.html" class="btn-voltar" target="_self">← Voltar</a>
-                <!-- Link para página de integração - target="_self" para abrir na mesma aba -->
-                <a href="integracao_superfrete_melhorenvio.html" class="btn-integracao" target="_self">
-                    🔗 Integração Super Frete/Melhor Envio
-                </a>
+            <div class="header-left">
+                <a href="dashboard.html" class="btn-voltar">← Voltar ao Dashboard</a>
+                <div>
+                    <h1>🚚 Rastreamento de Entregas</h1>
+                    <p>Gerencie códigos de rastreio e envie atualizações aos clientes</p>
+                </div>
             </div>
+            <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
+        </div>
+
+        <div class="filtros-container" id="filtrosContainer" style="opacity: 0.5; pointer-events: none;">
+            <h2 class="filtros-titulo">📅 Filtros por Período</h2>
             
-            <div class="header-content">
-                <h1>🚚 Rastreamento de Entregas</h1>
-                <p>Gerencie códigos de rastreio e envie atualizações aos clientes</p>
-            </div>
-        </div>
-
-        <!-- Stats -->
-        <div class="stats-row">
-            <div class="stat-card">
-                <div class="stat-number" id="statTotal">-</div>
-                <div class="stat-label">Total de Solicitações</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="statPendentes">-</div>
-                <div class="stat-label">Pendentes de Envio</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="statEnviados">-</div>
-                <div class="stat-label">Em Trânsito</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="statEntregues">-</div>
-                <div class="stat-label">Entregues</div>
-            </div>
-        </div>
-
-        <!-- Filtros - ATUALIZADO com campos de hora -->
-        <div class="filtros-section">
-            <div class="filtro-group">
-                <label for="dataInicial">Data Inicial</label>
-                <div class="datetime-group">
+            <div class="filtros-grid">
+                <div class="campo-filtro">
+                    <label>Data Inicial</label>
                     <input type="date" id="dataInicial">
+                </div>
+                <div class="campo-filtro">
+                    <label>Horário Inicial</label>
                     <input type="time" id="horaInicial" value="00:00">
                 </div>
-            </div>
-            <div class="filtro-group">
-                <label for="dataFinal">Data Final</label>
-                <div class="datetime-group">
+                <div class="campo-filtro">
+                    <label>Data Final</label>
                     <input type="date" id="dataFinal">
+                </div>
+                <div class="campo-filtro">
+                    <label>Horário Final</label>
                     <input type="time" id="horaFinal" value="23:59">
                 </div>
-            </div>
-            <div class="filtro-group">
-                <label for="filtroStatus">Status</label>
-                <select id="filtroStatus" onchange="aplicarFiltrosLocal()">
-                    <option value="">Todos</option>
-                    <option value="pendente">Pendente</option>
-                    <option value="enviado">Enviado</option>
-                    <option value="entregue">Entregue</option>
-                    <option value="cancelado">Cancelado</option>
-                </select>
-            </div>
-            <div class="filtro-group">
-                <label for="filtroBusca">Buscar (Nº ou Cliente)</label>
-                <input type="text" id="filtroBusca" oninput="aplicarFiltrosLocal()" placeholder="Digite para buscar...">
-            </div>
-            <button class="btn-filtrar" onclick="aplicarFiltros()">🔍 Buscar</button>
-        </div>
-
-        <!-- Tabela -->
-        <div class="tabela-section">
-            <div class="tabela-header">
-                <h2>📋 Solicitações</h2>
-            </div>
-            <div class="table-container" id="tabelaContainer">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Carregando solicitações...</p>
+                <div class="campo-filtro">
+                    <label>Status</label>
+                    <select id="filtroStatus" onchange="aplicarFiltrosLocal()">
+                        <option value="">Todos</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="enviado">Enviado</option>
+                        <option value="entregue">Entregue</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="campo-filtro">
+                    <label>Buscar (Nº ou Cliente)</label>
+                    <input type="text" id="filtroBusca" oninput="aplicarFiltrosLocal()" placeholder="Digite para buscar...">
                 </div>
             </div>
+            
+            <div class="botoes-filtro">
+                <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Buscar Solicitações</button>
+                <button class="btn btn-secondary" onclick="limparFiltros()">🧹 Limpar Filtros</button>
+                <button class="btn btn-pdf" id="btnGerarPDF" onclick="gerarPDF()" disabled>📄 Gerar PDF</button>
+                <button class="btn btn-emitir" id="btnEmitirEtiquetas" onclick="abrirModalEtiquetas()" disabled>📋 Emitir Etiquetas</button>
+            </div>
+        </div>
+
+        <div class="stats-container" id="statsContainer" style="display: none;">
+            <div class="stat-card"><h3>Total de Solicitações</h3><div class="valor" id="statTotal">-</div></div>
+            <div class="stat-card"><h3>Pendentes de Envio</h3><div class="valor" id="statPendentes">-</div></div>
+            <div class="stat-card"><h3>Em Trânsito</h3><div class="valor" id="statEnviados">-</div></div>
+            <div class="stat-card"><h3>Entregues</h3><div class="valor" id="statEntregues">-</div></div>
+        </div>
+
+        <div class="tabela-container" id="tabelaContainer" style="display: none;">
+            <div class="tabela-header">
+                <h2>📋 Solicitações</h2>
+                <span id="periodoSelecionado"></span>
+            </div>
+            <div class="selecao-massa">
+                <label><input type="checkbox" id="selecionarTodos" onchange="toggleSelecionarTodos()"> Selecionar todos</label>
+                <span id="infoSelecao" style="color: #636E72; font-size: 0.9rem;"></span>
+            </div>
+            <div class="table-responsive">
+                <table id="tabelaSolicitacoes">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="checkboxHeader" onchange="toggleSelecionarTodos()"></th>
+                            <th>Nº Pedido</th>
+                            <th>Data Solicitação</th>
+                            <th>Cliente</th>
+                            <th>Status</th>
+                            <th>Código Rastreio</th>
+                            <th>Forma Envio</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon">📅</div>
+            <h3>Configure a conexão com o Supabase</h3>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Carregando...</p>
         </div>
     </div>
 
-    <!-- Modal Cadastrar Rastreio - ATUALIZADO -->
+    <!-- Modal Cadastrar/Editar Rastreio -->
     <div class="modal-overlay" id="modalRastreio">
         <div class="modal">
             <div class="modal-header">
@@ -785,7 +346,6 @@
                 <button class="btn-fechar" onclick="fecharModal('modalRastreio')">×</button>
             </div>
             
-            <!-- NOVO: Histórico de rastreamentos -->
             <div class="historico-rastreamentos" id="historicoRastreamentos" style="display: none;">
                 <h4 style="margin-bottom: 10px; color: #636E72;">📜 Histórico de Rastreamentos</h4>
                 <div id="listaHistorico"></div>
@@ -793,7 +353,7 @@
 
             <form id="formRastreio" onsubmit="salvarRastreio(event)">
                 <input type="hidden" id="rastreioSolicitacaoId">
-                <input type="hidden" id="rastreioId"> <!-- NOVO: ID do rastreamento atual -->
+                <input type="hidden" id="rastreioId">
                 
                 <div class="form-group">
                     <label for="codigoRastreio">
@@ -808,16 +368,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="dataEnvio">
-                        Data de Envio <span class="campo-opcional">(opcional)</span>
-                    </label>
+                    <label for="dataEnvio">Data de Envio <span class="campo-opcional">(opcional)</span></label>
                     <input type="date" id="dataEnvio">
                 </div>
 
                 <div class="form-group">
-                    <label for="dataPrevista">
-                        Data Prevista de Entrega <span class="campo-opcional">(opcional)</span>
-                    </label>
+                    <label for="dataPrevista">Data Prevista de Entrega <span class="campo-opcional">(opcional)</span></label>
                     <input type="date" id="dataPrevista">
                 </div>
 
@@ -834,18 +390,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="observacoesRastreio">
-                        Observações <span class="campo-opcional">(opcional)</span>
-                    </label>
+                    <label for="observacoesRastreio">Observações <span class="campo-opcional">(opcional)</span></label>
                     <textarea id="observacoesRastreio" placeholder="Alguma observação sobre este rastreamento..."></textarea>
                 </div>
 
                 <button type="submit" class="btn-salvar">💾 Salvar Rastreio</button>
-                
-                <!-- NOVO: Botão para apagar rastreamento -->
-                <button type="button" class="btn-apagar-rastreio" id="btnApagarRastreio" onclick="apagarRastreio()" style="display: none;">
-                    🗑️ Apagar Rastreio
-                </button>
+                <button type="button" class="btn-apagar-rastreio" id="btnApagarRastreio" onclick="apagarRastreio()" style="display: none;">🗑️ Apagar Rastreio</button>
             </form>
         </div>
     </div>
@@ -868,9 +418,7 @@
                     <strong>💡 Como enviar:</strong>
                     Clique no botão abaixo para abrir o perfil do cliente no Instagram. Depois, inicie uma conversa no Direct e cole a mensagem.
                 </div>
-                <button class="btn-abrir-instagram" onclick="abrirInstagramCliente()" id="btnAbrirInstagram">
-                    📱 Abrir Instagram do Cliente
-                </button>
+                <button class="btn-abrir-instagram" onclick="abrirInstagramCliente()">📱 Abrir Instagram do Cliente</button>
             </div>
 
             <div class="form-group">
@@ -883,12 +431,27 @@
                 <div class="preview-texto" id="igPreview"></div>
             </div>
 
-            <button class="btn-salvar" onclick="copiarParaInstagram()" style="margin-top: 20px;">
-                📋 Copiar Mensagem
-            </button>
-            <p style="text-align: center; margin-top: 15px; color: #636E72; font-size: 0.85rem;">
-                Depois de copiar, cole no Direct do cliente
-            </p>
+            <button class="btn-salvar" onclick="copiarParaInstagram()" style="margin-top: 20px;">📋 Copiar Mensagem</button>
+        </div>
+    </div>
+
+    <!-- Modal Emitir Etiquetas -->
+    <div class="modal-overlay" id="modalEtiquetas">
+        <div class="modal-etiquetas">
+            <div class="etiquetas-header">
+                <div>
+                    <h3>🏷️ Emitir Etiquetas</h3>
+                    <div class="subtitulo">Copie os dados manualmente para as plataformas de envio</div>
+                </div>
+                <button class="btn-fechar" onclick="fecharModalEtiquetas()" style="color: white; font-size: 1.8rem;">×</button>
+            </div>
+            
+            <div class="etiquetas-body" id="etiquetasContainer"></div>
+            
+            <div class="etiquetas-footer">
+                <div class="etiquetas-info">💡 Clique em "Copiar" ao lado de cada campo para copiar automaticamente</div>
+                <button class="btn-fechar-etiquetas" onclick="fecharModalEtiquetas()">Fechar</button>
+            </div>
         </div>
     </div>
 
@@ -920,7 +483,7 @@
         })();
 
         // ============================================
-        // SUPABASE CONFIGURAÇÃO
+        // CONFIGURAÇÃO
         // ============================================
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
@@ -928,13 +491,10 @@
         let supabaseClient = null;
         let solicitacoesData = [];
         let clientesCache = {};
+        let rastreamentosCache = {};
         let instagramAtual = '';
-        let rastreamentosCache = {}; // NOVO: Cache de rastreamentos por solicitação
-        let rastreamentoAtualId = null; // NOVO: ID do rastreamento sendo editado
+        let idsSelecionados = new Set();
 
-        // ============================================
-        // URLs DE RASTREAMENTO POR TRANSPORTADORA
-        // ============================================
         const URLS_RASTREAMENTO = {
             'correios': (codigo) => `https://www2.correios.com.br/sistemas/rastreamento/default.cfm?objeto=${codigo}`,
             'jadlog': (codigo) => `https://www.jadlog.com.br/tracking?cnpj=&cte=${codigo}`,
@@ -942,6 +502,15 @@
             'melhor_envio': (codigo) => `https://www.melhorrastreio.com.br/rastreio/${codigo}`,
             'transportadora': (codigo) => `https://www.google.com/search?q=rastreamento+${codigo}`,
             'outro': (codigo) => `https://www.google.com/search?q=rastreamento+${codigo}`
+        };
+
+        const REMETENTE = {
+            nome: 'Amanda Marcelino',
+            endereco: 'Rua Arnoldo Silveira de Souza, 50 - Casa',
+            bairro: 'Distrito Industrial',
+            cidade: 'São José',
+            estado: 'SC',
+            cep: '88104-740'
         };
 
         // ============================================
@@ -952,18 +521,14 @@
                 if (typeof supabase !== 'undefined') {
                     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                     
-                    // Definir datas padrão (últimos 30 dias)
                     const hoje = new Date();
                     const trintaDiasAtras = new Date(hoje.getTime() - (30 * 24 * 60 * 60 * 1000));
                     document.getElementById('dataFinal').value = hoje.toISOString().split('T')[0];
                     document.getElementById('dataInicial').value = trintaDiasAtras.toISOString().split('T')[0];
-                    
-                    // Definir horas padrão
                     document.getElementById('horaInicial').value = '00:00';
                     document.getElementById('horaFinal').value = '23:59';
                     
-                    // Carregar dados iniciais
-                    carregarDados();
+                    testarConexao();
                 }
             } catch (e) {
                 console.error('Erro ao conectar Supabase:', e);
@@ -971,98 +536,122 @@
             }
         }
 
-        async function carregarDados() {
-            await Promise.all([
-                carregarClientes(),
-                carregarSolicitacoes()
-            ]);
-        }
-
-        async function carregarClientes() {
-            if (!supabaseClient) return;
-            
+        async function testarConexao() {
             try {
-                const { data, error } = await supabaseClient
-                    .from('clientes_pg')
-                    .select('id, nome, instagram, whatsapp');
-                
+                const { data, error } = await supabaseClient.from('clientes_pg').select('count').limit(1);
                 if (error) throw error;
-                
-                clientesCache = {};
-                (data || []).forEach(c => {
-                    clientesCache[c.id] = c;
-                });
-            } catch (e) {
-                console.error('Erro ao carregar clientes:', e);
+                document.getElementById('filtrosContainer').style.opacity = '1';
+                document.getElementById('filtrosContainer').style.pointerEvents = 'auto';
+                document.getElementById('emptyState').innerHTML = '<div class="empty-state-icon">📅</div><h3>Selecione um período</h3><p>Escolha filtros acima e clique em Buscar</p>';
+            } catch (erro) {
+                alert('❌ Erro ao conectar');
+                supabaseClient = null;
             }
         }
 
-        // ============================================
-        // CARREGAR SOLICITAÇÕES - ATUALIZADO (com hora nos filtros)
-        // ============================================
-        async function carregarSolicitacoes() {
-            if (!supabaseClient) return;
+        window.addEventListener('DOMContentLoaded', function() {
+            inicializarSupabase();
+            
+            document.getElementById('modalRastreio').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalRastreio'); });
+            document.getElementById('modalInstagram').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalInstagram'); });
+            document.getElementById('modalEtiquetas').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalEtiquetas(); });
+        });
 
+        // ============================================
+        // FUNÇÕES DE FORMATAÇÃO
+        // ============================================
+        function formatarDataBr(data) { if (!data) return '-'; const d = new Date(data); return isNaN(d.getTime()) ? data : d.toLocaleDateString('pt-BR'); }
+        function formatarDataHoraBr(data) { if (!data) return '-'; const d = new Date(data); return isNaN(d.getTime()) ? data : d.toLocaleString('pt-BR'); }
+        function formatarCPF(cpf) { if (!cpf) return '-'; cpf = cpf.toString().replace(/\D/g, ''); return cpf.length === 11 ? cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : cpf; }
+        function formatarCEP(cep) { if (!cep) return '-'; cep = cep.toString().replace(/\D/g, ''); return cep.length === 8 ? cep.replace(/(\d{5})(\d{3})/, '$1-$2') : cep; }
+        function formatarWhatsApp(whatsapp) { if (!whatsapp) return '-'; let num = whatsapp.toString().replace(/\D/g, ''); return num.startsWith('55') ? num : '55' + num; }
+        function formatarFormaEnvio(forma) {
+            const map = { 'correios': 'Correios', 'jadlog': 'Jadlog', 'super_frete': 'Super Frete', 'melhor_envio': 'Melhor Envio', 'transportadora': 'Transportadora', 'outro': 'Outro' };
+            return map[forma] || forma || 'Não especificada';
+        }
+        function getTagStatus(status) {
+            const cores = {'pendente': '#FFA726', 'enviado': '#42A5F5', 'entregue': '#66BB6A', 'cancelado': '#EF5350'};
+            const cor = cores[status] || '#9E9E9E';
+            return `<span class="status-badge" style="background: ${cor}20; color: ${cor}; border: 1px solid ${cor};">${status || 'Pendente'}</span>`;
+        }
+
+        // ============================================
+        // CARREGAR DADOS - PADRONIZADO COM ENTREGAS
+        // ============================================
+        async function aplicarFiltros() {
+            if (!supabaseClient) { alert('⚠️ Conecte-se primeiro!'); return; }
+            
             const dataInicial = document.getElementById('dataInicial').value;
-            const dataFinal = document.getElementById('dataFinal').value;
             const horaInicial = document.getElementById('horaInicial').value || '00:00';
+            const dataFinal = document.getElementById('dataFinal').value;
             const horaFinal = document.getElementById('horaFinal').value || '23:59';
+            
+            if (!dataInicial || !dataFinal) { alert('⚠️ Selecione as datas'); return; }
+            if (new Date(dataInicial) > new Date(dataFinal)) { alert('⚠️ Data inicial maior que final'); return; }
+
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('tabelaContainer').style.display = 'none';
+            document.getElementById('statsContainer').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
 
             try {
+                // ✅ PADRONIZADO: Mesmo formato da página de Entregas (UTC)
+                const dataHoraInicial = new Date(dataInicial + 'T' + horaInicial + ':00.000Z');
+                const dataHoraFinal = new Date(dataFinal + 'T' + horaFinal + ':59.999Z');
+
                 let query = supabaseClient
                     .from('solicitacoes_pg')
-                    .select(`
-                        *,
-                        enderecos_pg (
-                            cep,
-                            rua,
-                            numero,
-                            complemento,
-                            bairro,
-                            cidade,
-                            estado
-                        )
-                    `)
+                    .select(`*, clientes_pg (id, nome, cpf, whatsapp, instagram), enderecos_pg (cep, rua, numero, complemento, bairro, cidade, estado, regiao)`)
+                    .gte('data_solicitacao', dataHoraInicial.toISOString())
+                    .lte('data_solicitacao', dataHoraFinal.toISOString())
                     .order('data_solicitacao', { ascending: false });
 
-                if (dataInicial) {
-                    // Criar data com hora no início do período em UTC
-                    const inicioUTC = new Date(dataInicial + 'T' + horaInicial + ':00.000Z');
-                    query = query.gte('data_solicitacao', inicioUTC.toISOString());
-                }
-                
-                if (dataFinal) {
-                    // Criar data com hora no final do período em UTC
-                    const fimUTC = new Date(dataFinal + 'T' + horaFinal + ':59.999Z');
-                    query = query.lte('data_solicitacao', fimUTC.toISOString());
-                }
-
                 const { data, error } = await query;
+                if (error) throw error;
 
-                if (error) {
-                    console.error('Erro na query:', error);
-                    throw error;
-                }
+                solicitacoesData = (data || []).map((item, index) => ({
+                    index,
+                    id: item.id,
+                    cliente_id: item.cliente_id,
+                    numero_solicitacao: item.numero_solicitacao,
+                    data_solicitacao: item.data_solicitacao,
+                    status: item.status,
+                    nome: item.clientes_pg?.nome,
+                    cpf: item.clientes_pg?.cpf,
+                    whatsapp: item.clientes_pg?.whatsapp,
+                    instagram: item.clientes_pg?.instagram,
+                    cep: item.enderecos_pg?.cep,
+                    rua: item.enderecos_pg?.rua,
+                    numero: item.enderecos_pg?.numero,
+                    complemento: item.enderecos_pg?.complemento,
+                    bairro: item.enderecos_pg?.bairro,
+                    cidade: item.enderecos_pg?.cidade,
+                    estado: item.enderecos_pg?.estado,
+                    regiao: item.enderecos_pg?.regiao,
+                    codigo_rastreio: null,
+                    forma_envio: null,
+                    data_envio: null,
+                    data_entrega_prevista: null,
+                    rastreamento_id: null
+                }));
 
-                solicitacoesData = data || [];
-                
-                // Carregar rastreamentos para todas as solicitações
                 await carregarRastreamentos();
                 
-                atualizarStats();
+                document.getElementById('periodoSelecionado').textContent = 
+                    `Período: ${formatarDataBr(dataInicial)} ${horaInicial} a ${formatarDataBr(dataFinal)} ${horaFinal}`;
                 
-                // Aplicar filtros da tela (status/busca) nos dados carregados
+                idsSelecionados.clear();
+                atualizarStats();
                 aplicarFiltrosLocal();
                 
             } catch (e) {
                 console.error('Erro ao carregar solicitações:', e);
                 mostrarErro('Erro ao carregar solicitações: ' + e.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
             }
         }
 
-        // ============================================
-        // CARREGAR RASTREAMENTOS DA TABELA rastreamentos_pg
-        // ============================================
         async function carregarRastreamentos() {
             if (!supabaseClient || solicitacoesData.length === 0) return;
             
@@ -1077,7 +666,6 @@
                 
                 if (error) throw error;
                 
-                // Organizar rastreamentos por solicitação
                 rastreamentosCache = {};
                 solicitacaoIds.forEach(id => rastreamentosCache[id] = []);
                 
@@ -1088,7 +676,6 @@
                     rastreamentosCache[rast.solicitacao_id].push(rast);
                 });
                 
-                // Atualizar solicitacoesData com o rastreamento mais recente
                 solicitacoesData.forEach(sol => {
                     const rastreamentos = rastreamentosCache[sol.id] || [];
                     if (rastreamentos.length > 0) {
@@ -1098,9 +685,6 @@
                         sol.data_envio = maisRecente.data_envio;
                         sol.data_entrega_prevista = maisRecente.data_entrega_prevista;
                         sol.rastreamento_id = maisRecente.id;
-                    } else {
-                        sol.codigo_rastreio = null;
-                        sol.rastreamento_id = null;
                     }
                 });
                 
@@ -1119,88 +703,76 @@
             document.getElementById('statPendentes').textContent = pendentes;
             document.getElementById('statEnviados').textContent = enviados;
             document.getElementById('statEntregues').textContent = entregues;
+            document.getElementById('statsContainer').style.display = 'grid';
         }
 
+        // ============================================
+        // RENDERIZAR TABELA - PADRONIZADO
+        // ============================================
         function renderizarTabela(dados) {
-            const container = document.getElementById('tabelaContainer');
+            const tbody = document.getElementById('tabelaBody');
+            tbody.innerHTML = '';
             
             if (dados.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📭</div>
-                        <h3>Nenhuma solicitação encontrada</h3>
-                        <p>Tente ajustar os filtros de data</p>
-                    </div>
-                `;
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">Nenhuma solicitação encontrada</td></tr>';
+                document.getElementById('tabelaContainer').style.display = 'block';
+                document.getElementById('tabelaContainer').classList.add('fade-in');
                 return;
             }
 
-            let html = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nº Solicitação</th>
-                            <th>Cliente</th>
-                            <th>Data Solicitação</th>
-                            <th>Status</th>
-                            <th>Código Rastreio</th>
-                            <th>Forma Envio</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            dados.forEach(sol => {
-                const cliente = clientesCache[sol.cliente_id] || { nome: 'N/A', instagram: '' };
-                const dataSol = formatarData(sol.data_solicitacao);
-                const statusClass = `status-${sol.codigo_rastreio ? 'enviado' : (sol.status || 'pendente')}`;
-                const temInstagram = cliente.instagram && cliente.instagram.trim() !== '';
+            dados.forEach((item) => {
+                const tr = document.createElement('tr');
+                tr.dataset.index = item.index;
                 
-                html += `
-                    <tr>
-                        <td><span class="numero-pedido">${sol.numero_solicitacao || '-'}</span></td>
-                        <td>
-                            <strong>${cliente.nome}</strong>
-                            ${temInstagram ? `<br><small style="color:#E1306C">@${cliente.instagram}</small>` : ''}
-                        </td>
-                        <td>${dataSol}</td>
-                        <td><span class="status-badge ${statusClass}">${sol.codigo_rastreio ? 'Enviado' : (sol.status || 'Pendente')}</span></td>
-                        <td>${sol.codigo_rastreio || '-'}</td>
-                        <td>${sol.forma_envio ? formatarFormaEnvio(sol.forma_envio) : '-'}</td>
-                        <td>
-                            <div class="acoes-cell">
-                                <button class="btn-acao btn-rastreio" onclick="abrirModalRastreio('${sol.id}')">
-                                    📦 ${sol.codigo_rastreio ? 'Editar' : 'Cadastrar'}
-                                </button>
-                                <button class="btn-acao btn-instagram" onclick="abrirModalInstagram('${sol.id}')" 
-                                    ${!temInstagram ? 'disabled title="Cliente sem Instagram cadastrado"' : ''}>
-                                    📱 Instagram
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                const temRastreio = !!item.codigo_rastreio;
+                const temInstagram = item.instagram && item.instagram.trim() !== '';
+                
+                const numeroPedidoHtml = item.numero_solicitacao 
+                    ? `<span class="numero-pedido">${item.numero_solicitacao}</span>` 
+                    : '<span style="color: #9E9E9E; font-style: italic;">-</span>';
+
+                tr.innerHTML = `
+                    <td><input type="checkbox" class="checkbox-selecao" onchange="toggleSelecao(${item.index})" ${idsSelecionados.has(item.index) ? 'checked' : ''}></td>
+                    <td>${numeroPedidoHtml}</td>
+                    <td>${formatarDataHoraBr(item.data_solicitacao)}</td>
+                    <td>
+                        <strong>${item.nome || '-'}</strong>
+                        ${temInstagram ? `<br><small style="color:#E1306C">@${item.instagram}</small>` : ''}
+                    </td>
+                    <td>${getTagStatus(item.codigo_rastreio ? 'enviado' : (item.status || 'pendente'))}</td>
+                    <td>${item.codigo_rastreio || '-'}</td>
+                    <td>${item.forma_envio ? formatarFormaEnvio(item.forma_envio) : '-'}</td>
+                    <td>
+                        <div class="acoes-container">
+                            <button class="btn-acao btn-rastreio" onclick="abrirModalRastreio('${item.id}')">
+                                📦 ${temRastreio ? 'Editar' : 'Cadastrar'}
+                            </button>
+                            <button class="btn-acao btn-instagram" onclick="abrirModalInstagram('${item.id}')" 
+                                ${!temInstagram ? 'disabled title="Cliente sem Instagram"' : ''}>
+                                📱 Instagram
+                            </button>
+                        </div>
+                    </td>
                 `;
+                
+                if (idsSelecionados.has(item.index)) tr.classList.add('selecionado');
+                tbody.appendChild(tr);
             });
-
-            html += '</tbody></table>';
-            container.innerHTML = html;
+            
+            document.getElementById('tabelaContainer').style.display = 'block';
+            document.getElementById('tabelaContainer').classList.add('fade-in');
+            atualizarContadores();
+            atualizarBotoes();
         }
 
         // ============================================
-        // FILTROS
+        // FILTROS LOCAIS
         // ============================================
-        function aplicarFiltros() {
-            // Recarrega dados do banco com as datas e horas selecionadas
-            carregarSolicitacoes();
-        }
-
-        // Aplica filtros localmente sem bater no banco
         function aplicarFiltrosLocal() {
             const status = document.getElementById('filtroStatus').value;
             const busca = document.getElementById('filtroBusca').value.toLowerCase();
 
-            let filtrados = [...solicitacoesData]; // Criar cópia
+            let filtrados = [...solicitacoesData];
 
             if (status) {
                 if (status === 'enviado') {
@@ -1214,9 +786,8 @@
 
             if (busca) {
                 filtrados = filtrados.filter(s => {
-                    const cliente = clientesCache[s.cliente_id] || { nome: '' };
                     const numMatch = (s.numero_solicitacao || '').toLowerCase().includes(busca);
-                    const nomeMatch = cliente.nome.toLowerCase().includes(busca);
+                    const nomeMatch = (s.nome || '').toLowerCase().includes(busca);
                     const codigoMatch = (s.codigo_rastreio || '').toLowerCase().includes(busca);
                     return numMatch || nomeMatch || codigoMatch;
                 });
@@ -1226,28 +797,71 @@
         }
 
         // ============================================
-        // FUNÇÃO PARA EXTRAIR CÓDIGO DE RASTREIO
+        // SELEÇÃO EM MASSA
+        // ============================================
+        function toggleSelecao(index) {
+            if (idsSelecionados.has(index)) idsSelecionados.delete(index);
+            else idsSelecionados.add(index);
+            
+            const tr = document.querySelector(`tr[data-index="${index}"]`);
+            if (tr) tr.classList.toggle('selecionado', idsSelecionados.has(index));
+            
+            atualizarContadores();
+            atualizarBotoes();
+        }
+
+        function toggleSelecionarTodos() {
+            const checkboxHeader = document.getElementById('checkboxHeader');
+            const checkboxMassa = document.getElementById('selecionarTodos');
+            const checked = checkboxHeader.checked;
+            checkboxMassa.checked = checked;
+            
+            idsSelecionados.clear();
+            if (checked) {
+                solicitacoesData.forEach(item => idsSelecionados.add(item.index));
+            }
+            
+            const todasLinhas = document.querySelectorAll('#tabelaBody tr[data-index]');
+            todasLinhas.forEach(tr => {
+                const index = parseInt(tr.dataset.index);
+                const checkbox = tr.querySelector('.checkbox-selecao');
+                if (checkbox) checkbox.checked = checked;
+                if (checked) tr.classList.add('selecionado');
+                else tr.classList.remove('selecionado');
+            });
+            
+            atualizarContadores();
+            atualizarBotoes();
+        }
+
+        function atualizarContadores() {
+            document.getElementById('infoSelecao').textContent = idsSelecionados.size > 0 ? `${idsSelecionados.size} de ${solicitacoesData.length}` : '';
+        }
+
+        function atualizarBotoes() {
+            const habilitado = idsSelecionados.size > 0;
+            document.getElementById('btnGerarPDF').disabled = !habilitado;
+            document.getElementById('btnEmitirEtiquetas').disabled = !habilitado;
+        }
+
+        // ============================================
+        // MODAL RASTREIO
         // ============================================
         function extrairCodigoRastreio(valor) {
             if (!valor || valor.trim() === '') return '';
-            
             valor = valor.trim();
-            
             if (valor.includes('/') || valor.includes('?')) {
                 const partes = valor.split('/');
                 let ultimaParte = partes[partes.length - 1];
-                
                 if (ultimaParte.includes('?')) {
                     const params = new URLSearchParams(ultimaParte.split('?')[1]);
                     const codigoParam = params.get('codigo') || params.get('tracking') || params.get('id');
                     if (codigoParam) return codigoParam;
                     ultimaParte = ultimaParte.split('?')[0];
                 }
-                
                 ultimaParte = ultimaParte.split('#')[0];
                 return ultimaParte.trim();
             }
-            
             return valor;
         }
 
@@ -1255,7 +869,6 @@
             const input = document.getElementById('codigoRastreio');
             const preview = document.getElementById('codigoPreview');
             const extraido = document.getElementById('codigoExtraido');
-            
             const codigo = extrairCodigoRastreio(input.value);
             
             if (codigo && input.value.includes('/')) {
@@ -1266,21 +879,15 @@
             }
         }
 
-        // ============================================
-        // MODAL RASTREIO COM HISTÓRICO - ATUALIZADO
-        // ============================================
         async function abrirModalRastreio(solicitacaoId) {
             const sol = solicitacoesData.find(s => s.id === solicitacaoId);
             if (!sol) return;
 
             document.getElementById('rastreioSolicitacaoId').value = solicitacaoId;
             document.getElementById('rastreioId').value = sol.rastreamento_id || '';
-            rastreamentoAtualId = sol.rastreamento_id || null;
             
-            // Mostrar histórico de rastreamentos
             await mostrarHistoricoRastreamentos(solicitacaoId);
             
-            // Preencher com dados do rastreamento mais recente se existir
             if (sol.rastreamento_id) {
                 const rastRecente = rastreamentosCache[solicitacaoId]?.[0];
                 if (rastRecente) {
@@ -1289,31 +896,24 @@
                     document.getElementById('dataPrevista').value = rastRecente.data_entrega_prevista || '';
                     document.getElementById('formaEnvio').value = rastRecente.forma_envio || 'correios';
                     document.getElementById('observacoesRastreio').value = rastRecente.observacoes || '';
-                    
-                    // Mostrar botão de apagar se existe rastreamento
                     document.getElementById('btnApagarRastreio').style.display = 'block';
                 }
             } else {
-                // Limpar campos para novo cadastro
                 document.getElementById('codigoRastreio').value = '';
                 document.getElementById('dataEnvio').value = '';
                 document.getElementById('dataPrevista').value = '';
                 document.getElementById('formaEnvio').value = 'correios';
                 document.getElementById('observacoesRastreio').value = '';
-                
-                // Esconder botão de apagar se não existe rastreamento
                 document.getElementById('btnApagarRastreio').style.display = 'none';
             }
             
             document.getElementById('codigoPreview').classList.remove('active');
-            document.getElementById('modalRastreio').classList.add('active');
+            document.getElementById('modalRastreio').classList.add('ativo');
         }
 
-        // Mostrar histórico de rastreamentos
         async function mostrarHistoricoRastreamentos(solicitacaoId) {
             const historicoDiv = document.getElementById('historicoRastreamentos');
             const listaDiv = document.getElementById('listaHistorico');
-            
             const rastreamentos = rastreamentosCache[solicitacaoId] || [];
             
             if (rastreamentos.length === 0) {
@@ -1322,7 +922,7 @@
             }
             
             let html = '';
-            rastreamentos.forEach((rast, index) => {
+            rastreamentos.forEach((rast) => {
                 const dataCad = new Date(rast.data_cadastro).toLocaleString('pt-BR');
                 html += `
                     <div class="historico-item">
@@ -1339,40 +939,33 @@
             historicoDiv.style.display = 'block';
         }
 
-        // ============================================
-        // SALVAR RASTREIO - ATUALIZADO
-        // ============================================
         async function salvarRastreio(event) {
             event.preventDefault();
             
             const solicitacaoId = document.getElementById('rastreioSolicitacaoId').value;
             const rastreioId = document.getElementById('rastreioId').value;
             const codigoInput = document.getElementById('codigoRastreio').value.trim();
-            
             const codigo = extrairCodigoRastreio(codigoInput);
             
-            const dataEnvio = document.getElementById('dataEnvio').value || null;
-            const dataPrevista = document.getElementById('dataPrevista').value || null;
-            const formaEnvio = document.getElementById('formaEnvio').value;
-            const observacoes = document.getElementById('observacoesRastreio').value || null;
-
-            // Se código está vazio e é edição, não faz nada (deixa para função de apagar)
+            if (!codigo && !rastreioId) {
+                alert('⚠️ Informe um código de rastreio');
+                return;
+            }
+            
             if (!codigo && rastreioId) {
                 alert('⚠️ Para remover o rastreamento, use o botão "Apagar Rastreio"');
                 return;
             }
 
-            // Se código está vazio e é novo, mostra erro
-            if (!codigo && !rastreioId) {
-                alert('⚠️ Informe um código de rastreio');
-                return;
-            }
+            const dataEnvio = document.getElementById('dataEnvio').value || null;
+            const dataPrevista = document.getElementById('dataPrevista').value || null;
+            const formaEnvio = document.getElementById('formaEnvio').value;
+            const observacoes = document.getElementById('observacoesRastreio').value || null;
 
             try {
                 let result;
                 
                 if (rastreioId) {
-                    // ATUALIZAR rastreamento existente
                     result = await supabaseClient
                         .from('rastreamentos_pg')
                         .update({
@@ -1385,7 +978,6 @@
                         .eq('id', rastreioId)
                         .select();
                 } else {
-                    // INSERIR novo rastreamento
                     result = await supabaseClient
                         .from('rastreamentos_pg')
                         .insert({
@@ -1399,27 +991,23 @@
                         .select();
                 }
 
-                if (result && result.error) throw result.error;
+                if (result.error) throw result.error;
 
-                // Atualizar status da solicitação para 'enviado'
                 await supabaseClient
                     .from('solicitacoes_pg')
                     .update({ status: 'enviado' })
                     .eq('id', solicitacaoId);
 
                 fecharModal('modalRastreio');
-                await carregarSolicitacoes();
-                
+                await aplicarFiltros();
                 alert('✅ Rastreio salvo com sucesso!\n\nCódigo: ' + codigo);
+                
             } catch (e) {
                 console.error('Erro ao salvar rastreio:', e);
                 alert('❌ Erro ao salvar rastreio: ' + e.message);
             }
         }
 
-        // ============================================
-        // NOVO: APAGAR RASTREIO
-        // ============================================
         async function apagarRastreio() {
             const rastreioId = document.getElementById('rastreioId').value;
             const solicitacaoId = document.getElementById('rastreioSolicitacaoId').value;
@@ -1429,17 +1017,10 @@
                 return;
             }
             
-            // Confirmação dupla
-            if (!confirm('🗑️ Tem certeza que deseja APAGAR este rastreamento?\n\nEsta ação não pode ser desfeita!')) {
-                return;
-            }
-            
-            if (!confirm('⚠️ CONFIRMAÇÃO FINAL:\n\nO rastreamento será permanentemente removido. Deseja continuar?')) {
-                return;
-            }
-            
+            if (!confirm('🗑️ Tem certeza que deseja APAGAR este rastreamento?\n\nEsta ação não pode ser desfeita!')) return;
+            if (!confirm('⚠️ CONFIRMAÇÃO FINAL:\n\nO rastreamento será permanentemente removido. Deseja continuar?')) return;
+
             try {
-                // Apagar o rastreamento
                 const { error } = await supabaseClient
                     .from('rastreamentos_pg')
                     .delete()
@@ -1447,17 +1028,14 @@
                 
                 if (error) throw error;
                 
-                // Verificar se há mais rastreamentos para esta solicitação
                 const rastreamentosRestantes = rastreamentosCache[solicitacaoId]?.filter(r => r.id !== rastreioId) || [];
                 
-                // Se não há mais rastreamentos, atualiza status para pendente
                 if (rastreamentosRestantes.length === 0) {
                     await supabaseClient
                         .from('solicitacoes_pg')
                         .update({ status: 'pendente' })
                         .eq('id', solicitacaoId);
                 } else {
-                    // Se há rastreamentos anteriores, atualiza com o mais recente
                     const maisRecente = rastreamentosRestantes[0];
                     await supabaseClient
                         .from('solicitacoes_pg')
@@ -1470,9 +1048,9 @@
                 }
                 
                 fecharModal('modalRastreio');
-                await carregarSolicitacoes();
+                await aplicarFiltros();
+                alert('✅ Rastreamento apagado com sucesso!');
                 
-                alert('✅ Rastreamento apagado com sucesso!\n\nA solicitação foi atualizada.');
             } catch (e) {
                 console.error('Erro ao apagar rastreio:', e);
                 alert('❌ Erro ao apagar rastreamento: ' + e.message);
@@ -1486,24 +1064,16 @@
             const sol = solicitacoesData.find(s => s.id === solicitacaoId);
             if (!sol) return;
 
-            const cliente = clientesCache[sol.cliente_id];
-            if (!cliente || !cliente.instagram) {
+            if (!sol.instagram) {
                 alert('Cliente não possui Instagram cadastrado');
                 return;
             }
 
-            instagramAtual = cliente.instagram.replace('@', '').trim();
-            document.getElementById('igClienteNome').value = `${cliente.nome} (@${instagramAtual})`;
-
-            const instagramSection = document.getElementById('instagramClienteSection');
-            if (instagramAtual) {
-                instagramSection.style.display = 'block';
-            } else {
-                instagramSection.style.display = 'none';
-            }
+            instagramAtual = sol.instagram.replace('@', '').trim();
+            document.getElementById('igClienteNome').value = `${sol.nome} (@${instagramAtual})`;
 
             const urlRastreamento = gerarUrlRastreamento(sol);
-            const mensagem = gerarMensagemInstagram(sol, cliente, urlRastreamento);
+            const mensagem = gerarMensagemInstagram(sol, urlRastreamento);
             document.getElementById('igMensagem').value = mensagem;
             document.getElementById('igPreview').textContent = mensagem;
 
@@ -1511,7 +1081,7 @@
                 document.getElementById('igPreview').textContent = this.value;
             };
 
-            document.getElementById('modalInstagram').classList.add('active');
+            document.getElementById('modalInstagram').classList.add('ativo');
         }
 
         function abrirInstagramCliente() {
@@ -1519,50 +1089,36 @@
                 alert('Não foi possível encontrar o Instagram do cliente');
                 return;
             }
-
             const instagramUrl = `https://ig.me/m/${instagramAtual}`;
             const instagramAppUrl = `instagram://user?username=${instagramAtual}`;
-            
             window.location.href = instagramAppUrl;
-            
-            setTimeout(() => {
-                window.open(instagramUrl, '_blank');
-            }, 1000);
+            setTimeout(() => window.open(instagramUrl, '_blank'), 1000);
         }
 
         function gerarUrlRastreamento(sol) {
             if (!sol.codigo_rastreio) return null;
-            
             const formaEnvio = sol.forma_envio || 'correios';
             const geradorUrl = URLS_RASTREAMENTO[formaEnvio];
-            
-            if (geradorUrl) {
-                return geradorUrl(sol.codigo_rastreio);
-            }
-            
-            return `https://www.google.com/search?q=rastreamento+${sol.codigo_rastreio}`;
+            return geradorUrl ? geradorUrl(sol.codigo_rastreio) : `https://www.google.com/search?q=rastreamento+${sol.codigo_rastreio}`;
         }
 
-        function gerarMensagemInstagram(sol, cliente, urlRastreamento) {
+        function gerarMensagemInstagram(sol, urlRastreamento) {
             const numero = sol.numero_solicitacao || 'N/A';
             const codigo = sol.codigo_rastreio || 'N/A';
             const formaEnvio = formatarFormaEnvio(sol.forma_envio);
             
-            let mensagem = `Oi ${cliente.nome.split(' ')[0]}! 👋\n\n`;
+            let mensagem = `Oi ${sol.nome.split(' ')[0]}! 👋\n\n`;
             mensagem += `Seu pedido da Pingo de Gente foi enviado! 🚚✨\n\n`;
             mensagem += `📦 Nº do Pedido: ${numero}\n`;
             
             if (sol.codigo_rastreio) {
                 mensagem += `🔍 Código de Rastreio: ${codigo}\n`;
                 mensagem += `🚛 Transportadora: ${formaEnvio}\n`;
-                
-                if (urlRastreamento) {
-                    mensagem += `\n🔗 Acompanhe sua entrega:\n${urlRastreamento}\n`;
-                }
+                if (urlRastreamento) mensagem += `\n🔗 Acompanhe sua entrega:\n${urlRastreamento}\n`;
             }
             
             if (sol.data_entrega_prevista) {
-                mensagem += `\n📅 Previsão de Entrega: ${formatarDataBR(sol.data_entrega_prevista)}\n`;
+                mensagem += `\n📅 Previsão de Entrega: ${formatarDataBr(sol.data_entrega_prevista)}\n`;
             }
             
             mensagem += `\nQualquer dúvida, estou por aqui! 💕\n`;
@@ -1571,21 +1127,8 @@
             return mensagem;
         }
 
-        function formatarFormaEnvio(forma) {
-            const map = {
-                'correios': 'Correios',
-                'jadlog': 'Jadlog',
-                'super_frete': 'Super Frete',
-                'melhor_envio': 'Melhor Envio',
-                'transportadora': 'Transportadora',
-                'outro': 'Outro'
-            };
-            return map[forma] || forma || 'Não especificada';
-        }
-
         function copiarParaInstagram() {
             const mensagem = document.getElementById('igMensagem').value;
-            
             navigator.clipboard.writeText(mensagem).then(() => {
                 alert('✅ Mensagem copiada! Agora abra o Instagram do cliente e cole no Direct.');
                 if (confirm('Deseja abrir o perfil do cliente no Instagram agora?')) {
@@ -1598,50 +1141,235 @@
                 textarea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textarea);
-                alert('✅ Mensagem copiada! Agora abra o Instagram do cliente e cole no Direct.');
+                alert('✅ Mensagem copiada!');
             });
+        }
+
+        // ============================================
+        // MODAL ETIQUETAS
+        // ============================================
+        function abrirModalEtiquetas() {
+            if (idsSelecionados.size === 0) {
+                alert('⚠️ Selecione pelo menos uma entrega para emitir etiquetas.');
+                return;
+            }
+
+            const dadosSelecionados = Array.from(idsSelecionados).map(index => {
+                return solicitacoesData.find(d => d.index === index);
+            }).filter(Boolean);
+
+            const container = document.getElementById('etiquetasContainer');
+            container.innerHTML = '';
+
+            dadosSelecionados.forEach((item, idx) => {
+                const enderecoCompleto = `${item.rua || ''}, ${item.numero || 'S/N'}${item.complemento ? ' - ' + item.complemento : ''}`;
+                const cidadeUF = `${item.cidade || ''} - ${item.estado || 'SC'}`;
+
+                const card = document.createElement('div');
+                card.className = 'etiqueta-card';
+                card.innerHTML = `
+                    <div class="etiqueta-numero">${item.numero_solicitacao || 'Sem Número'}</div>
+                    
+                    <div class="etiqueta-secao">
+                        <div class="etiqueta-secao-titulo">👤 Dados do Destinatário</div>
+                        <div class="etiqueta-grid">
+                            <div class="campo-copiar">
+                                <span class="campo-label">Nome:</span>
+                                <span class="campo-valor" id="nome-${idx}">${item.nome || '-'}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('nome-${idx}', this)">📋 Copiar</button>
+                            </div>
+                            <div class="campo-copiar">
+                                <span class="campo-label">CPF:</span>
+                                <span class="campo-valor" id="cpf-${idx}">${formatarCPF(item.cpf)}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('cpf-${idx}', this)">📋 Copiar</button>
+                            </div>
+                            <div class="campo-copiar">
+                                <span class="campo-label">WhatsApp:</span>
+                                <span class="campo-valor" id="whatsapp-${idx}">${item.whatsapp || '-'}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('whatsapp-${idx}', this)">📋 Copiar</button>
+                            </div>
+                            <div class="campo-copiar">
+                                <span class="campo-label">Instagram:</span>
+                                <span class="campo-valor" id="instagram-${idx}">${item.instagram || '-'}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('instagram-${idx}', this)">📋 Copiar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="etiqueta-secao">
+                        <div class="etiqueta-secao-titulo">📍 Endereço de Entrega</div>
+                        <div class="etiqueta-grid">
+                            <div class="campo-copiar campo-endereco-completo">
+                                <span class="campo-label">Endereço:</span>
+                                <span class="campo-valor" id="endereco-${idx}">${enderecoCompleto}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('endereco-${idx}', this)">📋 Copiar</button>
+                            </div>
+                            <div class="campo-copiar">
+                                <span class="campo-label">Bairro:</span>
+                                <span class="campo-valor" id="bairro-${idx}">${item.bairro || '-'}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('bairro-${idx}', this)">📋 Copiar</button>
+                            </div>
+                            <div class="campo-copiar">
+                                <span class="campo-label">Cidade/UF:</span>
+                                <span class="campo-valor" id="cidade-${idx}">${cidadeUF}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('cidade-${idx}', this)">📋 Copiar</button>
+                            </div>
+                            <div class="campo-copiar">
+                                <span class="campo-label">CEP:</span>
+                                <span class="campo-valor" id="cep-${idx}">${formatarCEP(item.cep)}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('cep-${idx}', this)">📋 Copiar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="etiqueta-secao">
+                        <div class="etiqueta-secao-titulo">📝 Informações de Rastreamento</div>
+                        <div class="etiqueta-grid">
+                            <div class="campo-copiar">
+                                <span class="campo-label">Código:</span>
+                                <span class="campo-valor" id="codigo-${idx}">${item.codigo_rastreio || 'Não cadastrado'}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('codigo-${idx}', this)">📋 Copiar</button>
+                            </div>
+                            <div class="campo-copiar">
+                                <span class="campo-label">Transportadora:</span>
+                                <span class="campo-valor" id="transp-${idx}">${formatarFormaEnvio(item.forma_envio)}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('transp-${idx}', this)">📋 Copiar</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('modalEtiquetas').classList.add('ativo');
+        }
+
+        function fecharModalEtiquetas() {
+            document.getElementById('modalEtiquetas').classList.remove('ativo');
+        }
+
+        function copiarCampo(elementId, botao) {
+            const elemento = document.getElementById(elementId);
+            if (!elemento) return;
+            
+            navigator.clipboard.writeText(elemento.textContent).then(() => {
+                botao.textContent = '✅ Copiado';
+                botao.classList.add('copiado');
+                const campoCopiar = botao.closest('.campo-copiar');
+                if (campoCopiar) campoCopiar.classList.add('copiado');
+                
+                setTimeout(() => {
+                    botao.textContent = '📋 Copiar';
+                    botao.classList.remove('copiado');
+                    if (campoCopiar) campoCopiar.classList.remove('copiado');
+                }, 2000);
+            });
+        }
+
+        // ============================================
+        // PDF
+        // ============================================
+        async function gerarPDF() {
+            if (idsSelecionados.size === 0) {
+                alert('⚠️ Selecione pelo menos uma solicitação para gerar o PDF.');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+
+            const dataInicial = document.getElementById('dataInicial').value;
+            const dataFinal = document.getElementById('dataFinal').value;
+
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Rastreamento de Entregas - Pingo de Gente', 15, 15);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Período: ${formatarDataBr(dataInicial)} a ${formatarDataBr(dataFinal)}`, 15, 22);
+            doc.line(10, 25, 287, 25);
+
+            const dadosSelecionados = Array.from(idsSelecionados).map(index => {
+                const item = solicitacoesData.find(d => d.index === index);
+                return [
+                    item.numero_solicitacao || '-',
+                    formatarDataBr(item.data_solicitacao),
+                    item.nome || '-',
+                    item.codigo_rastreio || '-',
+                    formatarFormaEnvio(item.forma_envio),
+                    item.status || 'Pendente',
+                    item.observacoes || '-'
+                ];
+            });
+
+            doc.autoTable({
+                head: [['Nº Pedido', 'Data', 'Nome', 'Código Rastreio', 'Transportadora', 'Status', 'Observações']],
+                body: dadosSelecionados,
+                startY: 30,
+                theme: 'grid',
+                headStyles: { fillColor: [255, 107, 138], textColor: [255, 255, 255], fontSize: 11, fontStyle: 'bold' },
+                bodyStyles: { fontSize: 10, textColor: [0, 0, 0] },
+                columnStyles: {
+                    0: { cellWidth: 30, fontStyle: 'bold' },
+                    1: { cellWidth: 25 },
+                    2: { cellWidth: 50 },
+                    3: { cellWidth: 35 },
+                    4: { cellWidth: 30 },
+                    5: { cellWidth: 25 },
+                    6: { cellWidth: 'auto' }
+                },
+                margin: { top: 30, left: 10, right: 10 }
+            });
+
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(10);
+                doc.text(`Página ${i} de ${pageCount} - Total de ${dadosSelecionados.length} solicitações`, 297 / 2, 210 - 10, { align: 'center' });
+            }
+
+            window.open(doc.output('bloburl'), '_blank');
         }
 
         // ============================================
         // UTILITÁRIOS
         // ============================================
         function fecharModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
+            document.getElementById(modalId).classList.remove('ativo');
         }
 
-        function formatarData(dataStr) {
-            if (!dataStr) return '-';
-            const data = new Date(dataStr);
-            return data.toLocaleDateString('pt-BR');
-        }
-
-        function formatarDataBR(dataStr) {
-            if (!dataStr) return '-';
-            const data = new Date(dataStr);
-            return data.toLocaleDateString('pt-BR');
+        function limparFiltros() {
+            const hoje = new Date();
+            const trintaDiasAtras = new Date(hoje.getTime() - (30 * 24 * 60 * 60 * 1000));
+            document.getElementById('dataFinal').value = hoje.toISOString().split('T')[0];
+            document.getElementById('dataInicial').value = trintaDiasAtras.toISOString().split('T')[0];
+            document.getElementById('horaInicial').value = '00:00';
+            document.getElementById('horaFinal').value = '23:59';
+            document.getElementById('filtroStatus').value = '';
+            document.getElementById('filtroBusca').value = '';
+            document.getElementById('tabelaContainer').style.display = 'none';
+            document.getElementById('statsContainer').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+            solicitacoesData = [];
+            idsSelecionados.clear();
+            document.getElementById('checkboxHeader').checked = false;
+            document.getElementById('selecionarTodos').checked = false;
         }
 
         function mostrarErro(mensagem) {
-            document.getElementById('tabelaContainer').innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">⚠️</div>
-                    <h3>Erro ao carregar dados</h3>
-                    <p>${mensagem}</p>
-                </div>
+            document.getElementById('tabelaContainer').style.display = 'none';
+            document.getElementById('emptyState').innerHTML = `
+                <div class="empty-state-icon">⚠️</div>
+                <h3>Erro ao carregar dados</h3>
+                <p>${mensagem}</p>
             `;
+            document.getElementById('emptyState').style.display = 'block';
         }
 
-        // Fechar modal ao clicar fora
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
-                }
-            });
-        });
-
-        // Inicializar
-        document.addEventListener('DOMContentLoaded', inicializarSupabase);
+        function fazerLogout() {
+            localStorage.removeItem('pingo_senha_hash');
+            window.location.replace('login.html');
+        }
     </script>
 </body>
 </html>
