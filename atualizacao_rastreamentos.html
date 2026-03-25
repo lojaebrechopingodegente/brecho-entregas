@@ -253,6 +253,21 @@
             color: #721c24;
         }
 
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-delivered {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-transit {
+            background: #cce5ff;
+            color: #004085;
+        }
+
         .card {
             background: #f8f9fa;
             border-radius: 10px;
@@ -329,6 +344,32 @@
             padding: 15px;
             margin: 10px 0;
             border-radius: 5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            margin-top: 5px;
         }
     </style>
 <base target="_blank">
@@ -438,13 +479,14 @@
                     <li>Configure o Supabase na aba "Configuração" primeiro</li>
                     <li>Clique em "📋 Copiar Script" (código limpo, sem HTML)</li>
                     <li>Cole no PowerShell como Administrador e execute</li>
+                    <li>O script irá: buscar tokens → buscar entregas pendentes → consultar APIs → retornar resultado</li>
                     <li>O resultado JSON será copiado <strong>automaticamente</strong>!</li>
                     <li>Vá direto para aba "Resultado" e cole (Ctrl+V)</li>
                 </ol>
             </div>
 
             <div class="card">
-                <h3>📜 Script PowerShell (com suas credenciais)</h3>
+                <h3>📜 Script PowerShell (completo - busca entregas e consulta APIs)</h3>
                 <div class="code-block" id="powershellCodeBlock">
                     <button class="copy-btn" onclick="copyPowerShell()">📋 Copiar Script</button>
                     <pre id="psCode"></pre>
@@ -549,84 +591,248 @@
             alert('Configuração removida!');
         }
 
-        // Gerar PowerShell com credenciais embutidas
+        // Gerar PowerShell completo com busca de entregas e APIs
         function gerarPowerShell() {
             const url = document.getElementById('sbUrl').value || 'https://ytnfjzngalfapfnbobfm.supabase.co';
             const key = document.getElementById('sbKey').value || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
 
             // Código LIMPO (sem HTML) - será usado para copiar
             cleanPowerShellCode = `# ============================================
-# Verificador de Entregas - PowerShell
-# Busca tokens em PRODUÇÃO e ATIVOS
+# Verificador de Entregas - PowerShell Completo
+# Busca tokens → Busca entregas → Consulta APIs
 # ============================================
 
-# Configurações do Supabase (AUTOMÁTICO - não editar)
+# Configurações do Supabase
 $url = "${url}"
 $apiKey = "${key}"
 
-# Headers para requisição
+# Headers para requisição Supabase
 $headers = @{
     "apikey" = $apiKey
     "Authorization" = "Bearer $apiKey"
     "Content-Type" = "application/json"
 }
 
-Write-Host "🔍 Buscando tokens de produção ativos..." -ForegroundColor Cyan
+Write-Host "🔍 Iniciando verificação de entregas..." -ForegroundColor Cyan
 Write-Host ""
 
-# Buscar token SuperFrete (PRODUÇÃO + ATIVO)
-$urlSF = "$url/rest/v1/superfrete_config?select=api_token&environment=eq.production&is_active=eq.true&limit=1"
+# ============================================
+# 1. BUSCAR TOKENS DAS APIs (PRODUÇÃO + ATIVO)
+# ============================================
+
+# Buscar token SuperFrete
+$urlSF = "$url/rest/v1/superfrete_config?select=api_token,environment,is_active&environment=eq.production&is_active=eq.true&limit=1"
+$tokenSF = $null
+$sfEnv = "production"
 try {
     $responseSF = Invoke-RestMethod -Uri $urlSF -Headers $headers -Method Get
-    if ($responseSF) {
+    if ($responseSF -and $responseSF.Count -gt 0) {
         $tokenSF = $responseSF[0].api_token
-        Write-Host "✅ Token SuperFrete PRODUÇÃO encontrado!" -ForegroundColor Green
+        Write-Host "✅ Token SuperFrete encontrado!" -ForegroundColor Green
     } else {
-        Write-Host "❌ Token SuperFrete não encontrado (verifique se está salvo como produção+ativo)" -ForegroundColor Red
+        Write-Host "❌ Token SuperFrete não encontrado" -ForegroundColor Red
     }
 } catch {
     Write-Host "❌ Erro ao buscar SuperFrete: $_" -ForegroundColor Red
 }
 
-# Buscar token Melhor Envio (PRODUÇÃO + ATIVO)
-$urlME = "$url/rest/v1/melhor_envio_config?select=api_token&environment=eq.production&is_active=eq.true&limit=1"
+# Buscar token Melhor Envio
+$urlME = "$url/rest/v1/melhor_envio_config?select=api_token,environment,is_active&environment=eq.production&is_active=eq.true&limit=1"
+$tokenME = $null
+$meEnv = "production"
 try {
     $responseME = Invoke-RestMethod -Uri $urlME -Headers $headers -Method Get
-    if ($responseME) {
+    if ($responseME -and $responseME.Count -gt 0) {
         $tokenME = $responseME[0].api_token
-        Write-Host "✅ Token Melhor Envio PRODUÇÃO encontrado!" -ForegroundColor Green
+        Write-Host "✅ Token Melhor Envio encontrado!" -ForegroundColor Green
     } else {
-        Write-Host "❌ Token Melhor Envio não encontrado (verifique se está salvo como produção+ativo)" -ForegroundColor Red
+        Write-Host "❌ Token Melhor Envio não encontrado" -ForegroundColor Red
     }
 } catch {
     Write-Host "❌ Erro ao buscar Melhor Envio: $_" -ForegroundColor Red
 }
 
 Write-Host ""
-Write-Host "🚀 Iniciando verificação de entregas..." -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Yellow
 
-# Resultado
-$resultado = @{
-    data_verificacao = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-    superfrete = @{
-        token_encontrado = $tokenSF -ne $null
-        ambiente = "production"
+# ============================================
+# 2. BUSCAR ENTREGAS PENDENTES NO SUPABASE
+# ============================================
+
+Write-Host "📦 Buscando entregas pendentes..." -ForegroundColor Cyan
+
+# Buscar entregas com status pendente ou em trânsito
+$urlEntregas = "$url/rest/v1/entregas?select=*&status=in.(pendente,em_transito,postado,enviado)&order=data_envio.desc&limit=100"
+$entregas = @()
+
+try {
+    $responseEntregas = Invoke-RestMethod -Uri $urlEntregas -Headers $headers -Method Get
+    if ($responseEntregas) {
+        $entregas = $responseEntregas
+        Write-Host "✅ $($entregas.Count) entregas encontradas" -ForegroundColor Green
+    } else {
+        Write-Host "⚠️ Nenhuma entrega pendente encontrada" -ForegroundColor Yellow
     }
-    melhor_envio = @{
-        token_encontrado = $tokenME -ne $null
-        ambiente = "production"
+} catch {
+    Write-Host "❌ Erro ao buscar entregas: $_" -ForegroundColor Red
+    # Tentar com nome alternativo da tabela
+    try {
+        $urlEntregas2 = "$url/rest/v1/delivery?select=*&status=in.(pendente,em_transito,postado,enviado)&limit=100"
+        $responseEntregas2 = Invoke-RestMethod -Uri $urlEntregas2 -Headers $headers -Method Get
+        if ($responseEntregas2) {
+            $entregas = $responseEntregas2
+            Write-Host "✅ $($entregas.Count) entregas encontradas (tabela: delivery)" -ForegroundColor Green
+        }
+    } catch {
+        Write-Host "❌ Tabela alternativa também não encontrada" -ForegroundColor Red
     }
-    entregas = @()
+}
+
+# ============================================
+# 3. CONSULTAR APIs DE RASTREAMENTO
+# ============================================
+
+$entregasProcessadas = @()
+
+foreach ($entrega in $entregas) {
+    $entregaResult = @{
+        id = $entrega.id
+        codigo_rastreio = $entrega.codigo_rastreio
+        transportadora = $entrega.transportadora
+        status_anterior = $entrega.status
+        status_atual = $entrega.status
+        data_ultima_atualizacao = $entrega.data_ultima_atualizacao
+        origem = $entrega.origem
+        destino = $entrega.destino
+        atualizado_na_api = $false
+        erro_api = $null
+        eventos = @()
+    }
+
+    # Verificar se tem código de rastreio
+    if (-not $entrega.codigo_rastreio) {
+        $entregaResult.erro_api = "Sem código de rastreio"
+        $entregasProcessadas += $entregaResult
+        continue
+    }
+
+    # Consultar SuperFrete (se for transportadora SuperFrete e tiver token)
+    if ($entrega.transportadora -like "*SuperFrete*" -or $entrega.transportadora -like "*superfrete*") {
+        if ($tokenSF) {
+            try {
+                $sfHeaders = @{
+                    "Authorization" = "Bearer $tokenSF"
+                    "Content-Type" = "application/json"
+                    "Accept" = "application/json"
+                }
+                
+                # Endpoint de rastreamento SuperFrete (ajustar conforme documentação real)
+                $sfTrackingUrl = "https://api.superfrete.com/api/v0/tracking?tracking_code=$($entrega.codigo_rastreio)"
+                
+                $sfResponse = Invoke-RestMethod -Uri $sfTrackingUrl -Headers $sfHeaders -Method Get -TimeoutSec 30
+                
+                $entregaResult.status_atual = $sfResponse.status
+                $entregaResult.atualizado_na_api = $true
+                
+                if ($sfResponse.events) {
+                    $entregaResult.eventos = $sfResponse.events
+                }
+                
+                Write-Host "  ✅ SuperFrete: $($entrega.codigo_rastreio) - $($sfResponse.status)" -ForegroundColor Green
+            } catch {
+                $entregaResult.erro_api = "Erro SF: $($_.Exception.Message)"
+                Write-Host "  ❌ SuperFrete: $($entrega.codigo_rastreio) - Erro" -ForegroundColor Red
+            }
+        } else {
+            $entregaResult.erro_api = "Token SuperFrete não disponível"
+        }
+    }
+    
+    # Consultar Melhor Envio (se for transportadora Melhor Envio e tiver token)
+    elseif ($entrega.transportadora -like "*Melhor Envio*" -or $entrega.transportadora -like "*melhor_envio*") {
+        if ($tokenME) {
+            try {
+                $meHeaders = @{
+                    "Authorization" = "Bearer $tokenME"
+                    "Accept" = "application/json"
+                    "Content-Type" = "application/json"
+                    "User-Agent" = "Aplicacao (email@exemplo.com)"
+                }
+                
+                # Endpoint de rastreamento Melhor Envio
+                $meTrackingUrl = "https://api.melhorenvio.com.br/api/v2/me/shipment/tracking"
+                
+                # Body com os códigos de rastreio (pode ser necessário ajustar)
+                $meBody = @{
+                    orders = @(@{id = $entrega.codigo_rastreio})
+                } | ConvertTo-Json -Depth 3
+                
+                $meResponse = Invoke-RestMethod -Uri $meTrackingUrl -Headers $meHeaders -Method Post -Body $meBody -TimeoutSec 30
+                
+                if ($meResponse -and $meResponse.Count -gt 0) {
+                    $tracking = $meResponse[0]
+                    $entregaResult.status_atual = $tracking.status
+                    $entregaResult.atualizado_na_api = $true
+                    
+                    if ($tracking.tracking) {
+                        $entregaResult.eventos = $tracking.tracking
+                    }
+                    
+                    Write-Host "  ✅ Melhor Envio: $($entrega.codigo_rastreio) - $($tracking.status)" -ForegroundColor Green
+                }
+            } catch {
+                $entregaResult.erro_api = "Erro ME: $($_.Exception.Message)"
+                Write-Host "  ❌ Melhor Envio: $($entrega.codigo_rastreio) - Erro" -ForegroundColor Red
+            }
+        } else {
+            $entregaResult.erro_api = "Token Melhor Envio não disponível"
+        }
+    }
+    
+    # Outras transportadoras (Correios, etc) - pode adicionar lógica específica
+    else {
+        $entregaResult.erro_api = "Transportadora não reconhecida para API: $($entrega.transportadora)"
+        Write-Host "  ⚠️ Transportadora não reconhecida: $($entrega.transportadora)" -ForegroundColor Yellow
+    }
+
+    $entregasProcessadas += $entregaResult
 }
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Yellow
-Write-Host "📊 RESULTADO JSON:" -ForegroundColor Cyan
+
+# ============================================
+# 4. MONTAR RESULTADO FINAL
+# ============================================
+
+$resultado = @{
+    data_verificacao = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+    superfrete = @{
+        token_encontrado = $tokenSF -ne $null
+        ambiente = $sfEnv
+        entregas_processadas = ($entregasProcessadas | Where-Object { $_.transportadora -like "*SuperFrete*" }).Count
+    }
+    melhor_envio = @{
+        token_encontrado = $tokenME -ne $null
+        ambiente = $meEnv
+        entregas_processadas = ($entregasProcessadas | Where-Object { $_.transportadora -like "*Melhor Envio*" }).Count
+    }
+    estatisticas = @{
+        total_entregas = $entregas.Count
+        processadas_com_sucesso = ($entregasProcessadas | Where-Object { $_.atualizado_na_api -eq $true }).Count
+        com_erro = ($entregasProcessadas | Where-Object { $_.erro_api -ne $null }).Count
+    }
+    entregas = $entregasProcessadas
+}
+
+Write-Host "📊 RESULTADO:" -ForegroundColor Cyan
+Write-Host "  Total: $($resultado.estatisticas.total_entregas)" -ForegroundColor White
+Write-Host "  Sucesso: $($resultado.estatisticas.processadas_com_sucesso)" -ForegroundColor Green
+Write-Host "  Erros: $($resultado.estatisticas.com_erro)" -ForegroundColor Red
 Write-Host "========================================" -ForegroundColor Yellow
 
 # Converter para JSON
 $jsonResultado = $resultado | ConvertTo-Json -Depth 10
+Write-Host ""
 Write-Host $jsonResultado
 
 # COPIAR AUTOMATICAMENTE PARA ÁREA DE TRANSFERÊNCIA
@@ -636,7 +842,7 @@ Write-Host "✅ JSON copiado automaticamente para a área de transferência!" -F
 Write-Host "📋 Cole no navegador (Ctrl+V)" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Yellow`;
 
-            // Mostrar na tela (apenas visualização, sem syntax highlighting para evitar confusão)
+            // Mostrar na tela
             document.getElementById('psCode').textContent = cleanPowerShellCode;
         }
 
@@ -703,7 +909,42 @@ Write-Host "========================================" -ForegroundColor Yellow`;
             try {
                 const data = JSON.parse(jsonInput);
 
-                let resumoHTML = '<div class="grid-2">';
+                // Cards de resumo
+                let resumoHTML = '<div class="stats-grid">';
+                
+                // Total de entregas
+                const totalEntregas = data.estatisticas?.total_entregas || data.entregas?.length || 0;
+                resumoHTML += `
+                    <div class="stat-card">
+                        <div class="stat-number">${totalEntregas}</div>
+                        <div class="stat-label">Total de Entregas</div>
+                    </div>
+                `;
+
+                // Processadas com sucesso
+                const sucesso = data.estatisticas?.processadas_com_sucesso || 
+                    (data.entregas ? data.entregas.filter(e => e.atualizado_na_api === true).length : 0);
+                resumoHTML += `
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: #28a745;">${sucesso}</div>
+                        <div class="stat-label">Atualizadas com Sucesso</div>
+                    </div>
+                `;
+
+                // Com erro
+                const erros = data.estatisticas?.com_erro || 
+                    (data.entregas ? data.entregas.filter(e => e.erro_api !== null).length : 0);
+                resumoHTML += `
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: #dc3545;">${erros}</div>
+                        <div class="stat-label">Com Erro</div>
+                    </div>
+                `;
+
+                resumoHTML += '</div>';
+
+                // Status das APIs
+                resumoHTML += '<div class="grid-2" style="margin-top: 20px;">';
 
                 const sfStatus = data.superfrete?.token_encontrado ? 
                     '<span class="status-badge status-active">✅ Conectado</span>' : 
@@ -713,6 +954,7 @@ Write-Host "========================================" -ForegroundColor Yellow`;
                         <h3>🚚 SuperFrete</h3>
                         <p><strong>Status:</strong> ${sfStatus}</p>
                         <p><strong>Ambiente:</strong> ${data.superfrete?.ambiente || 'N/A'}</p>
+                        <p><strong>Entregas:</strong> ${data.superfrete?.entregas_processadas || 0}</p>
                     </div>
                 `;
 
@@ -724,35 +966,44 @@ Write-Host "========================================" -ForegroundColor Yellow`;
                         <h3>📮 Melhor Envio</h3>
                         <p><strong>Status:</strong> ${meStatus}</p>
                         <p><strong>Ambiente:</strong> ${data.melhor_envio?.ambiente || 'N/A'}</p>
+                        <p><strong>Entregas:</strong> ${data.melhor_envio?.entregas_processadas || 0}</p>
                     </div>
                 `;
                 resumoHTML += '</div>';
 
                 document.getElementById('resumoCards').innerHTML = resumoHTML;
 
+                // Tabela de entregas
                 if (data.entregas && data.entregas.length > 0) {
                     let tabelaHTML = `
                         <table class="result-table">
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Transportadora</th>
-                                    <th>Status</th>
-                                    <th>Data</th>
                                     <th>Rastreio</th>
+                                    <th>Transportadora</th>
+                                    <th>Status Anterior</th>
+                                    <th>Status Atual</th>
+                                    <th>Atualizado</th>
+                                    <th>Erro</th>
                                 </tr>
                             </thead>
                             <tbody>
                     `;
 
                     data.entregas.forEach(entrega => {
+                        const statusClass = entrega.atualizado_na_api ? 'status-delivered' : 
+                            (entrega.erro_api ? 'status-inactive' : 'status-pending');
+                        
                         tabelaHTML += `
                             <tr>
                                 <td>${entrega.id || '-'}</td>
+                                <td><code>${entrega.codigo_rastreio || '-'}</code></td>
                                 <td>${entrega.transportadora || '-'}</td>
-                                <td>${entrega.status || '-'}</td>
-                                <td>${entrega.data || '-'}</td>
-                                <td>${entrega.rastreio || '-'}</td>
+                                <td>${entrega.status_anterior || '-'}</td>
+                                <td><span class="status-badge ${statusClass}">${entrega.status_atual || '-'}</span></td>
+                                <td>${entrega.atualizado_na_api ? '✅' : '❌'}</td>
+                                <td>${entrega.erro_api ? `<span style="color: #dc3545; font-size: 0.9em;">${entrega.erro_api}</span>` : '-'}</td>
                             </tr>
                         `;
                     });
