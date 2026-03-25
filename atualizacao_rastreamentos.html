@@ -82,15 +82,8 @@
             font-family: 'Consolas', 'Courier New', monospace;
         }
 
-        input[type="text"]:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
         textarea {
-            min-height: 200px;
+            min-height: 120px;
             resize: vertical;
             font-size: 0.85rem;
             line-height: 1.5;
@@ -113,16 +106,6 @@
             color: white;
         }
 
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
         .btn-secondary {
             background: #6c757d;
             color: white;
@@ -133,52 +116,14 @@
             color: white;
         }
 
-        .btn-warning {
-            background: #ffc107;
-            color: #212529;
-        }
-
         .btn-info {
             background: #17a2b8;
             color: white;
         }
 
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .grid-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .grid-2, .grid-3 {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .token-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .token-status.ok {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .token-status.error {
-            background: #f8d7da;
-            color: #721c24;
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
         }
 
         .hidden {
@@ -235,13 +180,6 @@
         .debug-console .info { color: #4fc1ff; }
         .debug-console .success { color: #4ec9b0; }
         .debug-console .error { color: #f48771; }
-        .debug-console .warning { color: #dcdcaa; }
-
-        .custom-checkbox {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
 
         .stats-grid {
             display: grid;
@@ -286,11 +224,6 @@
             border-radius: 8px 8px 0 0;
         }
 
-        .tab:hover {
-            background: #f0f0f0;
-            color: #333;
-        }
-
         .tab.active {
             color: #667eea;
             border-bottom: 3px solid #667eea;
@@ -325,59 +258,68 @@
             border-color: #bee5eb;
         }
 
-        .config-input {
-            background: #fff3cd;
-            border: 2px dashed #ffc107;
+        .method-box {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
         }
 
-        .script-box {
-            background: #012456;
-            color: #fff;
-            padding: 20px;
-            border-radius: 10px;
+        .method-box:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .method-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .method-desc {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        .code-box {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
             font-family: 'Consolas', 'Courier New', monospace;
             font-size: 0.85rem;
-            margin: 20px 0;
-            border: 2px solid #4ec9b0;
+            overflow-x: auto;
+            margin: 10px 0;
+            position: relative;
         }
 
-        .script-box-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #4ec9b0;
+        .code-box .comment {
+            color: #6a9955;
         }
 
-        .script-box h4 {
+        .code-box .cmd {
             color: #4ec9b0;
-            margin: 0;
         }
 
-        .copy-btn {
+        .copy-btn-small {
+            position: absolute;
+            top: 5px;
+            right: 5px;
             background: #4ec9b0;
-            color: #012456;
+            color: #1e1e1e;
             border: none;
-            padding: 8px 15px;
+            padding: 5px 10px;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 0.75rem;
             font-weight: bold;
-            font-size: 0.85rem;
-        }
-
-        .copy-btn:hover {
-            background: #3db89f;
-        }
-
-        .instruction-step {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: white;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
         }
 
         .step-number {
@@ -386,47 +328,33 @@
             width: 30px;
             height: 30px;
             border-radius: 50%;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            margin-right: 15px;
-            flex-shrink: 0;
+            margin-right: 10px;
         }
 
-        .step-content {
-            flex: 1;
-        }
-
-        .step-content h4 {
-            margin-bottom: 8px;
-            color: #333;
-        }
-
-        .diagnostic-box {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 10px;
+        .resultado-item {
             padding: 15px;
-            margin: 15px 0;
-            font-family: monospace;
-            font-size: 0.9rem;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #ccc;
         }
 
-        .diagnostic-item {
-            margin: 5px 0;
-            padding: 5px;
-            border-radius: 3px;
-        }
-
-        .diagnostic-ok {
+        .resultado-item.entregue {
             background: #d4edda;
-            color: #155724;
+            border-left-color: #28a745;
         }
 
-        .diagnostic-error {
+        .resultado-item.transito {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+
+        .resultado-item.erro {
             background: #f8d7da;
-            color: #721c24;
+            border-left-color: #dc3545;
         }
     </style>
 <base target="_blank">
@@ -435,53 +363,31 @@
     <div class="container">
         <div class="header">
             <h1>🚚 Rastreamento de Entregas</h1>
-            <p>Sistema de Gestão de Envios - Loja Pingo de Gente</p>
+            <p>Loja Pingo de Gente - Sistema de Gestão de Envios</p>
         </div>
 
         <div class="content">
             <!-- Configuração -->
             <div id="alertaConfig" class="alert-box">
-                <strong>⚠️ Configuração Necessária:</strong> Insira seu Supabase Anon Key abaixo.
-                <div id="erroDetalhe" style="margin-top: 10px; font-size: 0.9rem;"></div>
+                <strong>⚠️ Configuração Necessária:</strong> Insira seu Supabase Anon Key.
             </div>
 
             <div class="section" id="secaoConfig">
-                <h2>⚙️ Configuração do Supabase</h2>
-
-                <!-- Diagnóstico -->
-                <div class="diagnostic-box" id="diagnostico" style="display: none;">
-                    <strong>🔍 Diagnóstico:</strong>
-                    <div id="diagnosticoContent"></div>
-                </div>
-
+                <h2>⚙️ Configuração</h2>
                 <div class="form-group">
                     <label>Supabase Anon Key</label>
-                    <input type="text" id="supabaseKey" class="config-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
-                    <small style="color: #666; display: block; margin-top: 5px;">
-                        Encontre em: Supabase Dashboard → Project Settings → API → Project API keys
-                    </small>
+                    <input type="text" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                    <small style="color: #666;">Encontre em: Supabase Dashboard → Project Settings → API</small>
                 </div>
-
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button class="btn btn-primary" id="btnSalvar" onclick="salvarConfigSupabase()">
-                        💾 Salvar Configuração
-                    </button>
-                    <button class="btn btn-secondary" onclick="testarDiagnostico()">
-                        🔍 Testar/Diagnóstico
-                    </button>
-                    <button class="btn btn-info" onclick="usarChaveMemoria()">
-                        📝 Usar Chave (sem salvar)
-                    </button>
-                </div>
-
-                <div id="statusSalvamento" style="margin-top: 15px; padding: 10px; border-radius: 5px; display: none;"></div>
+                <button class="btn btn-primary" onclick="salvarConfig()">💾 Salvar</button>
+                <button class="btn btn-secondary" onclick="usarSemSalvar()">📝 Usar (sem salvar)</button>
             </div>
 
             <!-- Estatísticas -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-number" id="statTotal">0</div>
-                    <div class="stat-label">Total de Envios</div>
+                    <div class="stat-label">Total</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="statEnviados">0</div>
@@ -499,170 +405,85 @@
 
             <!-- Abas -->
             <div class="tabs">
-                <button class="tab active" onclick="mudarAba('powershell')">🖥️ PowerShell</button>
-                <button class="tab" onclick="mudarAba('lista')">📋 Lista de Envios</button>
+                <button class="tab active" onclick="mudarAba('metodos')">🛠️ Métodos</button>
+                <button class="tab" onclick="mudarAba('lista')">📋 Lista</button>
                 <button class="tab" onclick="mudarAba('tokens')">🔐 Tokens</button>
+                <button class="tab" onclick="mudarAba('resultado')">📊 Resultado</button>
             </div>
 
-            <!-- Aba: PowerShell -->
-            <div id="abaPowershell" class="tab-content active">
+            <!-- Aba: Métodos -->
+            <div id="abaMetodos" class="tab-content active">
                 <div class="section">
-                    <h2>🖥️ Rastreamento via PowerShell (Copiar & Colar)</h2>
+                    <h2>🛠️ Escolha um Método de Verificação</h2>
 
                     <div class="alert-box info">
-                        <strong>📋 Instruções:</strong> Siga os 3 passos abaixo.
+                        <strong>💡 Dica:</strong> Se um método não funcionar, tente outro. Todos acessam as mesmas APIs.
                     </div>
 
-                    <!-- PASSO 1 -->
-                    <div class="instruction-step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <h4>📋 Copie o script PowerShell</h4>
-                            <p>Clique no botão "Copiar Script" e cole no PowerShell (como Administrador)</p>
-                            <div class="script-box">
-                                <div class="script-box-header">
-                                    <h4>📜 Script de Verificação</h4>
-                                    <button class="copy-btn" onclick="copiarScript()">📋 Copiar Script</button>
-                                </div>
-                                <textarea id="powershellScript" readonly style="width: 100%; height: 250px; background: #001122; color: #4ec9b0; border: 1px solid #4ec9b0; padding: 10px; font-family: Consolas, monospace; font-size: 0.75rem;">
-# ============================================
-# RASTREAMENTO - LOJA PINGO DE GENTE
-# ============================================
+                    <!-- MÉTODO 1: PowerShell Simples -->
+                    <div class="method-box">
+                        <div class="method-title">🖥️ Método 1: PowerShell (Recomendado)</div>
+                        <div class="method-desc">
+                            Copie o script abaixo, cole no PowerShell como Administrador e execute. 
+                            O resultado aparece na tela para você copiar.
+                        </div>
+                        <div class="code-box" style="max-height: 300px; overflow-y: auto;">
+                            <button class="copy-btn-small" onclick="copiarTexto('psScript')">📋 Copiar</button>
+                            <pre id="psScript"><code><span class="comment"># Cole no PowerShell (Admin) - Execute linha por linha se der erro</span>
+<span class="cmd">$key = "SUA_CHAVE_AQUI"</span>
+<span class="cmd">$url = "https://ytnfjzngalfapfnbobfm.supabase.co"</span>
+<span class="cmd">$h = @{ "apikey" = $key; "Authorization" = "Bearer $key" }</span>
 
-# SUBSTITUA PELA SUA CHAVE:
-$SUPABASE_URL = "https://ytnfjzngalfapfnbobfm.supabase.co"
-$SUPABASE_ANON_KEY = "INSIRA_SUA_CHAVE_AQUI"
+<span class="comment"># Testar conexão</span>
+<span class="cmd">Invoke-RestMethod -Uri "$url/rest/v1/superfrete_config?limit=1" -Headers $h</span>
 
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  RASTREAMENTO DE ENTREGAS" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
+<span class="comment"># Buscar tokens</span>
+<span class="cmd">$sf = (Invoke-RestMethod -Uri "$url/rest/v1/superfrete_config?select=api_token&is_active=eq.true&limit=1" -Headers $h)[0].api_token</span>
+<span class="cmd">$me = (Invoke-RestMethod -Uri "$url/rest/v1/melhorenvio_config?select=access_token&is_active=eq.true&limit=1" -Headers $h)[0].access_token</span>
 
-function Log-Info { param([string]$M) Write-Host "[INFO] $M" -ForegroundColor Cyan }
-function Log-Ok { param([string]$M) Write-Host "[OK] $M" -ForegroundColor Green }
-function Log-Erro { param([string]$M) Write-Host "[ERRO] $M" -ForegroundColor Red }
+<span class="comment"># Buscar entregas pendentes</span>
+<span class="cmd">$sol = Invoke-RestMethod -Uri "$url/rest/v1/solicitacoes_pg?select=id,numero_solicitacao,codigo_rastreio,forma_envio,clientes_pg(nome)&status=eq.enviado&limit=10" -Headers $h</span>
 
-$headers = @{ "apikey" = $SUPABASE_ANON_KEY; "Authorization" = "Bearer $SUPABASE_ANON_KEY" }
-
-# Buscar tokens
-Log-Info "Buscando tokens..."
-try {
-    $urlSF = "$SUPABASE_URL/rest/v1/superfrete_config?select=api_token&is_active=eq.true&limit=1"
-    $tokenSF = (Invoke-RestMethod -Uri $urlSF -Headers $headers -Method GET)[0].api_token
-    if ($tokenSF) { Log-Ok "Token SuperFrete OK" }
-} catch { $tokenSF = $null; Log-Erro "SuperFrete: $($_.Exception.Message)" }
-
-try {
-    $urlME = "$SUPABASE_URL/rest/v1/melhorenvio_config?select=access_token&is_active=eq.true&limit=1"
-    $tokenME = (Invoke-RestMethod -Uri $urlME -Headers $headers -Method GET)[0].access_token
-    if ($tokenME) { Log-Ok "Token Melhor Envio OK" }
-} catch { $tokenME = $null; Log-Erro "Melhor Envio: $($_.Exception.Message)" }
-
-if (-not $tokenSF -and -not $tokenME) {
-    Log-Erro "Nenhum token configurado!"
-    exit
-}
-
-# Buscar solicitacoes
-Log-Info "Buscando entregas pendentes..."
-try {
-    $dataLimite = (Get-Date).AddDays(-30).ToString("yyyy-MM-dd")
-    $urlSol = "$SUPABASE_URL/rest/v1/solicitacoes_pg?select=id,numero_solicitacao,codigo_rastreio,forma_envio,clientes_pg(nome)&status=eq.enviado&codigo_rastreio=not.is.null&data_envio=gte.$dataLimite&order=data_envio.desc"
-    $solicitacoes = Invoke-RestMethod -Uri $urlSol -Headers $headers -Method GET
-    Log-Ok "Encontradas $($solicitacoes.Count) solicitacoes"
-} catch {
-    Log-Erro "Erro ao buscar: $($_.Exception.Message)"
-    exit
-}
-
-$resultados = @()
-$atualizadas = 0
-
-foreach ($sol in $solicitacoes | Select-Object -First 10) {
-    $codigo = $sol.codigo_rastreio
-    $forma = $sol.forma_envio.ToLower()
-    $cliente = $sol.clientes_pg.nome
-
-    Log-Info "Verificando: $codigo"
-
-    $entregue = $false
-    $erro = $null
-
-    try {
-        if ($forma -match "melhor|jadlog|azul" -and $tokenME) {
-            $h = @{ "Authorization" = "Bearer $tokenME"; "Content-Type" = "application/json" }
-            $r = Invoke-RestMethod -Uri "https://api.melhorenvio.com/v2/me/orders" -Headers $h -Method GET
-            $p = $r.data | Where-Object { $_.tracking -eq $codigo }
-            if ($p) { $entregue = ($p.status -eq "delivered") } else { throw "Nao encontrado" }
-        } elseif ($tokenSF) {
-            $h = @{ "Authorization" = "Bearer $tokenSF"; "Content-Type" = "application/json" }
-            $r = Invoke-RestMethod -Uri "https://api.superfrete.com/v1/trackings/$codigo" -Headers $h -Method GET
-            $entregue = ($r.status -eq "delivered")
-            if (-not $entregue -and $r.events) {
-                $entregue = ($r.events | Where-Object { $_.status -match "entregue|delivered" } | Measure-Object).Count -gt 0
-            }
-        }
-
-        if ($entregue) {
-            Log-Ok "ENTREGUE: $codigo"
-            $uh = $headers.Clone(); $uh["Content-Type"] = "application/json"; $uh["Prefer"] = "return=minimal"
-            $b = @{ status = "entregue"; data_entrega_real = (Get-Date).ToString("o"); atualizado_em = (Get-Date).ToString("o") } | ConvertTo-Json
-            Invoke-RestMethod -Uri "$SUPABASE_URL/rest/v1/solicitacoes_pg?id=eq.$($sol.id)" -Headers $uh -Method PATCH -Body $b
-            $atualizadas++
-        } else {
-            Log-Info "Em transito: $codigo"
-        }
-    } catch {
-        $erro = $_.Exception.Message
-        Log-Erro "Erro em $codigo : $erro"
-    }
-
-    $resultados += @{ codigo = $codigo; cliente = $cliente; entregue = $entregue; erro = $erro; numero_solicitacao = $sol.numero_solicitacao }
-    Start-Sleep -Milliseconds 500
-}
-
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "RESUMO: $($resultados.Count) verificados, $atualizadas entregues" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-
-# JSON para copiar
-$output = @{ data_verificacao = (Get-Date).ToString("o"); total_verificados = $resultados.Count; total_atualizados = $atualizadas; resultados = $resultados } | ConvertTo-Json -Depth 10
-Write-Host ""
-Write-Host "=== COPIE O JSON ABAIXO ===" -ForegroundColor Yellow
-Write-Host $output -ForegroundColor White
-$output | Out-File -FilePath "resultado_rastreamento.json" -Encoding UTF8
-Log-Ok "Tambem salvo em: resultado_rastreamento.json"
-                                </textarea>
-                            </div>
+<span class="comment"># Verificar cada uma (exemplo com SuperFrete)</span>
+<span class="cmd">foreach ($s in $sol) {</span>
+<span class="cmd">    $r = Invoke-RestMethod -Uri "https://api.superfrete.com/v1/trackings/$($s.codigo_rastreio)" -Headers @{ "Authorization" = "Bearer $sf" } -ErrorAction SilentlyContinue</span>
+<span class="cmd">    if ($r.status -eq "delivered") { Write-Host "ENTREGUE: $($s.codigo_rastreio)" -ForegroundColor Green }</span>
+<span class="cmd">    else { Write-Host "Transito: $($s.codigo_rastreio)" -ForegroundColor Yellow }</span>
+<span class="cmd">    Start-Sleep -Milliseconds 500</span>
+<span class="cmd">}</span></code></pre>
                         </div>
                     </div>
 
-                    <!-- PASSO 2 -->
-                    <div class="instruction-step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <h4>▶️ Execute no PowerShell (Admin)</h4>
-                            <p>Abra PowerShell como Administrador, cole o script e pressione Enter</p>
+                    <!-- MÉTODO 2: cURL (CMD) -->
+                    <div class="method-box">
+                        <div class="method-title">🌐 Método 2: cURL no Prompt de Comando (CMD)</div>
+                        <div class="method-desc">
+                            Funciona no CMD do Windows 10/11 sem instalar nada. 
+                            Execute comando por comando.
+                        </div>
+                        <div class="code-box">
+                            <button class="copy-btn-small" onclick="copiarTexto('curlCmd')">📋 Copiar</button>
+                            <pre id="curlCmd"><code><span class="comment"># Abra o CMD e execute:</span>
+<span class="cmd">curl -X GET "https://ytnfjzngalfapfnbobfm.supabase.co/rest/v1/superfrete_config?select=api_token&is_active=eq.true&limit=1" -H "apikey: SUA_CHAVE" -H "Authorization: Bearer SUA_CHAVE"</span>
+
+<span class="comment"># Buscar entregas pendentes:</span>
+<span class="cmd">curl -X GET "https://ytnfjzngalfapfnbobfm.supabase.co/rest/v1/solicitacoes_pg?select=codigo_rastreio,forma_envio,clientes_pg(nome)&status=eq.enviado&limit=10" -H "apikey: SUA_CHAVE" -H "Authorization: Bearer SUA_CHAVE"</span></code></pre>
                         </div>
                     </div>
 
-                    <!-- PASSO 3 -->
-                    <div class="instruction-step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <h4>📋 Cole o resultado JSON aqui</h4>
-                            <p>Copie o JSON do final da execução do PowerShell:</p>
-                            <textarea id="jsonInput" placeholder='Cole aqui o JSON gerado pelo PowerShell...' style="min-height: 150px;"></textarea>
-                            <button class="btn btn-success" onclick="processarJSONColado()" style="margin-top: 10px;">
-                                📊 Processar Resultados
-                            </button>
+                    <!-- MÉTODO 3: Manual via Browser -->
+                    <div class="method-box">
+                        <div class="method-title">🔍 Método 3: Verificação Manual (Navegador)</div>
+                        <div class="method-desc">
+                            Use sites de rastreamento públicos e atualize manualmente no sistema.
                         </div>
-                    </div>
-
-                    <!-- RESULTADOS -->
-                    <div id="resultadoProcessamento" style="margin-top: 20px; display: none;">
-                        <h3>📊 Resultados</h3>
-                        <div id="listaResultadosProcessados"></div>
+                        <ol style="margin-left: 20px; color: #555;">
+                            <li>Copie os códigos de rastreio da aba "📋 Lista"</li>
+                            <li>Acesse: <a href="https://www.superfrete.com/rastreamento" target="_blank">SuperFrete Rastreamento</a></li>
+                            <li>Ou: <a href="https://www.melhorenvio.com.br/rastreamento" target="_blank">Melhor Envio Rastreamento</a></li>
+                            <li>Verifique cada código</li>
+                            <li>Volte à aba "📋 Lista" e marque como entregue</li>
+                        </ol>
                     </div>
                 </div>
             </div>
@@ -670,44 +491,36 @@ Log-Ok "Tambem salvo em: resultado_rastreamento.json"
             <!-- Aba: Lista -->
             <div id="abaLista" class="tab-content">
                 <div class="section">
-                    <h2>Lista de Solicitações</h2>
-                    <div class="grid-3">
-                        <div class="form-group">
-                            <label>Data Início</label>
-                            <input type="date" id="filtroDataInicio">
-                        </div>
-                        <div class="form-group">
-                            <label>Data Fim</label>
-                            <input type="date" id="filtroDataFim">
-                        </div>
-                        <div class="form-group">
-                            <label>Status</label>
-                            <select id="filtroStatus">
-                                <option value="">Todos</option>
-                                <option value="enviado">Em Trânsito</option>
-                                <option value="entregue">Entregue</option>
-                                <option value="pendente">Pendente</option>
-                            </select>
-                        </div>
+                    <h2>📋 Lista de Envios</h2>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <input type="date" id="filtroDataInicio" style="width: auto;">
+                        <input type="date" id="filtroDataFim" style="width: auto;">
+                        <select id="filtroStatus" style="width: auto;">
+                            <option value="">Todos</option>
+                            <option value="enviado">Em Trânsito</option>
+                            <option value="entregue">Entregue</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="carregarSolicitacoes()">Buscar</button>
                     </div>
-                    <button class="btn btn-primary" onclick="carregarSolicitacoes()">Buscar</button>
-                    <button class="btn btn-secondary" onclick="limparFiltros()">Limpar</button>
 
                     <div id="secaoResultados" class="hidden">
                         <table class="results-table">
                             <thead>
                                 <tr>
-                                    <th><input type="checkbox" id="selectAll" class="custom-checkbox" onchange="toggleSelectAll()"></th>
-                                    <th>Nº Solicitação</th>
+                                    <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                                    <th>Nº</th>
                                     <th>Cliente</th>
                                     <th>Código Rastreio</th>
                                     <th>Forma Envio</th>
-                                    <th>Data Envio</th>
                                     <th>Status</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelaResultados"></tbody>
                         </table>
+                        <button class="btn btn-success" onclick="marcarComoEntregue()" style="margin-top: 15px;">
+                            📦 Marcar Selecionados como Entregue
+                        </button>
                     </div>
                 </div>
             </div>
@@ -715,47 +528,78 @@ Log-Ok "Tambem salvo em: resultado_rastreamento.json"
             <!-- Aba: Tokens -->
             <div id="abaTokens" class="tab-content">
                 <div class="section">
-                    <h2>🔐 Configuração de Tokens</h2>
+                    <h2>🔐 Configurar Tokens das Transportadoras</h2>
                     <p style="color: #666; margin-bottom: 20px;">
-                        Configure os tokens das transportadoras. Eles serão usados pelo script PowerShell.
+                        Configure os tokens para usar nos scripts PowerShell/cURL. Eles são salvos no Supabase.
                     </p>
-                    <div class="grid-2">
-                        <div class="form-group">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
                             <label>Token SuperFrete</label>
-                            <input type="text" id="tokenSuperfrete" placeholder="Cole o token do SuperFrete">
-                            <select id="ambienteSuperfrete" style="margin-top: 10px; width: auto;">
+                            <input type="text" id="tokenSuperfrete" placeholder="Cole o token aqui">
+                            <select id="ambienteSuperfrete" style="margin-top: 10px; width: 100%;">
                                 <option value="production">Produção</option>
                                 <option value="sandbox">Sandbox</option>
                             </select>
-                            <button class="btn btn-primary" onclick="salvarTokenSuperfrete()" style="margin-top: 10px;">Salvar SuperFrete</button>
+                            <button class="btn btn-primary" onclick="salvarTokenSF()" style="margin-top: 10px; width: 100%;">
+                                Salvar SuperFrete
+                            </button>
                         </div>
-                        <div class="form-group">
+                        <div>
                             <label>Token Melhor Envio</label>
-                            <input type="text" id="tokenMelhorEnvio" placeholder="Cole o token do Melhor Envio">
-                            <select id="ambienteMelhorEnvio" style="margin-top: 10px; width: auto;">
+                            <input type="text" id="tokenMelhorEnvio" placeholder="Cole o token aqui">
+                            <select id="ambienteMelhorEnvio" style="margin-top: 10px; width: 100%;">
                                 <option value="production">Produção</option>
                                 <option value="sandbox">Sandbox</option>
                             </select>
-                            <button class="btn btn-primary" onclick="salvarTokenMelhorEnvio()" style="margin-top: 10px;">Salvar Melhor Envio</button>
+                            <button class="btn btn-primary" onclick="salvarTokenME()" style="margin-top: 10px; width: 100%;">
+                                Salvar Melhor Envio
+                            </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba: Resultado -->
+            <div id="abaResultado" class="tab-content">
+                <div class="section">
+                    <h2>📊 Colar Resultado da Verificação</h2>
+                    <p style="color: #666; margin-bottom: 15px;">
+                        Após executar o PowerShell ou cURL, cole o resultado JSON aqui:
+                    </p>
+                    <textarea id="jsonResultado" placeholder='Cole aqui o JSON com os resultados...
+
+Exemplo:
+[
+  {"codigo": "SF123", "entregue": true, "cliente": "Joao"},
+  {"codigo": "ME456", "entregue": false, "cliente": "Maria"}
+]'></textarea>
+                    <button class="btn btn-success" onclick="processarResultado()" style="margin-top: 10px;">
+                        📊 Processar e Atualizar
+                    </button>
+
+                    <div id="resultadoProcessado" style="margin-top: 20px; display: none;">
+                        <h3>Resultados Processados</h3>
+                        <div id="listaProcessados"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Console -->
             <div class="section">
-                <h2>🖥️ Console de Log</h2>
+                <h2>🖥️ Console</h2>
                 <div class="debug-console" id="debugConsole">
                     <div class="info">Sistema pronto. Aguardando configuração...</div>
                 </div>
-                <button class="btn btn-secondary" onclick="limparConsole()" style="margin-top: 10px;">Limpar Console</button>
+                <button class="btn btn-secondary" onclick="limparConsole()" style="margin-top: 10px;">
+                    Limpar
+                </button>
             </div>
         </div>
     </div>
 
     <script>
         // ============================================
-        // CONFIGURAÇÃO COM DIAGNÓSTICO
+        // CONFIGURAÇÃO
         // ============================================
 
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
@@ -763,206 +607,78 @@ Log-Ok "Tambem salvo em: resultado_rastreamento.json"
         let supabaseClient = null;
         let solicitacoesCache = [];
 
-        // Tentar carregar de várias fontes
-        function tentarCarregarChave() {
-            let chave = null;
-            let fonte = null;
-
-            // Tentar localStorage
-            try {
-                chave = localStorage.getItem('supabase_anon_key');
-                if (chave) fonte = 'localStorage';
-            } catch (e) {
-                logDebug('localStorage não disponível: ' + e.message, 'warning');
-            }
-
-            // Tentar sessionStorage
-            if (!chave) {
-                try {
-                    chave = sessionStorage.getItem('supabase_anon_key');
-                    if (chave) fonte = 'sessionStorage';
-                } catch (e) {}
-            }
-
-            // Tentar cookie
-            if (!chave) {
-                const match = document.cookie.match(/supabase_key=([^;]+)/);
-                if (match) {
-                    chave = decodeURIComponent(match[1]);
-                    fonte = 'cookie';
-                }
-            }
-
-            return { chave, fonte };
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            const { chave, fonte } = tentarCarregarChave();
-
-            if (chave) {
-                SUPABASE_ANON_KEY = chave;
-                document.getElementById('supabaseKey').value = chave;
-                logDebug(`Chave carregada de ${fonte}`, 'success');
-                inicializarSistema();
-            } else {
-                logDebug('Nenhuma chave salva encontrada', 'info');
+            // Tentar carregar chave salva
+            try {
+                const saved = localStorage.getItem('supabase_anon_key');
+                if (saved) {
+                    SUPABASE_ANON_KEY = saved;
+                    document.getElementById('supabaseKey').value = saved;
+                    inicializarSistema();
+                }
+            } catch (e) {
+                log('localStorage não disponível', 'warning');
             }
 
-            inicializarDatas();
+            // Configurar datas
+            const hoje = new Date();
+            const trintaDiasAtras = new Date();
+            trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
+            document.getElementById('filtroDataFim').value = hoje.toISOString().split('T')[0];
+            document.getElementById('filtroDataInicio').value = trintaDiasAtras.toISOString().split('T')[0];
         });
 
-        function testarDiagnostico() {
-            const div = document.getElementById('diagnostico');
-            const content = document.getElementById('diagnosticoContent');
-
-            div.style.display = 'block';
-            content.innerHTML = '';
-
-            const tests = [
-                { name: 'JavaScript ativo', test: () => true },
-                { name: 'localStorage disponível', test: () => {
-                    try { localStorage.setItem('test', '1'); localStorage.removeItem('test'); return true; } catch(e) { return false; }
-                }},
-                { name: 'sessionStorage disponível', test: () => {
-                    try { sessionStorage.setItem('test', '1'); sessionStorage.removeItem('test'); return true; } catch(e) { return false; }
-                }},
-                { name: 'Cookies habilitados', test: () => navigator.cookieEnabled },
-                { name: 'Supabase JS carregado', test: () => typeof window.supabase !== 'undefined' }
-            ];
-
-            tests.forEach(t => {
-                const result = t.test();
-                const el = document.createElement('div');
-                el.className = `diagnostic-item ${result ? 'diagnostic-ok' : 'diagnostic-error'}`;
-                el.textContent = `${result ? '✅' : '❌'} ${t.name}`;
-                content.appendChild(el);
-            });
-
-            logDebug('Diagnóstico executado', 'info');
-        }
-
-        function salvarConfigSupabase() {
-            const key = document.getElementById('supabaseKey').value.trim();
-            const btn = document.getElementById('btnSalvar');
-            const status = document.getElementById('statusSalvamento');
-
-            if (!key) {
-                alert('Por favor, insira uma chave');
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = '⏳ Salvando...';
-
-            let salvou = false;
-            let erros = [];
-
-            // Tentar localStorage
-            try {
-                localStorage.setItem('supabase_anon_key', key);
-                salvou = true;
-                logDebug('Chave salva no localStorage', 'success');
-            } catch (e) {
-                erros.push('localStorage: ' + e.message);
-            }
-
-            // Tentar sessionStorage (backup)
-            if (!salvou) {
-                try {
-                    sessionStorage.setItem('supabase_anon_key', key);
-                    salvou = true;
-                    logDebug('Chave salva no sessionStorage (backup)', 'success');
-                } catch (e) {
-                    erros.push('sessionStorage: ' + e.message);
-                }
-            }
-
-            // Tentar cookie (último recurso)
-            if (!salvou) {
-                try {
-                    document.cookie = `supabase_key=${encodeURIComponent(key)}; path=/; max-age=31536000`;
-                    salvou = true;
-                    logDebug('Chave salva em cookie (backup)', 'success');
-                } catch (e) {
-                    erros.push('Cookie: ' + e.message);
-                }
-            }
-
-            btn.disabled = false;
-            btn.textContent = '💾 Salvar Configuração';
-
-            if (salvou) {
-                SUPABASE_ANON_KEY = key;
-                status.style.display = 'block';
-                status.className = 'alert-box success';
-                status.innerHTML = '<strong>✅ Sucesso!</strong> Chave salva. Inicializando sistema...';
-
-                document.getElementById('alertaConfig').classList.add('hidden');
-
-                setTimeout(() => {
-                    document.getElementById('secaoConfig').style.display = 'none';
-                    inicializarSistema();
-                }, 1000);
-            } else {
-                status.style.display = 'block';
-                status.className = 'alert-box';
-                status.innerHTML = '<strong>❌ Erro ao salvar:</strong><br>' + erros.join('<br>');
-                logDebug('Falha ao salvar: ' + erros.join(', '), 'error');
-            }
-        }
-
-        function usarChaveMemoria() {
+        function salvarConfig() {
             const key = document.getElementById('supabaseKey').value.trim();
             if (!key) {
-                alert('Por favor, insira uma chave primeiro');
+                alert('Insira uma chave');
                 return;
             }
 
             SUPABASE_ANON_KEY = key;
-            logDebug('Usando chave em memória (não salva)', 'warning');
 
-            document.getElementById('alertaConfig').classList.add('hidden');
-            document.getElementById('secaoConfig').style.display = 'none';
+            try {
+                localStorage.setItem('supabase_anon_key', key);
+            } catch (e) {
+                log('Não foi possível salvar no localStorage', 'warning');
+            }
 
+            inicializarSistema();
+        }
+
+        function usarSemSalvar() {
+            const key = document.getElementById('supabaseKey').value.trim();
+            if (!key) {
+                alert('Insira uma chave primeiro');
+                return;
+            }
+            SUPABASE_ANON_KEY = key;
             inicializarSistema();
         }
 
         async function inicializarSistema() {
             try {
-                if (!SUPABASE_ANON_KEY) {
-                    throw new Error('Chave não configurada');
-                }
-
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
                 // Testar conexão
-                const { data, error } = await supabaseClient.from('superfrete_config').select('count').limit(1);
+                const { error } = await supabaseClient.from('superfrete_config').select('count').limit(1);
 
                 if (error) {
                     if (error.message.includes('Invalid API key')) {
-                        throw new Error('Chave de API inválida ou expirada');
+                        throw new Error('Chave inválida');
                     }
                     throw error;
                 }
 
-                logDebug('✅ Conectado ao Supabase com sucesso!', 'success');
+                log('✅ Conectado ao Supabase!', 'success');
+                document.getElementById('alertaConfig').classList.add('hidden');
+                document.getElementById('secaoConfig').style.display = 'none';
+
                 carregarSolicitacoes();
 
             } catch (err) {
-                logDebug('❌ Erro: ' + err.message, 'error');
-                document.getElementById('erroDetalhe').textContent = 'Erro: ' + err.message;
-                document.getElementById('alertaConfig').classList.remove('hidden');
-                document.getElementById('secaoConfig').style.display = 'block';
+                log('❌ Erro: ' + err.message, 'error');
             }
-        }
-
-        function inicializarDatas() {
-            const hoje = new Date();
-            const trintaDiasAtras = new Date();
-            trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
-
-            document.getElementById('filtroDataFim').value = hoje.toISOString().split('T')[0];
-            document.getElementById('filtroDataInicio').value = trintaDiasAtras.toISOString().split('T')[0];
         }
 
         // ============================================
@@ -970,15 +686,15 @@ Log-Ok "Tambem salvo em: resultado_rastreamento.json"
         // ============================================
 
         async function carregarSolicitacoes() {
-            try {
-                if (!supabaseClient) {
-                    logDebug('Supabase não conectado', 'error');
-                    return;
-                }
+            if (!supabaseClient) {
+                log('Supabase não conectado', 'error');
+                return;
+            }
 
+            try {
                 const { data, error } = await supabaseClient
                     .from('solicitacoes_pg')
-                    .select(`id, numero_solicitacao, codigo_rastreio, forma_envio, data_envio, status, clientes_pg(nome)`)
+                    .select('id, numero_solicitacao, codigo_rastreio, forma_envio, data_envio, status, clientes_pg(nome)')
                     .order('data_envio', { ascending: false })
                     .limit(100);
 
@@ -989,10 +705,10 @@ Log-Ok "Tambem salvo em: resultado_rastreamento.json"
                 atualizarEstatisticas();
 
                 document.getElementById('secaoResultados').classList.remove('hidden');
-                logDebug(`${solicitacoesCache.length} solicitações carregadas`, 'success');
+                log(solicitacoesCache.length + ' solicitações carregadas', 'success');
 
             } catch (err) {
-                logDebug('Erro ao carregar: ' + err.message, 'error');
+                log('Erro ao carregar: ' + err.message, 'error');
             }
         }
 
@@ -1004,16 +720,20 @@ Log-Ok "Tambem salvo em: resultado_rastreamento.json"
                 const tr = document.createElement('tr');
                 const statusClass = item.status === 'entregue' ? 'status-entregue' : 
                                    item.status === 'enviado' ? 'status-enviado' : 'status-pendente';
-                const dataEnvio = item.data_envio ? new Date(item.data_envio).toLocaleDateString('pt-BR') : '-';
 
                 tr.innerHTML = `
-                    <td><input type="checkbox" class="custom-checkbox checkbox-item" value="${item.id}"></td>
+                    <td><input type="checkbox" class="custom-checkbox" value="${item.id}"></td>
                     <td>${item.numero_solicitacao || '-'}</td>
                     <td>${item.clientes_pg?.nome || 'N/A'}</td>
-                    <td>${item.codigo_rastreio || '-'}</td>
+                    <td><code>${item.codigo_rastreio || '-'}</code></td>
                     <td>${item.forma_envio || '-'}</td>
-                    <td>${dataEnvio}</td>
                     <td><span class="status-badge ${statusClass}">${item.status || 'pendente'}</span></td>
+                    <td>
+                        <button class="btn btn-info" style="padding: 5px 10px; font-size: 0.8rem;" 
+                                onclick="window.open('https://www.superfrete.com/rastreamento', '_blank')">
+                            Rastrear
+                        </button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1031,75 +751,38 @@ Log-Ok "Tambem salvo em: resultado_rastreamento.json"
             document.getElementById('statPendentes').textContent = pendentes;
         }
 
-        function limparFiltros() {
-            inicializarDatas();
-            document.getElementById('filtroStatus').value = '';
-            carregarSolicitacoes();
-        }
-
         function toggleSelectAll() {
+            const checkboxes = document.querySelectorAll('#tabelaResultados input[type="checkbox"]');
             const selectAll = document.getElementById('selectAll');
-            document.querySelectorAll('.checkbox-item').forEach(cb => cb.checked = selectAll.checked);
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
         }
 
-        // ============================================
-        // POWERSHELL INTEGRATION
-        // ============================================
+        async function marcarComoEntregue() {
+            const selecionados = Array.from(document.querySelectorAll('#tabelaResultados input:checked')).map(cb => cb.value);
 
-        function copiarScript() {
-            const textarea = document.getElementById('powershellScript');
-            textarea.select();
-            document.execCommand('copy');
-
-            const btn = event.target;
-            btn.textContent = '✅ Copiado!';
-            setTimeout(() => btn.textContent = '📋 Copiar Script', 2000);
-
-            logDebug('Script copiado', 'success');
-        }
-
-        function processarJSONColado() {
-            const jsonText = document.getElementById('jsonInput').value.trim();
-
-            if (!jsonText) {
-                alert('Cole o JSON primeiro');
+            if (selecionados.length === 0) {
+                alert('Selecione pelo menos uma solicitação');
                 return;
             }
 
+            if (!confirm(`Marcar ${selecionados.length} como entregue?`)) return;
+
             try {
-                const dados = JSON.parse(jsonText);
+                const { error } = await supabaseClient
+                    .from('solicitacoes_pg')
+                    .update({
+                        status: 'entregue',
+                        data_entrega_real: new Date().toISOString(),
+                        atualizado_em: new Date().toISOString()
+                    })
+                    .in('id', selecionados);
 
-                if (!dados.resultados) {
-                    throw new Error('JSON inválido: campo "resultados" não encontrado');
-                }
+                if (error) throw error;
 
-                const container = document.getElementById('resultadoProcessamento');
-                const lista = document.getElementById('listaResultadosProcessados');
-
-                lista.innerHTML = `<h4>Total: ${dados.total_atualizados || 0} entregues de ${dados.resultados.length} verificados</h4>`;
-
-                dados.resultados.forEach(r => {
-                    const div = document.createElement('div');
-                    div.style.cssText = 'padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid ' + (r.entregue ? '#28a745' : r.erro ? '#dc3545' : '#ffc107') + '; background: ' + (r.entregue ? '#d4edda' : r.erro ? '#f8d7da' : '#fff3cd') + ';';
-
-                    div.innerHTML = `
-                        <strong>${r.codigo}</strong> - ${r.cliente || 'N/A'}<br>
-                        <small>${r.entregue ? '✅ Entregue' : r.erro ? '❌ Erro: ' + r.erro : '⏳ Em trânsito'}</small>
-                    `;
-                    lista.appendChild(div);
-                });
-
-                container.style.display = 'block';
-                logDebug('Resultados processados: ' + dados.resultados.length, 'success');
-
-                // Recarregar lista
-                if (dados.total_atualizados > 0) {
-                    carregarSolicitacoes();
-                }
-
+                log(selecionados.length + ' marcadas como entregue', 'success');
+                carregarSolicitacoes();
             } catch (err) {
-                logDebug('Erro no JSON: ' + err.message, 'error');
-                alert('Erro ao processar JSON: ' + err.message);
+                log('Erro: ' + err.message, 'error');
             }
         }
 
@@ -1107,7 +790,7 @@ Log-Ok "Tambem salvo em: resultado_rastreamento.json"
         // TOKENS
         // ============================================
 
-        async function salvarTokenSuperfrete() {
+        async function salvarTokenSF() {
             const token = document.getElementById('tokenSuperfrete').value.trim();
             if (!token) { alert('Token vazio'); return; }
 
@@ -1119,14 +802,14 @@ Log-Ok "Tambem salvo em: resultado_rastreamento.json"
                     is_active: true,
                     created_at: new Date().toISOString()
                 });
-                logDebug('Token SuperFrete salvo', 'success');
+                log('Token SuperFrete salvo', 'success');
                 alert('Token SuperFrete salvo!');
             } catch (err) {
-                logDebug('Erro ao salvar token: ' + err.message, 'error');
+                log('Erro: ' + err.message, 'error');
             }
         }
 
-        async function salvarTokenMelhorEnvio() {
+        async function salvarTokenME() {
             const token = document.getElementById('tokenMelhorEnvio').value.trim();
             if (!token) { alert('Token vazio'); return; }
 
@@ -1138,16 +821,86 @@ Log-Ok "Tambem salvo em: resultado_rastreamento.json"
                     is_active: true,
                     created_at: new Date().toISOString()
                 });
-                logDebug('Token Melhor Envio salvo', 'success');
+                log('Token Melhor Envio salvo', 'success');
                 alert('Token Melhor Envio salvo!');
             } catch (err) {
-                logDebug('Erro ao salvar token: ' + err.message, 'error');
+                log('Erro: ' + err.message, 'error');
+            }
+        }
+
+        // ============================================
+        // RESULTADO
+        // ============================================
+
+        function processarResultado() {
+            const jsonText = document.getElementById('jsonResultado').value.trim();
+
+            if (!jsonText) {
+                alert('Cole o JSON primeiro');
+                return;
+            }
+
+            try {
+                let dados;
+                try {
+                    dados = JSON.parse(jsonText);
+                } catch {
+                    // Tentar extrair array de texto
+                    const match = jsonText.match(/\[[\s\S]*\]/);
+                    if (match) {
+                        dados = JSON.parse(match[0]);
+                    } else {
+                        throw new Error('JSON inválido');
+                    }
+                }
+
+                const container = document.getElementById('resultadoProcessado');
+                const lista = document.getElementById('listaProcessados');
+
+                lista.innerHTML = '';
+                let entregues = 0;
+
+                dados.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'resultado-item ' + (r.entregue ? 'entregue' : r.erro ? 'erro' : 'transito');
+
+                    div.innerHTML = `
+                        <strong>${r.codigo}</strong> - ${r.cliente || 'N/A'}<br>
+                        <small>${r.entregue ? '✅ Entregue' : r.erro ? '❌ Erro: ' + r.erro : '⏳ Em trânsito'}</small>
+                    `;
+
+                    lista.appendChild(div);
+                    if (r.entregue) entregues++;
+                });
+
+                container.style.display = 'block';
+                log(`Processados: ${dados.length} total, ${entregues} entregues`, 'success');
+
+                // Recarregar lista
+                carregarSolicitacoes();
+
+            } catch (err) {
+                log('Erro no JSON: ' + err.message, 'error');
+                alert('Erro ao processar JSON: ' + err.message);
             }
         }
 
         // ============================================
         // UTILITÁRIOS
         // ============================================
+
+        function copiarTexto(elementId) {
+            const el = document.getElementById(elementId);
+            const range = document.createRange();
+            range.selectNode(el);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            window.getSelection().removeAllRanges();
+
+            log('Texto copiado!', 'success');
+            alert('Copiado! Cole no PowerShell/CMD.');
+        }
 
         function mudarAba(aba) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -1156,7 +909,7 @@ Log-Ok "Tambem salvo em: resultado_rastreamento.json"
             event.target.classList.add('active');
         }
 
-        function logDebug(mensagem, tipo = 'info') {
+        function log(mensagem, tipo = 'info') {
             const console = document.getElementById('debugConsole');
             const hora = new Date().toLocaleTimeString('pt-BR');
             const div = document.createElement('div');
