@@ -148,6 +148,21 @@
             border-color: #e17055;
         }
 
+        /* NOVO: Estilo para grupo de data/hora */
+        .datetime-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .datetime-group input[type="date"] {
+            min-width: 150px;
+        }
+
+        .datetime-group input[type="time"] {
+            min-width: 100px;
+        }
+
         .btn-filtrar {
             background: linear-gradient(135deg, #e17055, #d63031);
             color: white;
@@ -420,6 +435,26 @@
             font-size: 0.85rem;
         }
 
+        /* NOVO: Botão apagar rastreamento */
+        .btn-apagar-rastreio {
+            width: 100%;
+            background: linear-gradient(135deg, #ff7675, #d63031);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-apagar-rastreio:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 118, 117, 0.4);
+        }
+
         .btn-salvar {
             width: 100%;
             background: linear-gradient(135deg, #e17055, #d63031);
@@ -626,6 +661,17 @@
                 min-width: 100%;
             }
 
+            /* NOVO: Ajuste para mobile no datetime */
+            .datetime-group {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .datetime-group input[type="date"],
+            .datetime-group input[type="time"] {
+                min-width: 100%;
+            }
+
             th, td {
                 padding: 10px;
                 font-size: 0.9rem;
@@ -641,6 +687,7 @@
             }
         }
     </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -683,15 +730,21 @@
             </div>
         </div>
 
-        <!-- Filtros -->
+        <!-- Filtros - ATUALIZADO com campos de hora -->
         <div class="filtros-section">
             <div class="filtro-group">
                 <label for="dataInicial">Data Inicial</label>
-                <input type="date" id="dataInicial">
+                <div class="datetime-group">
+                    <input type="date" id="dataInicial">
+                    <input type="time" id="horaInicial" value="00:00">
+                </div>
             </div>
             <div class="filtro-group">
                 <label for="dataFinal">Data Final</label>
-                <input type="date" id="dataFinal">
+                <div class="datetime-group">
+                    <input type="date" id="dataFinal">
+                    <input type="time" id="horaFinal" value="23:59">
+                </div>
             </div>
             <div class="filtro-group">
                 <label for="filtroStatus">Status</label>
@@ -788,6 +841,11 @@
                 </div>
 
                 <button type="submit" class="btn-salvar">💾 Salvar Rastreio</button>
+                
+                <!-- NOVO: Botão para apagar rastreamento -->
+                <button type="button" class="btn-apagar-rastreio" id="btnApagarRastreio" onclick="apagarRastreio()" style="display: none;">
+                    🗑️ Apagar Rastreio
+                </button>
             </form>
         </div>
     </div>
@@ -872,6 +930,7 @@
         let clientesCache = {};
         let instagramAtual = '';
         let rastreamentosCache = {}; // NOVO: Cache de rastreamentos por solicitação
+        let rastreamentoAtualId = null; // NOVO: ID do rastreamento sendo editado
 
         // ============================================
         // URLs DE RASTREAMENTO POR TRANSPORTADORA
@@ -898,6 +957,10 @@
                     const trintaDiasAtras = new Date(hoje.getTime() - (30 * 24 * 60 * 60 * 1000));
                     document.getElementById('dataFinal').value = hoje.toISOString().split('T')[0];
                     document.getElementById('dataInicial').value = trintaDiasAtras.toISOString().split('T')[0];
+                    
+                    // Definir horas padrão
+                    document.getElementById('horaInicial').value = '00:00';
+                    document.getElementById('horaFinal').value = '23:59';
                     
                     // Carregar dados iniciais
                     carregarDados();
@@ -935,13 +998,15 @@
         }
 
         // ============================================
-        // CARREGAR SOLICITAÇÕES - CORRIGIDO (filtros de data UTC)
+        // CARREGAR SOLICITAÇÕES - ATUALIZADO (com hora nos filtros)
         // ============================================
         async function carregarSolicitacoes() {
             if (!supabaseClient) return;
 
             const dataInicial = document.getElementById('dataInicial').value;
             const dataFinal = document.getElementById('dataFinal').value;
+            const horaInicial = document.getElementById('horaInicial').value || '00:00';
+            const horaFinal = document.getElementById('horaFinal').value || '23:59';
 
             try {
                 let query = supabaseClient
@@ -961,14 +1026,14 @@
                     .order('data_solicitacao', { ascending: false });
 
                 if (dataInicial) {
-                    // Criar data no início do dia em UTC (00:00:00)
-                    const inicioUTC = new Date(dataInicial + 'T00:00:00.000Z');
+                    // Criar data com hora no início do período em UTC
+                    const inicioUTC = new Date(dataInicial + 'T' + horaInicial + ':00.000Z');
                     query = query.gte('data_solicitacao', inicioUTC.toISOString());
                 }
                 
                 if (dataFinal) {
-                    // Criar data no final do dia em UTC (23:59:59.999)
-                    const fimUTC = new Date(dataFinal + 'T23:59:59.999Z');
+                    // Criar data com hora no final do período em UTC
+                    const fimUTC = new Date(dataFinal + 'T' + horaFinal + ':59.999Z');
                     query = query.lte('data_solicitacao', fimUTC.toISOString());
                 }
 
@@ -1126,7 +1191,7 @@
         // FILTROS
         // ============================================
         function aplicarFiltros() {
-            // Recarrega dados do banco com as datas selecionadas
+            // Recarrega dados do banco com as datas e horas selecionadas
             carregarSolicitacoes();
         }
 
@@ -1202,7 +1267,7 @@
         }
 
         // ============================================
-        // MODAL RASTREIO COM HISTÓRICO
+        // MODAL RASTREIO COM HISTÓRICO - ATUALIZADO
         // ============================================
         async function abrirModalRastreio(solicitacaoId) {
             const sol = solicitacoesData.find(s => s.id === solicitacaoId);
@@ -1210,6 +1275,7 @@
 
             document.getElementById('rastreioSolicitacaoId').value = solicitacaoId;
             document.getElementById('rastreioId').value = sol.rastreamento_id || '';
+            rastreamentoAtualId = sol.rastreamento_id || null;
             
             // Mostrar histórico de rastreamentos
             await mostrarHistoricoRastreamentos(solicitacaoId);
@@ -1223,6 +1289,9 @@
                     document.getElementById('dataPrevista').value = rastRecente.data_entrega_prevista || '';
                     document.getElementById('formaEnvio').value = rastRecente.forma_envio || 'correios';
                     document.getElementById('observacoesRastreio').value = rastRecente.observacoes || '';
+                    
+                    // Mostrar botão de apagar se existe rastreamento
+                    document.getElementById('btnApagarRastreio').style.display = 'block';
                 }
             } else {
                 // Limpar campos para novo cadastro
@@ -1231,6 +1300,9 @@
                 document.getElementById('dataPrevista').value = '';
                 document.getElementById('formaEnvio').value = 'correios';
                 document.getElementById('observacoesRastreio').value = '';
+                
+                // Esconder botão de apagar se não existe rastreamento
+                document.getElementById('btnApagarRastreio').style.display = 'none';
             }
             
             document.getElementById('codigoPreview').classList.remove('active');
@@ -1268,7 +1340,7 @@
         }
 
         // ============================================
-        // SALVAR RASTREIO - CORRIGIDO (permite apagar)
+        // SALVAR RASTREIO - ATUALIZADO
         // ============================================
         async function salvarRastreio(event) {
             event.preventDefault();
@@ -1284,17 +1356,27 @@
             const formaEnvio = document.getElementById('formaEnvio').value;
             const observacoes = document.getElementById('observacoesRastreio').value || null;
 
-            // REMOVIDA A VALIDAÇÃO OBRIGATÓRIA - agora permite salvar com código vazio (apagar rastreamento)
+            // Se código está vazio e é edição, não faz nada (deixa para função de apagar)
+            if (!codigo && rastreioId) {
+                alert('⚠️ Para remover o rastreamento, use o botão "Apagar Rastreio"');
+                return;
+            }
+
+            // Se código está vazio e é novo, mostra erro
+            if (!codigo && !rastreioId) {
+                alert('⚠️ Informe um código de rastreio');
+                return;
+            }
 
             try {
                 let result;
                 
                 if (rastreioId) {
-                    // ATUALIZAR rastreamento existente (permite código vazio)
+                    // ATUALIZAR rastreamento existente
                     result = await supabaseClient
                         .from('rastreamentos_pg')
                         .update({
-                            codigo_rastreio: codigo || null, // pode ser vazio/null agora
+                            codigo_rastreio: codigo,
                             forma_envio: formaEnvio,
                             data_envio: dataEnvio,
                             data_entrega_prevista: dataPrevista,
@@ -1303,49 +1385,97 @@
                         .eq('id', rastreioId)
                         .select();
                 } else {
-                    // Só insere novo se tiver código
-                    if (codigo) {
-                        result = await supabaseClient
-                            .from('rastreamentos_pg')
-                            .insert({
-                                solicitacao_id: solicitacaoId,
-                                codigo_rastreio: codigo,
-                                forma_envio: formaEnvio,
-                                data_envio: dataEnvio,
-                                data_entrega_prevista: dataPrevista,
-                                observacoes: observacoes
-                            })
-                            .select();
-                    }
+                    // INSERIR novo rastreamento
+                    result = await supabaseClient
+                        .from('rastreamentos_pg')
+                        .insert({
+                            solicitacao_id: solicitacaoId,
+                            codigo_rastreio: codigo,
+                            forma_envio: formaEnvio,
+                            data_envio: dataEnvio,
+                            data_entrega_prevista: dataPrevista,
+                            observacoes: observacoes
+                        })
+                        .select();
                 }
 
                 if (result && result.error) throw result.error;
 
-                // Se código ficou vazio, atualiza status da solicitação para 'pendente'
-                if (!codigo) {
+                // Atualizar status da solicitação para 'enviado'
+                await supabaseClient
+                    .from('solicitacoes_pg')
+                    .update({ status: 'enviado' })
+                    .eq('id', solicitacaoId);
+
+                fecharModal('modalRastreio');
+                await carregarSolicitacoes();
+                
+                alert('✅ Rastreio salvo com sucesso!\n\nCódigo: ' + codigo);
+            } catch (e) {
+                console.error('Erro ao salvar rastreio:', e);
+                alert('❌ Erro ao salvar rastreio: ' + e.message);
+            }
+        }
+
+        // ============================================
+        // NOVO: APAGAR RASTREIO
+        // ============================================
+        async function apagarRastreio() {
+            const rastreioId = document.getElementById('rastreioId').value;
+            const solicitacaoId = document.getElementById('rastreioSolicitacaoId').value;
+            
+            if (!rastreioId) {
+                alert('⚠️ Nenhum rastreamento para apagar');
+                return;
+            }
+            
+            // Confirmação dupla
+            if (!confirm('🗑️ Tem certeza que deseja APAGAR este rastreamento?\n\nEsta ação não pode ser desfeita!')) {
+                return;
+            }
+            
+            if (!confirm('⚠️ CONFIRMAÇÃO FINAL:\n\nO rastreamento será permanentemente removido. Deseja continuar?')) {
+                return;
+            }
+            
+            try {
+                // Apagar o rastreamento
+                const { error } = await supabaseClient
+                    .from('rastreamentos_pg')
+                    .delete()
+                    .eq('id', rastreioId);
+                
+                if (error) throw error;
+                
+                // Verificar se há mais rastreamentos para esta solicitação
+                const rastreamentosRestantes = rastreamentosCache[solicitacaoId]?.filter(r => r.id !== rastreioId) || [];
+                
+                // Se não há mais rastreamentos, atualiza status para pendente
+                if (rastreamentosRestantes.length === 0) {
                     await supabaseClient
                         .from('solicitacoes_pg')
                         .update({ status: 'pendente' })
                         .eq('id', solicitacaoId);
                 } else {
-                    // Atualizar status da solicitação para 'enviado'
+                    // Se há rastreamentos anteriores, atualiza com o mais recente
+                    const maisRecente = rastreamentosRestantes[0];
                     await supabaseClient
                         .from('solicitacoes_pg')
-                        .update({ status: 'enviado' })
+                        .update({ 
+                            status: 'enviado',
+                            codigo_rastreio: maisRecente.codigo_rastreio,
+                            forma_envio: maisRecente.forma_envio
+                        })
                         .eq('id', solicitacaoId);
                 }
-
+                
                 fecharModal('modalRastreio');
                 await carregarSolicitacoes();
                 
-                if (codigo) {
-                    alert('✅ Rastreio salvo com sucesso!\n\nCódigo: ' + codigo);
-                } else {
-                    alert('✅ Rastreio removido com sucesso!\n\nA solicitação voltou para o status "Pendente".');
-                }
+                alert('✅ Rastreamento apagado com sucesso!\n\nA solicitação foi atualizada.');
             } catch (e) {
-                console.error('Erro ao salvar rastreio:', e);
-                alert('❌ Erro ao salvar rastreio: ' + e.message);
+                console.error('Erro ao apagar rastreio:', e);
+                alert('❌ Erro ao apagar rastreamento: ' + e.message);
             }
         }
 
