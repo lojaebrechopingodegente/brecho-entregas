@@ -165,10 +165,11 @@
             overflow-y: auto;
         }
 
-        .code-block .comment { color: #6a9955; }
-        .code-block .string { color: #ce9178; }
-        .code-block .keyword { color: #569cd6; }
-        .code-block .variable { color: #9cdcfe; }
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
 
         .copy-btn {
             position: absolute;
@@ -214,6 +215,12 @@
             background: #d4edda;
             border: 1px solid #c3e6cb;
             color: #155724;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
         }
 
         .grid-2 {
@@ -316,17 +323,12 @@
             margin-bottom: 20px;
         }
 
-        .step-number {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 30px;
-            height: 30px;
-            background: #667eea;
-            color: white;
-            border-radius: 50%;
-            font-weight: bold;
-            margin-right: 10px;
+        .error-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
         }
     </style>
 <base target="_blank">
@@ -425,11 +427,16 @@
                 E ao final, o resultado JSON é copiado automaticamente para a área de transferência.
             </div>
 
+            <div class="error-box">
+                <strong>⚠️ Importante:</strong> Clique no botão "📋 Copiar Script" para copiar o código limpo. 
+                Não selecione o texto manualmente para evitar copiar tags HTML.
+            </div>
+
             <div class="alert alert-warning">
-                <strong>⚠️ Como usar:</strong>
+                <strong>📋 Como usar:</strong>
                 <ol style="margin-top: 10px; margin-left: 20px;">
                     <li>Configure o Supabase na aba "Configuração" primeiro</li>
-                    <li>Copie o script abaixo (já com suas credenciais)</li>
+                    <li>Clique em "📋 Copiar Script" (código limpo, sem HTML)</li>
                     <li>Cole no PowerShell como Administrador e execute</li>
                     <li>O resultado JSON será copiado <strong>automaticamente</strong>!</li>
                     <li>Vá direto para aba "Resultado" e cole (Ctrl+V)</li>
@@ -446,7 +453,7 @@
             </div>
 
             <div class="powershell-output" id="powershellOutput" style="display: none;">
-                <h4>📋 Script copiado!</h4>
+                <h4>✅ Script copiado!</h4>
                 <p>Cole no PowerShell (Admin) e execute. O resultado será copiado automaticamente.</p>
             </div>
         </div>
@@ -483,6 +490,9 @@
     </div>
 
     <script>
+        // Variável global para armazenar o código limpo (sem HTML)
+        let cleanPowerShellCode = '';
+
         // Carregar configuração ao iniciar
         window.onload = function() {
             carregarConfiguracao();
@@ -544,7 +554,8 @@
             const url = document.getElementById('sbUrl').value || 'https://ytnfjzngalfapfnbobfm.supabase.co';
             const key = document.getElementById('sbKey').value || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
 
-            const psScript = `# ============================================
+            // Código LIMPO (sem HTML) - será usado para copiar
+            cleanPowerShellCode = `# ============================================
 # Verificador de Entregas - PowerShell
 # Busca tokens em PRODUÇÃO e ATIVOS
 # ============================================
@@ -595,9 +606,7 @@ Write-Host ""
 Write-Host "🚀 Iniciando verificação de entregas..." -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Yellow
 
-# Aqui você pode adicionar a lógica de verificação das entregas
-# usando os tokens $tokenSF e $tokenME
-
+# Resultado
 $resultado = @{
     data_verificacao = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
     superfrete = @{
@@ -608,7 +617,7 @@ $resultado = @{
         token_encontrado = $tokenME -ne $null
         ambiente = "production"
     }
-    entregas = @() # Preencher com dados reais das entregas
+    entregas = @()
 }
 
 Write-Host ""
@@ -627,19 +636,16 @@ Write-Host "✅ JSON copiado automaticamente para a área de transferência!" -F
 Write-Host "📋 Cole no navegador (Ctrl+V)" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Yellow`;
 
-            // Aplicar syntax highlighting simples
-            let highlighted = psScript
-                .replace(/#.*/g, match => `<span class="comment">${match}</span>`)
-                .replace(/".*?"/g, match => `<span class="string">${match}</span>`)
-                .replace(/\$[a-zA-Z_]+/g, match => `<span class="variable">${match}</span>`)
-                .replace(/(try|catch|if|else)/g, match => `<span class="keyword">${match}</span>`);
-
-            document.getElementById('psCode').innerHTML = highlighted;
+            // Mostrar na tela (apenas visualização, sem syntax highlighting para evitar confusão)
+            document.getElementById('psCode').textContent = cleanPowerShellCode;
         }
 
         function copyPowerShell() {
-            const code = document.getElementById('psCode').innerText;
-            navigator.clipboard.writeText(code).then(() => {
+            if (!cleanPowerShellCode) {
+                gerarPowerShell();
+            }
+
+            navigator.clipboard.writeText(cleanPowerShellCode).then(() => {
                 const btn = document.querySelector('.copy-btn');
                 btn.textContent = '✅ Copiado!';
                 btn.classList.add('copied');
@@ -649,6 +655,8 @@ Write-Host "========================================" -ForegroundColor Yellow`;
                     btn.textContent = '📋 Copiar Script';
                     btn.classList.remove('copied');
                 }, 2000);
+            }).catch(err => {
+                alert('Erro ao copiar: ' + err);
             });
         }
 
