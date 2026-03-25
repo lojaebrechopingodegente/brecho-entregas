@@ -230,16 +230,16 @@
     
     <div class="container">
         <div class="header">
-         <div class="header-left">
-    <a href="dashboard.html" class="btn-voltar">← Voltar ao Dashboard</a>
+        <div class="botoes-filtro">
+    <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Buscar Solicitações</button>
+    <button class="btn btn-secondary" onclick="limparFiltros()">🧹 Limpar Filtros</button>
+    <button class="btn btn-pdf" id="btnGerarPDF" onclick="gerarPDF()" disabled>📄 Gerar PDF</button>
+    <button class="btn btn-emitir" id="btnEmitirEtiquetas" onclick="abrirModalEtiquetas()" disabled>📋 Emitir Etiquetas</button>
     <!-- Link para página de integração -->
-    <a href="integracao_superfrete_melhorenvio.html" class="btn-emitir" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+    <a href="integracao_superfrete_melhorenvio.html" class="btn btn-emitir" style="text-decoration: none; background: linear-gradient(135deg, #667eea, #764ba2);">
         🔗 Integração Super Frete/Melhor Envio
     </a>
-    <div>
-        <h1>🚚 Rastreamento de Entregas</h1>
-        <p>Gerencie códigos de rastreio e envie atualizações aos clientes</p>
-    </div>
+</div>
 </div>
             <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
         </div>
