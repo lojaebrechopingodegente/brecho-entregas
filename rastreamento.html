@@ -226,67 +226,65 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body>
-    
-    <div class="container">
-        <div class="header">
-        <div class="botoes-filtro">
-    <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Buscar Solicitações</button>
-    <button class="btn btn-secondary" onclick="limparFiltros()">🧹 Limpar Filtros</button>
-    <button class="btn btn-pdf" id="btnGerarPDF" onclick="gerarPDF()" disabled>📄 Gerar PDF</button>
-    <button class="btn btn-emitir" id="btnEmitirEtiquetas" onclick="abrirModalEtiquetas()" disabled>📋 Emitir Etiquetas</button>
-    <!-- Link para página de integração -->
-    <a href="integracao_superfrete_melhorenvio.html" class="btn btn-emitir" style="text-decoration: none; background: linear-gradient(135deg, #667eea, #764ba2);">
-        🔗 Integração Super Frete/Melhor Envio
-    </a>
-</div>
-</div>
-            <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
+<div class="container">
+    <div class="header">
+        <div class="header-left">
+            <a href="dashboard.html" class="btn-voltar">← Voltar ao Dashboard</a>
+            <div>
+                <h1>🚚 Rastreamento de Entregas</h1>
+                <p>Gerencie códigos de rastreio e envie atualizações aos clientes</p>
+            </div>
         </div>
+        <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
+    </div>
 
-        <div class="filtros-container" id="filtrosContainer" style="opacity: 0.5; pointer-events: none;">
-            <h2 class="filtros-titulo">📅 Filtros por Período</h2>
-            
-            <div class="filtros-grid">
-                <div class="campo-filtro">
-                    <label>Data Inicial</label>
-                    <input type="date" id="dataInicial">
-                </div>
-                <div class="campo-filtro">
-                    <label>Horário Inicial</label>
-                    <input type="time" id="horaInicial" value="00:00">
-                </div>
-                <div class="campo-filtro">
-                    <label>Data Final</label>
-                    <input type="date" id="dataFinal">
-                </div>
-                <div class="campo-filtro">
-                    <label>Horário Final</label>
-                    <input type="time" id="horaFinal" value="23:59">
-                </div>
-                <div class="campo-filtro">
-                    <label>Status</label>
-                    <select id="filtroStatus" onchange="aplicarFiltrosLocal()">
-                        <option value="">Todos</option>
-                        <option value="pendente">Pendente</option>
-                        <option value="enviado">Enviado</option>
-                        <option value="entregue">Entregue</option>
-                        <option value="cancelado">Cancelado</option>
-                    </select>
-                </div>
-                <div class="campo-filtro">
-                    <label>Buscar (Nº ou Cliente)</label>
-                    <input type="text" id="filtroBusca" oninput="aplicarFiltrosLocal()" placeholder="Digite para buscar...">
-                </div>
+    <div class="filtros-container" id="filtrosContainer" style="opacity: 0.5; pointer-events: none;">
+        <h2 class="filtros-titulo">📅 Filtros por Período</h2>
+        
+        <div class="filtros-grid">
+            <div class="campo-filtro">
+                <label>Data Inicial</label>
+                <input type="date" id="dataInicial">
             </div>
-            
-            <div class="botoes-filtro">
-                <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Buscar Solicitações</button>
-                <button class="btn btn-secondary" onclick="limparFiltros()">🧹 Limpar Filtros</button>
-                <button class="btn btn-pdf" id="btnGerarPDF" onclick="gerarPDF()" disabled>📄 Gerar PDF</button>
-                <button class="btn btn-emitir" id="btnEmitirEtiquetas" onclick="abrirModalEtiquetas()" disabled>📋 Emitir Etiquetas</button>
+            <div class="campo-filtro">
+                <label>Horário Inicial</label>
+                <input type="time" id="horaInicial" value="00:00">
+            </div>
+            <div class="campo-filtro">
+                <label>Data Final</label>
+                <input type="date" id="dataFinal">
+            </div>
+            <div class="campo-filtro">
+                <label>Horário Final</label>
+                <input type="time" id="horaFinal" value="23:59">
+            </div>
+            <div class="campo-filtro">
+                <label>Status</label>
+                <select id="filtroStatus" onchange="aplicarFiltrosLocal()">
+                    <option value="">Todos</option>
+                    <option value="pendente">Pendente</option>
+                    <option value="enviado">Enviado</option>
+                    <option value="entregue">Entregue</option>
+                    <option value="cancelado">Cancelado</option>
+                </select>
+            </div>
+            <div class="campo-filtro">
+                <label>Buscar (Nº ou Cliente)</label>
+                <input type="text" id="filtroBusca" oninput="aplicarFiltrosLocal()" placeholder="Digite para buscar...">
             </div>
         </div>
+        
+        <div class="botoes-filtro">
+            <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Buscar Solicitações</button>
+            <button class="btn btn-secondary" onclick="limparFiltros()">🧹 Limpar Filtros</button>
+            <button class="btn btn-pdf" id="btnGerarPDF" onclick="gerarPDF()" disabled>📄 Gerar PDF</button>
+            <button class="btn btn-emitir" id="btnEmitirEtiquetas" onclick="abrirModalEtiquetas()" disabled>📋 Emitir Etiquetas</button>
+            <!-- Link para página de integração -->
+            <a href="integracao_superfrete_melhorenvio.html" class="btn btn-emitir" style="text-decoration: none; background: linear-gradient(135deg, #667eea, #764ba2);">
+                🔗 Integração Super Frete/Melhor Envio
+            </a>
+        </div>
+    </div>
 
         <div class="stats-container" id="statsContainer" style="display: none;">
             <div class="stat-card"><h3>Total de Solicitações</h3><div class="valor" id="statTotal">-</div></div>
