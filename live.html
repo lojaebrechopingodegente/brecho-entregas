@@ -246,6 +246,15 @@
             color: white;
         }
 
+        .btn-purple {
+            background: #6f42c1;
+            color: white;
+        }
+
+        .btn-purple:hover {
+            background: #5a32a3;
+        }
+
         .actions {
             display: flex;
             gap: 10px;
@@ -462,6 +471,54 @@
         .confirm-box .btn {
             margin: 0 10px;
         }
+
+        .venda-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+        }
+
+        .venda-dialog.active {
+            display: flex;
+        }
+
+        .venda-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .venda-box h3 {
+            margin-bottom: 20px;
+            color: #495057;
+            text-align: center;
+        }
+
+        .venda-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .venda-info p {
+            margin: 5px 0;
+            color: #495057;
+        }
+
+        .venda-info strong {
+            color: #667eea;
+        }
     </style>
 <base target="_blank">
 </head>
@@ -535,7 +592,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 <div class="actions">
                     <button class="btn btn-primary" onclick="adicionarLinha()">+ Adicionar Item</button>
                     <button class="btn btn-success" onclick="gerarRelatorioNovaAba()">📄 Ver Relatório</button>
-                    <button class="btn btn-warning" onclick="carregarVendasExistentes()">🔄 Recarregar Dados</button>
+                    <button class="btn btn-purple" onclick="registrarVenda()">💰 Registrar Venda</button>
                     <button class="btn btn-danger" onclick="confirmarResetarLive()">🗑️ Resetar Live</button>
                 </div>
                 <p class="info-text">* Pressione ENTER para navegar entre os campos. Use ↑↓ para navegar nas sugestões. Clique no 🎤 para comando de voz.</p>
@@ -573,6 +630,20 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         </div>
     </div>
 
+    <!-- Dialog de Confirmação para Registrar Venda -->
+    <div class="venda-dialog" id="vendaDialog">
+        <div class="venda-box">
+            <h3>💰 Confirmar Registro de Venda</h3>
+            <div class="venda-info" id="vendaInfo">
+                <!-- Preenchido dinamicamente -->
+            </div>
+            <div style="text-align: center;">
+                <button class="btn btn-secondary" onclick="fecharVendaDialog()" style="background: #6c757d; color: white; margin-right: 10px;">Cancelar</button>
+                <button class="btn btn-success" onclick="executarRegistrarVenda()">Confirmar Registro</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let supabaseClient = null;
         let clientes = [];
@@ -583,6 +654,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         let recognition = null;
         let activeInput = null;
         let selectedSuggestionIndex = -1;
+        let totalLiveAtual = 0;
 
         function inicializarReconhecimentoVoz() {
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -1348,12 +1420,91 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
         }
 
+        // NOVA FUNÇÃO: Registrar Venda na tabela vendas_pg
+        function registrarVenda() {
+            // Calcular total da live
+            const vendasValidas = vendas.filter(v => v.valor > 0 && v.comprador && v.comprador.trim() !== '');
+            totalLiveAtual = vendasValidas.reduce((sum, v) => sum + (parseFloat(v.valor) || 0), 0);
+            
+            const quantidadeItens = vendasValidas.length;
+            
+            if (quantidadeItens === 0) {
+                showStatus('Não há vendas válidas para registrar!', 'error');
+                return;
+            }
+
+            const dataFormatada = formatarData(dataLiveAtual);
+            
+            const vendaInfo = document.getElementById('vendaInfo');
+            vendaInfo.innerHTML = `
+                <p><strong>Data da Live:</strong> ${dataFormatada}</p>
+                <p><strong>Quantidade de Itens:</strong> ${quantidadeItens}</p>
+                <p><strong>Valor Total:</strong> ${formatarMoeda(totalLiveAtual)}</p>
+                <p style="margin-top: 10px; font-size: 12px; color: #6c757d;">
+                    Será criado um registro na tabela vendas_pg com a descrição:<br>
+                    <em>"Live do Dia ${dataFormatada}"</em>
+                </p>
+            `;
+            
+            document.getElementById('vendaDialog').classList.add('active');
+        }
+
+        function fecharVendaDialog() {
+            document.getElementById('vendaDialog').classList.remove('active');
+        }
+
+        async function executarRegistrarVenda() {
+            fecharVendaDialog();
+            
+            try {
+                showStatus('Registrando venda na tabela vendas_pg...', 'info');
+                
+                const dataFormatada = formatarData(dataLiveAtual);
+                const descricao = `Live do Dia ${dataFormatada}`;
+                
+                // Preparar itens da venda
+                const vendasValidas = vendas.filter(v => v.valor > 0 && v.comprador && v.comprador.trim() !== '');
+                const itensVenda = vendasValidas.map(v => ({
+                    linha_id: v.linha_id,
+                    valor: v.valor,
+                    codigo: v.codigo,
+                    comprador: v.comprador,
+                    fila: v.fila
+                }));
+                
+                const vendaData = {
+                    data_venda: new Date(dataLiveAtual + 'T12:00:00').toISOString(),
+                    cliente_nome: null,
+                    cliente_cpf: null,
+                    canal_venda: 'Live',
+                    forma_pagamento: 'Dinheiro',
+                    status_pagamento: 'pago',
+                    total: totalLiveAtual,
+                    itens: itensVenda,
+                    observacoes: descricao
+                };
+                
+                const { data, error } = await supabaseClient
+                    .from('vendas_pg')
+                    .insert([vendaData])
+                    .select();
+                
+                if (error) throw error;
+                
+                showStatus(`Venda registrada com sucesso! ID: ${data[0].id}`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao registrar venda:', error);
+                showStatus('Erro ao registrar venda: ' + error.message, 'error');
+            }
+        }
+
         function formatarMoeda(valor) {
             return 'R$ ' + valor.toFixed(2).replace('.', ',');
         }
 
         function gerarRelatorioNovaAba() {
-            // CORREÇÃO: Garantir que não haja duplicados usando Map
+            // CORREÇÃO: Usar Array.from() corretamente para converter valores do Map
             const vendasUnicas = new Map();
 
             vendas.forEach(venda => {
@@ -1366,15 +1517,15 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
             const vendasPorComprador = {};
 
-            // Usar apenas vendas únicas
-            Array.from(vendasUnicas.values()).forEach(venda => {
-                if (!venda.comprador || venda.valor === 0) return;
+            // CORREÇÃO: Usar for...of para iterar sobre os valores do Map
+            for (const venda of vendasUnicas.values()) {
+                if (!venda.comprador || venda.valor === 0) continue;
 
                 if (!vendasPorComprador[venda.comprador]) {
                     vendasPorComprador[venda.comprador] = [];
                 }
                 vendasPorComprador[venda.comprador].push(venda);
-            });
+            }
 
             const compradoresOrdenados = Object.keys(vendasPorComprador).sort((a, b) => {
                 const totalA = vendasPorComprador[a].reduce((sum, v) => sum + v.total, 0);
