@@ -92,7 +92,7 @@
         /* Cards de Navegação */
         .cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
             margin-bottom: 30px;
         }
@@ -115,6 +115,20 @@
             box-shadow: 0 15px 50px rgba(255, 139, 167, 0.25);
         }
 
+        /* Card Lives - NOVO */
+        .card-lives {
+            border-top: 5px solid #9b59b6;
+        }
+
+        .card-lives:hover {
+            border-color: #9b59b6;
+        }
+
+        .card-lives .card-badge {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+
         .card-entregas {
             border-top: 5px solid #FF6B8A;
         }
@@ -123,35 +137,54 @@
             border-color: #FF6B8A;
         }
 
+        .card-entregas .card-badge {
+            background: linear-gradient(135deg, #FF8BA7, #FF6B8A);
+            color: white;
+        }
+
         .card-vendas {
             border-top: 5px solid #4ECDC4;
         }
 
-        .card-clientes {
-    border-top: 5px solid #667eea;
-}
-
-.card-clientes:hover {
-    border-color: #667eea;
-}
-
-.card-clientes .card-badge {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-}
-
         .card-vendas:hover {
             border-color: #4ECDC4;
+        }
+
+        .card-vendas .card-badge {
+            background: linear-gradient(135deg, #4ECDC4, #44A08D);
+            color: white;
+        }
+
+        .card-clientes {
+            border-top: 5px solid #667eea;
+        }
+
+        .card-clientes:hover {
+            border-color: #667eea;
+        }
+
+        .card-clientes .card-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .card-rastreamento {
+            border-top: 5px solid #e17055;
+        }
+
+        .card-rastreamento:hover {
+            border-color: #e17055;
+        }
+
+        .card-rastreamento .card-badge {
+            background: linear-gradient(135deg, #e17055, #d63031);
+            color: white;
         }
 
         .card-icon {
             font-size: 4rem;
             margin-bottom: 20px;
             display: block;
-        }
-
-        .card-entregas .card-icon {
-            filter: hue-rotate(320deg);
         }
 
         .card h2 {
@@ -173,16 +206,6 @@
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: 600;
-        }
-
-        .card-entregas .card-badge {
-            background: linear-gradient(135deg, #FF8BA7, #FF6B8A);
-            color: white;
-        }
-
-        .card-vendas .card-badge {
-            background: linear-gradient(135deg, #4ECDC4, #44A08D);
-            color: white;
         }
 
         /* Seção de Vendas */
@@ -305,7 +328,7 @@
             width: 100%;
         }
 
-        /* Seção de Entregas - NOVA */
+        /* Seção de Entregas */
         .entregas-section {
             background: white;
             border-radius: 20px;
@@ -364,19 +387,8 @@
             color: #95a5a6;
             margin-top: 5px;
         }
-.card-rastreamento {
-    border-top: 5px solid #e17055;
-}
 
-.card-rastreamento:hover {
-    border-color: #e17055;
-}
-
-.card-rastreamento .card-badge {
-    background: linear-gradient(135deg, #e17055, #d63031);
-    color: white;
-}
-        /* Gráfico de Entregas - cores diferentes */
+        /* Gráfico de Entregas */
         .entregas-section .grafico-container {
             background: #FFF5F7;
         }
@@ -403,13 +415,11 @@
             animation: fadeInUp 0.5s ease forwards;
         }
 
-        .card:nth-child(1) {
-            animation-delay: 0.1s;
-        }
-
-        .card:nth-child(2) {
-            animation-delay: 0.2s;
-        }
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+        .card:nth-child(5) { animation-delay: 0.5s; }
 
         @media (max-width: 768px) {
             .header h1 {
@@ -463,8 +473,16 @@
             <p>Loja e Brechó Pingo de Gente</p>
         </div>
 
-        <!-- Cards de Navegação -->
+        <!-- Cards de Navegação - 5 cards agora -->
         <div class="cards-grid">
+            <!-- NOVO: Gerenciamento de Lives -->
+            <a href="live.html" class="card card-lives">
+                <span class="card-icon">📱</span>
+                <h2>Gerenciamento de Lives</h2>
+                <p>Gerencie transmissões ao vivo, agende lives, acompanhe métricas de engajamento e interaja com espectadores em tempo real.</p>
+                <span class="card-badge">Acessar →</span>
+            </a>
+
             <a href="gerenciamento.html" class="card card-entregas">
                 <span class="card-icon">📦</span>
                 <h2>Gerenciamento de Entregas</h2>
@@ -478,19 +496,20 @@
                 <p>Registre novas vendas, consulte histórico, acompanhe pagamentos e gerencie o estoque.</p>
                 <span class="card-badge">Acessar →</span>
             </a>
+
             <a href="clientes.html" class="card card-clientes">
-    <span class="card-icon">👥</span>
-    <h2>Gerenciamento de Clientes</h2>
-    <p>Cadastre e gerencie clientes, endereços de entrega, consulte histórico e organize sua base de dados.</p>
-    <span class="card-badge">Acessar →</span>
+                <span class="card-icon">👥</span>
+                <h2>Gerenciamento de Clientes</h2>
+                <p>Cadastre e gerencie clientes, endereços de entrega, consulte histórico e organize sua base de dados.</p>
+                <span class="card-badge">Acessar →</span>
             </a>
-<a href="rastreamento.html" class="card card-rastreamento">
-    <span class="card-icon">🚚</span>
-    <h2>Rastreamento de Entregas</h2>
-    <p>Gerencie códigos de rastreio, envie atualizações para clientes via Instagram DM e acompanhe o status das entregas em trânsito.</p>
-    <span class="card-badge">Acessar →</span>
-</a>
-            
+
+            <a href="rastreamento.html" class="card card-rastreamento">
+                <span class="card-icon">🚚</span>
+                <h2>Rastreamento de Entregas</h2>
+                <p>Gerencie códigos de rastreio, envie atualizações para clientes via Instagram DM e acompanhe o status das entregas em trânsito.</p>
+                <span class="card-badge">Acessar →</span>
+            </a>
         </div>
 
         <!-- SEÇÃO: Resumo de Vendas -->
@@ -532,7 +551,7 @@
             </div>
         </div>
 
-        <!-- SEÇÃO: Resumo de Entregas - NOVA -->
+        <!-- SEÇÃO: Resumo de Entregas -->
         <div class="entregas-section">
             <div class="section-header">
                 <h2>📦 Resumo de Entregas</h2>
@@ -816,7 +835,7 @@
         }
 
         // ============================================
-        // RESUMO DE ENTREGAS - NOVO
+        // RESUMO DE ENTREGAS
         // ============================================
         async function carregarResumoEntregas() {
             if (!supabaseClient) return;
@@ -947,7 +966,6 @@
                 graficoEntregas.destroy();
             }
 
-            // Cores diferentes para entregas (tom de rosa/laranja)
             graficoEntregas = new Chart(ctx, {
                 type: 'bar',
                 data: {
