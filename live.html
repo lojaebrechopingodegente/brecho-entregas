@@ -170,18 +170,9 @@
             color: white;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
         .btn-success {
             background: #28a745;
             color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
         }
 
         .btn-warning {
@@ -233,14 +224,8 @@
         }
 
         @keyframes slideUp {
-            from {
-                transform: translateY(100px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .status-message.success {
@@ -277,6 +262,19 @@
             font-size: 12px;
             margin-top: 5px;
         }
+
+        .sql-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -287,7 +285,6 @@
         </div>
 
         <div class="content">
-            <!-- Configuração do Supabase -->
             <div class="config-section" id="configSection">
                 <h3>🔧 Configuração do Supabase</h3>
                 <div class="form-group">
@@ -299,6 +296,25 @@
                     <input type="password" id="supabaseKey" placeholder="sua-chave-anon">
                 </div>
                 <button class="btn btn-primary" onclick="conectarSupabase()">Conectar</button>
+                
+                <div id="sqlHelper" style="display: none; margin-top: 20px;">
+                    <p style="color: #dc3545; font-weight: bold;">⚠️ Execute este SQL no Editor do Supabase primeiro:</p>
+                    <div class="sql-box">create table if not exists vendas_live (
+    id uuid default gen_random_uuid() primary key,
+    linha_id integer not null unique,
+    item integer,
+    valor decimal(10,2) default 0,
+    codigo text,
+    comprador text,
+    fila text,
+    total decimal(10,2) default 0,
+    created_at timestamp with time zone default timezone('utc'::text, now()),
+    updated_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+create index if not exists idx_vendas_live_linha on vendas_live(linha_id);
+create index if not exists idx_vendas_live_comprador on vendas_live(comprador);</div>
+                </div>
             </div>
 
             <div id="appSection" style="display: none;">
@@ -307,7 +323,7 @@
                     <button class="btn btn-success" onclick="gerarRelatorioPDF()">📄 Gerar Relatório PDF</button>
                     <button class="btn btn-warning" onclick="carregarVendasExistentes()">🔄 Recarregar Dados</button>
                 </div>
-                <p class="info-text">* Os dados são salvos automaticamente ao sair do campo. Cada linha representa 1 unidade.</p>
+                <p class="info-text">* Pressione ENTER para navegar entre os campos. Os dados são salvos automaticamente.</p>
 
                 <div class="table-container">
                     <table id="vendasTable">
@@ -322,26 +338,21 @@
                                 <th style="width: 80px;">Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="vendasBody">
-                            <!-- Linhas serão adicionadas dinamicamente -->
-                        </tbody>
+                        <tbody id="vendasBody"></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Mensagem de Status -->
     <div class="status-message" id="statusMessage"></div>
 
     <script>
-        // Variáveis globais
         let supabaseClient = null;
         let clientes = [];
         let vendas = [];
         let linhaCount = 0;
 
-        // Conectar ao Supabase
         async function conectarSupabase() {
             const url = document.getElementById('supabaseUrl').value;
             const key = document.getElementById('supabaseKey').value;
@@ -354,7 +365,6 @@
             try {
                 supabaseClient = supabase.createClient(url, key);
                 
-                // Testar conexão e carregar clientes
                 const { data, error } = await supabaseClient
                     .from('clientes_pg')
                     .select('*')
@@ -362,19 +372,25 @@
 
                 if (error) throw error;
 
-                // Carregar todos os clientes para autocomplete
                 await carregarClientes();
                 
-                // Verificar/criar tabela vendas_live
-                await verificarTabelaVendas();
+                // Testar se tabela vendas_live existe
+                const { error: vendasError } = await supabaseClient
+                    .from('vendas_live')
+                    .select('id')
+                    .limit(1);
                 
+                if (vendasError && vendasError.message.includes('does not exist')) {
+                    document.getElementById('sqlHelper').style.display = 'block';
+                    showStatus('Crie a tabela vendas_live primeiro (veja o SQL abaixo)', 'error');
+                    return;
+                }
+
                 document.getElementById('configSection').style.display = 'none';
                 document.getElementById('appSection').style.display = 'block';
                 
-                // Adicionar 150 linhas iniciais
                 await carregarVendasExistentes();
                 
-                // Completar até 150 linhas se necessário
                 const linhasAtuais = document.querySelectorAll('#vendasBody tr').length;
                 for (let i = linhasAtuais; i < 150; i++) {
                     adicionarLinha();
@@ -387,26 +403,6 @@
             }
         }
 
-        // Verificar se tabela vendas_live existe, se não criar
-        async function verificarTabelaVendas() {
-            try {
-                const { error } = await supabaseClient
-                    .from('vendas_live')
-                    .select('id')
-                    .limit(1);
-                
-                // Se der erro de tabela não existe, criar
-                if (error && error.message.includes('does not exist')) {
-                    // Criar tabela via SQL (usuário precisa executar no SQL Editor do Supabase)
-                    console.log('Tabela vendas_live não existe. Execute o SQL fornecido.');
-                    showStatus('Crie a tabela vendas_live no SQL Editor do Supabase (veja o código)', 'error');
-                }
-            } catch (e) {
-                console.log('Verificação de tabela:', e);
-            }
-        }
-
-        // Carregar clientes do Supabase
         async function carregarClientes() {
             try {
                 const { data, error } = await supabaseClient
@@ -415,14 +411,11 @@
 
                 if (error) throw error;
                 clientes = data || [];
-                console.log('Clientes carregados:', clientes.length);
             } catch (error) {
                 console.error('Erro ao carregar clientes:', error);
-                showStatus('Erro ao carregar clientes', 'error');
             }
         }
 
-        // Carregar vendas existentes
         async function carregarVendasExistentes() {
             try {
                 const { data, error } = await supabaseClient
@@ -434,11 +427,9 @@
                 
                 vendas = data || [];
                 
-                // Limpar tabela atual
                 document.getElementById('vendasBody').innerHTML = '';
                 linhaCount = 0;
                 
-                // Recriar linhas com dados existentes
                 vendas.forEach(venda => {
                     criarLinhaComDados(venda);
                 });
@@ -449,7 +440,6 @@
             }
         }
 
-        // Criar linha com dados existentes
         function criarLinhaComDados(venda) {
             linhaCount = Math.max(linhaCount, venda.linha_id);
             const tbody = document.getElementById('vendasBody');
@@ -458,17 +448,17 @@
             
             tr.innerHTML = `
                 <td><span class="item-number">${venda.linha_id}</span></td>
-                <td><input type="number" step="0.01" class="valor-input" id="valor-${venda.linha_id}" value="${venda.valor || ''}" placeholder="0,00" onblur="salvarVenda(${venda.linha_id})"></td>
-                <td><input type="text" id="codigo-${venda.linha_id}" value="${venda.codigo || ''}" onblur="salvarVenda(${venda.linha_id})"></td>
+                <td><input type="number" step="0.01" class="valor-input" id="valor-${venda.linha_id}" value="${venda.valor || ''}" placeholder="0,00" onkeydown="navegarCampos(event, ${venda.linha_id}, 'valor')" onblur="salvarVenda(${venda.linha_id})"></td>
+                <td><input type="text" id="codigo-${venda.linha_id}" value="${venda.codigo || ''}" onkeydown="navegarCampos(event, ${venda.linha_id}, 'codigo')" onblur="salvarVenda(${venda.linha_id})"></td>
                 <td>
                     <div class="autocomplete-container">
-                        <input type="text" id="comprador-${venda.linha_id}" value="${venda.comprador || ''}" oninput="filtrarSugestoes(this, 'nome')" onblur="salvarVenda(${venda.linha_id})" autocomplete="off">
+                        <input type="text" id="comprador-${venda.linha_id}" value="${venda.comprador || ''}" oninput="filtrarSugestoes(this, 'nome')" onkeydown="navegarCampos(event, ${venda.linha_id}, 'comprador')" onblur="salvarVenda(${venda.linha_id})" autocomplete="off">
                         <div class="suggestions" id="sugestoes-nome-${venda.linha_id}"></div>
                     </div>
                 </td>
                 <td>
                     <div class="autocomplete-container">
-                        <input type="text" id="fila-${venda.linha_id}" value="${venda.fila || ''}" oninput="filtrarSugestoes(this, 'instagram')" onblur="salvarVenda(${venda.linha_id})" autocomplete="off">
+                        <input type="text" id="fila-${venda.linha_id}" value="${venda.fila || ''}" oninput="filtrarSugestoes(this, 'instagram')" onkeydown="navegarCampos(event, ${venda.linha_id}, 'fila')" onblur="salvarVenda(${venda.linha_id})" autocomplete="off">
                         <div class="suggestions" id="sugestoes-instagram-${venda.linha_id}"></div>
                     </div>
                 </td>
@@ -479,7 +469,6 @@
             tbody.appendChild(tr);
         }
 
-        // Adicionar nova linha na tabela
         function adicionarLinha() {
             linhaCount++;
             const tbody = document.getElementById('vendasBody');
@@ -488,17 +477,17 @@
             
             tr.innerHTML = `
                 <td><span class="item-number">${linhaCount}</span></td>
-                <td><input type="number" step="0.01" class="valor-input" id="valor-${linhaCount}" placeholder="0,00" onblur="salvarVenda(${linhaCount})"></td>
-                <td><input type="text" id="codigo-${linhaCount}" onblur="salvarVenda(${linhaCount})"></td>
+                <td><input type="number" step="0.01" class="valor-input" id="valor-${linhaCount}" placeholder="0,00" onkeydown="navegarCampos(event, ${linhaCount}, 'valor')" onblur="salvarVenda(${linhaCount})"></td>
+                <td><input type="text" id="codigo-${linhaCount}" onkeydown="navegarCampos(event, ${linhaCount}, 'codigo')" onblur="salvarVenda(${linhaCount})"></td>
                 <td>
                     <div class="autocomplete-container">
-                        <input type="text" id="comprador-${linhaCount}" oninput="filtrarSugestoes(this, 'nome')" onblur="salvarVenda(${linhaCount})" autocomplete="off">
+                        <input type="text" id="comprador-${linhaCount}" oninput="filtrarSugestoes(this, 'nome')" onkeydown="navegarCampos(event, ${linhaCount}, 'comprador')" onblur="salvarVenda(${linhaCount})" autocomplete="off">
                         <div class="suggestions" id="sugestoes-nome-${linhaCount}"></div>
                     </div>
                 </td>
                 <td>
                     <div class="autocomplete-container">
-                        <input type="text" id="fila-${linhaCount}" oninput="filtrarSugestoes(this, 'instagram')" onblur="salvarVenda(${linhaCount})" autocomplete="off">
+                        <input type="text" id="fila-${linhaCount}" oninput="filtrarSugestoes(this, 'instagram')" onkeydown="navegarCampos(event, ${linhaCount}, 'fila')" onblur="salvarVenda(${linhaCount})" autocomplete="off">
                         <div class="suggestions" id="sugestoes-instagram-${linhaCount}"></div>
                     </div>
                 </td>
@@ -509,7 +498,53 @@
             tbody.appendChild(tr);
         }
 
-        // Filtrar sugestões de autocomplete
+        // Navegação por ENTER entre campos
+        function navegarCampos(event, linhaId, campoAtual) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                
+                const campos = ['valor', 'codigo', 'comprador', 'fila'];
+                const indiceAtual = campos.indexOf(campoAtual);
+                
+                // Se tem sugestões abertas, selecionar primeira
+                const sugestoesDiv = document.getElementById(`sugestoes-${campoAtual === 'comprador' ? 'nome' : 'instagram'}-${linhaId}`);
+                if (sugestoesDiv && sugestoesDiv.classList.contains('active')) {
+                    const primeiraSugestao = sugestoesDiv.querySelector('.suggestion-item');
+                    if (primeiraSugestao) {
+                        primeiraSugestao.click();
+                        return;
+                    }
+                }
+                
+                // Fechar sugestões
+                document.querySelectorAll('.suggestions').forEach(el => el.classList.remove('active'));
+                
+                // Salvar campo atual
+                salvarVenda(linhaId);
+                
+                // Mover para próximo campo ou próxima linha
+                if (indiceAtual < campos.length - 1) {
+                    // Próximo campo na mesma linha
+                    const proximoCampo = campos[indiceAtual + 1];
+                    const proximoInput = document.getElementById(`${proximoCampo}-${linhaId}`);
+                    if (proximoInput) {
+                        proximoInput.focus();
+                        proximoInput.select();
+                    }
+                } else {
+                    // Próxima linha, primeiro campo
+                    const proximaLinha = linhaId + 1;
+                    const proximoInput = document.getElementById(`valor-${proximaLinha}`);
+                    if (proximoInput) {
+                        proximoInput.focus();
+                        proximoInput.select();
+                        // Scroll suave para a linha
+                        proximoInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }
+        }
+
         function filtrarSugestoes(input, campo) {
             const valor = input.value.toLowerCase();
             const linhaId = input.id.split('-')[1];
@@ -539,7 +574,6 @@
             sugestoesDiv.classList.add('active');
         }
 
-        // Selecionar sugestão
         function selecionarSugestao(linhaId, campo, valor) {
             const inputId = campo === 'nome' ? 'comprador' : 'fila';
             const input = document.getElementById(`${inputId}-${linhaId}`);
@@ -555,22 +589,26 @@
             }
             
             salvarVenda(linhaId);
+            
+            // Focar próximo campo
+            if (campo === 'nome') {
+                document.getElementById(`fila-${linhaId}`).focus();
+            }
         }
 
-        // Salvar venda no Supabase
         async function salvarVenda(linhaId) {
             const input = document.getElementById(`comprador-${linhaId}`);
-            input.classList.add('saving');
+            if (input) input.classList.add('saving');
             
             const valor = parseFloat(document.getElementById(`valor-${linhaId}`).value) || 0;
             const codigo = document.getElementById(`codigo-${linhaId}`).value;
             const comprador = document.getElementById(`comprador-${linhaId}`).value;
             const fila = document.getElementById(`fila-${linhaId}`).value;
             
-            const quantidade = 1;
-            const total = valor * quantidade;
+            const total = valor; // Sempre 1 unidade
             
-            document.getElementById(`total-${linhaId}`).textContent = formatarMoeda(total);
+            const totalElement = document.getElementById(`total-${linhaId}`);
+            if (totalElement) totalElement.textContent = formatarMoeda(total);
             
             const vendaExistente = vendas.find(v => v.linha_id === linhaId);
             
@@ -581,7 +619,6 @@
                 codigo: codigo,
                 comprador: comprador,
                 fila: fila,
-                quantidade: quantidade,
                 total: total,
                 updated_at: new Date().toISOString()
             };
@@ -610,18 +647,19 @@
                     vendas[index] = vendaData;
                 }
 
-                input.classList.remove('saving');
-                input.classList.add('saved');
-                setTimeout(() => input.classList.remove('saved'), 1000);
+                if (input) {
+                    input.classList.remove('saving');
+                    input.classList.add('saved');
+                    setTimeout(() => input.classList.remove('saved'), 1000);
+                }
                 
             } catch (error) {
                 console.error('Erro ao salvar:', error);
-                input.classList.remove('saving');
+                if (input) input.classList.remove('saving');
                 showStatus('Erro ao salvar: ' + error.message, 'error');
             }
         }
 
-        // Excluir linha
         async function excluirLinha(linhaId) {
             if (!confirm('Deseja realmente excluir este item?')) return;
             
@@ -642,26 +680,21 @@
             }
         }
 
-        // Formatar valor como moeda
         function formatarMoeda(valor) {
             return 'R$ ' + valor.toFixed(2).replace('.', ',');
         }
 
-        // Gerar relatório em PDF
         function gerarRelatorioPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
-            // Título
             doc.setFontSize(16);
             doc.text('Relatório de Vendas por Comprador', 14, 20);
             
-            // Data
             doc.setFontSize(10);
             const dataAtual = new Date().toLocaleString('pt-BR');
             doc.text(`Gerado em: ${dataAtual}`, 14, 30);
             
-            // Agrupar por comprador
             const agrupado = {};
             
             vendas.forEach(venda => {
@@ -670,24 +703,16 @@
                 if (!agrupado[venda.comprador]) {
                     agrupado[venda.comprador] = {
                         quantidade: 0,
-                        total: 0,
-                        itens: []
+                        total: 0
                     };
                 }
                 
                 agrupado[venda.comprador].quantidade += 1;
                 agrupado[venda.comprador].total += venda.total;
-                agrupado[venda.comprador].itens.push({
-                    codigo: venda.codigo,
-                    valor: venda.valor
-                });
             });
 
-            // Ordenar por total (maior primeiro)
-            const ordenado = Object.entries(agrupado)
-                .sort((a, b) => b[1].total - a[1].total);
+            const ordenado = Object.entries(agrupado).sort((a, b) => b[1].total - a[1].total);
 
-            // Preparar dados para tabela
             const dadosTabela = [];
             let totalGeral = 0;
             let quantidadeTotal = 0;
@@ -702,19 +727,17 @@
                 ]);
             });
 
-            // Adicionar linha de total
             dadosTabela.push([
                 'TOTAL GERAL',
                 quantidadeTotal.toString(),
                 formatarMoeda(totalGeral).replace('R$ ', '')
             ]);
 
-            // Criar tabela sem fundo colorido
             doc.autoTable({
                 startY: 40,
                 head: [['Comprador', 'Qtd Itens', 'Valor Total']],
                 body: dadosTabela,
-                theme: 'plain', // Sem fundo colorido
+                theme: 'plain',
                 styles: {
                     fontSize: 10,
                     cellPadding: 3,
@@ -724,17 +747,10 @@
                 headStyles: {
                     fontStyle: 'bold',
                     textColor: [0, 0, 0],
-                    fillColor: [255, 255, 255], // Fundo branco
+                    fillColor: [255, 255, 255],
                     lineWidth: 0.2
                 },
-                footStyles: {
-                    fontStyle: 'bold'
-                },
-                alternateRowStyles: {
-                    fillColor: [255, 255, 255] // Sem zebra striping
-                },
                 didParseCell: function(data) {
-                    // Destacar linha de total
                     if (data.row.index === dadosTabela.length - 1) {
                         data.cell.styles.fontStyle = 'bold';
                         data.cell.styles.lineWidth = 0.3;
@@ -742,12 +758,10 @@
                 }
             });
 
-            // Salvar PDF
             doc.save(`relatorio_vendas_${new Date().toISOString().split('T')[0]}.pdf`);
             showStatus('PDF gerado com sucesso!', 'success');
         }
 
-        // Mostrar mensagem de status
         function showStatus(mensagem, tipo) {
             const div = document.getElementById('statusMessage');
             div.textContent = mensagem;
@@ -758,7 +772,6 @@
             }, 3000);
         }
 
-        // Fechar sugestões ao clicar fora
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.autocomplete-container')) {
                 document.querySelectorAll('.suggestions').forEach(el => {
