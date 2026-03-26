@@ -358,13 +358,6 @@
         .change-date-btn:hover {
             background: #5a6268;
         }
-
-        .field-hint {
-            font-size: 11px;
-            color: #6c757d;
-            margin-top: 4px;
-            font-style: italic;
-        }
     </style>
 </head>
 <body>
@@ -469,6 +462,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         let vendas = [];
         let linhaCount = 0;
         let dataLiveAtual = null;
+        let linhasInicializadas = false; // NOVO: controle para evitar duplicatas
 
         document.addEventListener('DOMContentLoaded', () => {
             const hoje = new Date().toISOString().split('T')[0];
@@ -553,6 +547,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
 
             dataLiveAtual = dataInput;
+            linhasInicializadas = false; // RESET ao iniciar nova live
             
             const [ano, mes, dia] = dataInput.split('-');
             const dataFormatada = `${dia}/${mes}/${ano}`;
@@ -574,6 +569,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 document.getElementById('vendasBody').innerHTML = '';
                 vendas = [];
                 linhaCount = 0;
+                linhasInicializadas = false; // RESET
                 
                 showStatus('Selecione uma nova data para a live.', 'info');
             }
@@ -596,28 +592,34 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 vendas = data || [];
                 console.log(`Vendas carregadas para ${dataLiveAtual}:`, vendas.length);
                 
+                // LIMPAR TABELA COMPLETAMENTE antes de recarregar
                 document.getElementById('vendasBody').innerHTML = '';
                 linhaCount = 0;
                 
                 if (vendas.length === 0) {
+                    // Se não houver vendas nesta data, iniciar com tela em branco
                     for (let i = 0; i < 150; i++) {
                         adicionarLinha();
                     }
                     document.getElementById('totalItens').textContent = '0';
                     showStatus('Nova live iniciada! Tela em branco pronta.', 'success');
                 } else {
+                    // Carregar vendas existentes desta data
                     vendas.forEach(venda => {
                         criarLinhaComDados(venda);
                     });
                     
-                    const linhasAtuais = vendas.length;
-                    for (let i = linhasAtuais; i < 150; i++) {
+                    // Completar até 150 linhas se necessário
+                    const linhasComDados = vendas.length;
+                    for (let i = linhasComDados; i < 150; i++) {
                         adicionarLinha();
                     }
                     
                     document.getElementById('totalItens').textContent = vendas.length;
                     showStatus(`Carregadas ${vendas.length} vendas do dia ${formatarData(dataLiveAtual)}`, 'success');
                 }
+                
+                linhasInicializadas = true;
                 
             } catch (error) {
                 console.error('Erro ao carregar vendas:', error);
@@ -644,14 +646,12 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     <div class="autocomplete-container">
                         <input type="text" id="comprador-${venda.linha_id}" value="${venda.comprador || ''}" oninput="filtrarSugestoes(this, 'comprador')" onkeydown="navegarCampos(event, ${venda.linha_id}, 'comprador')" onblur="salvarVenda(${venda.linha_id})" autocomplete="off" placeholder="Nome ou Instagram">
                         <div class="suggestions" id="sugestoes-comprador-${venda.linha_id}"></div>
-                        <div class="field-hint">Busca por nome ou @instagram</div>
                     </div>
                 </td>
                 <td>
                     <div class="autocomplete-container">
                         <input type="text" id="fila-${venda.linha_id}" value="${venda.fila || ''}" oninput="filtrarSugestoes(this, 'fila')" onkeydown="navegarCampos(event, ${venda.linha_id}, 'fila')" onblur="salvarVenda(${venda.linha_id})" autocomplete="off" placeholder="Nome ou Instagram">
                         <div class="suggestions" id="sugestoes-fila-${venda.linha_id}"></div>
-                        <div class="field-hint">Busca por nome ou @instagram</div>
                     </div>
                 </td>
                 <td id="total-${venda.linha_id}" class="total-geral">${formatarMoeda(venda.total || 0)}</td>
@@ -675,14 +675,12 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     <div class="autocomplete-container">
                         <input type="text" id="comprador-${linhaCount}" oninput="filtrarSugestoes(this, 'comprador')" onkeydown="navegarCampos(event, ${linhaCount}, 'comprador')" onblur="salvarVenda(${linhaCount})" autocomplete="off" placeholder="Nome ou Instagram">
                         <div class="suggestions" id="sugestoes-comprador-${linhaCount}"></div>
-                        <div class="field-hint">Busca por nome ou @instagram</div>
                     </div>
                 </td>
                 <td>
                     <div class="autocomplete-container">
                         <input type="text" id="fila-${linhaCount}" oninput="filtrarSugestoes(this, 'fila')" onkeydown="navegarCampos(event, ${linhaCount}, 'fila')" onblur="salvarVenda(${linhaCount})" autocomplete="off" placeholder="Nome ou Instagram">
                         <div class="suggestions" id="sugestoes-fila-${linhaCount}"></div>
-                        <div class="field-hint">Busca por nome ou @instagram</div>
                     </div>
                 </td>
                 <td id="total-${linhaCount}" class="total-geral">R$ 0,00</td>
@@ -783,7 +781,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             const input = document.getElementById(`${tipoCampo}-${linhaId}`);
             
             // Preenche com o valor que o usuário estava buscando (nome tem prioridade, mas se buscou por instagram, preenche com instagram)
-            // Na prática, vamos preencher com o nome se existir, senão com o instagram
             const valorPreencher = nome || instagram;
             input.value = valorPreencher;
             
