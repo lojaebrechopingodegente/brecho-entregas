@@ -348,8 +348,8 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         let linhaCount = 0;
 
         async function conectarSupabase() {
-            const url = document.getElementById('supabaseUrl').value;
-            const key = document.getElementById('supabaseKey').value;
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
 
             if (!url || !key) {
                 showStatus('Preencha URL e chave do Supabase!', 'error');
@@ -357,42 +357,62 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
 
             try {
-                supabaseClient = supabase.createClient(url, key);
+                console.log('Tentando conectar...', url);
                 
+                // Criar cliente Supabase
+                const { createClient } = supabase;
+                supabaseClient = createClient(url, key);
+                
+                // Testar conexão buscando clientes
                 const { data, error } = await supabaseClient
                     .from('clientes_pg')
                     .select('*')
                     .limit(1);
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Erro ao buscar clientes:', error);
+                    throw new Error('Erro na tabela clientes_pg: ' + error.message);
+                }
 
+                console.log('Conexão OK, carregando clientes...');
                 await carregarClientes();
                 
+                // Verificar se tabela vendas_live existe
+                console.log('Verificando tabela vendas_live...');
                 const { error: vendasError } = await supabaseClient
                     .from('vendas_live')
                     .select('id')
                     .limit(1);
                 
-                if (vendasError && vendasError.message.includes('does not exist')) {
-                    document.getElementById('sqlHelper').style.display = 'block';
-                    showStatus('Crie a tabela vendas_live primeiro (veja o SQL abaixo)', 'error');
-                    return;
+                if (vendasError) {
+                    console.error('Erro vendas_live:', vendasError);
+                    if (vendasError.message && vendasError.message.includes('does not exist')) {
+                        document.getElementById('sqlHelper').style.display = 'block';
+                        showStatus('Crie a tabela vendas_live primeiro (veja o SQL abaixo)', 'error');
+                        return;
+                    }
+                    // Se for outro erro, continuar mesmo assim
                 }
 
+                console.log('Tudo OK! Inicializando interface...');
                 document.getElementById('configSection').style.display = 'none';
                 document.getElementById('appSection').style.display = 'block';
                 
+                // Carregar vendas existentes primeiro
                 await carregarVendasExistentes();
                 
+                // Completar até 150 linhas
                 const linhasAtuais = document.querySelectorAll('#vendasBody tr').length;
+                console.log('Linhas atuais:', linhasAtuais);
+                
                 for (let i = linhasAtuais; i < 150; i++) {
                     adicionarLinha();
                 }
 
                 showStatus('Conectado com sucesso! 150 linhas prontas.', 'success');
             } catch (error) {
+                console.error('Erro completo:', error);
                 showStatus('Erro ao conectar: ' + error.message, 'error');
-                console.error(error);
             }
         }
 
@@ -404,8 +424,10 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
                 if (error) throw error;
                 clientes = data || [];
+                console.log('Clientes carregados:', clientes.length);
             } catch (error) {
                 console.error('Erro ao carregar clientes:', error);
+                throw error;
             }
         }
 
@@ -416,9 +438,15 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     .select('*')
                     .order('linha_id', { ascending: true });
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Erro ao carregar vendas:', error);
+                    // Não mostrar erro, apenas iniciar com tabela vazia
+                    vendas = [];
+                    return;
+                }
                 
                 vendas = data || [];
+                console.log('Vendas carregadas:', vendas.length);
                 
                 document.getElementById('vendasBody').innerHTML = '';
                 linhaCount = 0;
@@ -427,9 +455,9 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     criarLinhaComDados(venda);
                 });
                 
-                showStatus('Dados carregados!', 'success');
             } catch (error) {
                 console.error('Erro ao carregar vendas:', error);
+                vendas = [];
             }
         }
 
@@ -717,10 +745,10 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 vendasPorComprador[venda.comprador].push(venda);
             });
 
-            // Ordenar compradores por valor total (maior primeiro)
+            // CORREÇÃO: Erro de sintaxe na linha do sort
             const compradoresOrdenados = Object.keys(vendasPorComprador).sort((a, b) => {
                 const totalA = vendasPorComprador[a].reduce((sum, v) => sum + v.total, 0);
-                const totalB = vendasPorComprador[b].reduce((sum + v.total, 0);
+                const totalB = vendasPorComprador[b].reduce((sum, v) => sum + v.total, 0);
                 return totalB - totalA;
             });
 
@@ -898,10 +926,13 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
             // Abrir em nova aba
             const novaAba = window.open('', '_blank');
-            novaAba.document.write(html);
-            novaAba.document.close();
-            
-            showStatus('Relatório aberto em nova aba!', 'success');
+            if (novaAba) {
+                novaAba.document.write(html);
+                novaAba.document.close();
+                showStatus('Relatório aberto em nova aba!', 'success');
+            } else {
+                showStatus('Popup bloqueado! Permita popups para este site.', 'error');
+            }
         }
 
         function showStatus(mensagem, tipo) {
