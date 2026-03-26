@@ -284,6 +284,11 @@
             background: #23272b;
         }
 
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
         .btn:disabled {
             background: #adb5bd;
             cursor: not-allowed;
@@ -685,7 +690,10 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                         <p>Total de itens cadastrados: <span id="totalItens">0</span></p>
                         <p id="statusLive" style="font-weight: bold; color: #28a745;"></p>
                     </div>
-                    <button class="change-date-btn" onclick="trocarData()">🔄 Trocar Data</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="sanitizarDuplicados()" title="Limpar duplicados no banco">🧹 Limpar Duplicados</button>
+                        <button class="change-date-btn" onclick="trocarData()">🔄 Trocar Data</button>
+                    </div>
                 </div>
 
                 <div class="actions">
@@ -750,17 +758,17 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         <div class="cliente-box">
             <h3>👤 Cadastrar Novo Cliente</h3>
             <p style="text-align: center; color: #6c757d; margin-bottom: 20px;">O nome "<strong id="novoClienteNome"></strong>" não foi encontrado. Cadastre-o:</p>
-            
+
             <div class="form-group">
                 <label>Nome Completo *</label>
                 <input type="text" id="clienteNome" placeholder="Nome do cliente">
             </div>
-            
+
             <div class="form-group">
                 <label>CPF <span class="campo-opcional">(opcional)</span></label>
                 <input type="text" id="clienteCpf" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)">
             </div>
-            
+
             <div class="form-row">
                 <div class="form-group">
                     <label>WhatsApp</label>
@@ -771,12 +779,12 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     <input type="text" id="clienteInstagram" placeholder="@usuario">
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label>E-mail</label>
                 <input type="email" id="clienteEmail" placeholder="email@exemplo.com">
             </div>
-            
+
             <div style="text-align: center; margin-top: 20px;">
                 <button class="btn btn-secondary" onclick="fecharClienteDialog()" style="background: #6c757d; color: white; margin-right: 10px;">Cancelar</button>
                 <button class="btn btn-success" onclick="salvarNovoCliente()">Cadastrar Cliente</button>
@@ -785,6 +793,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
     </div>
 
     <script>
+
         let supabaseClient = null;
         let clientes = [];
         let vendas = [];
@@ -996,12 +1005,13 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             document.getElementById('totalItens').textContent = linhasCompletas.length;
         }
 
+        // ==================== FUNÇÃO CORRIGIDA ====================
         async function carregarVendasExistentes() {
             try {
                 // LIMPAR TUDO antes de carregar - evita duplicação
                 vendas = [];
                 document.getElementById('vendasBody').innerHTML = '';
-                linhaCount = 0;
+                linhaCount = 0; // RESETAR para garantir
 
                 // Verificar se a live está bloqueada
                 const { data: statusData, error: statusError } = await supabaseClient
@@ -1014,6 +1024,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     liveBloqueada = statusData[0].bloqueada || false;
                 }
 
+                // Buscar registros do banco
                 const { data, error } = await supabaseClient
                     .from('vendas_live')
                     .select('*')
@@ -1026,13 +1037,19 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     return;
                 }
 
-                const dadosCarregados = data || [];
+                // Filtrar apenas registros com dados relevantes
+                const dadosCarregados = (data || []).filter(v => 
+                    v.valor > 0 || 
+                    (v.comprador && v.comprador.trim() !== '') || 
+                    (v.codigo && v.codigo.trim() !== '')
+                );
+
                 console.log(`Vendas carregadas para ${dataLiveAtual}:`, dadosCarregados.length);
 
-                // CORREÇÃO: Remover duplicados baseado no ID do registro (UUID)
+                // CORREÇÃO: Remover duplicados baseado no UUID (id)
                 const idsUnicos = new Set();
                 const vendasFiltradas = [];
-                
+
                 for (const venda of dadosCarregados) {
                     if (!idsUnicos.has(venda.id)) {
                         idsUnicos.add(venda.id);
@@ -1041,37 +1058,68 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                         console.warn('Registro duplicado ignorado:', venda.id);
                     }
                 }
-                
-                vendas = vendasFiltradas;
+
+                // CORREÇÃO ADICIONAL: Verificar duplicados por linha_id
+                // Se mesmo linha_id aparece mais de uma vez, manter apenas o mais recente
+                const linhaIdsVistos = new Map(); // linha_id -> venda
+                const vendasUnicasPorLinha = [];
+
+                for (const venda of vendasFiltradas) {
+                    if (linhaIdsVistos.has(venda.linha_id)) {
+                        // Já existe, verificar qual é mais recente
+                        const existente = linhaIdsVistos.get(venda.linha_id);
+                        const dataExistente = new Date(existente.updated_at || existente.created_at);
+                        const dataNova = new Date(venda.updated_at || venda.created_at);
+
+                        if (dataNova > dataExistente) {
+                            // Substituir pelo mais recente
+                            const index = vendasUnicasPorLinha.findIndex(v => v.linha_id === venda.linha_id);
+                            if (index !== -1) {
+                                vendasUnicasPorLinha[index] = venda;
+                                linhaIdsVistos.set(venda.linha_id, venda);
+                            }
+                        }
+                    } else {
+                        linhaIdsVistos.set(venda.linha_id, venda);
+                        vendasUnicasPorLinha.push(venda);
+                    }
+                }
+
+                vendas = vendasUnicasPorLinha.sort((a, b) => a.linha_id - b.linha_id);
 
                 // Se houver menos registros únicos que o total, limpar duplicados no banco
-                if (vendasFiltradas.length < dadosCarregados.length) {
-                    console.warn(`Encontrados ${dadosCarregados.length - vendasFiltradas.length} registros duplicados no banco`);
+                if (vendas.length < dadosCarregados.length) {
+                    console.warn(`Encontrados ${dadosCarregados.length - vendas.length} registros duplicados no banco`);
                     await limparDuplicadosNoBanco();
                 }
 
                 if (vendas.length === 0) {
+                    // Nova live - criar 150 linhas vazias
                     for (let i = 0; i < 150; i++) {
                         adicionarLinha();
                     }
                     atualizarContagemItens();
                     showStatus('Nova live iniciada! Tela em branco pronta.', 'success');
                 } else {
-                    // CORREÇÃO: Criar linhas apenas para vendas válidas (com dados)
-                    const vendasComDados = vendas.filter(v => v.valor > 0 || v.comprador || v.codigo);
-                    
-                    vendasComDados.forEach(venda => {
+                    // Live existente - criar linhas apenas para vendas válidas
+                    vendas.forEach(venda => {
                         criarLinhaComDados(venda);
                     });
 
-                    // Adicionar linhas vazias até completar 150
-                    const linhasAtuais = vendasComDados.length;
-                    for (let i = linhasAtuais; i < 150; i++) {
-                        adicionarLinha();
+                    // CORREÇÃO: Determinar o maior linha_id para continuar sequência
+                    const maxLinhaId = Math.max(...vendas.map(v => v.linha_id), 0);
+                    linhaCount = maxLinhaId;
+
+                    // Adicionar linhas vazias até completar 150 apenas se necessário
+                    const linhasAtuais = vendas.length;
+                    if (linhasAtuais < 150) {
+                        for (let i = linhasAtuais; i < 150; i++) {
+                            adicionarLinha();
+                        }
                     }
 
                     atualizarContagemItens();
-                    showStatus(`Carregadas ${vendasComDados.length} vendas do dia ${formatarData(dataLiveAtual)}`, 'success');
+                    showStatus(`Carregadas ${vendas.length} vendas do dia ${formatarData(dataLiveAtual)}`, 'success');
                 }
 
                 // Aplicar estado de bloqueio
@@ -1089,37 +1137,75 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
         }
 
-        // NOVA FUNÇÃO: Limpar duplicados no banco
+        // ==================== FUNÇÃO CORRIGIDA ====================
         async function limparDuplicadosNoBanco() {
             try {
+                // Buscar todos os registros da data atual
                 const { data, error } = await supabaseClient
                     .from('vendas_live')
-                    .select('id, linha_id')
+                    .select('id, linha_id, updated_at, created_at')
                     .eq('data_live', dataLiveAtual);
 
                 if (error) return;
 
-                const idsVistos = new Set();
+                // Agrupar por linha_id
+                const porLinhaId = {};
+                for (const registro of data) {
+                    if (!porLinhaId[registro.linha_id]) {
+                        porLinhaId[registro.linha_id] = [];
+                    }
+                    porLinhaId[registro.linha_id].push(registro);
+                }
+
                 const idsParaDeletar = [];
 
-                for (const registro of data) {
-                    const chave = `${registro.linha_id}-${registro.id}`;
-                    if (idsVistos.has(chave)) {
-                        idsParaDeletar.push(registro.id);
-                    } else {
-                        idsVistos.add(chave);
+                // Para cada linha_id com múltiplos registros, manter só o mais recente
+                for (const [linhaId, registros] of Object.entries(porLinhaId)) {
+                    if (registros.length > 1) {
+                        // Ordenar por data (mais recente primeiro)
+                        registros.sort((a, b) => {
+                            const dataA = new Date(a.updated_at || a.created_at);
+                            const dataB = new Date(b.updated_at || b.created_at);
+                            return dataB - dataA;
+                        });
+
+                        // Manter o primeiro (mais recente), deletar os outros
+                        for (let i = 1; i < registros.length; i++) {
+                            idsParaDeletar.push(registros[i].id);
+                        }
                     }
                 }
 
                 if (idsParaDeletar.length > 0) {
-                    console.log('Removendo duplicados:', idsParaDeletar);
-                    await supabaseClient
+                    console.log('Removendo duplicados no banco:', idsParaDeletar);
+                    const { error: deleteError } = await supabaseClient
                         .from('vendas_live')
                         .delete()
                         .in('id', idsParaDeletar);
+
+                    if (deleteError) {
+                        console.error('Erro ao deletar duplicados:', deleteError);
+                    } else {
+                        console.log(`${idsParaDeletar.length} duplicados removidos com sucesso`);
+                    }
                 }
             } catch (e) {
                 console.error('Erro ao limpar duplicados:', e);
+            }
+        }
+
+        // Função para sanitização manual (botão)
+        async function sanitizarDuplicados() {
+            try {
+                showStatus('Verificando duplicados...', 'info');
+                await limparDuplicadosNoBanco();
+
+                // Recarregar a página para mostrar dados limpos
+                await carregarVendasExistentes();
+                showStatus('Duplicados removidos! Dados atualizados.', 'success');
+            } catch (e) {
+                console.error('Erro na sanitização:', e);
+                showStatus('Erro ao sanitizar: ' + e.message, 'error');
             }
         }
 
@@ -1365,10 +1451,10 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             document.getElementById('clienteWhatsapp').value = '';
             document.getElementById('clienteInstagram').value = '';
             document.getElementById('clienteEmail').value = '';
-            
+
             // Fechar sugestões
             document.querySelectorAll('.suggestions').forEach(el => el.classList.remove('active'));
-            
+
             document.getElementById('clienteDialog').classList.add('active');
         }
 
@@ -1378,10 +1464,10 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         }
 
         function mascaraCPF(input) {
-            let value = input.value.replace(/\\D/g, '');
-            value = value.replace(/(\\d{3})(\\d)/, '$1.$2');
-            value = value.replace(/(\\d{3})(\\d)/, '$1.$2');
-            value = value.replace(/(\\d{3})(\\d{1,2})$/, '$1-$2');
+            let value = input.value.replace(/\D/g, '');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
             input.value = value;
         }
 
@@ -1392,13 +1478,11 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             const instagram = document.getElementById('clienteInstagram').value.trim();
             const email = document.getElementById('clienteEmail').value.trim();
 
-            // CORREÇÃO: Apenas nome é obrigatório, CPF é opcional
             if (!nome) {
                 showStatus('Nome é obrigatório!', 'error');
                 return;
             }
 
-            // Se CPF foi preenchido, validar formato
             let cpfParaSalvar = null;
             if (cpf && cpf.length > 0) {
                 if (cpf.length < 14) {
@@ -1411,7 +1495,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             try {
                 const novoCliente = {
                     nome: nome,
-                    cpf: cpfParaSalvar, // Pode ser null
+                    cpf: cpfParaSalvar,
                     whatsapp: whatsapp || null,
                     instagram: instagram || null,
                     email: email || null,
@@ -1425,7 +1509,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     .select();
 
                 if (error) {
-                    // Se erro for de CPF duplicado mas CPF é opcional, tentar sem CPF
                     if ((error.message.includes('duplicate') || error.message.includes('unique')) && cpfParaSalvar) {
                         showStatus('CPF já cadastrado! Salvando sem CPF...', 'info');
                         novoCliente.cpf = null;
@@ -1433,9 +1516,9 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                             .from('clientes_pg')
                             .insert([novoCliente])
                             .select();
-                        
+
                         if (error2) throw error2;
-                        
+
                         if (data2 && data2[0]) {
                             finalizarCadastroCliente(data2[0]);
                             return;
@@ -1456,12 +1539,10 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
         }
 
-        // Função auxiliar para finalizar cadastro
         function finalizarCadastroCliente(cliente) {
             clientes.push(cliente);
             showStatus(`Cliente ${cliente.nome} cadastrado com sucesso!`, 'success');
-            
-            // Preencher o campo que estava sendo editado
+
             if (inputAtualCadastro) {
                 const input = document.getElementById(`${inputAtualCadastro.tipoCampo}-${inputAtualCadastro.linhaId}`);
                 if (input) {
@@ -1469,7 +1550,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     salvarVenda(inputAtualCadastro.linhaId);
                 }
             }
-            
+
             fecharClienteDialog();
         }
 
@@ -1477,7 +1558,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             if (liveBloqueada) return;
 
             const input = document.getElementById(`${tipoCampo}-${linhaId}`);
-
             const valorPreencher = nome || instagram;
             input.value = valorPreencher;
 
@@ -1497,6 +1577,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
         }
 
+        // ==================== FUNÇÃO CORRIGIDA ====================
         async function salvarVenda(linhaId) {
             if (liveBloqueada) return;
 
@@ -1510,40 +1591,66 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
             const total = valor;
 
-            const vendaExistente = vendas.find(v => v.linha_id === linhaId);
-
-            const vendaData = {
-                linha_id: linhaId,
-                data_live: dataLiveAtual,
-                item: linhaId,
-                valor: valor,
-                codigo: codigo,
-                comprador: comprador,
-                fila: fila,
-                total: total,
-                updated_at: new Date().toISOString()
-            };
-
+            // CORREÇÃO: Verificar no banco se já existe, não só no array local
             try {
+                const { data: existenteNoBanco, error: checkError } = await supabaseClient
+                    .from('vendas_live')
+                    .select('id')
+                    .eq('linha_id', linhaId)
+                    .eq('data_live', dataLiveAtual)
+                    .maybeSingle();
+
+                if (checkError) throw checkError;
+
+                const vendaData = {
+                    linha_id: linhaId,
+                    data_live: dataLiveAtual,
+                    item: linhaId,
+                    valor: valor,
+                    codigo: codigo,
+                    comprador: comprador,
+                    fila: fila,
+                    total: total,
+                    updated_at: new Date().toISOString()
+                };
+
                 let result;
-                if (vendaExistente) {
+
+                if (existenteNoBanco) {
+                    // UPDATE - já existe no banco (usa ID único)
                     result = await supabaseClient
                         .from('vendas_live')
                         .update(vendaData)
-                        .eq('linha_id', linhaId)
-                        .eq('data_live', dataLiveAtual);
+                        .eq('id', existenteNoBanco.id);
 
+                    // Atualizar array local
                     const index = vendas.findIndex(v => v.linha_id === linhaId);
                     if (index !== -1) {
-                        vendas[index] = vendaData;
+                        vendas[index] = { ...vendaData, id: existenteNoBanco.id };
+                    } else {
+                        vendas.push({ ...vendaData, id: existenteNoBanco.id });
                     }
                 } else {
+                    // INSERT - novo registro
+                    const insertData = { 
+                        ...vendaData, 
+                        created_at: new Date().toISOString(),
+                        bloqueada: false
+                    };
+
                     result = await supabaseClient
                         .from('vendas_live')
-                        .insert([{ ...vendaData, created_at: new Date().toISOString() }]);
+                        .insert([insertData])
+                        .select();
 
-                    if (!result.error) {
-                        vendas.push(vendaData);
+                    if (!result.error && result.data && result.data[0]) {
+                        // Adicionar ao array local com ID correto
+                        const index = vendas.findIndex(v => v.linha_id === linhaId);
+                        if (index !== -1) {
+                            vendas[index] = result.data[0];
+                        } else {
+                            vendas.push(result.data[0]);
+                        }
                     }
                 }
 
@@ -1721,11 +1828,11 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             document.querySelectorAll('#vendasBody input').forEach(input => input.disabled = true);
             document.querySelectorAll('.mic-btn').forEach(btn => btn.disabled = true);
             document.querySelectorAll('.delete-btn').forEach(btn => btn.disabled = true);
-            
+
             const banner = document.getElementById('liveInfoBanner');
             banner.classList.add('bloqueada');
             document.getElementById('statusLive').textContent = '🔒 LIVE FINALIZADA';
-            
+
             document.getElementById('btnAdicionar').style.display = 'none';
             document.getElementById('btnFinalizar').style.display = 'none';
             document.getElementById('btnResetar').style.display = 'none';
@@ -1736,11 +1843,11 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             document.querySelectorAll('#vendasBody input').forEach(input => input.disabled = false);
             document.querySelectorAll('.mic-btn').forEach(btn => btn.disabled = false);
             document.querySelectorAll('.delete-btn').forEach(btn => btn.disabled = false);
-            
+
             const banner = document.getElementById('liveInfoBanner');
             banner.classList.remove('bloqueada');
             document.getElementById('statusLive').textContent = '';
-            
+
             document.getElementById('btnAdicionar').style.display = 'inline-block';
             document.getElementById('btnFinalizar').style.display = 'inline-block';
             document.getElementById('btnResetar').style.display = 'inline-block';
@@ -1797,16 +1904,16 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         function registrarVenda() {
             const vendasValidas = vendas.filter(v => v.valor > 0 && v.comprador && v.comprador.trim() !== '');
             totalLiveAtual = vendasValidas.reduce((sum, v) => sum + (parseFloat(v.valor) || 0), 0);
-            
+
             const quantidadeItens = vendasValidas.length;
-            
+
             if (quantidadeItens === 0) {
                 showStatus('Não há vendas válidas para registrar!', 'error');
                 return;
             }
 
             const dataFormatada = formatarData(dataLiveAtual);
-            
+
             document.getElementById('vendaInfo').innerHTML = `
                 <p><strong>Data da Live:</strong> ${dataFormatada}</p>
                 <p><strong>Quantidade de Itens:</strong> ${quantidadeItens}</p>
@@ -1816,7 +1923,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     <em>"Live do Dia ${dataFormatada}"</em>
                 </p>
             `;
-            
+
             document.getElementById('vendaDialog').classList.add('active');
         }
 
@@ -1826,13 +1933,13 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
         async function executarRegistrarVenda() {
             fecharVendaDialog();
-            
+
             try {
                 showStatus('Registrando venda na tabela vendas_pg...', 'info');
-                
+
                 const dataFormatada = formatarData(dataLiveAtual);
                 const descricao = `Live do Dia ${dataFormatada}`;
-                
+
                 const vendasValidas = vendas.filter(v => v.valor > 0 && v.comprador && v.comprador.trim() !== '');
                 const itensVenda = vendasValidas.map(v => ({
                     linha_id: v.linha_id,
@@ -1841,7 +1948,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     comprador: v.comprador,
                     fila: v.fila
                 }));
-                
+
                 const vendaData = {
                     data_venda: new Date(dataLiveAtual + 'T12:00:00').toISOString(),
                     cliente_nome: null,
@@ -1853,16 +1960,16 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     itens: itensVenda,
                     observacoes: descricao
                 };
-                
+
                 const { data, error } = await supabaseClient
                     .from('vendas_pg')
                     .insert([vendaData])
                     .select();
-                
+
                 if (error) throw error;
-                
+
                 showStatus(`Venda registrada com sucesso! ID: ${data[0].id}`, 'success');
-                
+
             } catch (error) {
                 console.error('Erro ao registrar venda:', error);
                 showStatus('Erro ao registrar venda: ' + error.message, 'error');
