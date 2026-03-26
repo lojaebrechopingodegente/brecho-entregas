@@ -1257,6 +1257,8 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             if (!confirm('Deseja realmente excluir este item?')) return;
 
             try {
+                showStatus('Excluindo e renumerando itens...', 'info');
+
                 // 1. Deletar do banco
                 await supabaseClient
                     .from('vendas_live')
@@ -1364,12 +1366,38 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 });
 
                 linhaCount = todasLinhas.length;
+                
+                // CORREÇÃO: Recarregar o array vendas do banco para garantir sincronização
+                await recarregarVendasArray();
+                
                 atualizarContagemItens();
 
                 showStatus(`Item ${linhaId} excluído e itens renumerados!`, 'success');
             } catch (error) {
                 console.error('Erro ao excluir:', error);
                 showStatus('Erro ao excluir: ' + error.message, 'error');
+            }
+        }
+
+        // NOVA FUNÇÃO: Recarrega o array vendas do banco após exclusão
+        async function recarregarVendasArray() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('vendas_live')
+                    .select('*')
+                    .eq('data_live', dataLiveAtual)
+                    .order('linha_id', { ascending: true });
+
+                if (error) {
+                    console.error('Erro ao recarregar vendas:', error);
+                    return;
+                }
+
+                // Atualizar o array vendas com dados frescos do banco
+                vendas = data || [];
+                console.log('Array vendas recarregado:', vendas.length, 'itens');
+            } catch (error) {
+                console.error('Erro ao recarregar array vendas:', error);
             }
         }
 
