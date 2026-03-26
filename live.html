@@ -610,6 +610,12 @@
             background: #667eea;
             color: white;
         }
+
+        .campo-opcional {
+            color: #6c757d;
+            font-size: 12px;
+            font-weight: normal;
+        }
     </style>
 <base target="_blank">
 </head>
@@ -751,7 +757,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             </div>
             
             <div class="form-group">
-                <label>CPF *</label>
+                <label>CPF <span class="campo-opcional">(opcional)</span></label>
                 <input type="text" id="clienteCpf" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)">
             </div>
             
@@ -1023,13 +1029,26 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 const dadosCarregados = data || [];
                 console.log(`Vendas carregadas para ${dataLiveAtual}:`, dadosCarregados.length);
 
-                // Remover duplicados baseado no ID (garantia extra)
+                // CORREÇÃO: Remover duplicados baseado no ID do registro (UUID)
                 const idsUnicos = new Set();
-                vendas = dadosCarregados.filter(v => {
-                    if (idsUnicos.has(v.id)) return false;
-                    idsUnicos.add(v.id);
-                    return true;
-                });
+                const vendasFiltradas = [];
+                
+                for (const venda of dadosCarregados) {
+                    if (!idsUnicos.has(venda.id)) {
+                        idsUnicos.add(venda.id);
+                        vendasFiltradas.push(venda);
+                    } else {
+                        console.warn('Registro duplicado ignorado:', venda.id);
+                    }
+                }
+                
+                vendas = vendasFiltradas;
+
+                // Se houver menos registros únicos que o total, limpar duplicados no banco
+                if (vendasFiltradas.length < dadosCarregados.length) {
+                    console.warn(`Encontrados ${dadosCarregados.length - vendasFiltradas.length} registros duplicados no banco`);
+                    await limparDuplicadosNoBanco();
+                }
 
                 if (vendas.length === 0) {
                     for (let i = 0; i < 150; i++) {
@@ -1038,17 +1057,21 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     atualizarContagemItens();
                     showStatus('Nova live iniciada! Tela em branco pronta.', 'success');
                 } else {
-                    vendas.forEach(venda => {
+                    // CORREÇÃO: Criar linhas apenas para vendas válidas (com dados)
+                    const vendasComDados = vendas.filter(v => v.valor > 0 || v.comprador || v.codigo);
+                    
+                    vendasComDados.forEach(venda => {
                         criarLinhaComDados(venda);
                     });
 
-                    const linhasComDados = vendas.length;
-                    for (let i = linhasComDados; i < 150; i++) {
+                    // Adicionar linhas vazias até completar 150
+                    const linhasAtuais = vendasComDados.length;
+                    for (let i = linhasAtuais; i < 150; i++) {
                         adicionarLinha();
                     }
 
                     atualizarContagemItens();
-                    showStatus(`Carregadas ${vendas.length} vendas do dia ${formatarData(dataLiveAtual)}`, 'success');
+                    showStatus(`Carregadas ${vendasComDados.length} vendas do dia ${formatarData(dataLiveAtual)}`, 'success');
                 }
 
                 // Aplicar estado de bloqueio
@@ -1063,6 +1086,40 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             } catch (error) {
                 console.error('Erro ao carregar vendas:', error);
                 vendas = [];
+            }
+        }
+
+        // NOVA FUNÇÃO: Limpar duplicados no banco
+        async function limparDuplicadosNoBanco() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('vendas_live')
+                    .select('id, linha_id')
+                    .eq('data_live', dataLiveAtual);
+
+                if (error) return;
+
+                const idsVistos = new Set();
+                const idsParaDeletar = [];
+
+                for (const registro of data) {
+                    const chave = `${registro.linha_id}-${registro.id}`;
+                    if (idsVistos.has(chave)) {
+                        idsParaDeletar.push(registro.id);
+                    } else {
+                        idsVistos.add(chave);
+                    }
+                }
+
+                if (idsParaDeletar.length > 0) {
+                    console.log('Removendo duplicados:', idsParaDeletar);
+                    await supabaseClient
+                        .from('vendas_live')
+                        .delete()
+                        .in('id', idsParaDeletar);
+                }
+            } catch (e) {
+                console.error('Erro ao limpar duplicados:', e);
             }
         }
 
@@ -1335,21 +1392,26 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             const instagram = document.getElementById('clienteInstagram').value.trim();
             const email = document.getElementById('clienteEmail').value.trim();
 
-            if (!nome || !cpf) {
-                showStatus('Nome e CPF são obrigatórios!', 'error');
+            // CORREÇÃO: Apenas nome é obrigatório, CPF é opcional
+            if (!nome) {
+                showStatus('Nome é obrigatório!', 'error');
                 return;
             }
 
-            // Validar CPF
-            if (cpf.length < 14) {
-                showStatus('CPF inválido!', 'error');
-                return;
+            // Se CPF foi preenchido, validar formato
+            let cpfParaSalvar = null;
+            if (cpf && cpf.length > 0) {
+                if (cpf.length < 14) {
+                    showStatus('CPF inválido! Deixe em branco ou preencha completo.', 'error');
+                    return;
+                }
+                cpfParaSalvar = cpf;
             }
 
             try {
                 const novoCliente = {
                     nome: nome,
-                    cpf: cpf,
+                    cpf: cpfParaSalvar, // Pode ser null
                     whatsapp: whatsapp || null,
                     instagram: instagram || null,
                     email: email || null,
@@ -1363,32 +1425,52 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     .select();
 
                 if (error) {
-                    if (error.message.includes('duplicate') || error.message.includes('unique')) {
-                        showStatus('CPF já cadastrado!', 'error');
+                    // Se erro for de CPF duplicado mas CPF é opcional, tentar sem CPF
+                    if ((error.message.includes('duplicate') || error.message.includes('unique')) && cpfParaSalvar) {
+                        showStatus('CPF já cadastrado! Salvando sem CPF...', 'info');
+                        novoCliente.cpf = null;
+                        const { data: data2, error: error2 } = await supabaseClient
+                            .from('clientes_pg')
+                            .insert([novoCliente])
+                            .select();
+                        
+                        if (error2) throw error2;
+                        
+                        if (data2 && data2[0]) {
+                            finalizarCadastroCliente(data2[0]);
+                            return;
+                        }
+                    } else {
+                        showStatus('Erro ao cadastrar cliente: ' + error.message, 'error');
                         return;
                     }
                     throw error;
                 }
 
                 if (data && data[0]) {
-                    clientes.push(data[0]);
-                    showStatus(`Cliente ${data[0].nome} cadastrado com sucesso!`, 'success');
-                    
-                    // Preencher o campo que estava sendo editado
-                    if (inputAtualCadastro) {
-                        const input = document.getElementById(`${inputAtualCadastro.tipoCampo}-${inputAtualCadastro.linhaId}`);
-                        if (input) {
-                            input.value = nome;
-                            salvarVenda(inputAtualCadastro.linhaId);
-                        }
-                    }
-                    
-                    fecharClienteDialog();
+                    finalizarCadastroCliente(data[0]);
                 }
             } catch (error) {
                 console.error('Erro ao cadastrar cliente:', error);
                 showStatus('Erro ao cadastrar cliente: ' + error.message, 'error');
             }
+        }
+
+        // Função auxiliar para finalizar cadastro
+        function finalizarCadastroCliente(cliente) {
+            clientes.push(cliente);
+            showStatus(`Cliente ${cliente.nome} cadastrado com sucesso!`, 'success');
+            
+            // Preencher o campo que estava sendo editado
+            if (inputAtualCadastro) {
+                const input = document.getElementById(`${inputAtualCadastro.tipoCampo}-${inputAtualCadastro.linhaId}`);
+                if (input) {
+                    input.value = cliente.nome;
+                    salvarVenda(inputAtualCadastro.linhaId);
+                }
+            }
+            
+            fecharClienteDialog();
         }
 
         function selecionarSugestao(linhaId, tipoCampo, nome, instagram) {
@@ -1482,7 +1564,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
         }
 
-        // FUNÇÃO CORRIGIDA: Excluir linha com renumeração automática
         async function excluirLinha(linhaId) {
             if (liveBloqueada) {
                 showStatus('Live está finalizada. Clique em "Alterar Live" para editar.', 'error');
@@ -1494,80 +1575,55 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             try {
                 showStatus('Excluindo e renumerando itens...', 'info');
 
-                // 1. Deletar do banco
                 await supabaseClient
                     .from('vendas_live')
                     .delete()
                     .eq('linha_id', linhaId)
                     .eq('data_live', dataLiveAtual);
 
-                // 2. Remover do array vendas
                 vendas = vendas.filter(v => v.linha_id !== linhaId);
 
-                // 3. RENUMERAÇÃO: Atualizar todas as linhas abaixo no banco
                 const linhasParaRenumerar = vendas.filter(v => v.linha_id > linhaId).sort((a,b) => a.linha_id - b.linha_id);
 
                 for (const venda of linhasParaRenumerar) {
                     const novoId = venda.linha_id - 1;
+                    const novaVenda = { ...venda, linha_id: novoId, item: novoId, updated_at: new Date().toISOString() };
 
-                    // Atualizar no banco: criar nova linha com ID correto
-                    const novaVenda = {
-                        ...venda,
-                        linha_id: novoId,
-                        item: novoId,
-                        updated_at: new Date().toISOString()
-                    };
-
-                    // Deletar antiga
-                    await supabaseClient
-                        .from('vendas_live')
-                        .delete()
-                        .eq('id', venda.id);
-
-                    // Inserir nova com ID correto
-                    const { data } = await supabaseClient
-                        .from('vendas_live')
-                        .insert([novaVenda])
-                        .select();
+                    await supabaseClient.from('vendas_live').delete().eq('id', venda.id);
+                    const { data } = await supabaseClient.from('vendas_live').insert([novaVenda]).select();
 
                     if (data && data[0]) {
-                        venda.id = data[0].id; // Atualizar ID no array
+                        venda.id = data[0].id;
                         venda.linha_id = novoId;
                         venda.item = novoId;
                     }
                 }
 
-                // 4. RENUMERAÇÃO NO DOM: Atualizar IDs e elementos visuais
                 const tbody = document.getElementById('vendasBody');
                 const trExcluir = document.getElementById(`linha-${linhaId}`);
                 if (trExcluir) trExcluir.remove();
 
-                // Reenumerar todas as linhas no DOM
                 const todasLinhas = Array.from(tbody.querySelectorAll('tr'));
                 todasLinhas.forEach((tr, index) => {
                     const novoLinhaId = index + 1;
                     const antigoLinhaId = parseInt(tr.dataset.linhaId);
 
                     if (antigoLinhaId !== novoLinhaId) {
-                        // Atualizar ID da linha
                         tr.id = `linha-${novoLinhaId}`;
                         tr.dataset.linhaId = novoLinhaId;
 
-                        // Atualizar número visual
                         const numeroSpan = tr.querySelector('.item-number');
                         if (numeroSpan) {
                             numeroSpan.id = `numero-${novoLinhaId}`;
                             numeroSpan.textContent = novoLinhaId;
                         }
 
-                        // Atualizar IDs dos inputs e eventos
                         const inputs = tr.querySelectorAll('input, button, div.suggestions');
                         inputs.forEach(el => {
                             if (el.id && el.id.includes(`-${antigoLinhaId}`)) {
                                 const novoId = el.id.replace(`-${antigoLinhaId}`, `-${novoLinhaId}`);
                                 el.id = novoId;
 
-                                // Atualizar eventos onclick
                                 if (el.onclick) {
                                     const onclickStr = el.getAttribute('onclick');
                                     if (onclickStr) {
@@ -1576,12 +1632,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                                     }
                                 }
 
-                                // Atualizar onblur
-                                if (el.onblur) {
-                                    el.setAttribute('onblur', `salvarVenda(${novoLinhaId})`);
-                                }
-
-                                // Atualizar onkeydown
+                                if (el.onblur) el.setAttribute('onblur', `salvarVenda(${novoLinhaId})`);
                                 if (el.onkeydown) {
                                     const onkeydownStr = el.getAttribute('onkeydown');
                                     if (onkeydownStr) {
@@ -1589,8 +1640,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                                         el.setAttribute('onkeydown', novoOnkeydown);
                                     }
                                 }
-
-                                // Atualizar oninput
                                 if (el.oninput) {
                                     const tipoCampo = el.id.split('-')[0];
                                     el.setAttribute('oninput', `filtrarSugestoes(this, '${tipoCampo}')`);
@@ -1601,12 +1650,8 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 });
 
                 linhaCount = todasLinhas.length;
-                
-                // CORREÇÃO: Recarregar o array vendas do banco para garantir sincronização
                 await recarregarVendasArray();
-                
                 atualizarContagemItens();
-
                 showStatus(`Item ${linhaId} excluído e itens renumerados!`, 'success');
             } catch (error) {
                 console.error('Erro ao excluir:', error);
@@ -1614,7 +1659,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
         }
 
-        // NOVA FUNÇÃO: Recarrega o array vendas do banco após exclusão
         async function recarregarVendasArray() {
             try {
                 const { data, error } = await supabaseClient
@@ -1627,20 +1671,15 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     console.error('Erro ao recarregar vendas:', error);
                     return;
                 }
-
-                // Atualizar o array vendas com dados frescos do banco
                 vendas = data || [];
-                console.log('Array vendas recarregado:', vendas.length, 'itens');
             } catch (error) {
                 console.error('Erro ao recarregar array vendas:', error);
             }
         }
 
-        // NOVA FUNÇÃO: Finalizar Live (bloquear edição)
         async function finalizarLive() {
             if (confirm('Deseja finalizar esta live? Os dados não poderão ser alterados até clicar em "Alterar Live".')) {
                 try {
-                    // Atualizar todas as vendas da live para bloqueadas
                     const { error } = await supabaseClient
                         .from('vendas_live')
                         .update({ bloqueada: true })
@@ -1658,11 +1697,9 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
         }
 
-        // NOVA FUNÇÃO: Alterar Live (liberar edição)
         async function alterarLive() {
             if (confirm('Deseja alterar esta live? Os campos serão liberados para edição.')) {
                 try {
-                    // Atualizar todas as vendas da live para desbloqueadas
                     const { error } = await supabaseClient
                         .from('vendas_live')
                         .update({ bloqueada: false })
@@ -1681,27 +1718,14 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         }
 
         function bloquearCampos() {
-            // Desabilitar todos os inputs
-            document.querySelectorAll('#vendasBody input').forEach(input => {
-                input.disabled = true;
-            });
+            document.querySelectorAll('#vendasBody input').forEach(input => input.disabled = true);
+            document.querySelectorAll('.mic-btn').forEach(btn => btn.disabled = true);
+            document.querySelectorAll('.delete-btn').forEach(btn => btn.disabled = true);
             
-            // Desabilitar botões de microfone
-            document.querySelectorAll('.mic-btn').forEach(btn => {
-                btn.disabled = true;
-            });
-            
-            // Desabilitar botões de excluir
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.disabled = true;
-            });
-            
-            // Atualizar banner
             const banner = document.getElementById('liveInfoBanner');
             banner.classList.add('bloqueada');
             document.getElementById('statusLive').textContent = '🔒 LIVE FINALIZADA';
             
-            // Mostrar/esconder botões
             document.getElementById('btnAdicionar').style.display = 'none';
             document.getElementById('btnFinalizar').style.display = 'none';
             document.getElementById('btnResetar').style.display = 'none';
@@ -1709,34 +1733,20 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         }
 
         function liberarCampos() {
-            // Habilitar todos os inputs
-            document.querySelectorAll('#vendasBody input').forEach(input => {
-                input.disabled = false;
-            });
+            document.querySelectorAll('#vendasBody input').forEach(input => input.disabled = false);
+            document.querySelectorAll('.mic-btn').forEach(btn => btn.disabled = false);
+            document.querySelectorAll('.delete-btn').forEach(btn => btn.disabled = false);
             
-            // Habilitar botões de microfone
-            document.querySelectorAll('.mic-btn').forEach(btn => {
-                btn.disabled = false;
-            });
-            
-            // Habilitar botões de excluir
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.disabled = false;
-            });
-            
-            // Atualizar banner
             const banner = document.getElementById('liveInfoBanner');
             banner.classList.remove('bloqueada');
             document.getElementById('statusLive').textContent = '';
             
-            // Mostrar/esconder botões
             document.getElementById('btnAdicionar').style.display = 'inline-block';
             document.getElementById('btnFinalizar').style.display = 'inline-block';
             document.getElementById('btnResetar').style.display = 'inline-block';
             document.getElementById('btnAlterar').style.display = 'none';
         }
 
-        // NOVA FUNÇÃO: Confirmar resetar live
         function confirmarResetarLive() {
             if (liveBloqueada) {
                 showStatus('Live está finalizada. Clique em "Alterar Live" para editar.', 'error');
@@ -1754,28 +1764,22 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             document.getElementById('confirmResetDialog').classList.remove('active');
         }
 
-        // NOVA FUNÇÃO: Executar reset da live
         async function executarResetarLive() {
             fecharConfirmReset();
 
             try {
                 showStatus('Apagando todos os registros...', 'info');
 
-                // Deletar TODOS os registros da data atual
-                const { error } = await supabaseClient
+                await supabaseClient
                     .from('vendas_live')
                     .delete()
                     .eq('data_live', dataLiveAtual);
 
-                if (error) throw error;
-
-                // Limpar tudo
                 vendas = [];
                 document.getElementById('vendasBody').innerHTML = '';
                 linhaCount = 0;
                 liveBloqueada = false;
 
-                // Recriar 150 linhas vazias
                 for (let i = 0; i < 150; i++) {
                     adicionarLinha();
                 }
@@ -1790,9 +1794,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
         }
 
-        // NOVA FUNÇÃO: Registrar Venda na tabela vendas_pg
         function registrarVenda() {
-            // Calcular total da live
             const vendasValidas = vendas.filter(v => v.valor > 0 && v.comprador && v.comprador.trim() !== '');
             totalLiveAtual = vendasValidas.reduce((sum, v) => sum + (parseFloat(v.valor) || 0), 0);
             
@@ -1805,8 +1807,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
             const dataFormatada = formatarData(dataLiveAtual);
             
-            const vendaInfo = document.getElementById('vendaInfo');
-            vendaInfo.innerHTML = `
+            document.getElementById('vendaInfo').innerHTML = `
                 <p><strong>Data da Live:</strong> ${dataFormatada}</p>
                 <p><strong>Quantidade de Itens:</strong> ${quantidadeItens}</p>
                 <p><strong>Valor Total:</strong> ${formatarMoeda(totalLiveAtual)}</p>
@@ -1832,7 +1833,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 const dataFormatada = formatarData(dataLiveAtual);
                 const descricao = `Live do Dia ${dataFormatada}`;
                 
-                // Preparar itens da venda
                 const vendasValidas = vendas.filter(v => v.valor > 0 && v.comprador && v.comprador.trim() !== '');
                 const itensVenda = vendasValidas.map(v => ({
                     linha_id: v.linha_id,
@@ -1874,11 +1874,9 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         }
 
         function gerarRelatorioNovaAba() {
-            // CORREÇÃO: Usar Array.from() corretamente para converter valores do Map
             const vendasUnicas = new Map();
 
             vendas.forEach(venda => {
-                // Usar ID único ou combinação de campos como chave
                 const chave = venda.id || `${venda.linha_id}-${venda.data_live}-${venda.comprador}-${venda.codigo}`;
                 if (!vendasUnicas.has(chave)) {
                     vendasUnicas.set(chave, venda);
@@ -1887,7 +1885,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
             const vendasPorComprador = {};
 
-            // CORREÇÃO: Usar for...of para iterar sobre os valores do Map
             for (const venda of vendasUnicas.values()) {
                 if (!venda.comprador || venda.valor === 0) continue;
 
@@ -1911,112 +1908,22 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relatório de Vendas - Live ${formatarData(dataLiveAtual)}</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background: white;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 18px;
-        }
-
-        .data-geracao {
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .data-live {
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 14px;
-            color: #333;
-            font-weight: bold;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-            margin-bottom: 30px;
-        }
-
-        th {
-            border: 1px solid #000;
-            padding: 8px;
-            text-align: left;
-            font-weight: bold;
-            background: white;
-        }
-
-        td {
-            border: 1px solid #000;
-            padding: 6px 8px;
-            text-align: left;
-        }
-
-        .valor-col {
-            text-align: right;
-        }
-
-        .total-col {
-            text-align: right;
-            font-weight: bold;
-        }
-
-        .linha-item {
-            background: white;
-        }
-
-        .total-comprador {
-            font-weight: bold;
-            border: 1px solid #000;
-            background: #fafafa;
-        }
-
-        .total-geral {
-            font-weight: bold;
-            font-size: 14px;
-            border: 2px solid #000;
-            background: #f0f0f0;
-        }
-
-        .print-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .print-btn:hover {
-            background: #218838;
-        }
-
-        @media print {
-            .print-btn {
-                display: none;
-            }
-
-            body {
-                padding: 0;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; padding: 20px; background: white; }
+        h1 { text-align: center; margin-bottom: 20px; font-size: 18px; }
+        .data-geracao { text-align: center; margin-bottom: 30px; font-size: 12px; color: #666; }
+        .data-live { text-align: center; margin-bottom: 10px; font-size: 14px; color: #333; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 30px; }
+        th { border: 1px solid #000; padding: 8px; text-align: left; font-weight: bold; background: white; }
+        td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
+        .valor-col { text-align: right; }
+        .total-col { text-align: right; font-weight: bold; }
+        .linha-item { background: white; }
+        .total-comprador { font-weight: bold; border: 1px solid #000; background: #fafafa; }
+        .total-geral { font-weight: bold; font-size: 14px; border: 2px solid #000; background: #f0f0f0; }
+        .print-btn { position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .print-btn:hover { background: #218838; }
+        @media print { .print-btn { display: none; } body { padding: 0; } }
     </style>
 </head>
 <body>
@@ -2024,15 +1931,9 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
     <h1>RELATÓRIO DE VENDAS - LIVE</h1>
     <p class="data-live">Data da Live: ${formatarData(dataLiveAtual)}</p>
     <p class="data-geracao">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
-
     <table>
         <thead>
-            <tr>
-                <th>Valor</th>
-                <th>Código</th>
-                <th>Comprador</th>
-                <th>Fila</th>
-            </tr>
+            <tr><th>Valor</th><th>Código</th><th>Comprador</th><th>Fila</th></tr>
         </thead>
         <tbody>`;
 
@@ -2104,6 +2005,3 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
     </script>
 </body>
 </html>
-
-
-            
