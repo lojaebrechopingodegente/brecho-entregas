@@ -178,6 +178,11 @@
             color: #212529;
         }
 
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
         .actions {
             display: flex;
             gap: 10px;
@@ -269,13 +274,98 @@
             max-height: 200px;
             overflow-y: auto;
         }
+
+        /* NOVOS ESTILOS PARA SELEÇÃO DE DATA */
+        .date-selector {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #667eea;
+        }
+
+        .date-selector h3 {
+            margin-bottom: 15px;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .date-input-group {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .date-input-group .form-group {
+            margin-bottom: 0;
+        }
+
+        .date-input-group input[type="date"] {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            min-width: 200px;
+        }
+
+        .live-info {
+            background: #d4edda;
+            border: 1px solid #28a745;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .live-info h4 {
+            color: #155724;
+            margin: 0;
+        }
+
+        .live-info p {
+            color: #155724;
+            margin: 5px 0 0 0;
+            font-size: 14px;
+        }
+
+        .change-date-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .change-date-btn:hover {
+            background: #5a6268;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🛍️ Registro de Vendas - Live</h1>
-            <p>Gerencie suas vendas em tempo real</p>
+            <p>Gerencie suas vendas em tempo real por data</p>
         </div>
 
         <div class="content">
@@ -295,7 +385,8 @@
                     <p style="color: #dc3545; font-weight: bold;">⚠️ Execute este SQL no Editor do Supabase primeiro:</p>
                     <div class="sql-box">create table if not exists vendas_live (
     id uuid default gen_random_uuid() primary key,
-    linha_id integer not null unique,
+    linha_id integer not null,
+    data_live date not null,
     item integer,
     valor decimal(10,2) default 0,
     codigo text,
@@ -307,11 +398,38 @@
 );
 
 create index if not exists idx_vendas_live_linha on vendas_live(linha_id);
+create index if not exists idx_vendas_live_data on vendas_live(data_live);
 create index if not exists idx_vendas_live_comprador on vendas_live(comprador);</div>
                 </div>
             </div>
 
+            <!-- SELETOR DE DATA -->
+            <div id="dateSelectorSection" style="display: none;">
+                <div class="date-selector">
+                    <h3>📅 Selecione a Data da Live</h3>
+                    <div class="date-input-group">
+                        <div class="form-group">
+                            <label>Data da Live:</label>
+                            <input type="date" id="dataLiveInput" value="">
+                        </div>
+                        <button class="btn btn-primary" onclick="iniciarLive()">Iniciar Cadastro</button>
+                    </div>
+                    <p class="info-text" style="margin-top: 10px;">
+                        💡 Cada data representa uma live diferente. Ao selecionar uma nova data, você terá uma tela em branco para novo cadastro.
+                    </p>
+                </div>
+            </div>
+
+            <!-- ÁREA PRINCIPAL DO APP -->
             <div id="appSection" style="display: none;">
+                <div class="live-info">
+                    <div>
+                        <h4>📅 Live do dia: <span id="dataLiveDisplay"></span></h4>
+                        <p>Total de itens cadastrados: <span id="totalItens">0</span></p>
+                    </div>
+                    <button class="change-date-btn" onclick="trocarData()">🔄 Trocar Data</button>
+                </div>
+
                 <div class="actions">
                     <button class="btn btn-primary" onclick="adicionarLinha()">+ Adicionar Item</button>
                     <button class="btn btn-success" onclick="gerarRelatorioNovaAba()">📄 Ver Relatório</button>
@@ -346,6 +464,13 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         let clientes = [];
         let vendas = [];
         let linhaCount = 0;
+        let dataLiveAtual = null;
+
+        // Define a data de hoje como padrão
+        document.addEventListener('DOMContentLoaded', () => {
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('dataLiveInput').value = hoje;
+        });
 
         async function conectarSupabase() {
             const url = document.getElementById('supabaseUrl').value.trim();
@@ -359,11 +484,9 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             try {
                 console.log('Tentando conectar...', url);
                 
-                // Criar cliente Supabase
                 const { createClient } = supabase;
                 supabaseClient = createClient(url, key);
                 
-                // Testar conexão buscando clientes
                 const { data, error } = await supabaseClient
                     .from('clientes_pg')
                     .select('*')
@@ -377,7 +500,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 console.log('Conexão OK, carregando clientes...');
                 await carregarClientes();
                 
-                // Verificar se tabela vendas_live existe
                 console.log('Verificando tabela vendas_live...');
                 const { error: vendasError } = await supabaseClient
                     .from('vendas_live')
@@ -391,25 +513,13 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                         showStatus('Crie a tabela vendas_live primeiro (veja o SQL abaixo)', 'error');
                         return;
                     }
-                    // Se for outro erro, continuar mesmo assim
                 }
 
-                console.log('Tudo OK! Inicializando interface...');
+                console.log('Tudo OK! Mostrando seletor de data...');
                 document.getElementById('configSection').style.display = 'none';
-                document.getElementById('appSection').style.display = 'block';
+                document.getElementById('dateSelectorSection').style.display = 'block';
                 
-                // Carregar vendas existentes primeiro
-                await carregarVendasExistentes();
-                
-                // Completar até 150 linhas
-                const linhasAtuais = document.querySelectorAll('#vendasBody tr').length;
-                console.log('Linhas atuais:', linhasAtuais);
-                
-                for (let i = linhasAtuais; i < 150; i++) {
-                    adicionarLinha();
-                }
-
-                showStatus('Conectado com sucesso! 150 linhas prontas.', 'success');
+                showStatus('Conectado com sucesso! Selecione a data da live.', 'success');
             } catch (error) {
                 console.error('Erro completo:', error);
                 showStatus('Erro ao conectar: ' + error.message, 'error');
@@ -431,34 +541,98 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
         }
 
+        function iniciarLive() {
+            const dataInput = document.getElementById('dataLiveInput').value;
+            
+            if (!dataInput) {
+                showStatus('Selecione uma data para a live!', 'error');
+                return;
+            }
+
+            dataLiveAtual = dataInput;
+            
+            // Formatar data para exibição (DD/MM/YYYY)
+            const [ano, mes, dia] = dataInput.split('-');
+            const dataFormatada = `${dia}/${mes}/${ano}`;
+            
+            document.getElementById('dataLiveDisplay').textContent = dataFormatada;
+            document.getElementById('dateSelectorSection').style.display = 'none';
+            document.getElementById('appSection').style.display = 'block';
+            
+            // Carregar vendas da data selecionada (ou iniciar em branco)
+            carregarVendasExistentes();
+            
+            showStatus(`Live do dia ${dataFormatada} iniciada!`, 'success');
+        }
+
+        function trocarData() {
+            if (confirm('Deseja trocar de data? Os dados atuais já estão salvos.')) {
+                document.getElementById('appSection').style.display = 'none';
+                document.getElementById('dateSelectorSection').style.display = 'block';
+                
+                // Limpar a tabela atual
+                document.getElementById('vendasBody').innerHTML = '';
+                vendas = [];
+                linhaCount = 0;
+                
+                showStatus('Selecione uma nova data para a live.', 'info');
+            }
+        }
+
         async function carregarVendasExistentes() {
             try {
+                // Buscar vendas APENAS da data selecionada
                 const { data, error } = await supabaseClient
                     .from('vendas_live')
                     .select('*')
+                    .eq('data_live', dataLiveAtual)
                     .order('linha_id', { ascending: true });
 
                 if (error) {
                     console.error('Erro ao carregar vendas:', error);
-                    // Não mostrar erro, apenas iniciar com tabela vazia
                     vendas = [];
                     return;
                 }
                 
                 vendas = data || [];
-                console.log('Vendas carregadas:', vendas.length);
+                console.log(`Vendas carregadas para ${dataLiveAtual}:`, vendas.length);
                 
                 document.getElementById('vendasBody').innerHTML = '';
                 linhaCount = 0;
                 
-                vendas.forEach(venda => {
-                    criarLinhaComDados(venda);
-                });
+                if (vendas.length === 0) {
+                    // Se não houver vendas nesta data, iniciar com tela em branco
+                    // Adicionar 150 linhas vazias
+                    for (let i = 0; i < 150; i++) {
+                        adicionarLinha();
+                    }
+                    document.getElementById('totalItens').textContent = '0';
+                    showStatus('Nova live iniciada! Tela em branco pronta.', 'success');
+                } else {
+                    // Carregar vendas existentes desta data
+                    vendas.forEach(venda => {
+                        criarLinhaComDados(venda);
+                    });
+                    
+                    // Completar até 150 linhas se necessário
+                    const linhasAtuais = vendas.length;
+                    for (let i = linhasAtuais; i < 150; i++) {
+                        adicionarLinha();
+                    }
+                    
+                    document.getElementById('totalItens').textContent = vendas.length;
+                    showStatus(`Carregadas ${vendas.length} vendas do dia ${formatarData(dataLiveAtual)}`, 'success');
+                }
                 
             } catch (error) {
                 console.error('Erro ao carregar vendas:', error);
                 vendas = [];
             }
+        }
+
+        function formatarData(dataString) {
+            const [ano, mes, dia] = dataString.split('-');
+            return `${dia}/${mes}/${ano}`;
         }
 
         function criarLinhaComDados(venda) {
@@ -622,7 +796,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             const totalElement = document.getElementById(`total-${linhaId}`);
             if (totalElement) totalElement.textContent = formatarMoeda(total);
             
-            // Verificar se comprador existe, se não, cadastrar
             if (comprador) {
                 const clienteExiste = clientes.find(c => c.nome && c.nome.toLowerCase() === comprador.toLowerCase());
                 if (!clienteExiste) {
@@ -634,6 +807,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             
             const vendaData = {
                 linha_id: linhaId,
+                data_live: dataLiveAtual,  // INCLUINDO A DATA DA LIVE
                 item: linhaId,
                 valor: valor,
                 codigo: codigo,
@@ -649,7 +823,8 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     result = await supabaseClient
                         .from('vendas_live')
                         .update(vendaData)
-                        .eq('linha_id', linhaId);
+                        .eq('linha_id', linhaId)
+                        .eq('data_live', dataLiveAtual);  // FILTRAR POR DATA TAMBÉM
                 } else {
                     result = await supabaseClient
                         .from('vendas_live')
@@ -657,6 +832,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     
                     if (!result.error) {
                         vendas.push(vendaData);
+                        document.getElementById('totalItens').textContent = vendas.length;
                     }
                 }
 
@@ -715,9 +891,11 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 await supabaseClient
                     .from('vendas_live')
                     .delete()
-                    .eq('linha_id', linhaId);
+                    .eq('linha_id', linhaId)
+                    .eq('data_live', dataLiveAtual);  // FILTRAR POR DATA
                 
                 vendas = vendas.filter(v => v.linha_id !== linhaId);
+                document.getElementById('totalItens').textContent = vendas.length;
                 
                 const tr = document.getElementById(`linha-${linhaId}`);
                 tr.remove();
@@ -745,21 +923,19 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 vendasPorComprador[venda.comprador].push(venda);
             });
 
-            // CORREÇÃO: Erro de sintaxe na linha do sort
             const compradoresOrdenados = Object.keys(vendasPorComprador).sort((a, b) => {
                 const totalA = vendasPorComprador[a].reduce((sum, v) => sum + v.total, 0);
                 const totalB = vendasPorComprador[b].reduce((sum, v) => sum + v.total, 0);
                 return totalB - totalA;
             });
 
-            // Construir HTML do relatório
             let html = `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Vendas - Live</title>
+    <title>Relatório de Vendas - Live ${formatarData(dataLiveAtual)}</title>
     <style>
         * {
             margin: 0;
@@ -784,6 +960,14 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             margin-bottom: 30px;
             font-size: 12px;
             color: #666;
+        }
+        
+        .data-live {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #333;
+            font-weight: bold;
         }
         
         table {
@@ -870,6 +1054,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 <body>
     <button class="print-btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
     <h1>RELATÓRIO DE VENDAS - LIVE</h1>
+    <p class="data-live">Data da Live: ${formatarData(dataLiveAtual)}</p>
     <p class="data-geracao">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
     
     <table>
@@ -905,7 +1090,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             </tr>`;
                 });
 
-                // Linha de total do comprador
                 html += `
             <tr class="total-comprador">
                 <td colspan="4" style="text-align: right;">Total ${comprador}:</td>
@@ -913,7 +1097,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             </tr>`;
             });
 
-            // Linha de total geral
             html += `
             <tr class="total-geral">
                 <td colspan="4" style="text-align: right;">TOTAL GERAL (${quantidadeTotal} itens):</td>
@@ -924,7 +1107,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 </body>
 </html>`;
 
-            // Abrir em nova aba
             const novaAba = window.open('', '_blank');
             if (novaAba) {
                 novaAba.document.write(html);
