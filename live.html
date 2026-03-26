@@ -232,6 +232,15 @@
             color: #212529;
         }
 
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
         .btn-info {
             background: #17a2b8;
             color: white;
@@ -412,6 +421,47 @@
             color: #6c757d;
             margin-left: 5px;
         }
+
+        .confirm-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+        }
+
+        .confirm-dialog.active {
+            display: flex;
+        }
+
+        .confirm-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .confirm-box h3 {
+            color: #dc3545;
+            margin-bottom: 15px;
+        }
+
+        .confirm-box p {
+            margin-bottom: 25px;
+            color: #495057;
+            line-height: 1.5;
+        }
+
+        .confirm-box .btn {
+            margin: 0 10px;
+        }
     </style>
 <base target="_blank">
 </head>
@@ -486,6 +536,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     <button class="btn btn-primary" onclick="adicionarLinha()">+ Adicionar Item</button>
                     <button class="btn btn-success" onclick="gerarRelatorioNovaAba()">📄 Ver Relatório</button>
                     <button class="btn btn-warning" onclick="carregarVendasExistentes()">🔄 Recarregar Dados</button>
+                    <button class="btn btn-danger" onclick="confirmarResetarLive()">🗑️ Resetar Live</button>
                 </div>
                 <p class="info-text">* Pressione ENTER para navegar entre os campos. Use ↑↓ para navegar nas sugestões. Clique no 🎤 para comando de voz.</p>
 
@@ -510,6 +561,18 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
     <div class="status-message" id="statusMessage"></div>
 
+    <!-- Dialog de Confirmação para Resetar -->
+    <div class="confirm-dialog" id="confirmResetDialog">
+        <div class="confirm-box">
+            <h3>⚠️ Atenção!</h3>
+            <p id="confirmResetText">Tem certeza que deseja resetar esta live?<br>Todos os <strong>0 itens</strong> serão permanentemente apagados.<br>Esta ação não pode ser desfeita!</p>
+            <div>
+                <button class="btn btn-secondary" onclick="fecharConfirmReset()" style="background: #6c757d; color: white;">Cancelar</button>
+                <button class="btn btn-danger" onclick="executarResetarLive()">Sim, Resetar Tudo</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let supabaseClient = null;
         let clientes = [];
@@ -521,7 +584,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         let activeInput = null;
         let selectedSuggestionIndex = -1;
 
-        // Inicializar reconhecimento de voz
         function inicializarReconhecimentoVoz() {
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -536,7 +598,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                         activeInput.value = transcript;
                         activeInput.dispatchEvent(new Event('input'));
 
-                        // Tentar selecionar a primeira sugestão automaticamente
                         setTimeout(() => {
                             const linhaId = activeInput.id.split('-')[1];
                             const tipoCampo = activeInput.id.split('-')[0];
@@ -709,7 +770,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
         }
 
-        // FUNÇÃO CORRIGIDA: Contar apenas linhas completamente preenchidas
         function atualizarContagemItens() {
             const linhasCompletas = vendas.filter(v => {
                 return v.valor > 0 && 
@@ -722,6 +782,11 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
         async function carregarVendasExistentes() {
             try {
+                // LIMPAR TUDO antes de carregar - evita duplicação
+                vendas = [];
+                document.getElementById('vendasBody').innerHTML = '';
+                linhaCount = 0;
+
                 const { data, error } = await supabaseClient
                     .from('vendas_live')
                     .select('*')
@@ -734,11 +799,16 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     return;
                 }
 
-                vendas = data || [];
-                console.log(`Vendas carregadas para ${dataLiveAtual}:`, vendas.length);
+                const dadosCarregados = data || [];
+                console.log(`Vendas carregadas para ${dataLiveAtual}:`, dadosCarregados.length);
 
-                document.getElementById('vendasBody').innerHTML = '';
-                linhaCount = 0;
+                // Remover duplicados baseado no ID (garantia extra)
+                const idsUnicos = new Set();
+                vendas = dadosCarregados.filter(v => {
+                    if (idsUnicos.has(v.id)) return false;
+                    idsUnicos.add(v.id);
+                    return true;
+                });
 
                 if (vendas.length === 0) {
                     for (let i = 0; i < 150; i++) {
@@ -778,9 +848,10 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             const tbody = document.getElementById('vendasBody');
             const tr = document.createElement('tr');
             tr.id = `linha-${venda.linha_id}`;
+            tr.dataset.linhaId = venda.linha_id; // Guardar referência
 
             tr.innerHTML = `
-                <td><span class="item-number">${venda.linha_id}</span></td>
+                <td><span class="item-number" id="numero-${venda.linha_id}">${venda.linha_id}</span></td>
                 <td><input type="number" step="0.01" class="valor-input" id="valor-${venda.linha_id}" value="${venda.valor || ''}" placeholder="0,00" onkeydown="navegarCampos(event, ${venda.linha_id}, 'valor')" onblur="salvarVenda(${venda.linha_id})"></td>
                 <td><input type="text" id="codigo-${venda.linha_id}" value="${venda.codigo || ''}" onkeydown="navegarCampos(event, ${venda.linha_id}, 'codigo')" onblur="salvarVenda(${venda.linha_id})"></td>
                 <td>
@@ -808,9 +879,10 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             const tbody = document.getElementById('vendasBody');
             const tr = document.createElement('tr');
             tr.id = `linha-${linhaCount}`;
+            tr.dataset.linhaId = linhaCount;
 
             tr.innerHTML = `
-                <td><span class="item-number">${linhaCount}</span></td>
+                <td><span class="item-number" id="numero-${linhaCount}">${linhaCount}</span></td>
                 <td><input type="number" step="0.01" class="valor-input" id="valor-${linhaCount}" placeholder="0,00" onkeydown="navegarCampos(event, ${linhaCount}, 'valor')" onblur="salvarVenda(${linhaCount})"></td>
                 <td><input type="text" id="codigo-${linhaCount}" onkeydown="navegarCampos(event, ${linhaCount}, 'codigo')" onblur="salvarVenda(${linhaCount})"></td>
                 <td>
@@ -863,7 +935,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
         }
 
-        // NOVA FUNÇÃO: Navegação com setas nas sugestões
         function navegarCamposComSugestoes(event, linhaId, campoAtual) {
             const sugestoesDiv = document.getElementById(`sugestoes-${campoAtual}-${linhaId}`);
             const itens = sugestoesDiv.querySelectorAll('.suggestion-item');
@@ -906,7 +977,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     }
                 }
 
-                // Se não houver sugestão selecionada, comportamento padrão
                 navegarCampos(event, linhaId, campoAtual);
                 return;
             }
@@ -917,7 +987,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 return;
             }
 
-            // Reset do índice quando digita
             if (event.key.length === 1 || event.key === 'Backspace') {
                 selectedSuggestionIndex = -1;
             }
@@ -1065,7 +1134,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
                 if (result.error) throw result.error;
 
-                // Atualizar contagem apenas com linhas completas
                 atualizarContagemItens();
 
                 if (inputComprador) {
@@ -1112,25 +1180,171 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
         }
 
+        // FUNÇÃO CORRIGIDA: Excluir linha com renumeração automática
         async function excluirLinha(linhaId) {
             if (!confirm('Deseja realmente excluir este item?')) return;
 
             try {
+                // 1. Deletar do banco
                 await supabaseClient
                     .from('vendas_live')
                     .delete()
                     .eq('linha_id', linhaId)
                     .eq('data_live', dataLiveAtual);
 
+                // 2. Remover do array vendas
                 vendas = vendas.filter(v => v.linha_id !== linhaId);
+
+                // 3. RENUMERAÇÃO: Atualizar todas as linhas abaixo no banco
+                const linhasParaRenumerar = vendas.filter(v => v.linha_id > linhaId).sort((a,b) => a.linha_id - b.linha_id);
+
+                for (const venda of linhasParaRenumerar) {
+                    const novoId = venda.linha_id - 1;
+
+                    // Atualizar no banco: criar nova linha com ID correto
+                    const novaVenda = {
+                        ...venda,
+                        linha_id: novoId,
+                        item: novoId,
+                        updated_at: new Date().toISOString()
+                    };
+
+                    // Deletar antiga
+                    await supabaseClient
+                        .from('vendas_live')
+                        .delete()
+                        .eq('id', venda.id);
+
+                    // Inserir nova com ID correto
+                    const { data } = await supabaseClient
+                        .from('vendas_live')
+                        .insert([novaVenda])
+                        .select();
+
+                    if (data && data[0]) {
+                        venda.id = data[0].id; // Atualizar ID no array
+                        venda.linha_id = novoId;
+                        venda.item = novoId;
+                    }
+                }
+
+                // 4. RENUMERAÇÃO NO DOM: Atualizar IDs e elementos visuais
+                const tbody = document.getElementById('vendasBody');
+                const trExcluir = document.getElementById(`linha-${linhaId}`);
+                if (trExcluir) trExcluir.remove();
+
+                // Reenumerar todas as linhas no DOM
+                const todasLinhas = Array.from(tbody.querySelectorAll('tr'));
+                todasLinhas.forEach((tr, index) => {
+                    const novoLinhaId = index + 1;
+                    const antigoLinhaId = parseInt(tr.dataset.linhaId);
+
+                    if (antigoLinhaId !== novoLinhaId) {
+                        // Atualizar ID da linha
+                        tr.id = `linha-${novoLinhaId}`;
+                        tr.dataset.linhaId = novoLinhaId;
+
+                        // Atualizar número visual
+                        const numeroSpan = tr.querySelector('.item-number');
+                        if (numeroSpan) {
+                            numeroSpan.id = `numero-${novoLinhaId}`;
+                            numeroSpan.textContent = novoLinhaId;
+                        }
+
+                        // Atualizar IDs dos inputs e eventos
+                        const inputs = tr.querySelectorAll('input, button, div.suggestions');
+                        inputs.forEach(el => {
+                            if (el.id && el.id.includes(`-${antigoLinhaId}`)) {
+                                const novoId = el.id.replace(`-${antigoLinhaId}`, `-${novoLinhaId}`);
+                                el.id = novoId;
+
+                                // Atualizar eventos onclick
+                                if (el.onclick) {
+                                    const onclickStr = el.getAttribute('onclick');
+                                    if (onclickStr) {
+                                        const novoOnclick = onclickStr.replace(new RegExp(antigoLinhaId, 'g'), novoLinhaId);
+                                        el.setAttribute('onclick', novoOnclick);
+                                    }
+                                }
+
+                                // Atualizar onblur
+                                if (el.onblur) {
+                                    el.setAttribute('onblur', `salvarVenda(${novoLinhaId})`);
+                                }
+
+                                // Atualizar onkeydown
+                                if (el.onkeydown) {
+                                    const onkeydownStr = el.getAttribute('onkeydown');
+                                    if (onkeydownStr) {
+                                        const novoOnkeydown = onkeydownStr.replace(new RegExp(antigoLinhaId, 'g'), novoLinhaId);
+                                        el.setAttribute('onkeydown', novoOnkeydown);
+                                    }
+                                }
+
+                                // Atualizar oninput
+                                if (el.oninput) {
+                                    const tipoCampo = el.id.split('-')[0];
+                                    el.setAttribute('oninput', `filtrarSugestoes(this, '${tipoCampo}')`);
+                                }
+                            }
+                        });
+                    }
+                });
+
+                linhaCount = todasLinhas.length;
                 atualizarContagemItens();
 
-                const tr = document.getElementById(`linha-${linhaId}`);
-                tr.remove();
-
-                showStatus('Item excluído!', 'success');
+                showStatus(`Item ${linhaId} excluído e itens renumerados!`, 'success');
             } catch (error) {
+                console.error('Erro ao excluir:', error);
                 showStatus('Erro ao excluir: ' + error.message, 'error');
+            }
+        }
+
+        // NOVA FUNÇÃO: Confirmar resetar live
+        function confirmarResetarLive() {
+            const totalItens = vendas.length;
+            const texto = `Tem certeza que deseja resetar esta live?<br>Todos os <strong>${totalItens} itens</strong> serão permanentemente apagados.<br>Esta ação não pode ser desfeita!`;
+
+            document.getElementById('confirmResetText').innerHTML = texto;
+            document.getElementById('confirmResetDialog').classList.add('active');
+        }
+
+        function fecharConfirmReset() {
+            document.getElementById('confirmResetDialog').classList.remove('active');
+        }
+
+        // NOVA FUNÇÃO: Executar reset da live
+        async function executarResetarLive() {
+            fecharConfirmReset();
+
+            try {
+                showStatus('Apagando todos os registros...', 'info');
+
+                // Deletar TODOS os registros da data atual
+                const { error } = await supabaseClient
+                    .from('vendas_live')
+                    .delete()
+                    .eq('data_live', dataLiveAtual);
+
+                if (error) throw error;
+
+                // Limpar tudo
+                vendas = [];
+                document.getElementById('vendasBody').innerHTML = '';
+                linhaCount = 0;
+
+                // Recriar 150 linhas vazias
+                for (let i = 0; i < 150; i++) {
+                    adicionarLinha();
+                }
+
+                atualizarContagemItens();
+                showStatus('Live resetada com sucesso! 150 linhas vazias criadas.', 'success');
+
+            } catch (error) {
+                console.error('Erro ao resetar:', error);
+                showStatus('Erro ao resetar live: ' + error.message, 'error');
             }
         }
 
@@ -1139,9 +1353,21 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         }
 
         function gerarRelatorioNovaAba() {
-            const vendasPorComprador = {};
+            // CORREÇÃO: Garantir que não haja duplicados usando Map
+            const vendasUnicas = new Map();
 
             vendas.forEach(venda => {
+                // Usar ID único ou combinação de campos como chave
+                const chave = venda.id || `${venda.linha_id}-${venda.data_live}-${venda.comprador}-${venda.codigo}`;
+                if (!vendasUnicas.has(chave)) {
+                    vendasUnicas.set(chave, venda);
+                }
+            });
+
+            const vendasPorComprador = {};
+
+            // Usar apenas vendas únicas
+            Array.from(vendasUnicas.values()).forEach(venda => {
                 if (!venda.comprador || venda.valor === 0) return;
 
                 if (!vendasPorComprador[venda.comprador]) {
@@ -1299,7 +1525,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 totalGeral += totalComprador;
                 quantidadeTotal += vendasComprador.length;
 
-                // MUDANÇA: Repetir nome em todas as linhas, sem linha em negrito
                 vendasComprador.forEach((venda) => {
                     html += `
             <tr class="linha-item">
