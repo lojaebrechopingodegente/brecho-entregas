@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Vendas - Live</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -253,10 +251,6 @@
             font-size: 11px;
         }
 
-        .delete-btn:hover {
-            background: #c82333;
-        }
-
         .info-text {
             color: #6c757d;
             font-size: 12px;
@@ -320,10 +314,10 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             <div id="appSection" style="display: none;">
                 <div class="actions">
                     <button class="btn btn-primary" onclick="adicionarLinha()">+ Adicionar Item</button>
-                    <button class="btn btn-success" onclick="gerarRelatorioPDF()">📄 Gerar Relatório PDF</button>
+                    <button class="btn btn-success" onclick="gerarRelatorioNovaAba()">📄 Ver Relatório</button>
                     <button class="btn btn-warning" onclick="carregarVendasExistentes()">🔄 Recarregar Dados</button>
                 </div>
-                <p class="info-text">* Pressione ENTER para navegar entre os campos. Os dados são salvos automaticamente.</p>
+                <p class="info-text">* Pressione ENTER para navegar entre os campos. Novos compradores serão salvos automaticamente.</p>
 
                 <div class="table-container">
                     <table id="vendasTable">
@@ -374,7 +368,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
                 await carregarClientes();
                 
-                // Testar se tabela vendas_live existe
                 const { error: vendasError } = await supabaseClient
                     .from('vendas_live')
                     .select('id')
@@ -498,7 +491,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             tbody.appendChild(tr);
         }
 
-        // Navegação por ENTER entre campos
         function navegarCampos(event, linhaId, campoAtual) {
             if (event.key === 'Enter') {
                 event.preventDefault();
@@ -506,7 +498,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 const campos = ['valor', 'codigo', 'comprador', 'fila'];
                 const indiceAtual = campos.indexOf(campoAtual);
                 
-                // Se tem sugestões abertas, selecionar primeira
                 const sugestoesDiv = document.getElementById(`sugestoes-${campoAtual === 'comprador' ? 'nome' : 'instagram'}-${linhaId}`);
                 if (sugestoesDiv && sugestoesDiv.classList.contains('active')) {
                     const primeiraSugestao = sugestoesDiv.querySelector('.suggestion-item');
@@ -516,15 +507,11 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     }
                 }
                 
-                // Fechar sugestões
                 document.querySelectorAll('.suggestions').forEach(el => el.classList.remove('active'));
                 
-                // Salvar campo atual
                 salvarVenda(linhaId);
                 
-                // Mover para próximo campo ou próxima linha
                 if (indiceAtual < campos.length - 1) {
-                    // Próximo campo na mesma linha
                     const proximoCampo = campos[indiceAtual + 1];
                     const proximoInput = document.getElementById(`${proximoCampo}-${linhaId}`);
                     if (proximoInput) {
@@ -532,13 +519,11 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                         proximoInput.select();
                     }
                 } else {
-                    // Próxima linha, primeiro campo
                     const proximaLinha = linhaId + 1;
                     const proximoInput = document.getElementById(`valor-${proximaLinha}`);
                     if (proximoInput) {
                         proximoInput.focus();
                         proximoInput.select();
-                        // Scroll suave para a linha
                         proximoInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 }
@@ -590,7 +575,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             
             salvarVenda(linhaId);
             
-            // Focar próximo campo
             if (campo === 'nome') {
                 document.getElementById(`fila-${linhaId}`).focus();
             }
@@ -602,13 +586,21 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             
             const valor = parseFloat(document.getElementById(`valor-${linhaId}`).value) || 0;
             const codigo = document.getElementById(`codigo-${linhaId}`).value;
-            const comprador = document.getElementById(`comprador-${linhaId}`).value;
-            const fila = document.getElementById(`fila-${linhaId}`).value;
+            const comprador = document.getElementById(`comprador-${linhaId}`).value.trim();
+            const fila = document.getElementById(`fila-${linhaId}`).value.trim();
             
-            const total = valor; // Sempre 1 unidade
+            const total = valor;
             
             const totalElement = document.getElementById(`total-${linhaId}`);
             if (totalElement) totalElement.textContent = formatarMoeda(total);
+            
+            // Verificar se comprador existe, se não, cadastrar
+            if (comprador) {
+                const clienteExiste = clientes.find(c => c.nome && c.nome.toLowerCase() === comprador.toLowerCase());
+                if (!clienteExiste) {
+                    await cadastrarNovoCliente(comprador, fila);
+                }
+            }
             
             const vendaExistente = vendas.find(v => v.linha_id === linhaId);
             
@@ -660,6 +652,34 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             }
         }
 
+        async function cadastrarNovoCliente(nome, instagram) {
+            try {
+                const novoCliente = {
+                    nome: nome,
+                    instagram: instagram || null,
+                    criado_em: new Date().toISOString(),
+                    atualizado_em: new Date().toISOString()
+                };
+                
+                const { data, error } = await supabaseClient
+                    .from('clientes_pg')
+                    .insert([novoCliente])
+                    .select();
+                
+                if (error) {
+                    console.error('Erro ao cadastrar cliente:', error);
+                    return;
+                }
+                
+                if (data && data[0]) {
+                    clientes.push(data[0]);
+                    console.log('Novo cliente cadastrado:', data[0].nome);
+                }
+            } catch (error) {
+                console.error('Erro ao cadastrar cliente:', error);
+            }
+        }
+
         async function excluirLinha(linhaId) {
             if (!confirm('Deseja realmente excluir este item?')) return;
             
@@ -684,82 +704,204 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             return 'R$ ' + valor.toFixed(2).replace('.', ',');
         }
 
-        function gerarRelatorioPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.setFontSize(16);
-            doc.text('Relatório de Vendas por Comprador', 14, 20);
-            
-            doc.setFontSize(10);
-            const dataAtual = new Date().toLocaleString('pt-BR');
-            doc.text(`Gerado em: ${dataAtual}`, 14, 30);
-            
-            const agrupado = {};
+        function gerarRelatorioNovaAba() {
+            // Agrupar vendas por comprador
+            const vendasPorComprador = {};
             
             vendas.forEach(venda => {
                 if (!venda.comprador || venda.valor === 0) return;
                 
-                if (!agrupado[venda.comprador]) {
-                    agrupado[venda.comprador] = {
-                        quantidade: 0,
-                        total: 0
-                    };
+                if (!vendasPorComprador[venda.comprador]) {
+                    vendasPorComprador[venda.comprador] = [];
                 }
-                
-                agrupado[venda.comprador].quantidade += 1;
-                agrupado[venda.comprador].total += venda.total;
+                vendasPorComprador[venda.comprador].push(venda);
             });
 
-            const ordenado = Object.entries(agrupado).sort((a, b) => b[1].total - a[1].total);
+            // Ordenar compradores por valor total (maior primeiro)
+            const compradoresOrdenados = Object.keys(vendasPorComprador).sort((a, b) => {
+                const totalA = vendasPorComprador[a].reduce((sum, v) => sum + v.total, 0);
+                const totalB = vendasPorComprador[b].reduce((sum + v.total, 0);
+                return totalB - totalA;
+            });
 
-            const dadosTabela = [];
+            // Construir HTML do relatório
+            let html = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Vendas - Live</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: white;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .data-geracao {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 30px;
+        }
+        
+        th {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+            font-weight: bold;
+            background: white;
+        }
+        
+        td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            text-align: left;
+        }
+        
+        .valor-col {
+            text-align: right;
+        }
+        
+        .total-col {
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .comprador-header {
+            background: #f5f5f5;
+            font-weight: bold;
+            border: 1px solid #000;
+        }
+        
+        .linha-item {
+            background: white;
+        }
+        
+        .total-comprador {
+            font-weight: bold;
+            border: 1px solid #000;
+            background: #fafafa;
+        }
+        
+        .total-geral {
+            font-weight: bold;
+            font-size: 14px;
+            border: 2px solid #000;
+            background: #f0f0f0;
+        }
+        
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .print-btn:hover {
+            background: #218838;
+        }
+        
+        @media print {
+            .print-btn {
+                display: none;
+            }
+            
+            body {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+    <h1>RELATÓRIO DE VENDAS - LIVE</h1>
+    <p class="data-geracao">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Valor</th>
+                <th>Código</th>
+                <th>Comprador</th>
+                <th>Fila</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
             let totalGeral = 0;
             let quantidadeTotal = 0;
 
-            ordenado.forEach(([comprador, dados]) => {
-                totalGeral += dados.total;
-                quantidadeTotal += dados.quantidade;
-                dadosTabela.push([
-                    comprador,
-                    dados.quantidade.toString(),
-                    formatarMoeda(dados.total).replace('R$ ', '')
-                ]);
+            compradoresOrdenados.forEach(comprador => {
+                const vendasComprador = vendasPorComprador[comprador];
+                const totalComprador = vendasComprador.reduce((sum, v) => sum + v.total, 0);
+                
+                totalGeral += totalComprador;
+                quantidadeTotal += vendasComprador.length;
+
+                vendasComprador.forEach((venda, index) => {
+                    html += `
+            <tr class="${index === 0 ? 'comprador-header' : 'linha-item'}">
+                <td class="valor-col">${formatarMoeda(venda.valor)}</td>
+                <td>${venda.codigo || 'x'}</td>
+                <td>${index === 0 ? comprador : ''}</td>
+                <td>${venda.fila || 'x'}</td>
+                <td class="total-col">${formatarMoeda(venda.total)}</td>
+            </tr>`;
+                });
+
+                // Linha de total do comprador
+                html += `
+            <tr class="total-comprador">
+                <td colspan="4" style="text-align: right;">Total ${comprador}:</td>
+                <td class="total-col">${formatarMoeda(totalComprador)}</td>
+            </tr>`;
             });
 
-            dadosTabela.push([
-                'TOTAL GERAL',
-                quantidadeTotal.toString(),
-                formatarMoeda(totalGeral).replace('R$ ', '')
-            ]);
+            // Linha de total geral
+            html += `
+            <tr class="total-geral">
+                <td colspan="4" style="text-align: right;">TOTAL GERAL (${quantidadeTotal} itens):</td>
+                <td class="total-col">${formatarMoeda(totalGeral)}</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>`;
 
-            doc.autoTable({
-                startY: 40,
-                head: [['Comprador', 'Qtd Itens', 'Valor Total']],
-                body: dadosTabela,
-                theme: 'plain',
-                styles: {
-                    fontSize: 10,
-                    cellPadding: 3,
-                    lineColor: [0, 0, 0],
-                    lineWidth: 0.1
-                },
-                headStyles: {
-                    fontStyle: 'bold',
-                    textColor: [0, 0, 0],
-                    fillColor: [255, 255, 255],
-                    lineWidth: 0.2
-                },
-                didParseCell: function(data) {
-                    if (data.row.index === dadosTabela.length - 1) {
-                        data.cell.styles.fontStyle = 'bold';
-                        data.cell.styles.lineWidth = 0.3;
-                    }
-                }
-            });
-
-            doc.save(`relatorio_vendas_${new Date().toISOString().split('T')[0]}.pdf`);
-            showStatus('PDF gerado com sucesso!', 'success');
+            // Abrir em nova aba
+            const novaAba = window.open('', '_blank');
+            novaAba.document.write(html);
+            novaAba.document.close();
+            
+            showStatus('Relatório aberto em nova aba!', 'success');
         }
 
         function showStatus(mensagem, tipo) {
