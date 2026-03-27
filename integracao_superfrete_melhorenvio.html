@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conciliador de Entregas Unificado - SuperFrete & Supabase</title>
+    <title>Conciliador de Entregas Unificado - Manual + PowerShell</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -250,7 +250,7 @@
             background: #ff6b6b;
         }
 
-        /* ÁREA DE AÇÃO MANUAL */
+        /* ÁREA DE AÇÃO */
         .acao-container {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -332,10 +332,10 @@
 
         /* BOTÕES */
         .btn {
-            padding: 12px 24px;
+            padding: 14px 28px;
             border: none;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 12px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
@@ -359,16 +359,6 @@
             color: white;
         }
 
-        .btn-danger {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
-            color: white;
-        }
-
-        .btn-info {
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
-            color: #1a1a2e;
-        }
-
         .btn-powershell {
             background: linear-gradient(135deg, #764ba2, #667eea);
             color: white;
@@ -376,7 +366,7 @@
 
         .btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
         .btn:disabled {
@@ -384,19 +374,40 @@
             cursor: not-allowed;
         }
 
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid currentColor;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        /* FORMULÁRIOS */
+        .form-group {
+            margin-bottom: 20px;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            min-height: 150px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            resize: vertical;
         }
 
         /* JSON INPUT */
@@ -491,9 +502,9 @@
         .alert-success { background: #d4edda; border-color: #28a745; color: #155724; }
         .alert-error { background: #f8d7da; border-color: #dc3545; color: #721c24; }
         .alert-info { background: #e7f3ff; border-color: #667eea; color: #004085; }
-        .alert-warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
         .alert-powershell { background: #f3e5f5; border-color: #764ba2; color: #4a148c; }
 
+        /* EMPTY STATE */
         .empty-state {
             text-align: center;
             padding: 40px;
@@ -505,7 +516,40 @@
             margin-bottom: 15px;
         }
 
-        /* ESTILOS POWERSHELL - COMO ESTAVA ANTES */
+        /* LOADING */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* SEÇÃO AUTOMÁTICA */
+        .secao-automatica {
+            border-top: 3px dashed #dee2e6;
+            padding-top: 30px;
+            margin-top: 30px;
+        }
+
+        .secao-titulo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* POWERSHELL SECTION */
         .powershell-section {
             background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
             border: 2px solid #764ba2;
@@ -586,37 +630,12 @@
             background: #f8f9fa;
         }
 
-        .transport-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-
-        .transport-correios { background: #ffd700; color: #333; }
-        .transport-jadlog { background: #ff6b35; color: white; }
-        .transport-jet { background: #4ecdc4; color: white; }
-
-        .tracking-code {
-            font-family: 'Consolas', monospace;
-            background: #e9ecef;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.9em;
-        }
-
         .conciliacao-box-unified {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 25px;
             border-radius: 16px;
             margin-bottom: 30px;
-        }
-
-        .conciliacao-box-unified h3 {
-            margin-bottom: 15px;
-            font-size: 1.3em;
         }
 
         .conciliacao-stats-unified {
@@ -645,52 +664,43 @@
             margin-top: 5px;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+        .tracking-code {
+            font-family: 'Consolas', monospace;
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
         }
 
-        .stat-card {
-            background: white;
-            border-radius: 15px;
+        .section {
+            background: #f8f9fa;
+            border-radius: 16px;
             padding: 25px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border: 2px solid #e9ecef;
-            transition: transform 0.3s;
+            margin-bottom: 25px;
         }
 
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-card .stat-number {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #764ba2;
-            margin-bottom: 10px;
-        }
-
-        .stat-card .stat-label {
-            color: #6c757d;
-            font-size: 1.1em;
-            font-weight: 500;
+        .section-title {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🔄 Conciliador de Entregas Unificado</h1>
-        <p class="subtitle">SuperFrete + Supabase | Modo Manual, Automático e PowerShell</p>
+        <p class="subtitle">SuperFrete + Supabase | Modo Manual + PowerShell Automatizado</p>
 
-        <!-- TABS PRINCIPAIS -->
+        <!-- TABS -->
         <div class="tabs-container">
             <button class="tab-btn active" onclick="switchTab('config')">⚙️ Configuração</button>
             <button class="tab-btn" onclick="switchTab('manual')">🖱️ Conciliação Manual</button>
             <button class="tab-btn" onclick="switchTab('auto')">🤖 Conciliação Automática</button>
-            <button class="tab-btn" onclick="switchTab('powershell')">💻 PowerShell Auto</button>
+            <button class="tab-btn btn-powershell" onclick="switchTab('powershell')">💻 PowerShell Auto</button>
         </div>
 
         <!-- TAB CONFIGURAÇÃO -->
@@ -803,35 +813,25 @@ Exemplo: {"data": [{"order_id": "...", "to": {"name": "..."}, ...}]}'></textarea
 
         <!-- TAB CONCILIAÇÃO AUTOMÁTICA -->
         <div id="tab-auto" class="tab-content">
-            <div class="stats-grid" id="statsAuto" style="display: none;">
-                <div class="stat-card">
-                    <div class="stat-number" id="statPendentes">0</div>
-                    <div class="stat-label">Pendentes</div>
+            <div class="secao-automatica">
+                <div class="secao-titulo">🤖 Conciliação Automática por Nome</div>
+                
+                <div id="resultadoAuto" style="margin-bottom: 20px;"></div>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn btn-success" onclick="executarConciliacaoAuto()">
+                        ⚡ Executar Match Automático
+                    </button>
+                    <button class="btn btn-primary" onclick="conciliarTodosAuto()">
+                        💾 Conciliar Todos Encontrados
+                    </button>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="statEncontrados" style="color: #28a745;">0</div>
-                    <div class="stat-label">Encontrados</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="statNaoEncontrados" style="color: #ffc107;">0</div>
-                    <div class="stat-label">Não Encontrados</div>
-                </div>
-            </div>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button class="btn btn-success" onclick="executarConciliacaoAuto()">
-                    ⚡ Executar Match Automático
-                </button>
-                <button class="btn btn-primary" onclick="conciliarTodosAuto()">
-                    💾 Conciliar Todos Encontrados
-                </button>
+                <div id="listaAuto"></div>
             </div>
-
-            <div id="resultadoAuto"></div>
-            <div id="listaAuto"></div>
         </div>
 
-        <!-- TAB POWERSHELL - COMO ESTAVA ANTES -->
+        <!-- TAB POWERSHELL -->
         <div id="tab-powershell" class="tab-content">
             <div class="powershell-section">
                 <div class="section-title">💻 Automação PowerShell</div>
@@ -840,30 +840,28 @@ Exemplo: {"data": [{"order_id": "...", "to": {"name": "..."}, ...}]}'></textarea
                     <strong>🚀 Modo Automatizado:</strong> Gere um script PowerShell que executa a conciliação diretamente no servidor, atualizando status automaticamente.
                 </div>
 
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 8px; color: #444; font-weight: 600; font-size: 14px;">URL do Supabase:</label>
-                    <input type="text" id="sbUrl" value="https://ytnfjzngalfapfnbobfm.supabase.co" readonly 
-                           style="width: 100%; padding: 14px 16px; border: 2px solid #e8e8e8; border-radius: 12px; font-size: 15px;">
+                <div class="form-group">
+                    <label>URL do Supabase:</label>
+                    <input type="text" id="sbUrl" value="https://ytnfjzngalfapfnbobfm.supabase.co" readonly>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 8px; color: #444; font-weight: 600; font-size: 14px;">Service Role Key:</label>
-                    <input type="password" id="sbKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUwOTgyOSwiZXhwIjoyMDg5MDg1ODI5fQ.OAncCiV4qtdhCTDaVFqjWFh6llf5qSkNN8ZQV4dLaxs" readonly 
-                           style="width: 100%; padding: 14px 16px; border: 2px solid #e8e8e8; border-radius: 12px; font-size: 15px;">
+                <div class="form-group">
+                    <label>Service Role Key:</label>
+                    <input type="password" id="sbKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUwOTgyOSwiZXhwIjoyMDg5MDg1ODI5fQ.OAncCiV4qtdhCTDaVFqjWFh6llf5qSkNN8ZQV4dLaxs" readonly>
                 </div>
 
                 <button class="btn btn-powershell" onclick="gerarPowerShell()">🔄 Gerar Script de Conciliação</button>
                 
                 <div class="code-preview" id="psCodeContainer" style="display: none;">
                     <button class="copy-btn" onclick="copyPowerShell()">📋 Copiar Script</button>
-                    <pre id="psCode" style="margin: 0; white-space: pre-wrap;"></pre>
+                    <pre id="psCode"></pre>
                 </div>
 
                 <div style="margin-top: 30px; border-top: 2px dashed #764ba2; padding-top: 20px;">
                     <h4 style="color: #764ba2; margin-bottom: 15px;">📊 Processar Resultado do PowerShell</h4>
                     
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 8px; color: #444; font-weight: 600; font-size: 14px;">Cole o JSON de resultado:</label>
+                    <div class="form-group">
+                        <label>Cole o JSON de resultado:</label>
                         <textarea id="jsonInputPowerShell" placeholder='{
   "data_verificacao": "2026-03-25 10:00:00",
   "conciliacao": {
@@ -871,12 +869,12 @@ Exemplo: {"data": [{"order_id": "...", "to": {"name": "..."}, ...}]}'></textarea
     "atualizados": 20,
     "nao_conciliados": 6
   }
-}' style="width: 100%; min-height: 150px; padding: 15px; border: 2px solid #e8e8e8; border-radius: 12px; font-family: 'Consolas', monospace; font-size: 13px; resize: vertical;"></textarea>
+}' style="min-height: 150px;"></textarea>
                     </div>
                     
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button class="btn btn-powershell" onclick="processarJSONPowerShell()">⚙️ Processar Resultado</button>
-                        <button class="btn btn-info" onclick="colarClipboardPowerShell()">📋 Colar do Clipboard</button>
+                        <button class="btn btn-primary" onclick="colarClipboardPowerShell()">📋 Colar do Clipboard</button>
                         <button class="btn btn-warning" onclick="limparResultadoPowerShell()">🗑️ Limpar</button>
                     </div>
                     
@@ -912,7 +910,6 @@ Exemplo: {"data": [{"order_id": "...", "to": {"name": "..."}, ...}]}'></textarea
 
         let rastreamentosExistentes = [];
         let cleanPowerShellCode = '';
-        let matchesAuto = [];
 
         // ============================================
         // INICIALIZAÇÃO
@@ -1370,14 +1367,23 @@ Exemplo: {"data": [{"order_id": "...", "to": {"name": "..."}, ...}]}'></textarea
                 }
             });
 
-            // Atualizar stats
-            document.getElementById('statsAuto').style.display = 'grid';
-            document.getElementById('statPendentes').textContent = pendentes.length;
-            document.getElementById('statEncontrados').textContent = encontrados.length;
-            document.getElementById('statNaoEncontrados').textContent = naoEncontrados.length;
+            let html = `
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 32px; font-weight: bold; color: #667eea;">${pendentes.length}</div>
+                        <div style="color: #666;">Pendentes</div>
+                    </div>
+                    <div style="background: #d4edda; padding: 20px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 32px; font-weight: bold; color: #155724;">${encontrados.length}</div>
+                        <div style="color: #155724;">Encontrados</div>
+                    </div>
+                    <div style="background: #fff3cd; padding: 20px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 32px; font-weight: bold; color: #856404;">${naoEncontrados.length}</div>
+                        <div style="color: #856404;">Não Encontrados</div>
+                    </div>
+                </div>
+            `;
 
-            // Renderizar resultados
-            let html = '';
             if (encontrados.length > 0) {
                 html += '<h4 style="margin-bottom: 15px;">✅ Matches Encontrados:</h4>';
                 html += '<div style="display: grid; gap: 10px;">';
@@ -1403,21 +1409,21 @@ Exemplo: {"data": [{"order_id": "...", "to": {"name": "..."}, ...}]}'></textarea
             }
 
             document.getElementById('resultadoAuto').innerHTML = html;
-            matchesAuto = encontrados;
+            window.matchesAuto = encontrados;
         }
 
         async function conciliarTodosAuto() {
-            if (!matchesAuto || matchesAuto.length === 0) {
+            if (!window.matchesAuto || window.matchesAuto.length === 0) {
                 alert('Execute o match automático primeiro!');
                 return;
             }
 
-            if (!confirm(`Conciliar ${matchesAuto.length} solicitações automaticamente?`)) return;
+            if (!confirm(`Conciliar ${window.matchesAuto.length} solicitações automaticamente?`)) return;
 
             let sucessos = 0;
             let erros = 0;
 
-            for (const match of matchesAuto) {
+            for (const match of window.matchesAuto) {
                 try {
                     const sol = match.solicitacao;
                     const etq = match.etiqueta;
@@ -1457,7 +1463,7 @@ Exemplo: {"data": [{"order_id": "...", "to": {"name": "..."}, ...}]}'></textarea
         }
 
         // ============================================
-        // POWERSHELL - COMO ESTAVA ANTES
+        // POWERSHELL
         // ============================================
         function gerarPowerShell() {
             const url = document.getElementById('sbUrl').value;
@@ -1661,7 +1667,6 @@ Write-Host "✅ JSON copiado para área de transferência!" -ForegroundColor Gre
                 const conciliacao = data.conciliacao || {};
                 const detalhesAtualizados = conciliacao.detalhes_atualizados || [];
 
-                // Box de resumo
                 if (conciliacao.total_processado !== undefined) {
                     html += `
                         <div class="conciliacao-box-unified">
@@ -1684,7 +1689,6 @@ Write-Host "✅ JSON copiado para área de transferência!" -ForegroundColor Gre
                     `;
                 }
 
-                // Tabela de detalhes
                 if (detalhesAtualizados.length > 0) {
                     html += '<h4 style="color: #764ba2; margin-bottom: 15px;">✅ Detalhes das Atualizações</h4>';
                     html += '<div style="overflow-x: auto;">';
