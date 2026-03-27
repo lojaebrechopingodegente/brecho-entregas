@@ -6,621 +6,102 @@
     <title>Registro de Vendas - Live</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            max-height: 70vh;
-            overflow-y: auto;
-            margin-bottom: 30px;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
-        th {
-            background: #f8f9fa;
-            color: #495057;
-            font-weight: 600;
-            padding: 12px 8px;
-            text-align: left;
-            border-bottom: 2px solid #dee2e6;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        td {
-            padding: 8px;
-            border-bottom: 1px solid #dee2e6;
-            position: relative;
-        }
-
-        tr:hover {
-            background: #f8f9fa;
-        }
-
-        input {
-            width: 100%;
-            padding: 6px 8px;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
-            font-size: 13px;
-            transition: all 0.3s ease;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
-        }
-
-        input.saving {
-            border-color: #ffc107;
-            background: #fff3cd;
-        }
-
-        input.saved {
-            border-color: #28a745;
-            background: #d4edda;
-        }
-
-        input:disabled, input[readonly] {
-            background: #e9ecef;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-
-        .valor-input {
-            text-align: right;
-            font-weight: 600;
-        }
-
-        .autocomplete-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .autocomplete-container input {
-            flex: 1;
-        }
-
-        .mic-btn {
-            background: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 6px 8px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            min-width: 32px;
-        }
-
-        .mic-btn:hover {
-            background: #5a6268;
-        }
-
-        .mic-btn:disabled {
-            background: #adb5bd;
-            cursor: not-allowed;
-        }
-
-        .mic-btn.recording {
-            background: #dc3545;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        .mic-btn.recording::before {
-            content: "🔴";
-        }
-
-        .suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-        }
-
-        .suggestions.active {
-            display: block;
-        }
-
-        .suggestion-item {
-            padding: 8px 10px;
-            cursor: pointer;
-            border-bottom: 1px solid #f1f3f4;
-            transition: background 0.2s;
-            font-size: 13px;
-        }
-
-        .suggestion-item:hover,
-        .suggestion-item.selected {
-            background: #667eea;
-            color: white;
-        }
-
-        .suggestion-item.selected .suggestion-secondary {
-            color: rgba(255,255,255,0.8);
-        }
-
-        .suggestion-item .suggestion-main {
-            font-weight: 600;
-            color: #333;
-        }
-
-        .suggestion-item:hover .suggestion-main,
-        .suggestion-item.selected .suggestion-main {
-            color: white;
-        }
-
-        .suggestion-item .suggestion-secondary {
-            font-size: 11px;
-            color: #666;
-            margin-top: 2px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin-right: 10px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            color: #212529;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        .btn-info {
-            background: #17a2b8;
-            color: white;
-        }
-
-        .btn-purple {
-            background: #6f42c1;
-            color: white;
-        }
-
-        .btn-purple:hover {
-            background: #5a32a3;
-        }
-
-        .btn-orange {
-            background: #fd7e14;
-            color: white;
-        }
-
-        .btn-orange:hover {
-            background: #e56b0a;
-        }
-
-        .btn-dark {
-            background: #343a40;
-            color: white;
-        }
-
-        .btn-dark:hover {
-            background: #23272b;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn:disabled {
-            background: #adb5bd;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-
-        .actions {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .config-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .config-section h3 {
-            margin-bottom: 15px;
-            color: #495057;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #495057;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #dee2e6;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .form-group input:focus {
-            border-color: #667eea;
-            outline: none;
-        }
-
-        .status-message {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            display: none;
-            animation: slideUp 0.3s ease;
-            z-index: 3000;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .status-message.success {
-            background: #28a745;
-            display: block;
-        }
-
-        .status-message.error {
-            background: #dc3545;
-            display: block;
-        }
-
-        .status-message.info {
-            background: #17a2b8;
-            display: block;
-        }
-
-        .item-number {
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .delete-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
-            cursor: pointer;
-            font-size: 11px;
-        }
-
-        .delete-btn:disabled {
-            background: #adb5bd;
-            cursor: not-allowed;
-        }
-
-        .info-text {
-            color: #6c757d;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-
-        .sql-box {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 15px;
-            margin-top: 10px;
-            font-family: monospace;
-            font-size: 12px;
-            white-space: pre-wrap;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .date-selector {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 2px solid #667eea;
-        }
-
-        .date-selector h3 {
-            margin-bottom: 15px;
-            color: #495057;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .date-input-group {
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-            flex-wrap: wrap;
-        }
-
-        .date-input-group .form-group {
-            margin-bottom: 0;
-        }
-
-        .date-input-group input[type="date"] {
-            padding: 10px 15px;
-            font-size: 16px;
-            border: 2px solid #667eea;
-            border-radius: 6px;
-            min-width: 200px;
-        }
-
-        .live-info {
-            background: #d4edda;
-            border: 1px solid #28a745;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .live-info.bloqueada {
-            background: #fff3cd;
-            border-color: #ffc107;
-        }
-
-        .live-info.bloqueada h4,
-        .live-info.bloqueada p {
-            color: #856404;
-        }
-
-        .live-info h4 {
-            color: #155724;
-            margin: 0;
-        }
-
-        .live-info p {
-            color: #155724;
-            margin: 5px 0 0 0;
-            font-size: 14px;
-        }
-
-        .change-date-btn {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        .change-date-btn:hover {
-            background: #5a6268;
-        }
-
-        .voice-hint {
-            font-size: 11px;
-            color: #6c757d;
-            margin-left: 5px;
-        }
-
-        .confirm-dialog {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 4000;
-        }
-
-        .confirm-dialog.active {
-            display: flex;
-        }
-
-        .confirm-box {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            max-width: 500px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        .confirm-box h3 {
-            color: #dc3545;
-            margin-bottom: 15px;
-        }
-
-        .confirm-box p {
-            margin-bottom: 25px;
-            color: #495057;
-            line-height: 1.5;
-        }
-
-        .confirm-box .btn {
-            margin: 0 10px;
-        }
-
-        .venda-dialog, .cliente-dialog {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 4000;
-        }
-
-        .venda-dialog.active, .cliente-dialog.active {
-            display: flex;
-        }
-
-        .venda-box, .cliente-box {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        .venda-box h3, .cliente-box h3 {
-            margin-bottom: 20px;
-            color: #495057;
-            text-align: center;
-        }
-
-        .venda-info {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .venda-info p {
-            margin: 5px 0;
-            color: #495057;
-        }
-
-        .venda-info strong {
-            color: #667eea;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 15px;
-        }
-
-        .form-row .form-group {
-            flex: 1;
-        }
-
-        .sugestao-cadastro {
-            background: #e7f3ff;
-            border: 1px solid #667eea;
-            border-radius: 6px;
-            padding: 10px;
-            margin-top: 10px;
-            cursor: pointer;
-            text-align: center;
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .sugestao-cadastro:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        .campo-opcional {
-            color: #6c757d;
-            font-size: 12px;
-            font-weight: normal;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 2rem; margin-bottom: 10px; }
+        .content { padding: 30px; }
+        .table-container { overflow-x: auto; max-height: 70vh; overflow-y: auto; margin-bottom: 30px; border: 1px solid #dee2e6; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #f8f9fa; color: #495057; font-weight: 600; padding: 12px 8px; text-align: left; border-bottom: 2px solid #dee2e6; position: sticky; top: 0; z-index: 10; }
+        td { padding: 8px; border-bottom: 1px solid #dee2e6; position: relative; }
+        tr:hover { background: #f8f9fa; }
+        input { width: 100%; padding: 6px 8px; border: 1px solid #e9ecef; border-radius: 4px; font-size: 13px; transition: all 0.3s ease; }
+        input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1); }
+        input.saving { border-color: #ffc107; background: #fff3cd; }
+        input.saved { border-color: #28a745; background: #d4edda; }
+        input:disabled, input[readonly] { background: #e9ecef; cursor: not-allowed; opacity: 0.7; }
+        .valor-input { text-align: right; font-weight: 600; }
+        .autocomplete-container { position: relative; display: flex; align-items: center; gap: 4px; }
+        .autocomplete-container input { flex: 1; }
+        .mic-btn { background: #6c757d; color: white; border: none; border-radius: 4px; padding: 6px 8px; cursor: pointer; font-size: 14px; transition: all 0.3s ease; min-width: 32px; }
+        .mic-btn:hover { background: #5a6268; }
+        .mic-btn:disabled { background: #adb5bd; cursor: not-allowed; }
+        .mic-btn.recording { background: #dc3545; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .mic-btn.recording::before { content: "🔴"; }
+        .suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #dee2e6; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 200px; overflow-y: auto; z-index: 1000; display: none; }
+        .suggestions.active { display: block; }
+        .suggestion-item { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #f1f3f4; transition: background 0.2s; font-size: 13px; }
+        .suggestion-item:hover, .suggestion-item.selected { background: #667eea; color: white; }
+        .suggestion-item.selected .suggestion-secondary { color: rgba(255,255,255,0.8); }
+        .suggestion-item .suggestion-main { font-weight: 600; color: #333; }
+        .suggestion-item:hover .suggestion-main, .suggestion-item.selected .suggestion-main { color: white; }
+        .suggestion-item .suggestion-secondary { font-size: 11px; color: #666; margin-top: 2px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease; margin-right: 10px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-purple { background: #6f42c1; color: white; }
+        .btn-purple:hover { background: #5a32a3; }
+        .btn-orange { background: #fd7e14; color: white; }
+        .btn-orange:hover { background: #e56b0a; }
+        .btn-dark { background: #343a40; color: white; }
+        .btn-dark:hover { background: #23272b; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn:disabled { background: #adb5bd; cursor: not-allowed; opacity: 0.7; }
+        .actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .config-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .config-section h3 { margin-bottom: 15px; color: #495057; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #495057; }
+        .form-group input { width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 6px; font-size: 14px; }
+        .form-group input:focus { border-color: #667eea; outline: none; }
+        .status-message { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; font-weight: 600; display: none; animation: slideUp 0.3s ease; z-index: 3000; }
+        @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .status-message.success { background: #28a745; display: block; }
+        .status-message.error { background: #dc3545; display: block; }
+        .status-message.info { background: #17a2b8; display: block; }
+        .item-number { font-weight: bold; color: #667eea; }
+        .delete-btn { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px; }
+        .delete-btn:disabled { background: #adb5bd; cursor: not-allowed; }
+        .info-text { color: #6c757d; font-size: 12px; margin-top: 5px; }
+        .sql-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 15px; margin-top: 10px; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+        .date-selector { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #667eea; }
+        .date-selector h3 { margin-bottom: 15px; color: #495057; display: flex; align-items: center; gap: 10px; }
+        .date-input-group { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+        .date-input-group .form-group { margin-bottom: 0; }
+        .date-input-group input[type="date"] { padding: 10px 15px; font-size: 16px; border: 2px solid #667eea; border-radius: 6px; min-width: 200px; }
+        .live-info { background: #d4edda; border: 1px solid #28a745; border-radius: 6px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .live-info.bloqueada { background: #fff3cd; border-color: #ffc107; }
+        .live-info.bloqueada h4, .live-info.bloqueada p { color: #856404; }
+        .live-info h4 { color: #155724; margin: 0; }
+        .live-info p { color: #155724; margin: 5px 0 0 0; font-size: 14px; }
+        .change-date-btn { background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .change-date-btn:hover { background: #5a6268; }
+        .voice-hint { font-size: 11px; color: #6c757d; margin-left: 5px; }
+        .confirm-dialog { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 4000; }
+        .confirm-dialog.active { display: flex; }
+        .confirm-box { background: white; padding: 30px; border-radius: 12px; max-width: 500px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .confirm-box h3 { color: #dc3545; margin-bottom: 15px; }
+        .confirm-box p { margin-bottom: 25px; color: #495057; line-height: 1.5; }
+        .confirm-box .btn { margin: 0 10px; }
+        .venda-dialog, .cliente-dialog { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 4000; }
+        .venda-dialog.active, .cliente-dialog.active { display: flex; }
+        .venda-box, .cliente-box { background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .venda-box h3, .cliente-box h3 { margin-bottom: 20px; color: #495057; text-align: center; }
+        .venda-info { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .venda-info p { margin: 5px 0; color: #495057; }
+        .venda-info strong { color: #667eea; }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+        .sugestao-cadastro { background: #e7f3ff; border: 1px solid #667eea; border-radius: 6px; padding: 10px; margin-top: 10px; cursor: pointer; text-align: center; color: #667eea; font-weight: 600; }
+        .sugestao-cadastro:hover { background: #667eea; color: white; }
+        .campo-opcional { color: #6c757d; font-size: 12px; font-weight: normal; }
     </style>
 <base target="_blank">
 </head>
@@ -630,7 +111,6 @@
             <h1>🛍️ Registro de Vendas - Live</h1>
             <p>Gerencie suas vendas em tempo real por data</p>
         </div>
-
         <div class="content">
             <div class="config-section" id="configSection">
                 <h3>🔧 Configuração do Supabase</h3>
@@ -643,7 +123,6 @@
                     <input type="password" id="supabaseKey" placeholder="sua-chave-anon">
                 </div>
                 <button class="btn btn-primary" onclick="conectarSupabase()">Conectar</button>
-
                 <div id="sqlHelper" style="display: none; margin-top: 20px;">
                     <p style="color: #dc3545; font-weight: bold;">⚠️ Execute este SQL no Editor do Supabase primeiro:</p>
                     <div class="sql-box">create table if not exists vendas_live (
@@ -660,13 +139,11 @@
     updated_at timestamp with time zone default timezone('utc'::text, now()),
     bloqueada boolean default false
 );
-
 create index if not exists idx_vendas_live_linha on vendas_live(linha_id);
 create index if not exists idx_vendas_live_data on vendas_live(data_live);
 create index if not exists idx_vendas_live_comprador on vendas_live(comprador);</div>
                 </div>
             </div>
-
             <div id="dateSelectorSection" style="display: none;">
                 <div class="date-selector">
                     <h3>📅 Selecione a Data da Live</h3>
@@ -677,12 +154,9 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                         </div>
                         <button class="btn btn-primary" onclick="iniciarLive()">Iniciar Cadastro</button>
                     </div>
-                    <p class="info-text" style="margin-top: 10px;">
-                        💡 Cada data representa uma live diferente. Ao selecionar uma nova data, você terá uma tela em branco para novo cadastro.
-                    </p>
+                    <p class="info-text" style="margin-top: 10px;">💡 Cada data representa uma live diferente.</p>
                 </div>
             </div>
-
             <div id="appSection" style="display: none;">
                 <div class="live-info" id="liveInfoBanner">
                     <div>
@@ -691,11 +165,10 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                         <p id="statusLive" style="font-weight: bold; color: #28a745;"></p>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-secondary" onclick="sanitizarDuplicados()" title="Limpar duplicados no banco">🧹 Limpar Duplicados</button>
+                        <button class="btn btn-secondary" onclick="sanitizarDuplicados()">🧹 Limpar Duplicados</button>
                         <button class="change-date-btn" onclick="trocarData()">🔄 Trocar Data</button>
                     </div>
                 </div>
-
                 <div class="actions">
                     <button class="btn btn-primary" id="btnAdicionar" onclick="adicionarLinha()">+ Adicionar Item</button>
                     <button class="btn btn-success" onclick="gerarRelatorioNovaAba()">📄 Ver Relatório</button>
@@ -704,19 +177,11 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     <button class="btn btn-dark" id="btnAlterar" onclick="alterarLive()" style="display: none;">✏️ Alterar Live</button>
                     <button class="btn btn-danger" id="btnResetar" onclick="confirmarResetarLive()">🗑️ Resetar Live</button>
                 </div>
-                <p class="info-text">* Pressione ENTER para navegar entre os campos. Use ↑↓ para navegar nas sugestões. Clique no 🎤 para comando de voz.</p>
-
+                <p class="info-text">* Pressione ENTER para navegar. Use ↑↓ para sugestões. 🎤 para voz.</p>
                 <div class="table-container">
                     <table id="vendasTable">
                         <thead>
-                            <tr>
-                                <th style="width: 50px;">Item</th>
-                                <th style="width: 100px;">Valor</th>
-                                <th style="width: 100px;">Código</th>
-                                <th>Comprador <span class="voice-hint">🎤</span></th>
-                                <th>Fila <span class="voice-hint">🎤</span></th>
-                                <th style="width: 80px;">Ações</th>
-                            </tr>
+                            <tr><th style="width: 50px;">Item</th><th style="width: 100px;">Valor</th><th style="width: 100px;">Código</th><th>Comprador <span class="voice-hint">🎤</span></th><th>Fila <span class="voice-hint">🎤</span></th><th style="width: 80px;">Ações</th></tr>
                         </thead>
                         <tbody id="vendasBody"></tbody>
                     </table>
@@ -724,76 +189,45 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             </div>
         </div>
     </div>
-
     <div class="status-message" id="statusMessage"></div>
-
-    <!-- Dialog de Confirmação para Resetar -->
     <div class="confirm-dialog" id="confirmResetDialog">
         <div class="confirm-box">
             <h3>⚠️ Atenção!</h3>
-            <p id="confirmResetText">Tem certeza que deseja resetar esta live?<br>Todos os <strong>0 itens</strong> serão permanentemente apagados.<br>Esta ação não pode ser desfeita!</p>
+            <p id="confirmResetText">Tem certeza?</p>
             <div>
-                <button class="btn btn-secondary" onclick="fecharConfirmReset()" style="background: #6c757d; color: white;">Cancelar</button>
-                <button class="btn btn-danger" onclick="executarResetarLive()">Sim, Resetar Tudo</button>
+                <button class="btn btn-secondary" onclick="fecharConfirmReset()">Cancelar</button>
+                <button class="btn btn-danger" onclick="executarResetarLive()">Sim, Resetar</button>
             </div>
         </div>
     </div>
-
-    <!-- Dialog de Confirmação para Registrar Venda -->
     <div class="venda-dialog" id="vendaDialog">
         <div class="venda-box">
-            <h3>💰 Confirmar Registro de Venda</h3>
-            <div class="venda-info" id="vendaInfo">
-                <!-- Preenchido dinamicamente -->
-            </div>
+            <h3>💰 Confirmar Registro</h3>
+            <div class="venda-info" id="vendaInfo"></div>
             <div style="text-align: center;">
-                <button class="btn btn-secondary" onclick="fecharVendaDialog()" style="background: #6c757d; color: white; margin-right: 10px;">Cancelar</button>
-                <button class="btn btn-success" onclick="executarRegistrarVenda()">Confirmar Registro</button>
+                <button class="btn btn-secondary" onclick="fecharVendaDialog()">Cancelar</button>
+                <button class="btn btn-success" onclick="executarRegistrarVenda()">Confirmar</button>
             </div>
         </div>
     </div>
-
-    <!-- Dialog para Cadastrar Novo Cliente -->
     <div class="cliente-dialog" id="clienteDialog">
         <div class="cliente-box">
-            <h3>👤 Cadastrar Novo Cliente</h3>
-            <p style="text-align: center; color: #6c757d; margin-bottom: 20px;">O nome "<strong id="novoClienteNome"></strong>" não foi encontrado. Cadastre-o:</p>
-
-            <div class="form-group">
-                <label>Nome Completo *</label>
-                <input type="text" id="clienteNome" placeholder="Nome do cliente">
-            </div>
-
-            <div class="form-group">
-                <label>CPF <span class="campo-opcional">(opcional)</span></label>
-                <input type="text" id="clienteCpf" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)">
-            </div>
-
+            <h3>👤 Cadastrar Cliente</h3>
+            <p style="text-align: center; color: #6c757d;">"<strong id="novoClienteNome"></strong>" não encontrado.</p>
+            <div class="form-group"><label>Nome *</label><input type="text" id="clienteNome"></div>
+            <div class="form-group"><label>CPF <span class="campo-opcional">(opcional)</span></label><input type="text" id="clienteCpf" maxlength="14" oninput="mascaraCPF(this)"></div>
             <div class="form-row">
-                <div class="form-group">
-                    <label>WhatsApp</label>
-                    <input type="text" id="clienteWhatsapp" placeholder="(00) 00000-0000">
-                </div>
-                <div class="form-group">
-                    <label>Instagram</label>
-                    <input type="text" id="clienteInstagram" placeholder="@usuario">
-                </div>
+                <div class="form-group"><label>WhatsApp</label><input type="text" id="clienteWhatsapp"></div>
+                <div class="form-group"><label>Instagram</label><input type="text" id="clienteInstagram"></div>
             </div>
-
-            <div class="form-group">
-                <label>E-mail</label>
-                <input type="email" id="clienteEmail" placeholder="email@exemplo.com">
-            </div>
-
+            <div class="form-group"><label>E-mail</label><input type="email" id="clienteEmail"></div>
             <div style="text-align: center; margin-top: 20px;">
-                <button class="btn btn-secondary" onclick="fecharClienteDialog()" style="background: #6c757d; color: white; margin-right: 10px;">Cancelar</button>
-                <button class="btn btn-success" onclick="salvarNovoCliente()">Cadastrar Cliente</button>
+                <button class="btn btn-secondary" onclick="fecharClienteDialog()">Cancelar</button>
+                <button class="btn btn-success" onclick="salvarNovoCliente()">Cadastrar</button>
             </div>
         </div>
     </div>
-
     <script>
-
         let supabaseClient = null;
         let clientes = [];
         let vendas = [];
@@ -814,38 +248,30 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 recognition.lang = 'pt-BR';
                 recognition.continuous = false;
                 recognition.interimResults = false;
-
                 recognition.onresult = (event) => {
                     const transcript = event.results[0][0].transcript;
                     if (activeInput) {
                         activeInput.value = transcript;
                         activeInput.dispatchEvent(new Event('input'));
-
                         setTimeout(() => {
                             const linhaId = activeInput.id.split('-')[1];
                             const tipoCampo = activeInput.id.split('-')[0];
                             const sugestoesDiv = document.getElementById(`sugestoes-${tipoCampo}-${linhaId}`);
                             if (sugestoesDiv && sugestoesDiv.classList.contains('active')) {
                                 const primeiraSugestao = sugestoesDiv.querySelector('.suggestion-item');
-                                if (primeiraSugestao) {
-                                    primeiraSugestao.click();
-                                }
+                                if (primeiraSugestao) primeiraSugestao.click();
                             }
                             salvarVenda(linhaId);
                         }, 100);
                     }
                     pararGravacao();
                 };
-
                 recognition.onerror = (event) => {
                     console.error('Erro no reconhecimento:', event.error);
                     showStatus('Erro no reconhecimento de voz: ' + event.error, 'error');
                     pararGravacao();
                 };
-
-                recognition.onend = () => {
-                    pararGravacao();
-                };
+                recognition.onend = () => pararGravacao();
             }
         }
 
@@ -854,14 +280,12 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 showStatus('Seu navegador não suporta reconhecimento de voz', 'error');
                 return;
             }
-
             activeInput = input;
             btn.classList.add('recording');
             btn.innerHTML = '🔴';
-
             try {
                 recognition.start();
-                showStatus('🎤 Ouvindo... Fale o nome do comprador', 'info');
+                showStatus('🎤 Ouvindo...', 'info');
             } catch (e) {
                 console.error('Erro ao iniciar:', e);
                 pararGravacao();
@@ -870,9 +294,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
         function pararGravacao() {
             if (recognition) {
-                try {
-                    recognition.stop();
-                } catch (e) {}
+                try { recognition.stop(); } catch (e) {}
             }
             document.querySelectorAll('.mic-btn').forEach(btn => {
                 btn.classList.remove('recording');
@@ -890,141 +312,95 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         async function conectarSupabase() {
             const url = document.getElementById('supabaseUrl').value.trim();
             const key = document.getElementById('supabaseKey').value.trim();
-
             if (!url || !key) {
-                showStatus('Preencha URL e chave do Supabase!', 'error');
+                showStatus('Preencha URL e chave!', 'error');
                 return;
             }
-
             try {
-                console.log('Tentando conectar...', url);
-
                 const { createClient } = supabase;
                 supabaseClient = createClient(url, key);
-
-                const { data, error } = await supabaseClient
-                    .from('clientes_pg')
-                    .select('*')
-                    .limit(1);
-
-                if (error) {
-                    console.error('Erro ao buscar clientes:', error);
-                    throw new Error('Erro na tabela clientes_pg: ' + error.message);
-                }
-
-                console.log('Conexão OK, carregando clientes...');
+                const { data, error } = await supabaseClient.from('clientes_pg').select('*').limit(1);
+                if (error) throw new Error('Erro na tabela clientes_pg: ' + error.message);
                 await carregarClientes();
-
-                console.log('Verificando tabela vendas_live...');
-                const { error: vendasError } = await supabaseClient
-                    .from('vendas_live')
-                    .select('id')
-                    .limit(1);
-
-                if (vendasError) {
-                    console.error('Erro vendas_live:', vendasError);
-                    if (vendasError.message && vendasError.message.includes('does not exist')) {
-                        document.getElementById('sqlHelper').style.display = 'block';
-                        showStatus('Crie a tabela vendas_live primeiro (veja o SQL abaixo)', 'error');
-                        return;
-                    }
+                const { error: vendasError } = await supabaseClient.from('vendas_live').select('id').limit(1);
+                if (vendasError && vendasError.message.includes('does not exist')) {
+                    document.getElementById('sqlHelper').style.display = 'block';
+                    showStatus('Crie a tabela vendas_live primeiro', 'error');
+                    return;
                 }
-
-                console.log('Tudo OK! Mostrando seletor de data...');
                 document.getElementById('configSection').style.display = 'none';
                 document.getElementById('dateSelectorSection').style.display = 'block';
-
-                showStatus('Conectado com sucesso! Selecione a data da live.', 'success');
+                showStatus('Conectado!', 'success');
             } catch (error) {
-                console.error('Erro completo:', error);
-                showStatus('Erro ao conectar: ' + error.message, 'error');
+                showStatus('Erro: ' + error.message, 'error');
             }
         }
 
         async function carregarClientes() {
             try {
-                const { data, error } = await supabaseClient
-                    .from('clientes_pg')
-                    .select('*');
-
+                const { data, error } = await supabaseClient.from('clientes_pg').select('*');
                 if (error) throw error;
                 clientes = data || [];
-                console.log('Clientes carregados:', clientes.length);
             } catch (error) {
-                console.error('Erro ao carregar clientes:', error);
                 throw error;
             }
         }
 
         function iniciarLive() {
             const dataInput = document.getElementById('dataLiveInput').value;
-
             if (!dataInput) {
-                showStatus('Selecione uma data para a live!', 'error');
+                showStatus('Selecione uma data!', 'error');
                 return;
             }
-
             dataLiveAtual = dataInput;
             linhasInicializadas = false;
             liveBloqueada = false;
-
             const [ano, mes, dia] = dataInput.split('-');
-            const dataFormatada = `${dia}/${mes}/${ano}`;
-
-            document.getElementById('dataLiveDisplay').textContent = dataFormatada;
+            document.getElementById('dataLiveDisplay').textContent = `${dia}/${mes}/${ano}`;
             document.getElementById('dateSelectorSection').style.display = 'none';
             document.getElementById('appSection').style.display = 'block';
-
             carregarVendasExistentes();
-
-            showStatus(`Live do dia ${dataFormatada} iniciada!`, 'success');
         }
 
         function trocarData() {
-            if (confirm('Deseja trocar de data? Os dados atuais já estão salvos.')) {
+            if (confirm('Deseja trocar de data?')) {
                 document.getElementById('appSection').style.display = 'none';
                 document.getElementById('dateSelectorSection').style.display = 'block';
-
                 document.getElementById('vendasBody').innerHTML = '';
                 vendas = [];
                 linhaCount = 0;
                 linhasInicializadas = false;
                 liveBloqueada = false;
-
-                showStatus('Selecione uma nova data para a live.', 'info');
             }
         }
 
         function atualizarContagemItens() {
-            const linhasCompletas = vendas.filter(v => {
-                return v.valor > 0 && 
-                       v.codigo && v.codigo.trim() !== '' && 
-                       v.comprador && v.comprador.trim() !== '' && 
-                       v.fila && v.fila.trim() !== '';
-            });
+            const linhasCompletas = vendas.filter(v => v.valor > 0 && v.codigo?.trim() && v.comprador?.trim() && v.fila?.trim());
             document.getElementById('totalItens').textContent = linhasCompletas.length;
+        }
+
+        function formatarData(dataString) {
+            const [ano, mes, dia] = dataString.split('-');
+            return `${dia}/${mes}/${ano}`;
         }
 
         // ==================== FUNÇÃO CORRIGIDA ====================
         async function carregarVendasExistentes() {
             try {
-                // LIMPAR TUDO antes de carregar - evita duplicação
                 vendas = [];
                 document.getElementById('vendasBody').innerHTML = '';
-                linhaCount = 0; // RESETAR para garantir
+                linhaCount = 0;
 
-                // Verificar se a live está bloqueada
                 const { data: statusData, error: statusError } = await supabaseClient
                     .from('vendas_live')
                     .select('bloqueada')
                     .eq('data_live', dataLiveAtual)
                     .limit(1);
 
-                if (!statusError && statusData && statusData.length > 0) {
+                if (!statusError && statusData?.length > 0) {
                     liveBloqueada = statusData[0].bloqueada || false;
                 }
 
-                // Buscar registros do banco
                 const { data, error } = await supabaseClient
                     .from('vendas_live')
                     .select('*')
@@ -1032,107 +408,68 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     .order('linha_id', { ascending: true });
 
                 if (error) {
-                    console.error('Erro ao carregar vendas:', error);
+                    console.error('Erro ao carregar:', error);
                     vendas = [];
                     return;
                 }
 
-                // Filtrar apenas registros com dados relevantes
                 const dadosCarregados = (data || []).filter(v => 
-                    v.valor > 0 || 
-                    (v.comprador && v.comprador.trim() !== '') || 
-                    (v.codigo && v.codigo.trim() !== '')
+                    v.valor > 0 || v.comprador?.trim() || v.codigo?.trim()
                 );
 
-                console.log(`Vendas carregadas para ${dataLiveAtual}:`, dadosCarregados.length);
-
-                // CORREÇÃO: Remover duplicados baseado no UUID (id)
+                // Remover duplicados por UUID
                 const idsUnicos = new Set();
                 const vendasFiltradas = [];
-
                 for (const venda of dadosCarregados) {
                     if (!idsUnicos.has(venda.id)) {
                         idsUnicos.add(venda.id);
                         vendasFiltradas.push(venda);
-                    } else {
-                        console.warn('Registro duplicado ignorado:', venda.id);
                     }
                 }
 
-                // CORREÇÃO ADICIONAL: Verificar duplicados por linha_id
-                // Se mesmo linha_id aparece mais de uma vez, manter apenas o mais recente
-                const linhaIdsVistos = new Map(); // linha_id -> venda
-                const vendasUnicasPorLinha = [];
-
+                // Manter apenas o mais recente por linha_id
+                const linhaIdsVistos = new Map();
+                const vendasUnicas = [];
                 for (const venda of vendasFiltradas) {
                     if (linhaIdsVistos.has(venda.linha_id)) {
-                        // Já existe, verificar qual é mais recente
                         const existente = linhaIdsVistos.get(venda.linha_id);
                         const dataExistente = new Date(existente.updated_at || existente.created_at);
                         const dataNova = new Date(venda.updated_at || venda.created_at);
-
                         if (dataNova > dataExistente) {
-                            // Substituir pelo mais recente
-                            const index = vendasUnicasPorLinha.findIndex(v => v.linha_id === venda.linha_id);
-                            if (index !== -1) {
-                                vendasUnicasPorLinha[index] = venda;
+                            const idx = vendasUnicas.findIndex(v => v.linha_id === venda.linha_id);
+                            if (idx !== -1) {
+                                vendasUnicas[idx] = venda;
                                 linhaIdsVistos.set(venda.linha_id, venda);
                             }
                         }
                     } else {
                         linhaIdsVistos.set(venda.linha_id, venda);
-                        vendasUnicasPorLinha.push(venda);
+                        vendasUnicas.push(venda);
                     }
                 }
 
-                vendas = vendasUnicasPorLinha.sort((a, b) => a.linha_id - b.linha_id);
+                vendas = vendasUnicas.sort((a, b) => a.linha_id - b.linha_id);
 
-                // Se houver menos registros únicos que o total, limpar duplicados no banco
                 if (vendas.length < dadosCarregados.length) {
-                    console.warn(`Encontrados ${dadosCarregados.length - vendas.length} registros duplicados no banco`);
                     await limparDuplicadosNoBanco();
                 }
 
                 if (vendas.length === 0) {
-                    // Nova live - criar 150 linhas vazias
-                    for (let i = 0; i < 150; i++) {
-                        adicionarLinha();
-                    }
-                    atualizarContagemItens();
-                    showStatus('Nova live iniciada! Tela em branco pronta.', 'success');
+                    for (let i = 0; i < 150; i++) adicionarLinha();
+                    showStatus('Nova live iniciada!', 'success');
                 } else {
-                    // Live existente - criar linhas apenas para vendas válidas
-                    vendas.forEach(venda => {
-                        criarLinhaComDados(venda);
-                    });
-
-                    // CORREÇÃO: Determinar o maior linha_id para continuar sequência
+                    vendas.forEach(v => criarLinhaComDados(v));
                     const maxLinhaId = Math.max(...vendas.map(v => v.linha_id), 0);
                     linhaCount = maxLinhaId;
-
-                    // Adicionar linhas vazias até completar 150 apenas se necessário
-                    const linhasAtuais = vendas.length;
-                    if (linhasAtuais < 150) {
-                        for (let i = linhasAtuais; i < 150; i++) {
-                            adicionarLinha();
-                        }
-                    }
-
-                    atualizarContagemItens();
-                    showStatus(`Carregadas ${vendas.length} vendas do dia ${formatarData(dataLiveAtual)}`, 'success');
+                    for (let i = vendas.length; i < 150; i++) adicionarLinha();
+                    showStatus(`Carregadas ${vendas.length} vendas`, 'success');
                 }
 
-                // Aplicar estado de bloqueio
-                if (liveBloqueada) {
-                    bloquearCampos();
-                } else {
-                    liberarCampos();
-                }
-
+                liveBloqueada ? bloquearCampos() : liberarCampos();
                 linhasInicializadas = true;
-
+                atualizarContagemItens();
             } catch (error) {
-                console.error('Erro ao carregar vendas:', error);
+                console.error('Erro:', error);
                 vendas = [];
             }
         }
@@ -1140,7 +477,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
         // ==================== FUNÇÃO CORRIGIDA ====================
         async function limparDuplicadosNoBanco() {
             try {
-                // Buscar todos os registros da data atual
                 const { data, error } = await supabaseClient
                     .from('vendas_live')
                     .select('id, linha_id, updated_at, created_at')
@@ -1148,70 +484,139 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
                 if (error) return;
 
-                // Agrupar por linha_id
                 const porLinhaId = {};
-                for (const registro of data) {
-                    if (!porLinhaId[registro.linha_id]) {
-                        porLinhaId[registro.linha_id] = [];
-                    }
-                    porLinhaId[registro.linha_id].push(registro);
+                for (const reg of data) {
+                    if (!porLinhaId[reg.linha_id]) porLinhaId[reg.linha_id] = [];
+                    porLinhaId[reg.linha_id].push(reg);
                 }
 
-                const idsParaDeletar = [];
-
-                // Para cada linha_id com múltiplos registros, manter só o mais recente
-                for (const [linhaId, registros] of Object.entries(porLinhaId)) {
+                const idsDeletar = [];
+                for (const registros of Object.values(porLinhaId)) {
                     if (registros.length > 1) {
-                        // Ordenar por data (mais recente primeiro)
                         registros.sort((a, b) => {
                             const dataA = new Date(a.updated_at || a.created_at);
                             const dataB = new Date(b.updated_at || b.created_at);
                             return dataB - dataA;
                         });
-
-                        // Manter o primeiro (mais recente), deletar os outros
-                        for (let i = 1; i < registros.length; i++) {
-                            idsParaDeletar.push(registros[i].id);
-                        }
+                        for (let i = 1; i < registros.length; i++) idsDeletar.push(registros[i].id);
                     }
                 }
 
-                if (idsParaDeletar.length > 0) {
-                    console.log('Removendo duplicados no banco:', idsParaDeletar);
-                    const { error: deleteError } = await supabaseClient
-                        .from('vendas_live')
-                        .delete()
-                        .in('id', idsParaDeletar);
-
-                    if (deleteError) {
-                        console.error('Erro ao deletar duplicados:', deleteError);
-                    } else {
-                        console.log(`${idsParaDeletar.length} duplicados removidos com sucesso`);
-                    }
+                if (idsDeletar.length > 0) {
+                    await supabaseClient.from('vendas_live').delete().in('id', idsDeletar);
                 }
             } catch (e) {
-                console.error('Erro ao limpar duplicados:', e);
+                console.error('Erro ao limpar:', e);
             }
         }
 
-        // Função para sanitização manual (botão)
+        async function limparDuplicadosPorLinhaId(linhaId, manterId) {
+            try {
+                await supabaseClient
+                    .from('vendas_live')
+                    .delete()
+                    .eq('linha_id', linhaId)
+                    .eq('data_live', dataLiveAtual)
+                    .neq('id', manterId);
+            } catch (e) {
+                console.warn('Erro ao limpar duplicados da linha:', e);
+            }
+        }
+
         async function sanitizarDuplicados() {
             try {
                 showStatus('Verificando duplicados...', 'info');
                 await limparDuplicadosNoBanco();
-
-                // Recarregar a página para mostrar dados limpos
                 await carregarVendasExistentes();
-                showStatus('Duplicados removidos! Dados atualizados.', 'success');
+                showStatus('Duplicados removidos!', 'success');
             } catch (e) {
-                console.error('Erro na sanitização:', e);
-                showStatus('Erro ao sanitizar: ' + e.message, 'error');
+                showStatus('Erro: ' + e.message, 'error');
             }
         }
 
-        function formatarData(dataString) {
-            const [ano, mes, dia] = dataString.split('-');
-            return `${dia}/${mes}/${ano}`;
+        // ==================== FUNÇÃO CORRIGIDA (ERRO JSON) ====================
+        async function salvarVenda(linhaId) {
+            if (liveBloqueada) return;
+
+            const inputComprador = document.getElementById(`comprador-${linhaId}`);
+            if (inputComprador) inputComprador.classList.add('saving');
+
+            const valor = parseFloat(document.getElementById(`valor-${linhaId}`).value) || 0;
+            const codigo = document.getElementById(`codigo-${linhaId}`).value;
+            const comprador = document.getElementById(`comprador-${linhaId}`).value.trim();
+            const fila = document.getElementById(`fila-${linhaId}`).value.trim();
+
+            try {
+                // CORREÇÃO: Usar limit(1) em vez de maybeSingle()
+                const { data: existentes, error: checkError } = await supabaseClient
+                    .from('vendas_live')
+                    .select('id, updated_at')
+                    .eq('linha_id', linhaId)
+                    .eq('data_live', dataLiveAtual)
+                    .order('updated_at', { ascending: false })
+                    .limit(1);
+
+                if (checkError) throw checkError;
+
+                // Tratar como array, não objeto único
+                const existente = (existentes && existentes.length > 0) ? existentes[0] : null;
+
+                const vendaData = {
+                    linha_id: linhaId,
+                    data_live: dataLiveAtual,
+                    item: linhaId,
+                    valor: valor,
+                    codigo: codigo,
+                    comprador: comprador,
+                    fila: fila,
+                    total: valor,
+                    updated_at: new Date().toISOString()
+                };
+
+                let result;
+
+                if (existente) {
+                    // UPDATE
+                    result = await supabaseClient
+                        .from('vendas_live')
+                        .update(vendaData)
+                        .eq('id', existente.id);
+
+                    // Limpar outros duplicados desta linha
+                    await limparDuplicadosPorLinhaId(linhaId, existente.id);
+
+                    const idx = vendas.findIndex(v => v.linha_id === linhaId);
+                    if (idx !== -1) vendas[idx] = { ...vendaData, id: existente.id };
+                    else vendas.push({ ...vendaData, id: existente.id });
+                } else {
+                    // INSERT
+                    result = await supabaseClient
+                        .from('vendas_live')
+                        .insert([{ ...vendaData, created_at: new Date().toISOString(), bloqueada: false }])
+                        .select();
+
+                    if (result.data?.[0]) {
+                        const idx = vendas.findIndex(v => v.linha_id === linhaId);
+                        if (idx !== -1) vendas[idx] = result.data[0];
+                        else vendas.push(result.data[0]);
+                    }
+                }
+
+                if (result.error) throw result.error;
+
+                atualizarContagemItens();
+
+                if (inputComprador) {
+                    inputComprador.classList.remove('saving');
+                    inputComprador.classList.add('saved');
+                    setTimeout(() => inputComprador.classList.remove('saved'), 1000);
+                }
+
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+                if (inputComprador) inputComprador.classList.remove('saving');
+                showStatus('Erro ao salvar: ' + error.message, 'error');
+            }
         }
 
         function criarLinhaComDados(venda) {
@@ -1220,7 +625,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             const tr = document.createElement('tr');
             tr.id = `linha-${venda.linha_id}`;
             tr.dataset.linhaId = venda.linha_id;
-
             tr.innerHTML = `
                 <td><span class="item-number" id="numero-${venda.linha_id}">${venda.linha_id}</span></td>
                 <td><input type="number" step="0.01" class="valor-input" id="valor-${venda.linha_id}" value="${venda.valor || ''}" placeholder="0,00" onkeydown="navegarCampos(event, ${venda.linha_id}, 'valor')" onblur="salvarVenda(${venda.linha_id})" ${liveBloqueada ? 'disabled' : ''}></td>
@@ -1228,94 +632,75 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 <td>
                     <div class="autocomplete-container">
                         <input type="text" id="comprador-${venda.linha_id}" value="${venda.comprador || ''}" oninput="filtrarSugestoes(this, 'comprador')" onkeydown="navegarCamposComSugestoes(event, ${venda.linha_id}, 'comprador')" onblur="salvarVenda(${venda.linha_id})" autocomplete="off" placeholder="Nome ou Instagram" ${liveBloqueada ? 'disabled' : ''}>
-                        <button class="mic-btn" onclick="event.preventDefault(); event.stopPropagation(); iniciarGravacao(document.getElementById('comprador-${venda.linha_id}'), this)" title="Comando de voz" ${liveBloqueada ? 'disabled' : ''}>🎤</button>
+                        <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('comprador-${venda.linha_id}'), this)" ${liveBloqueada ? 'disabled' : ''}>🎤</button>
                         <div class="suggestions" id="sugestoes-comprador-${venda.linha_id}"></div>
                     </div>
                 </td>
                 <td>
                     <div class="autocomplete-container">
                         <input type="text" id="fila-${venda.linha_id}" value="${venda.fila || ''}" oninput="filtrarSugestoes(this, 'fila')" onkeydown="navegarCamposComSugestoes(event, ${venda.linha_id}, 'fila')" onblur="salvarVenda(${venda.linha_id})" autocomplete="off" placeholder="Nome ou Instagram" ${liveBloqueada ? 'disabled' : ''}>
-                        <button class="mic-btn" onclick="event.preventDefault(); event.stopPropagation(); iniciarGravacao(document.getElementById('fila-${venda.linha_id}'), this)" title="Comando de voz" ${liveBloqueada ? 'disabled' : ''}>🎤</button>
+                        <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('fila-${venda.linha_id}'), this)" ${liveBloqueada ? 'disabled' : ''}>🎤</button>
                         <div class="suggestions" id="sugestoes-fila-${venda.linha_id}"></div>
                     </div>
                 </td>
                 <td><button class="delete-btn" onclick="excluirLinha(${venda.linha_id})" ${liveBloqueada ? 'disabled' : ''}>Excluir</button></td>
             `;
-
             tbody.appendChild(tr);
         }
 
         function adicionarLinha() {
             if (liveBloqueada) {
-                showStatus('Live está finalizada. Clique em "Alterar Live" para editar.', 'error');
+                showStatus('Live finalizada.', 'error');
                 return;
             }
-
             linhaCount++;
             const tbody = document.getElementById('vendasBody');
             const tr = document.createElement('tr');
             tr.id = `linha-${linhaCount}`;
             tr.dataset.linhaId = linhaCount;
-
             tr.innerHTML = `
-                <td><span class="item-number" id="numero-${linhaCount}">${linhaCount}</span></td>
+                <td><span class="item-number">${linhaCount}</span></td>
                 <td><input type="number" step="0.01" class="valor-input" id="valor-${linhaCount}" placeholder="0,00" onkeydown="navegarCampos(event, ${linhaCount}, 'valor')" onblur="salvarVenda(${linhaCount})"></td>
                 <td><input type="text" id="codigo-${linhaCount}" onkeydown="navegarCampos(event, ${linhaCount}, 'codigo')" onblur="salvarVenda(${linhaCount})"></td>
                 <td>
                     <div class="autocomplete-container">
                         <input type="text" id="comprador-${linhaCount}" oninput="filtrarSugestoes(this, 'comprador')" onkeydown="navegarCamposComSugestoes(event, ${linhaCount}, 'comprador')" onblur="salvarVenda(${linhaCount})" autocomplete="off" placeholder="Nome ou Instagram">
-                        <button class="mic-btn" onclick="event.preventDefault(); event.stopPropagation(); iniciarGravacao(document.getElementById('comprador-${linhaCount}'), this)" title="Comando de voz">🎤</button>
+                        <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('comprador-${linhaCount}'), this)">🎤</button>
                         <div class="suggestions" id="sugestoes-comprador-${linhaCount}"></div>
                     </div>
                 </td>
                 <td>
                     <div class="autocomplete-container">
                         <input type="text" id="fila-${linhaCount}" oninput="filtrarSugestoes(this, 'fila')" onkeydown="navegarCamposComSugestoes(event, ${linhaCount}, 'fila')" onblur="salvarVenda(${linhaCount})" autocomplete="off" placeholder="Nome ou Instagram">
-                        <button class="mic-btn" onclick="event.preventDefault(); event.stopPropagation(); iniciarGravacao(document.getElementById('fila-${linhaCount}'), this)" title="Comando de voz">🎤</button>
+                        <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('fila-${linhaCount}'), this)">🎤</button>
                         <div class="suggestions" id="sugestoes-fila-${linhaCount}"></div>
                     </div>
                 </td>
                 <td><button class="delete-btn" onclick="excluirLinha(${linhaCount})">Excluir</button></td>
             `;
-
             tbody.appendChild(tr);
         }
 
         function navegarCampos(event, linhaId, campoAtual) {
             if (liveBloqueada) return;
-
             if (event.key === 'Enter') {
                 event.preventDefault();
-
                 const campos = ['valor', 'codigo', 'comprador', 'fila'];
-                const indiceAtual = campos.indexOf(campoAtual);
-
+                const idx = campos.indexOf(campoAtual);
                 document.querySelectorAll('.suggestions').forEach(el => el.classList.remove('active'));
-
                 salvarVenda(linhaId);
-
-                if (indiceAtual < campos.length - 1) {
-                    const proximoCampo = campos[indiceAtual + 1];
-                    const proximoInput = document.getElementById(`${proximoCampo}-${linhaId}`);
-                    if (proximoInput) {
-                        proximoInput.focus();
-                        proximoInput.select();
-                    }
+                if (idx < campos.length - 1) {
+                    const next = document.getElementById(`${campos[idx+1]}-${linhaId}`);
+                    if (next) { next.focus(); next.select(); }
                 } else {
-                    const proximaLinha = linhaId + 1;
-                    const proximoInput = document.getElementById(`valor-${proximaLinha}`);
-                    if (proximoInput) {
-                        proximoInput.focus();
-                        proximoInput.select();
-                        proximoInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
+                    const next = document.getElementById(`valor-${linhaId+1}`);
+                    if (next) { next.focus(); next.select(); next.scrollIntoView({behavior:'smooth', block:'center'}); }
                 }
             }
         }
 
         function navegarCamposComSugestoes(event, linhaId, campoAtual) {
             if (liveBloqueada) return;
-
             const sugestoesDiv = document.getElementById(`sugestoes-${campoAtual}-${linhaId}`);
             const itens = sugestoesDiv.querySelectorAll('.suggestion-item');
 
@@ -1325,11 +710,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     filtrarSugestoes(document.getElementById(`${campoAtual}-${linhaId}`), campoAtual);
                     selectedSuggestionIndex = -1;
                 }
-
-                selectedSuggestionIndex++;
-                if (selectedSuggestionIndex >= itens.length) {
-                    selectedSuggestionIndex = 0;
-                }
+                selectedSuggestionIndex = (selectedSuggestionIndex + 1) % itens.length;
                 atualizarSelecaoSugestao(itens);
                 return;
             }
@@ -1337,26 +718,17 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             if (event.key === 'ArrowUp') {
                 event.preventDefault();
                 if (!sugestoesDiv.classList.contains('active')) return;
-
-                selectedSuggestionIndex--;
-                if (selectedSuggestionIndex < 0) {
-                    selectedSuggestionIndex = itens.length - 1;
-                }
+                selectedSuggestionIndex = selectedSuggestionIndex <= 0 ? itens.length - 1 : selectedSuggestionIndex - 1;
                 atualizarSelecaoSugestao(itens);
                 return;
             }
 
             if (event.key === 'Enter') {
                 event.preventDefault();
-
                 if (sugestoesDiv.classList.contains('active') && selectedSuggestionIndex >= 0) {
-                    const itemSelecionado = itens[selectedSuggestionIndex];
-                    if (itemSelecionado) {
-                        itemSelecionado.click();
-                        return;
-                    }
+                    const item = itens[selectedSuggestionIndex];
+                    if (item) { item.click(); return; }
                 }
-
                 navegarCampos(event, linhaId, campoAtual);
                 return;
             }
@@ -1385,7 +757,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
         function filtrarSugestoes(input, tipoCampo) {
             if (liveBloqueada) return;
-
             const valor = input.value.toLowerCase().trim();
             const linhaId = input.id.split('-')[1];
             const sugestoesDiv = document.getElementById(`sugestoes-${tipoCampo}-${linhaId}`);
@@ -1396,19 +767,14 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 return;
             }
 
-            const filtrados = clientes.filter(cliente => {
-                const nome = cliente.nome ? cliente.nome.toString().toLowerCase() : '';
-                const instagram = cliente.instagram ? cliente.instagram.toString().toLowerCase() : '';
-                return nome.includes(valor) || instagram.includes(valor);
+            const filtrados = clientes.filter(c => {
+                const nome = c.nome?.toString().toLowerCase() || '';
+                const insta = c.instagram?.toString().toLowerCase() || '';
+                return nome.includes(valor) || insta.includes(valor);
             }).slice(0, 10);
 
-            // Se não encontrou nenhum cliente e tem mais de 2 caracteres, mostrar opção de cadastro
             if (filtrados.length === 0 && valor.length >= 2) {
-                sugestoesDiv.innerHTML = `
-                    <div class="sugestao-cadastro" onclick="abrirCadastroCliente('${valor}', '${linhaId}', '${tipoCampo}')">
-                        + Cadastrar "${valor}" como novo cliente
-                    </div>
-                `;
+                sugestoesDiv.innerHTML = `<div class="sugestao-cadastro" onclick="abrirCadastroCliente('${valor}', '${linhaId}', '${tipoCampo}')">+ Cadastrar "${valor}"</div>`;
                 sugestoesDiv.classList.add('active');
                 return;
             }
@@ -1418,28 +784,21 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 return;
             }
 
-            sugestoesDiv.innerHTML = filtrados.map(cliente => {
-                const nome = cliente.nome || '';
-                const instagram = cliente.instagram || '';
-
+            sugestoesDiv.innerHTML = filtrados.map(c => {
+                const nome = c.nome || '';
+                const insta = c.instagram || '';
                 const nomeMatch = nome.toLowerCase().includes(valor);
-                const instaMatch = instagram.toLowerCase().includes(valor);
-
-                let displayHtml = '';
+                const instaMatch = insta.toLowerCase().includes(valor);
+                let html = '';
                 if (nomeMatch && instaMatch) {
-                    displayHtml = `<div class="suggestion-main">${nome}</div><div class="suggestion-secondary">@${instagram}</div>`;
+                    html = `<div class="suggestion-main">${nome}</div><div class="suggestion-secondary">@${insta}</div>`;
                 } else if (nomeMatch) {
-                    displayHtml = `<div class="suggestion-main">${nome}</div>${instagram ? `<div class="suggestion-secondary">@${instagram}</div>` : ''}`;
+                    html = `<div class="suggestion-main">${nome}</div>${insta ? `<div class="suggestion-secondary">@${insta}</div>` : ''}`;
                 } else {
-                    displayHtml = `<div class="suggestion-main">@${instagram}</div>${nome ? `<div class="suggestion-secondary">${nome}</div>` : ''}`;
+                    html = `<div class="suggestion-main">@${insta}</div>${nome ? `<div class="suggestion-secondary">${nome}</div>` : ''}`;
                 }
-
-                return `
-                <div class="suggestion-item" onclick="selecionarSugestao('${linhaId}', '${tipoCampo}', '${nome}', '${instagram}')">
-                    ${displayHtml}
-                </div>`;
+                return `<div class="suggestion-item" onclick="selecionarSugestao('${linhaId}', '${tipoCampo}', '${nome}', '${insta}')">${html}</div>`;
             }).join('');
-
             sugestoesDiv.classList.add('active');
         }
 
@@ -1451,10 +810,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             document.getElementById('clienteWhatsapp').value = '';
             document.getElementById('clienteInstagram').value = '';
             document.getElementById('clienteEmail').value = '';
-
-            // Fechar sugestões
             document.querySelectorAll('.suggestions').forEach(el => el.classList.remove('active'));
-
             document.getElementById('clienteDialog').classList.add('active');
         }
 
@@ -1486,7 +842,7 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             let cpfParaSalvar = null;
             if (cpf && cpf.length > 0) {
                 if (cpf.length < 14) {
-                    showStatus('CPF inválido! Deixe em branco ou preencha completo.', 'error');
+                    showStatus('CPF inválido!', 'error');
                     return;
                 }
                 cpfParaSalvar = cpf;
@@ -1494,55 +850,38 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
             try {
                 const novoCliente = {
-                    nome: nome,
-                    cpf: cpfParaSalvar,
-                    whatsapp: whatsapp || null,
-                    instagram: instagram || null,
-                    email: email || null,
+                    nome, cpf: cpfParaSalvar, whatsapp: whatsapp || null,
+                    instagram: instagram || null, email: email || null,
                     criado_em: new Date().toISOString(),
                     atualizado_em: new Date().toISOString()
                 };
 
-                const { data, error } = await supabaseClient
-                    .from('clientes_pg')
-                    .insert([novoCliente])
-                    .select();
+                const { data, error } = await supabaseClient.from('clientes_pg').insert([novoCliente]).select();
 
                 if (error) {
                     if ((error.message.includes('duplicate') || error.message.includes('unique')) && cpfParaSalvar) {
                         showStatus('CPF já cadastrado! Salvando sem CPF...', 'info');
                         novoCliente.cpf = null;
-                        const { data: data2, error: error2 } = await supabaseClient
-                            .from('clientes_pg')
-                            .insert([novoCliente])
-                            .select();
-
+                        const { data: data2, error: error2 } = await supabaseClient.from('clientes_pg').insert([novoCliente]).select();
                         if (error2) throw error2;
-
-                        if (data2 && data2[0]) {
+                        if (data2?.[0]) {
                             finalizarCadastroCliente(data2[0]);
                             return;
                         }
                     } else {
-                        showStatus('Erro ao cadastrar cliente: ' + error.message, 'error');
-                        return;
+                        throw error;
                     }
-                    throw error;
                 }
 
-                if (data && data[0]) {
-                    finalizarCadastroCliente(data[0]);
-                }
+                if (data?.[0]) finalizarCadastroCliente(data[0]);
             } catch (error) {
-                console.error('Erro ao cadastrar cliente:', error);
-                showStatus('Erro ao cadastrar cliente: ' + error.message, 'error');
+                showStatus('Erro: ' + error.message, 'error');
             }
         }
 
         function finalizarCadastroCliente(cliente) {
             clientes.push(cliente);
-            showStatus(`Cliente ${cliente.nome} cadastrado com sucesso!`, 'success');
-
+            showStatus(`Cliente ${cliente.nome} cadastrado!`, 'success');
             if (inputAtualCadastro) {
                 const input = document.getElementById(`${inputAtualCadastro.tipoCampo}-${inputAtualCadastro.linhaId}`);
                 if (input) {
@@ -1550,156 +889,43 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     salvarVenda(inputAtualCadastro.linhaId);
                 }
             }
-
             fecharClienteDialog();
         }
 
         function selecionarSugestao(linhaId, tipoCampo, nome, instagram) {
             if (liveBloqueada) return;
-
             const input = document.getElementById(`${tipoCampo}-${linhaId}`);
-            const valorPreencher = nome || instagram;
-            input.value = valorPreencher;
-
+            input.value = nome || instagram;
             document.getElementById(`sugestoes-${tipoCampo}-${linhaId}`).classList.remove('active');
             selectedSuggestionIndex = -1;
-
             salvarVenda(linhaId);
-
             const campos = ['valor', 'codigo', 'comprador', 'fila'];
-            const indiceAtual = campos.indexOf(tipoCampo);
-            if (indiceAtual < campos.length - 1) {
-                const proximoCampo = campos[indiceAtual + 1];
-                const proximoInput = document.getElementById(`${proximoCampo}-${linhaId}`);
-                if (proximoInput) {
-                    proximoInput.focus();
-                }
-            }
-        }
-
-        // ==================== FUNÇÃO CORRIGIDA ====================
-        async function salvarVenda(linhaId) {
-            if (liveBloqueada) return;
-
-            const inputComprador = document.getElementById(`comprador-${linhaId}`);
-            if (inputComprador) inputComprador.classList.add('saving');
-
-            const valor = parseFloat(document.getElementById(`valor-${linhaId}`).value) || 0;
-            const codigo = document.getElementById(`codigo-${linhaId}`).value;
-            const comprador = document.getElementById(`comprador-${linhaId}`).value.trim();
-            const fila = document.getElementById(`fila-${linhaId}`).value.trim();
-
-            const total = valor;
-
-            // CORREÇÃO: Verificar no banco se já existe, não só no array local
-            try {
-                const { data: existenteNoBanco, error: checkError } = await supabaseClient
-                    .from('vendas_live')
-                    .select('id')
-                    .eq('linha_id', linhaId)
-                    .eq('data_live', dataLiveAtual)
-                    .maybeSingle();
-
-                if (checkError) throw checkError;
-
-                const vendaData = {
-                    linha_id: linhaId,
-                    data_live: dataLiveAtual,
-                    item: linhaId,
-                    valor: valor,
-                    codigo: codigo,
-                    comprador: comprador,
-                    fila: fila,
-                    total: total,
-                    updated_at: new Date().toISOString()
-                };
-
-                let result;
-
-                if (existenteNoBanco) {
-                    // UPDATE - já existe no banco (usa ID único)
-                    result = await supabaseClient
-                        .from('vendas_live')
-                        .update(vendaData)
-                        .eq('id', existenteNoBanco.id);
-
-                    // Atualizar array local
-                    const index = vendas.findIndex(v => v.linha_id === linhaId);
-                    if (index !== -1) {
-                        vendas[index] = { ...vendaData, id: existenteNoBanco.id };
-                    } else {
-                        vendas.push({ ...vendaData, id: existenteNoBanco.id });
-                    }
-                } else {
-                    // INSERT - novo registro
-                    const insertData = { 
-                        ...vendaData, 
-                        created_at: new Date().toISOString(),
-                        bloqueada: false
-                    };
-
-                    result = await supabaseClient
-                        .from('vendas_live')
-                        .insert([insertData])
-                        .select();
-
-                    if (!result.error && result.data && result.data[0]) {
-                        // Adicionar ao array local com ID correto
-                        const index = vendas.findIndex(v => v.linha_id === linhaId);
-                        if (index !== -1) {
-                            vendas[index] = result.data[0];
-                        } else {
-                            vendas.push(result.data[0]);
-                        }
-                    }
-                }
-
-                if (result.error) throw result.error;
-
-                atualizarContagemItens();
-
-                if (inputComprador) {
-                    inputComprador.classList.remove('saving');
-                    inputComprador.classList.add('saved');
-                    setTimeout(() => inputComprador.classList.remove('saved'), 1000);
-                }
-
-            } catch (error) {
-                console.error('Erro ao salvar:', error);
-                if (inputComprador) inputComprador.classList.remove('saving');
-                showStatus('Erro ao salvar: ' + error.message, 'error');
+            const idx = campos.indexOf(tipoCampo);
+            if (idx < campos.length - 1) {
+                const next = document.getElementById(`${campos[idx+1]}-${linhaId}`);
+                if (next) next.focus();
             }
         }
 
         async function excluirLinha(linhaId) {
             if (liveBloqueada) {
-                showStatus('Live está finalizada. Clique em "Alterar Live" para editar.', 'error');
+                showStatus('Live finalizada.', 'error');
                 return;
             }
-
-            if (!confirm('Deseja realmente excluir este item?')) return;
+            if (!confirm('Deseja excluir este item?')) return;
 
             try {
-                showStatus('Excluindo e renumerando itens...', 'info');
-
-                await supabaseClient
-                    .from('vendas_live')
-                    .delete()
-                    .eq('linha_id', linhaId)
-                    .eq('data_live', dataLiveAtual);
-
+                showStatus('Excluindo...', 'info');
+                await supabaseClient.from('vendas_live').delete().eq('linha_id', linhaId).eq('data_live', dataLiveAtual);
                 vendas = vendas.filter(v => v.linha_id !== linhaId);
 
                 const linhasParaRenumerar = vendas.filter(v => v.linha_id > linhaId).sort((a,b) => a.linha_id - b.linha_id);
-
                 for (const venda of linhasParaRenumerar) {
                     const novoId = venda.linha_id - 1;
                     const novaVenda = { ...venda, linha_id: novoId, item: novoId, updated_at: new Date().toISOString() };
-
                     await supabaseClient.from('vendas_live').delete().eq('id', venda.id);
                     const { data } = await supabaseClient.from('vendas_live').insert([novaVenda]).select();
-
-                    if (data && data[0]) {
+                    if (data?.[0]) {
                         venda.id = data[0].id;
                         venda.linha_id = novoId;
                         venda.item = novoId;
@@ -1714,23 +940,19 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 todasLinhas.forEach((tr, index) => {
                     const novoLinhaId = index + 1;
                     const antigoLinhaId = parseInt(tr.dataset.linhaId);
-
                     if (antigoLinhaId !== novoLinhaId) {
                         tr.id = `linha-${novoLinhaId}`;
                         tr.dataset.linhaId = novoLinhaId;
-
                         const numeroSpan = tr.querySelector('.item-number');
                         if (numeroSpan) {
                             numeroSpan.id = `numero-${novoLinhaId}`;
                             numeroSpan.textContent = novoLinhaId;
                         }
-
                         const inputs = tr.querySelectorAll('input, button, div.suggestions');
                         inputs.forEach(el => {
                             if (el.id && el.id.includes(`-${antigoLinhaId}`)) {
                                 const novoId = el.id.replace(`-${antigoLinhaId}`, `-${novoLinhaId}`);
                                 el.id = novoId;
-
                                 if (el.onclick) {
                                     const onclickStr = el.getAttribute('onclick');
                                     if (onclickStr) {
@@ -1738,7 +960,6 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                                         el.setAttribute('onclick', novoOnclick);
                                     }
                                 }
-
                                 if (el.onblur) el.setAttribute('onblur', `salvarVenda(${novoLinhaId})`);
                                 if (el.onkeydown) {
                                     const onkeydownStr = el.getAttribute('onkeydown');
@@ -1759,9 +980,8 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 linhaCount = todasLinhas.length;
                 await recarregarVendasArray();
                 atualizarContagemItens();
-                showStatus(`Item ${linhaId} excluído e itens renumerados!`, 'success');
+                showStatus(`Item ${linhaId} excluído!`, 'success');
             } catch (error) {
-                console.error('Erro ao excluir:', error);
                 showStatus('Erro ao excluir: ' + error.message, 'error');
             }
         }
@@ -1773,53 +993,40 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                     .select('*')
                     .eq('data_live', dataLiveAtual)
                     .order('linha_id', { ascending: true });
-
                 if (error) {
-                    console.error('Erro ao recarregar vendas:', error);
+                    console.error('Erro ao recarregar:', error);
                     return;
                 }
                 vendas = data || [];
             } catch (error) {
-                console.error('Erro ao recarregar array vendas:', error);
+                console.error('Erro:', error);
             }
         }
 
         async function finalizarLive() {
-            if (confirm('Deseja finalizar esta live? Os dados não poderão ser alterados até clicar em "Alterar Live".')) {
+            if (confirm('Deseja finalizar esta live?')) {
                 try {
-                    const { error } = await supabaseClient
-                        .from('vendas_live')
-                        .update({ bloqueada: true })
-                        .eq('data_live', dataLiveAtual);
-
+                    const { error } = await supabaseClient.from('vendas_live').update({ bloqueada: true }).eq('data_live', dataLiveAtual);
                     if (error) throw error;
-
                     liveBloqueada = true;
                     bloquearCampos();
-                    showStatus('Live finalizada com sucesso!', 'success');
+                    showStatus('Live finalizada!', 'success');
                 } catch (error) {
-                    console.error('Erro ao finalizar live:', error);
-                    showStatus('Erro ao finalizar live: ' + error.message, 'error');
+                    showStatus('Erro: ' + error.message, 'error');
                 }
             }
         }
 
         async function alterarLive() {
-            if (confirm('Deseja alterar esta live? Os campos serão liberados para edição.')) {
+            if (confirm('Deseja alterar esta live?')) {
                 try {
-                    const { error } = await supabaseClient
-                        .from('vendas_live')
-                        .update({ bloqueada: false })
-                        .eq('data_live', dataLiveAtual);
-
+                    const { error } = await supabaseClient.from('vendas_live').update({ bloqueada: false }).eq('data_live', dataLiveAtual);
                     if (error) throw error;
-
                     liveBloqueada = false;
                     liberarCampos();
-                    showStatus('Live liberada para edição!', 'success');
+                    showStatus('Live liberada!', 'success');
                 } catch (error) {
-                    console.error('Erro ao alterar live:', error);
-                    showStatus('Erro ao alterar live: ' + error.message, 'error');
+                    showStatus('Erro: ' + error.message, 'error');
                 }
             }
         }
@@ -1828,11 +1035,8 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             document.querySelectorAll('#vendasBody input').forEach(input => input.disabled = true);
             document.querySelectorAll('.mic-btn').forEach(btn => btn.disabled = true);
             document.querySelectorAll('.delete-btn').forEach(btn => btn.disabled = true);
-
-            const banner = document.getElementById('liveInfoBanner');
-            banner.classList.add('bloqueada');
+            document.getElementById('liveInfoBanner').classList.add('bloqueada');
             document.getElementById('statusLive').textContent = '🔒 LIVE FINALIZADA';
-
             document.getElementById('btnAdicionar').style.display = 'none';
             document.getElementById('btnFinalizar').style.display = 'none';
             document.getElementById('btnResetar').style.display = 'none';
@@ -1843,11 +1047,8 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             document.querySelectorAll('#vendasBody input').forEach(input => input.disabled = false);
             document.querySelectorAll('.mic-btn').forEach(btn => btn.disabled = false);
             document.querySelectorAll('.delete-btn').forEach(btn => btn.disabled = false);
-
-            const banner = document.getElementById('liveInfoBanner');
-            banner.classList.remove('bloqueada');
+            document.getElementById('liveInfoBanner').classList.remove('bloqueada');
             document.getElementById('statusLive').textContent = '';
-
             document.getElementById('btnAdicionar').style.display = 'inline-block';
             document.getElementById('btnFinalizar').style.display = 'inline-block';
             document.getElementById('btnResetar').style.display = 'inline-block';
@@ -1856,14 +1057,10 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
         function confirmarResetarLive() {
             if (liveBloqueada) {
-                showStatus('Live está finalizada. Clique em "Alterar Live" para editar.', 'error');
+                showStatus('Live finalizada.', 'error');
                 return;
             }
-
-            const totalItens = vendas.length;
-            const texto = `Tem certeza que deseja resetar esta live?<br>Todos os <strong>${totalItens} itens</strong> serão permanentemente apagados.<br>Esta ação não pode ser desfeita!`;
-
-            document.getElementById('confirmResetText').innerHTML = texto;
+            document.getElementById('confirmResetText').innerHTML = `Tem certeza?<br>Todos os <strong>${vendas.length} itens</strong> serão apagados.`;
             document.getElementById('confirmResetDialog').classList.add('active');
         }
 
@@ -1873,57 +1070,38 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
         async function executarResetarLive() {
             fecharConfirmReset();
-
             try {
-                showStatus('Apagando todos os registros...', 'info');
-
-                await supabaseClient
-                    .from('vendas_live')
-                    .delete()
-                    .eq('data_live', dataLiveAtual);
-
+                showStatus('Apagando...', 'info');
+                await supabaseClient.from('vendas_live').delete().eq('data_live', dataLiveAtual);
                 vendas = [];
                 document.getElementById('vendasBody').innerHTML = '';
                 linhaCount = 0;
                 liveBloqueada = false;
-
-                for (let i = 0; i < 150; i++) {
-                    adicionarLinha();
-                }
-
+                for (let i = 0; i < 150; i++) adicionarLinha();
                 liberarCampos();
                 atualizarContagemItens();
-                showStatus('Live resetada com sucesso! 150 linhas vazias criadas.', 'success');
-
+                showStatus('Live resetada!', 'success');
             } catch (error) {
-                console.error('Erro ao resetar:', error);
-                showStatus('Erro ao resetar live: ' + error.message, 'error');
+                showStatus('Erro: ' + error.message, 'error');
             }
         }
 
         function registrarVenda() {
-            const vendasValidas = vendas.filter(v => v.valor > 0 && v.comprador && v.comprador.trim() !== '');
+            const vendasValidas = vendas.filter(v => v.valor > 0 && v.comprador?.trim());
             totalLiveAtual = vendasValidas.reduce((sum, v) => sum + (parseFloat(v.valor) || 0), 0);
-
             const quantidadeItens = vendasValidas.length;
 
             if (quantidadeItens === 0) {
-                showStatus('Não há vendas válidas para registrar!', 'error');
+                showStatus('Não há vendas válidas!', 'error');
                 return;
             }
 
             const dataFormatada = formatarData(dataLiveAtual);
-
             document.getElementById('vendaInfo').innerHTML = `
-                <p><strong>Data da Live:</strong> ${dataFormatada}</p>
-                <p><strong>Quantidade de Itens:</strong> ${quantidadeItens}</p>
-                <p><strong>Valor Total:</strong> ${formatarMoeda(totalLiveAtual)}</p>
-                <p style="margin-top: 10px; font-size: 12px; color: #6c757d;">
-                    Será criado um registro na tabela vendas_pg com a descrição:<br>
-                    <em>"Live do Dia ${dataFormatada}"</em>
-                </p>
+                <p><strong>Data:</strong> ${dataFormatada}</p>
+                <p><strong>Itens:</strong> ${quantidadeItens}</p>
+                <p><strong>Total:</strong> ${formatarMoeda(totalLiveAtual)}</p>
             `;
-
             document.getElementById('vendaDialog').classList.add('active');
         }
 
@@ -1933,46 +1111,28 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
         async function executarRegistrarVenda() {
             fecharVendaDialog();
-
             try {
-                showStatus('Registrando venda na tabela vendas_pg...', 'info');
-
+                showStatus('Registrando...', 'info');
                 const dataFormatada = formatarData(dataLiveAtual);
-                const descricao = `Live do Dia ${dataFormatada}`;
-
-                const vendasValidas = vendas.filter(v => v.valor > 0 && v.comprador && v.comprador.trim() !== '');
+                const vendasValidas = vendas.filter(v => v.valor > 0 && v.comprador?.trim());
                 const itensVenda = vendasValidas.map(v => ({
-                    linha_id: v.linha_id,
-                    valor: v.valor,
-                    codigo: v.codigo,
-                    comprador: v.comprador,
-                    fila: v.fila
+                    linha_id: v.linha_id, valor: v.valor, codigo: v.codigo,
+                    comprador: v.comprador, fila: v.fila
                 }));
 
                 const vendaData = {
                     data_venda: new Date(dataLiveAtual + 'T12:00:00').toISOString(),
-                    cliente_nome: null,
-                    cliente_cpf: null,
-                    canal_venda: 'Live',
-                    forma_pagamento: 'Dinheiro',
-                    status_pagamento: 'pago',
-                    total: totalLiveAtual,
-                    itens: itensVenda,
-                    observacoes: descricao
+                    cliente_nome: null, cliente_cpf: null, canal_venda: 'Live',
+                    forma_pagamento: 'Dinheiro', status_pagamento: 'pago',
+                    total: totalLiveAtual, itens: itensVenda,
+                    observacoes: `Live do Dia ${dataFormatada}`
                 };
 
-                const { data, error } = await supabaseClient
-                    .from('vendas_pg')
-                    .insert([vendaData])
-                    .select();
-
+                const { data, error } = await supabaseClient.from('vendas_pg').insert([vendaData]).select();
                 if (error) throw error;
-
-                showStatus(`Venda registrada com sucesso! ID: ${data[0].id}`, 'success');
-
+                showStatus(`Venda registrada! ID: ${data[0].id}`, 'success');
             } catch (error) {
-                console.error('Erro ao registrar venda:', error);
-                showStatus('Erro ao registrar venda: ' + error.message, 'error');
+                showStatus('Erro: ' + error.message, 'error');
             }
         }
 
@@ -1982,23 +1142,16 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
 
         function gerarRelatorioNovaAba() {
             const vendasUnicas = new Map();
-
-            vendas.forEach(venda => {
-                const chave = venda.id || `${venda.linha_id}-${venda.data_live}-${venda.comprador}-${venda.codigo}`;
-                if (!vendasUnicas.has(chave)) {
-                    vendasUnicas.set(chave, venda);
-                }
+            vendas.forEach(v => {
+                const chave = v.id || `${v.linha_id}-${v.data_live}-${v.comprador}-${v.codigo}`;
+                if (!vendasUnicas.has(chave)) vendasUnicas.set(chave, v);
             });
 
             const vendasPorComprador = {};
-
-            for (const venda of vendasUnicas.values()) {
-                if (!venda.comprador || venda.valor === 0) continue;
-
-                if (!vendasPorComprador[venda.comprador]) {
-                    vendasPorComprador[venda.comprador] = [];
-                }
-                vendasPorComprador[venda.comprador].push(venda);
+            for (const v of vendasUnicas.values()) {
+                if (!v.comprador || v.valor === 0) continue;
+                if (!vendasPorComprador[v.comprador]) vendasPorComprador[v.comprador] = [];
+                vendasPorComprador[v.comprador].push(v);
             }
 
             const compradoresOrdenados = Object.keys(vendasPorComprador).sort((a, b) => {
@@ -2007,87 +1160,40 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
                 return totalB - totalA;
             });
 
-            let html = `
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Vendas - Live ${formatarData(dataLiveAtual)}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; padding: 20px; background: white; }
-        h1 { text-align: center; margin-bottom: 20px; font-size: 18px; }
-        .data-geracao { text-align: center; margin-bottom: 30px; font-size: 12px; color: #666; }
-        .data-live { text-align: center; margin-bottom: 10px; font-size: 14px; color: #333; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 30px; }
-        th { border: 1px solid #000; padding: 8px; text-align: left; font-weight: bold; background: white; }
-        td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
-        .valor-col { text-align: right; }
-        .total-col { text-align: right; font-weight: bold; }
-        .linha-item { background: white; }
-        .total-comprador { font-weight: bold; border: 1px solid #000; background: #fafafa; }
-        .total-geral { font-weight: bold; font-size: 14px; border: 2px solid #000; background: #f0f0f0; }
-        .print-btn { position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-        .print-btn:hover { background: #218838; }
-        @media print { .print-btn { display: none; } body { padding: 0; } }
-    </style>
-</head>
-<body>
-    <button class="print-btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
-    <h1>RELATÓRIO DE VENDAS - LIVE</h1>
-    <p class="data-live">Data da Live: ${formatarData(dataLiveAtual)}</p>
-    <p class="data-geracao">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
-    <table>
-        <thead>
-            <tr><th>Valor</th><th>Código</th><th>Comprador</th><th>Fila</th></tr>
-        </thead>
-        <tbody>`;
+            let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório</title><style>
+                *{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial;padding:20px}
+                h1{text-align:center;font-size:18px;margin-bottom:20px}.data-live{text-align:center;font-size:14px;font-weight:bold;margin-bottom:10px}
+                table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #000;padding:6px 8px}
+                .valor-col{text-align:right}.total-col{text-align:right;font-weight:bold}
+                .total-comprador{font-weight:bold;background:#fafafa}.total-geral{font-weight:bold;font-size:14px;background:#f0f0f0}
+                .print-btn{position:fixed;top:20px;right:20px;padding:10px 20px;background:#28a745;color:white;border:none;border-radius:4px;cursor:pointer}
+                @media print{.print-btn{display:none}}
+            </style></head><body>
+            <button class="print-btn" onclick="window.print()">🖨️ Imprimir</button>
+            <h1>RELATÓRIO DE VENDAS - LIVE</h1>
+            <p class="data-live">Data: ${formatarData(dataLiveAtual)}</p>
+            <table><thead><tr><th>Valor</th><th>Código</th><th>Comprador</th><th>Fila</th></tr></thead><tbody>`;
 
-            let totalGeral = 0;
-            let quantidadeTotal = 0;
-
+            let totalGeral = 0, quantidadeTotal = 0;
             compradoresOrdenados.forEach(comprador => {
-                const vendasComprador = vendasPorComprador[comprador];
-                const totalComprador = vendasComprador.reduce((sum, v) => sum + v.total, 0);
-
-                totalGeral += totalComprador;
-                quantidadeTotal += vendasComprador.length;
-
-                vendasComprador.forEach((venda) => {
-                    html += `
-            <tr class="linha-item">
-                <td class="valor-col">${formatarMoeda(venda.valor)}</td>
-                <td>${venda.codigo || 'x'}</td>
-                <td>${comprador}</td>
-                <td>${venda.fila || 'x'}</td>
-            </tr>`;
+                const vendasComp = vendasPorComprador[comprador];
+                const totalComp = vendasComp.reduce((sum, v) => sum + v.total, 0);
+                totalGeral += totalComp;
+                quantidadeTotal += vendasComp.length;
+                vendasComp.forEach(v => {
+                    html += `<tr><td class="valor-col">${formatarMoeda(v.valor)}</td><td>${v.codigo||'x'}</td><td>${comprador}</td><td>${v.fila||'x'}</td></tr>`;
                 });
-
-                html += `
-            <tr class="total-comprador">
-                <td colspan="3" style="text-align: right;">Total ${comprador}:</td>
-                <td class="total-col">${formatarMoeda(totalComprador)}</td>
-            </tr>`;
+                html += `<tr class="total-comprador"><td colspan="3" style="text-align:right">Total ${comprador}:</td><td class="total-col">${formatarMoeda(totalComp)}</td></tr>`;
             });
-
-            html += `
-            <tr class="total-geral">
-                <td colspan="3" style="text-align: right;">TOTAL GERAL (${quantidadeTotal} itens):</td>
-                <td class="total-col">${formatarMoeda(totalGeral)}</td>
-            </tr>
-        </tbody>
-    </table>
-</body>
-</html>`;
+            html += `<tr class="total-geral"><td colspan="3" style="text-align:right">TOTAL (${quantidadeTotal} itens):</td><td class="total-col">${formatarMoeda(totalGeral)}</td></tr></tbody></table></body></html>`;
 
             const novaAba = window.open('', '_blank');
             if (novaAba) {
                 novaAba.document.write(html);
                 novaAba.document.close();
-                showStatus('Relatório aberto em nova aba!', 'success');
+                showStatus('Relatório aberto!', 'success');
             } else {
-                showStatus('Popup bloqueado! Permita popups para este site.', 'error');
+                showStatus('Permita popups!', 'error');
             }
         }
 
@@ -2095,17 +1201,12 @@ create index if not exists idx_vendas_live_comprador on vendas_live(comprador);<
             const div = document.getElementById('statusMessage');
             div.textContent = mensagem;
             div.className = 'status-message ' + tipo;
-
-            setTimeout(() => {
-                div.className = 'status-message';
-            }, 3000);
+            setTimeout(() => div.className = 'status-message', 3000);
         }
 
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.autocomplete-container')) {
-                document.querySelectorAll('.suggestions').forEach(el => {
-                    el.classList.remove('active');
-                });
+                document.querySelectorAll('.suggestions').forEach(el => el.classList.remove('active'));
                 selectedSuggestionIndex = -1;
             }
         });
