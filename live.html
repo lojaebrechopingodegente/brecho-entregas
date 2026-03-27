@@ -22,6 +22,12 @@
         input.saving { border-color: #ffc107; background: #fff3cd; }
         input.saved { border-color: #28a745; background: #d4edda; }
         input:disabled, input[readonly] { background: #e9ecef; cursor: not-allowed; opacity: 0.7; }
+        /* NOVO: Campos obrigatórios não preenchidos */
+        input.obrigatorio-pendente { 
+            border-color: #dc3545 !important; 
+            background: #f8d7da !important; 
+            box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25) !important;
+        }
         .valor-input { text-align: right; font-weight: 600; }
         .autocomplete-container { position: relative; display: flex; align-items: center; gap: 4px; }
         .autocomplete-container input { flex: 1; }
@@ -69,8 +75,9 @@
         .item-number { font-weight: bold; color: #667eea; }
         .delete-btn { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 10px; }
         .delete-btn:disabled { background: #adb5bd; cursor: not-allowed; }
+        /* NOVO: Botão salvar vermelho quando não salvo, verde quando salvo */
         .btn-save { 
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%); 
+            background: #dc3545; /* Vermelho por padrão - não salvo */
             color: white; 
             border: none; 
             border-radius: 4px; 
@@ -100,7 +107,7 @@
             color: #212529;
         }
         .btn-save.saved {
-            background: #17a2b8;
+            background: #28a745; /* Verde quando salvo */
             animation: pulseSave 0.5s ease;
         }
         @keyframes pulseSave {
@@ -137,7 +144,6 @@
         .sugestao-cadastro:hover { background: #667eea; color: white; }
         .campo-opcional { color: #6c757d; font-size: 12px; font-weight: normal; }
         
-        /* NOVO: Seletor de data compacto */
         .date-selector-compact {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             padding: 15px 20px;
@@ -182,7 +188,6 @@
             margin-top: 8px;
         }
         
-        /* NOVO: Campos de live super compactos */
         .live-selection-compact {
             margin-top: 10px;
             padding: 10px;
@@ -300,7 +305,6 @@
             background: #218838;
         }
         
-        /* NOVO: Confirmar exclusão de live */
         .confirm-excluir-live {
             position: fixed;
             top: 0;
@@ -431,9 +435,9 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 </div>
                 <div class="actions">
                     <button class="btn btn-primary" id="btnAdicionar" onclick="adicionarLinha()">+ Adicionar Item</button>
-                    <button class="btn btn-success" onclick="gerarRelatorioNovaAba()">📄 Ver Relatório</button>
+                    <button class="btn btn-success" onclick="verificarESalvarAntesDeVerRelatorio()">📄 Ver Relatório</button>
                     <button class="btn btn-purple" id="btnRegistrar" onclick="registrarVenda()">💰 Registrar Venda</button>
-                    <button class="btn btn-orange" id="btnFinalizar" onclick="finalizarLive()">🔒 Finalizar Live</button>
+                    <button class="btn btn-orange" id="btnFinalizar" onclick="verificarESalvarAntesDeFinalizar()">🔒 Finalizar Live</button>
                     <button class="btn btn-dark" id="btnAlterar" onclick="alterarLive()" style="display: none;">✏️ Alterar Live</button>
                     <button class="btn btn-danger" id="btnResetar" onclick="confirmarResetarLive()">🗑️ Resetar Live</button>
                 </div>
@@ -441,7 +445,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 <div class="table-container">
                     <table id="vendasTable">
                         <thead>
-                            <tr><th style="width: 50px;">Item</th><th style="width: 100px;">Valor</th><th style="width: 100px;">Código</th><th>Comprador <span class="voice-hint">🎤</span></th><th>Fila <span class="voice-hint">🎤</span></th><th style="width: 80px;">Ações</th></tr>
+                            <tr><th style="width: 50px;">Item</th><th style="width: 100px;">Valor *</th><th style="width: 100px;">Código *</th><th>Comprador <span class="voice-hint">🎤</span></th><th>Fila <span class="voice-hint">🎤</span></th><th style="width: 80px;">Ações</th></tr>
                         </thead>
                         <tbody id="vendasBody"></tbody>
                     </table>
@@ -514,6 +518,8 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
         let livesNaDataSelecionada = [];
         let liveSelecionada = null;
         let liveParaExcluir = null;
+        // NOVO: Rastrear linhas não salvas
+        let linhasNaoSalvas = new Set();
 
         function inicializarReconhecimentoVoz() {
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -527,6 +533,8 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     if (activeInput) {
                         activeInput.value = transcript;
                         activeInput.dispatchEvent(new Event('input'));
+                        // NOVO: Marcar como não salvo ao digitar
+                        marcarLinhaComoNaoSalva(activeInput);
                         setTimeout(() => {
                             const linhaId = activeInput.id.split('-')[1];
                             const tipoCampo = activeInput.id.split('-')[0];
@@ -712,6 +720,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             showStatus('Excluindo live...', 'info');
             
             try {
+                // Primeiro exclui todas as vendas da live
                 const { error: errorVendas } = await supabaseClient
                     .from('vendas_live')
                     .delete()
@@ -719,6 +728,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 
                 if (errorVendas) throw errorVendas;
                 
+                // Depois exclui a live
                 const { error: errorLive } = await supabaseClient
                     .from('lives_pg')
                     .delete()
@@ -727,6 +737,13 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 if (errorLive) throw errorLive;
                 
                 showStatus(`Live ${liveParaExcluir} excluída!`, 'success');
+                
+                // NOVO: Remove a live do array local e atualiza a lista
+                livesNaDataSelecionada = livesNaDataSelecionada.filter(l => l.codigo !== liveParaExcluir);
+                liveParaExcluir = null;
+                liveSelecionada = livesNaDataSelecionada.length > 0 ? livesNaDataSelecionada[0] : null;
+                
+                // Atualiza a visualização
                 await verificarLivesNaData();
                 
             } catch (error) {
@@ -847,6 +864,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 liveBloqueada = false;
                 liveSelecionada = null;
                 livesNaDataSelecionada = [];
+                linhasNaoSalvas.clear();
                 document.getElementById('livesDisponiveis').style.display = 'none';
                 document.getElementById('btnIniciarCadastro').style.display = 'none';
             }
@@ -867,6 +885,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 vendas = [];
                 document.getElementById('vendasBody').innerHTML = '';
                 linhaCount = 0;
+                linhasNaoSalvas.clear();
 
                 const { data: liveData, error: liveError } = await supabaseClient
                     .from('lives_pg')
@@ -973,6 +992,154 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             }
         }
 
+        // NOVO: Funções para rastrear linhas não salvas
+        function marcarLinhaComoNaoSalva(input) {
+            const linhaId = input.id.split('-')[1];
+            if (!linhaId) return;
+            
+            linhasNaoSalvas.add(parseInt(linhaId));
+            
+            const btnSalvar = document.getElementById(`btn-save-${linhaId}`);
+            if (btnSalvar) {
+                btnSalvar.classList.remove('saved');
+                btnSalvar.style.background = '#dc3545'; // Vermelho
+            }
+            
+            // Verificar campos obrigatórios
+            verificarCamposObrigatorios(linhaId);
+        }
+
+        function verificarCamposObrigatorios(linhaId) {
+            const valorInput = document.getElementById(`valor-${linhaId}`);
+            const codigoInput = document.getElementById(`codigo-${linhaId}`);
+            
+            if (valorInput && !valorInput.value) {
+                valorInput.classList.add('obrigatorio-pendente');
+            } else if (valorInput) {
+                valorInput.classList.remove('obrigatorio-pendente');
+            }
+            
+            if (codigoInput && !codigoInput.value) {
+                codigoInput.classList.add('obrigatorio-pendente');
+            } else if (codigoInput) {
+                codigoInput.classList.remove('obrigatorio-pendente');
+            }
+        }
+
+        function marcarLinhaComoSalva(linhaId) {
+            linhasNaoSalvas.delete(parseInt(linhaId));
+            
+            const btnSalvar = document.getElementById(`btn-save-${linhaId}`);
+            if (btnSalvar) {
+                btnSalvar.classList.add('saved');
+                btnSalvar.style.background = ''; // Remove inline style, usa classe CSS
+            }
+            
+            // Remove destaque de obrigatório
+            const valorInput = document.getElementById(`valor-${linhaId}`);
+            const codigoInput = document.getElementById(`codigo-${linhaId}`);
+            if (valorInput) valorInput.classList.remove('obrigatorio-pendente');
+            if (codigoInput) codigoInput.classList.remove('obrigatorio-pendente');
+        }
+
+        // NOVO: Verificar e salvar todas as linhas pendentes
+        async function verificarESalvarTodasLinhasPendentes() {
+            if (linhasNaoSalvas.size === 0) return true;
+            
+            showStatus(`Salvando ${linhasNaoSalvas.size} linha(s) pendente(s)...`, 'info');
+            
+            const linhasParaSalvar = Array.from(linhasNaoSalvas);
+            let sucesso = true;
+            
+            for (const linhaId of linhasParaSalvar) {
+                try {
+                    await salvarVendaSilencioso(linhaId);
+                } catch (error) {
+                    console.error(`Erro ao salvar linha ${linhaId}:`, error);
+                    sucesso = false;
+                }
+            }
+            
+            return sucesso;
+        }
+
+        async function salvarVendaSilencioso(linhaId) {
+            const valor = parseFloat(document.getElementById(`valor-${linhaId}`).value) || 0;
+            const codigo = document.getElementById(`codigo-${linhaId}`).value;
+            const comprador = document.getElementById(`comprador-${linhaId}`).value.trim();
+            const fila = document.getElementById(`fila-${linhaId}`).value.trim();
+
+            // Só salva se tiver valor ou código ou comprador (não salva linha vazia)
+            if (valor === 0 && !codigo && !comprador) {
+                marcarLinhaComoSalva(linhaId);
+                return;
+            }
+
+            const { data: existentes, error: checkError } = await supabaseClient
+                .from('vendas_live')
+                .select('id, updated_at')
+                .eq('codigo_live', codigoLiveAtual)
+                .eq('linha_id', linhaId)
+                .order('updated_at', { ascending: false })
+                .limit(1);
+
+            if (checkError) throw checkError;
+
+            const existente = (existentes && existentes.length > 0) ? existentes[0] : null;
+
+            const vendaData = {
+                codigo_live: codigoLiveAtual,
+                linha_id: linhaId,
+                data_live: dataLiveAtual,
+                item: linhaId,
+                valor: valor,
+                codigo: codigo,
+                comprador: comprador,
+                fila: fila,
+                total: valor,
+                updated_at: new Date().toISOString()
+            };
+
+            let result;
+
+            if (existente) {
+                result = await supabaseClient
+                    .from('vendas_live')
+                    .update(vendaData)
+                    .eq('id', existente.id);
+
+                const idx = vendas.findIndex(v => v.linha_id === linhaId && v.codigo_live === codigoLiveAtual);
+                if (idx !== -1) vendas[idx] = { ...vendaData, id: existente.id };
+                else vendas.push({ ...vendaData, id: existente.id });
+            } else {
+                result = await supabaseClient
+                    .from('vendas_live')
+                    .insert([{ ...vendaData, created_at: new Date().toISOString(), bloqueada: false }])
+                    .select();
+
+                if (result.data?.[0]) {
+                    const idx = vendas.findIndex(v => v.linha_id === linhaId && v.codigo_live === codigoLiveAtual);
+                    if (idx !== -1) vendas[idx] = result.data[0];
+                    else vendas.push(result.data[0]);
+                }
+            }
+
+            if (result.error) throw result.error;
+            
+            marcarLinhaComoSalva(linhaId);
+        }
+
+        // NOVO: Funções para verificar antes de ações importantes
+        async function verificarESalvarAntesDeVerRelatorio() {
+            await verificarESalvarTodasLinhasPendentes();
+            gerarRelatorioNovaAba();
+        }
+
+        async function verificarESalvarAntesDeFinalizar() {
+            await verificarESalvarTodasLinhasPendentes();
+            finalizarLive();
+        }
+
         async function salvarVenda(linhaId) {
             if (liveBloqueada) return;
 
@@ -1040,13 +1207,12 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 if (result.error) throw result.error;
 
                 atualizarContagemItens();
+                marcarLinhaComoSalva(linhaId);
 
                 if (btnSalvar) {
                     btnSalvar.classList.remove('saving');
-                    btnSalvar.classList.add('saved');
                     btnSalvar.textContent = '✓';
                     setTimeout(() => {
-                        btnSalvar.classList.remove('saved');
                         btnSalvar.textContent = '💾';
                     }, 1500);
                 }
@@ -1078,30 +1244,41 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             const tr = document.createElement('tr');
             tr.id = `linha-${venda.linha_id}`;
             tr.dataset.linhaId = venda.linha_id;
+            
+            // Verifica se já existe no banco (tem ID) para definir cor do botão
+            const jaSalvo = venda.id ? true : false;
+            const btnClass = jaSalvo ? 'btn-save saved' : 'btn-save';
+            const btnStyle = jaSalvo ? '' : 'background: #dc3545;';
+            
             tr.innerHTML = `
                 <td><span class="item-number" id="numero-${venda.linha_id}">${venda.linha_id}</span></td>
-                <td><input type="number" step="0.01" class="valor-input" id="valor-${venda.linha_id}" value="${venda.valor || ''}" placeholder="0,00" onkeydown="navegarCampos(event, ${venda.linha_id}, 'valor')" ${liveBloqueada ? 'disabled' : ''}></td>
-                <td><input type="text" id="codigo-${venda.linha_id}" value="${venda.codigo || ''}" onkeydown="navegarCampos(event, ${venda.linha_id}, 'codigo')" ${liveBloqueada ? 'disabled' : ''}></td>
+                <td><input type="number" step="0.01" class="valor-input" id="valor-${venda.linha_id}" value="${venda.valor || ''}" placeholder="0,00" onkeydown="navegarCampos(event, ${venda.linha_id}, 'valor')" oninput="marcarLinhaComoNaoSalva(this)" ${liveBloqueada ? 'disabled' : ''}></td>
+                <td><input type="text" id="codigo-${venda.linha_id}" value="${venda.codigo || ''}" onkeydown="navegarCampos(event, ${venda.linha_id}, 'codigo')" oninput="marcarLinhaComoNaoSalva(this)" ${liveBloqueada ? 'disabled' : ''}></td>
                 <td>
                     <div class="autocomplete-container">
-                        <input type="text" id="comprador-${venda.linha_id}" value="${venda.comprador || ''}" oninput="filtrarSugestoes(this, 'comprador')" onkeydown="navegarCamposComSugestoes(event, ${venda.linha_id}, 'comprador')" autocomplete="off" placeholder="Nome ou Instagram" ${liveBloqueada ? 'disabled' : ''}>
+                        <input type="text" id="comprador-${venda.linha_id}" value="${venda.comprador || ''}" oninput="filtrarSugestoes(this, 'comprador'); marcarLinhaComoNaoSalva(this)" onkeydown="navegarCamposComSugestoes(event, ${venda.linha_id}, 'comprador')" autocomplete="off" placeholder="Nome ou Instagram" ${liveBloqueada ? 'disabled' : ''}>
                         <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('comprador-${venda.linha_id}'), this)" ${liveBloqueada ? 'disabled' : ''}>🎤</button>
                         <div class="suggestions" id="sugestoes-comprador-${venda.linha_id}"></div>
                     </div>
                 </td>
                 <td>
                     <div class="autocomplete-container">
-                        <input type="text" id="fila-${venda.linha_id}" value="${venda.fila || ''}" oninput="filtrarSugestoes(this, 'fila')" onkeydown="navegarCamposComSugestoes(event, ${venda.linha_id}, 'fila')" autocomplete="off" placeholder="Nome ou Instagram" ${liveBloqueada ? 'disabled' : ''}>
+                        <input type="text" id="fila-${venda.linha_id}" value="${venda.fila || ''}" oninput="filtrarSugestoes(this, 'fila'); marcarLinhaComoNaoSalva(this)" onkeydown="navegarCamposComSugestoes(event, ${venda.linha_id}, 'fila')" autocomplete="off" placeholder="Nome ou Instagram" ${liveBloqueada ? 'disabled' : ''}>
                         <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('fila-${venda.linha_id}'), this)" ${liveBloqueada ? 'disabled' : ''}>🎤</button>
                         <div class="suggestions" id="sugestoes-fila-${venda.linha_id}"></div>
                     </div>
                 </td>
                 <td>
-                    <button class="btn-save" id="btn-save-${venda.linha_id}" onclick="salvarVenda(${venda.linha_id})" ${liveBloqueada ? 'disabled' : ''}>💾</button>
+                    <button class="${btnClass}" id="btn-save-${venda.linha_id}" onclick="salvarVenda(${venda.linha_id})" style="${btnStyle}" ${liveBloqueada ? 'disabled' : ''}>💾</button>
                     <button class="delete-btn" onclick="excluirLinha(${venda.linha_id})" ${liveBloqueada ? 'disabled' : ''}>🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);
+            
+            // Verifica campos obrigatórios
+            if (!jaSalvo) {
+                verificarCamposObrigatorios(venda.linha_id);
+            }
         }
 
         function adicionarLinha() {
@@ -1116,28 +1293,32 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             tr.dataset.linhaId = linhaCount;
             tr.innerHTML = `
                 <td><span class="item-number">${linhaCount}</span></td>
-                <td><input type="number" step="0.01" class="valor-input" id="valor-${linhaCount}" placeholder="0,00" onkeydown="navegarCampos(event, ${linhaCount}, 'valor')"></td>
-                <td><input type="text" id="codigo-${linhaCount}" onkeydown="navegarCampos(event, ${linhaCount}, 'codigo')"></td>
+                <td><input type="number" step="0.01" class="valor-input" id="valor-${linhaCount}" placeholder="0,00" onkeydown="navegarCampos(event, ${linhaCount}, 'valor')" oninput="marcarLinhaComoNaoSalva(this)"></td>
+                <td><input type="text" id="codigo-${linhaCount}" onkeydown="navegarCampos(event, ${linhaCount}, 'codigo')" oninput="marcarLinhaComoNaoSalva(this)"></td>
                 <td>
                     <div class="autocomplete-container">
-                        <input type="text" id="comprador-${linhaCount}" oninput="filtrarSugestoes(this, 'comprador')" onkeydown="navegarCamposComSugestoes(event, ${linhaCount}, 'comprador')" autocomplete="off" placeholder="Nome ou Instagram">
+                        <input type="text" id="comprador-${linhaCount}" oninput="filtrarSugestoes(this, 'comprador'); marcarLinhaComoNaoSalva(this)" onkeydown="navegarCamposComSugestoes(event, ${linhaCount}, 'comprador')" autocomplete="off" placeholder="Nome ou Instagram">
                         <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('comprador-${linhaCount}'), this)">🎤</button>
                         <div class="suggestions" id="sugestoes-comprador-${linhaCount}"></div>
                     </div>
                 </td>
                 <td>
                     <div class="autocomplete-container">
-                        <input type="text" id="fila-${linhaCount}" oninput="filtrarSugestoes(this, 'fila')" onkeydown="navegarCamposComSugestoes(event, ${linhaCount}, 'fila')" autocomplete="off" placeholder="Nome ou Instagram">
+                        <input type="text" id="fila-${linhaCount}" oninput="filtrarSugestoes(this, 'fila'); marcarLinhaComoNaoSalva(this)" onkeydown="navegarCamposComSugestoes(event, ${linhaCount}, 'fila')" autocomplete="off" placeholder="Nome ou Instagram">
                         <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('fila-${linhaCount}'), this)">🎤</button>
                         <div class="suggestions" id="sugestoes-fila-${linhaCount}"></div>
                     </div>
                 </td>
                 <td>
-                    <button class="btn-save" id="btn-save-${linhaCount}" onclick="salvarVenda(${linhaCount})">💾</button>
+                    <button class="btn-save" id="btn-save-${linhaCount}" onclick="salvarVenda(${linhaCount})" style="background: #dc3545;">💾</button>
                     <button class="delete-btn" onclick="excluirLinha(${linhaCount})">🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);
+            
+            // Marca como não salva e verifica obrigatórios
+            linhasNaoSalvas.add(linhaCount);
+            verificarCamposObrigatorios(linhaCount);
         }
 
         function navegarCampos(event, linhaId, campoAtual) {
@@ -1363,6 +1544,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 const input = document.getElementById(`${inputAtualCadastro.tipoCampo}-${inputAtualCadastro.linhaId}`);
                 if (input) {
                     input.value = cliente.nome;
+                    marcarLinhaComoNaoSalva(input);
                 }
             }
             fecharClienteDialog();
@@ -1374,6 +1556,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             input.value = nome || instagram;
             document.getElementById(`sugestoes-${tipoCampo}-${linhaId}`).classList.remove('active');
             selectedSuggestionIndex = -1;
+            marcarLinhaComoNaoSalva(input);
             const campos = ['valor', 'codigo', 'comprador', 'fila'];
             const idx = campos.indexOf(tipoCampo);
             if (idx < campos.length - 1) {
@@ -1393,6 +1576,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 showStatus('Excluindo...', 'info');
                 await supabaseClient.from('vendas_live').delete().eq('linha_id', linhaId).eq('data_live', dataLiveAtual);
                 vendas = vendas.filter(v => v.linha_id !== linhaId);
+                linhasNaoSalvas.delete(parseInt(linhaId));
 
                 const linhasParaRenumerar = vendas.filter(v => v.linha_id > linhaId).sort((a,b) => a.linha_id - b.linha_id);
                 for (const venda of linhasParaRenumerar) {
@@ -1443,8 +1627,13 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                                     }
                                 }
                                 if (el.oninput) {
-                                    const tipoCampo = el.id.split('-')[0];
-                                    el.setAttribute('oninput', `filtrarSugestoes(this, '${tipoCampo}')`);
+                                    const oninputStr = el.getAttribute('oninput');
+                                    if (oninputStr && oninputStr.includes('marcarLinhaComoNaoSalva')) {
+                                        // Mantém o oninput existente
+                                    } else if (oninputStr) {
+                                        const tipoCampo = el.id.split('-')[0];
+                                        el.setAttribute('oninput', `filtrarSugestoes(this, '${tipoCampo}'); marcarLinhaComoNaoSalva(this)`);
+                                    }
                                 }
                             }
                         });
@@ -1560,6 +1749,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 document.getElementById('vendasBody').innerHTML = '';
                 linhaCount = 0;
                 liveBloqueada = false;
+                linhasNaoSalvas.clear();
                 for (let i = 0; i < 150; i++) adicionarLinha();
                 liberarCampos();
                 atualizarContagemItens();
