@@ -67,18 +67,19 @@
         .status-message.error { background: #dc3545; display: block; }
         .status-message.info { background: #17a2b8; display: block; }
         .item-number { font-weight: bold; color: #667eea; }
-        .delete-btn { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px; }
+        /* Botões menores - diminuídos */
+        .delete-btn { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 10px; }
         .delete-btn:disabled { background: #adb5bd; cursor: not-allowed; }
         .btn-save { 
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%); 
             color: white; 
             border: none; 
             border-radius: 4px; 
-            padding: 6px 10px; 
+            padding: 3px 6px; 
             cursor: pointer; 
-            font-size: 11px; 
+            font-size: 10px; 
             font-weight: 600;
-            margin-right: 6px; 
+            margin-right: 4px; 
             transition: all 0.2s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
@@ -141,6 +142,23 @@
         .sugestao-cadastro { background: #e7f3ff; border: 1px solid #667eea; border-radius: 6px; padding: 10px; margin-top: 10px; cursor: pointer; text-align: center; color: #667eea; font-weight: 600; }
         .sugestao-cadastro:hover { background: #667eea; color: white; }
         .campo-opcional { color: #6c757d; font-size: 12px; font-weight: normal; }
+        /* Estilos para seleção de live */
+        .live-selection { margin-top: 15px; padding: 15px; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; }
+        .live-selection h4 { margin-bottom: 10px; color: #856404; }
+        .live-option { display: flex; align-items: center; padding: 10px; margin: 5px 0; background: white; border: 2px solid #dee2e6; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .live-option:hover { border-color: #667eea; background: #f8f9fa; }
+        .live-option.selected { border-color: #28a745; background: #d4edda; }
+        .live-option input[type="radio"] { margin-right: 10px; }
+        .live-option-info { flex: 1; }
+        .live-option-code { font-weight: bold; color: #667eea; font-size: 16px; }
+        .live-option-date { color: #6c757d; font-size: 12px; }
+        .live-option-status { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .live-option-status.ativa { background: #d4edda; color: #155724; }
+        .live-option-status.finalizada { background: #f8d7da; color: #721c24; }
+        #livesDisponiveis { display: none; }
+        #livesDisponiveis.active { display: block; }
+        .nova-live-btn { margin-top: 10px; padding: 10px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600; }
+        .nova-live-btn:hover { background: #218838; }
     </style>
 <base target="_blank">
 <base target="_blank">
@@ -156,11 +174,11 @@
                 <h3>🔧 Configuração do Supabase</h3>
                 <div class="form-group">
                     <label>URL do Supabase:</label>
-                    <input type="text" id="supabaseUrl" placeholder="https://seu-projeto.supabase.co">
+                    <input type="text" id="supabaseUrl" value="https://ytnfjzngalfapfnbobfm.supabase.co" readonly>
                 </div>
                 <div class="form-group">
                     <label>Chave Anônima (Anon Key):</label>
-                    <input type="password" id="supabaseKey" placeholder="sua-chave-anon">
+                    <input type="password" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls">
                 </div>
                 <button class="btn btn-primary" onclick="conectarSupabase()">Conectar</button>
                 <div id="sqlHelper" style="display: none; margin-top: 20px;">
@@ -206,11 +224,16 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     <div class="date-input-group">
                         <div class="form-group">
                             <label>Data da Live:</label>
-                            <input type="date" id="dataLiveInput" value="">
+                            <input type="date" id="dataLiveInput" value="" onchange="verificarLivesNaData()">
                         </div>
-                        <button class="btn btn-primary" onclick="iniciarLive()">Iniciar Cadastro</button>
                     </div>
-                    <p class="info-text" style="margin-top: 10px;">💡 Cada data representa uma live diferente.</p>
+                    <div id="livesDisponiveis" class="live-selection">
+                        <h4>📺 Lives disponíveis nesta data:</h4>
+                        <div id="listaLives"></div>
+                        <button class="nova-live-btn" onclick="criarNovaLiveNaData()">+ Criar Nova Live</button>
+                    </div>
+                    <button class="btn btn-primary" id="btnIniciarCadastro" onclick="iniciarLive()" style="margin-top: 15px; display: none;">Iniciar Cadastro</button>
+                    <p class="info-text" style="margin-top: 10px;">💡 Selecione uma data para ver as lives disponíveis.</p>
                 </div>
             </div>
             <div id="appSection" style="display: none;">
@@ -298,6 +321,8 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
         let totalLiveAtual = 0;
         let liveBloqueada = false;
         let inputAtualCadastro = null;
+        let livesNaDataSelecionada = [];
+        let liveSelecionada = null;
 
         function inicializarReconhecimentoVoz() {
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -319,7 +344,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                                 const primeiraSugestao = sugestoesDiv.querySelector('.suggestion-item');
                                 if (primeiraSugestao) primeiraSugestao.click();
                             }
-                            salvarVenda(linhaId);
                         }, 100);
                     }
                     pararGravacao();
@@ -404,6 +428,112 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             }
         }
 
+        // ==================== FUNÇÕES DE SELEÇÃO DE LIVE ====================
+
+        async function verificarLivesNaData() {
+            const dataInput = document.getElementById('dataLiveInput').value;
+            if (!dataInput) {
+                document.getElementById('livesDisponiveis').classList.remove('active');
+                document.getElementById('btnIniciarCadastro').style.display = 'none';
+                return;
+            }
+
+            showStatus('Buscando lives...', 'info');
+
+            try {
+                // Busca todas as lives desta data (ativas e finalizadas)
+                const { data: lives, error } = await supabaseClient
+                    .from('lives_pg')
+                    .select('*')
+                    .eq('data_live', dataInput)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                livesNaDataSelecionada = lives || [];
+                const listaLivesDiv = document.getElementById('listaLives');
+                const livesDisponiveisDiv = document.getElementById('livesDisponiveis');
+
+                if (livesNaDataSelecionada.length === 0) {
+                    // Não há lives nesta data - criar nova automaticamente
+                    listaLivesDiv.innerHTML = '<p style="color: #6c757d; text-align: center;">Nenhuma live encontrada nesta data. Clique em "Criar Nova Live".</p>';
+                    livesDisponiveisDiv.classList.add('active');
+                    liveSelecionada = null;
+                    document.getElementById('btnIniciarCadastro').style.display = 'none';
+                } else {
+                    // Mostrar opções de lives
+                    let html = '';
+                    livesNaDataSelecionada.forEach((live, index) => {
+                        const statusClass = live.status === 'ativa' ? 'ativa' : 'finalizada';
+                        const statusText = live.status === 'ativa' ? 'ATIVA' : 'FINALIZADA';
+                        const selected = index === 0 ? 'selected' : '';
+                        const checked = index === 0 ? 'checked' : '';
+                        
+                        html += `
+                            <div class="live-option ${selected}" onclick="selecionarLive('${live.codigo}')" data-codigo="${live.codigo}">
+                                <input type="radio" name="liveSelecionada" value="${live.codigo}" ${checked} onchange="selecionarLive('${live.codigo}')">
+                                <div class="live-option-info">
+                                    <div class="live-option-code">${live.codigo}</div>
+                                    <div class="live-option-date">Criada em: ${new Date(live.created_at).toLocaleString('pt-BR')}</div>
+                                </div>
+                                <span class="live-option-status ${statusClass}">${statusText}</span>
+                            </div>
+                        `;
+                    });
+                    
+                    listaLivesDiv.innerHTML = html;
+                    livesDisponiveisDiv.classList.add('active');
+                    
+                    // Seleciona a primeira live por padrão
+                    liveSelecionada = livesNaDataSelecionada[0];
+                    document.getElementById('btnIniciarCadastro').style.display = 'inline-block';
+                }
+
+            } catch (error) {
+                showStatus('Erro ao buscar lives: ' + error.message, 'error');
+            }
+        }
+
+        function selecionarLive(codigo) {
+            liveSelecionada = livesNaDataSelecionada.find(l => l.codigo === codigo);
+            
+            // Atualiza visual da seleção
+            document.querySelectorAll('.live-option').forEach(el => {
+                el.classList.remove('selected');
+                if (el.dataset.codigo === codigo) {
+                    el.classList.add('selected');
+                    el.querySelector('input[type="radio"]').checked = true;
+                }
+            });
+            
+            document.getElementById('btnIniciarCadastro').style.display = 'inline-block';
+        }
+
+        async function criarNovaLiveNaData() {
+            const dataInput = document.getElementById('dataLiveInput').value;
+            if (!dataInput) {
+                showStatus('Selecione uma data primeiro!', 'error');
+                return;
+            }
+
+            showStatus('Criando nova live...', 'info');
+
+            try {
+                const novoCodigo = await gerarCodigoLive();
+                const novaLive = await criarNovaLive(dataInput, novoCodigo);
+                
+                // Atualiza a lista
+                await verificarLivesNaData();
+                
+                // Seleciona a nova live criada
+                selecionarLive(novaLive.codigo);
+                
+                showStatus(`Live ${novoCodigo} criada!`, 'success');
+            } catch (error) {
+                showStatus('Erro ao criar live: ' + error.message, 'error');
+            }
+        }
+
         // ==================== FUNÇÕES DE CÓDIGO SEQUENCIAL DA LIVE ====================
 
         async function gerarCodigoLive() {
@@ -461,51 +591,21 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             }
         }
 
-        async function buscarOuCriarLive(dataLive) {
-            try {
-                // Verifica se já existe uma live ativa para esta data
-                const { data: livesExistentes, error } = await supabaseClient
-                    .from('lives_pg')
-                    .select('*')
-                    .eq('data_live', dataLive)
-                    .eq('status', 'ativa')
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-
-                if (livesExistentes && livesExistentes.length > 0) {
-                    // Retorna a live mais recente desta data
-                    return livesExistentes[0];
-                }
-
-                // Cria nova live com código sequencial
-                const novoCodigo = await gerarCodigoLive();
-                const novaLive = await criarNovaLive(dataLive, novoCodigo);
-                return novaLive;
-
-            } catch (error) {
-                console.error('Erro ao buscar/criar live:', error);
-                throw error;
-            }
-        }
-
         async function iniciarLive() {
-            const dataInput = document.getElementById('dataLiveInput').value;
-            if (!dataInput) {
-                showStatus('Selecione uma data!', 'error');
+            if (!liveSelecionada) {
+                showStatus('Selecione uma live primeiro!', 'error');
                 return;
             }
 
+            const dataInput = document.getElementById('dataLiveInput').value;
             showStatus('Iniciando live...', 'info');
 
             try {
-                // Busca ou cria a live (com código sequencial)
-                const live = await buscarOuCriarLive(dataInput);
                 dataLiveAtual = dataInput;
-                codigoLiveAtual = live.codigo;
+                codigoLiveAtual = liveSelecionada.codigo;
 
                 linhasInicializadas = false;
-                liveBloqueada = live.status === 'finalizada';
+                liveBloqueada = liveSelecionada.status === 'finalizada';
 
                 const [ano, mes, dia] = dataInput.split('-');
                 document.getElementById('dataLiveDisplay').textContent = `${dia}/${mes}/${ano}`;
@@ -531,6 +631,11 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 linhaCount = 0;
                 linhasInicializadas = false;
                 liveBloqueada = false;
+                liveSelecionada = null;
+                livesNaDataSelecionada = [];
+                // Limpa a seleção
+                document.getElementById('livesDisponiveis').classList.remove('active');
+                document.getElementById('btnIniciarCadastro').style.display = 'none';
             }
         }
 
@@ -666,7 +771,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             const btnSalvar = document.getElementById(`btn-save-${linhaId}`);
             if (btnSalvar) {
                 btnSalvar.classList.add('saving');
-                btnSalvar.textContent = '⏳ Salvando...';
+                btnSalvar.textContent = '⏳';
             }
 
             const valor = parseFloat(document.getElementById(`valor-${linhaId}`).value) || 0;
@@ -734,20 +839,30 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 if (btnSalvar) {
                     btnSalvar.classList.remove('saving');
                     btnSalvar.classList.add('saved');
-                    btnSalvar.textContent = '✓ Salvo!';
+                    btnSalvar.textContent = '✓';
                     setTimeout(() => {
                         btnSalvar.classList.remove('saved');
-                        btnSalvar.textContent = '💾 Salvar';
+                        btnSalvar.textContent = '💾';
                     }, 1500);
                 }
 
                 showStatus('Item salvo com sucesso!', 'success');
 
+                // APÓS SALVAR, MOVE O FOCO PARA O CAMPO VALOR DA PRÓXIMA LINHA
+                setTimeout(() => {
+                    const proximaLinha = linhaId + 1;
+                    const campoValorProximo = document.getElementById(`valor-${proximaLinha}`);
+                    if (campoValorProximo) {
+                        campoValorProximo.focus();
+                        campoValorProximo.select();
+                    }
+                }, 100);
+
             } catch (error) {
                 console.error('Erro ao salvar:', error);
                 if (btnSalvar) {
                     btnSalvar.classList.remove('saving');
-                    btnSalvar.textContent = '💾 Salvar';
+                    btnSalvar.textContent = '💾';
                 }
                 showStatus('Erro ao salvar: ' + error.message, 'error');
             }
@@ -778,8 +893,8 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     </div>
                 </td>
                 <td>
-                    <button class="btn-save" id="btn-save-${venda.linha_id}" onclick="salvarVenda(${venda.linha_id})" ${liveBloqueada ? 'disabled' : ''}>💾 Salvar</button>
-                    <button class="delete-btn" onclick="excluirLinha(${venda.linha_id})" ${liveBloqueada ? 'disabled' : ''}>🗑️ Excluir</button>
+                    <button class="btn-save" id="btn-save-${venda.linha_id}" onclick="salvarVenda(${venda.linha_id})" ${liveBloqueada ? 'disabled' : ''}>💾</button>
+                    <button class="delete-btn" onclick="excluirLinha(${venda.linha_id})" ${liveBloqueada ? 'disabled' : ''}>🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -814,8 +929,8 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     </div>
                 </td>
                 <td>
-                    <button class="btn-save" id="btn-save-${linhaCount}" onclick="salvarVenda(${linhaCount})">💾 Salvar</button>
-                    <button class="delete-btn" onclick="excluirLinha(${linhaCount})">🗑️ Excluir</button>
+                    <button class="btn-save" id="btn-save-${linhaCount}" onclick="salvarVenda(${linhaCount})">💾</button>
+                    <button class="delete-btn" onclick="excluirLinha(${linhaCount})">🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -1048,7 +1163,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 const input = document.getElementById(`${inputAtualCadastro.tipoCampo}-${inputAtualCadastro.linhaId}`);
                 if (input) {
                     input.value = cliente.nome;
-                    salvarVenda(inputAtualCadastro.linhaId);
                 }
             }
             fecharClienteDialog();
@@ -1060,7 +1174,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             input.value = nome || instagram;
             document.getElementById(`sugestoes-${tipoCampo}-${linhaId}`).classList.remove('active');
             selectedSuggestionIndex = -1;
-            salvarVenda(linhaId);
             const campos = ['valor', 'codigo', 'comprador', 'fila'];
             const idx = campos.indexOf(tipoCampo);
             if (idx < campos.length - 1) {
@@ -1122,7 +1235,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                                         el.setAttribute('onclick', novoOnclick);
                                     }
                                 }
-                                if (el.onblur) el.setAttribute('onblur', `salvarVenda(${novoLinhaId})`);
                                 if (el.onkeydown) {
                                     const onkeydownStr = el.getAttribute('onkeydown');
                                     if (onkeydownStr) {
