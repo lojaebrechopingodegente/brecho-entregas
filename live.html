@@ -159,7 +159,172 @@
         #livesDisponiveis.active { display: block; }
         .nova-live-btn { margin-top: 10px; padding: 10px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600; }
         .nova-live-btn:hover { background: #218838; }
-    </style>
+<style>
+    /* ... (mantenha todo o CSS anterior) ... */
+    
+    /* Campos de live super compactos */
+    .live-selection-compact {
+        margin-top: 10px;
+        padding: 10px;
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 6px;
+    }
+    
+    .live-selection-compact h4 {
+        margin-bottom: 6px;
+        font-size: 12px;
+        color: #856404;
+    }
+    
+    .live-option-compact {
+        display: flex;
+        align-items: center;
+        padding: 6px 8px;
+        margin: 3px 0;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 12px;
+    }
+    
+    .live-option-compact:hover {
+        border-color: #667eea;
+        background: #f8f9fa;
+    }
+    
+    .live-option-compact.selected {
+        border-color: #28a745;
+        background: #d4edda;
+    }
+    
+    .live-option-compact input[type="radio"] {
+        margin-right: 8px;
+        width: 14px;
+        height: 14px;
+    }
+    
+    .live-option-info-compact {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .live-option-code-compact {
+        font-weight: bold;
+        color: #667eea;
+        font-size: 13px;
+        min-width: 70px;
+    }
+    
+    .live-option-date-compact {
+        color: #6c757d;
+        font-size: 10px;
+    }
+    
+    .live-option-status-compact {
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 9px;
+        font-weight: 600;
+        margin-right: 8px;
+    }
+    
+    .live-option-status-compact.ativa {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .live-option-status-compact.finalizada {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .btn-excluir-live {
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        padding: 3px 6px;
+        cursor: pointer;
+        font-size: 10px;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    
+    .live-option-compact:hover .btn-excluir-live {
+        opacity: 1;
+    }
+    
+    .btn-excluir-live:hover {
+        background: #c82333;
+    }
+    
+    .nova-live-btn-compact {
+        margin-top: 6px;
+        padding: 6px;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+        font-weight: 600;
+        font-size: 12px;
+    }
+    
+    .nova-live-btn-compact:hover {
+        background: #218838;
+    }
+    
+    /* Confirmar exclusão */
+    .confirm-excluir-live {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 5000;
+    }
+    
+    .confirm-excluir-live.active {
+        display: flex;
+    }
+    
+    .confirm-box-compact {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 350px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .confirm-box-compact h3 {
+        color: #dc3545;
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+    
+    .confirm-box-compact p {
+        margin-bottom: 15px;
+        color: #495057;
+        font-size: 13px;
+    }
+    
+    .confirm-box-compact .btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        margin: 0 5px;
+    }
+</style>
 <base target="_blank">
 <base target="_blank">
 </head>
@@ -218,24 +383,34 @@ create index if not exists idx_vendas_live_data on vendas_live(data_live);
 create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 </div>
             </div>
-            <div id="dateSelectorSection" style="display: none;">
-                <div class="date-selector">
-                    <h3>📅 Selecione a Data da Live</h3>
-                    <div class="date-input-group">
-                        <div class="form-group">
-                            <label>Data da Live:</label>
-                            <input type="date" id="dataLiveInput" value="" onchange="verificarLivesNaData()">
-                        </div>
-                    </div>
-                    <div id="livesDisponiveis" class="live-selection">
-                        <h4>📺 Lives disponíveis nesta data:</h4>
-                        <div id="listaLives"></div>
-                        <button class="nova-live-btn" onclick="criarNovaLiveNaData()">+ Criar Nova Live</button>
-                    </div>
-                    <button class="btn btn-primary" id="btnIniciarCadastro" onclick="iniciarLive()" style="margin-top: 15px; display: none;">Iniciar Cadastro</button>
-                    <p class="info-text" style="margin-top: 10px;">💡 Selecione uma data para ver as lives disponíveis.</p>
-                </div>
-            </div>
+            <!-- SUBSTITUA a div dateSelectorSection por esta: -->
+<div id="dateSelectorSection" style="display: none;">
+    <div class="date-selector-compact">
+        <h3>📅 Selecione a Data da Live</h3>
+        <div class="date-input-compact">
+            <input type="date" id="dataLiveInput" value="" onchange="verificarLivesNaData()">
+            <button class="btn btn-primary" id="btnIniciarCadastro" onclick="iniciarLive()" style="display: none;">Iniciar Cadastro</button>
+        </div>
+        <div id="livesDisponiveis" class="live-selection-compact" style="display: none;">
+            <h4>📺 Lives disponíveis:</h4>
+            <div id="listaLives"></div>
+            <button class="nova-live-btn-compact" onclick="criarNovaLiveNaData()">+ Criar Nova Live</button>
+        </div>
+        <p class="info-text-small">💡 Selecione uma data para ver as lives disponíveis.</p>
+    </div>
+</div>
+
+<!-- ADICIONE este dialog de confirmação antes do fechamento do body: -->
+<div class="confirm-excluir-live" id="confirmExcluirLiveDialog">
+    <div class="confirm-box-compact">
+        <h3>⚠️ Excluir Live</h3>
+        <p id="textoConfirmExcluir">Tem certeza que deseja excluir esta live?</p>
+        <div>
+            <button class="btn btn-secondary" onclick="fecharConfirmExcluirLive()">Cancelar</button>
+            <button class="btn btn-danger" onclick="executarExcluirLive()">Sim, Excluir</button>
+        </div>
+    </div>
+</div>
             <div id="appSection" style="display: none;">
                 <div class="live-info" id="liveInfoBanner">
                     <div>
@@ -430,85 +605,114 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
 
         // ==================== FUNÇÕES DE SELEÇÃO DE LIVE ====================
 
-        async function verificarLivesNaData() {
-            const dataInput = document.getElementById('dataLiveInput').value;
-            if (!dataInput) {
-                document.getElementById('livesDisponiveis').classList.remove('active');
-                document.getElementById('btnIniciarCadastro').style.display = 'none';
-                return;
-            }
+        // SUBSTITUA a função verificarLivesNaData por esta:
+async function verificarLivesNaData() {
+    const dataInput = document.getElementById('dataLiveInput').value;
+    const livesDiv = document.getElementById('livesDisponiveis');
+    const btnIniciar = document.getElementById('btnIniciarCadastro');
+    
+    if (!dataInput) {
+        livesDiv.style.display = 'none';
+        btnIniciar.style.display = 'none';
+        return;
+    }
 
-            showStatus('Buscando lives...', 'info');
+    showStatus('Buscando lives...', 'info');
 
-            try {
-                // Busca todas as lives desta data (ativas e finalizadas)
-                const { data: lives, error } = await supabaseClient
-                    .from('lives_pg')
-                    .select('*')
-                    .eq('data_live', dataInput)
-                    .order('created_at', { ascending: false });
+    try {
+        const { data: lives, error } = await supabaseClient
+            .from('lives_pg')
+            .select('*')
+            .eq('data_live', dataInput)
+            .order('created_at', { ascending: false });
 
-                if (error) throw error;
+        if (error) throw error;
 
-                livesNaDataSelecionada = lives || [];
-                const listaLivesDiv = document.getElementById('listaLives');
-                const livesDisponiveisDiv = document.getElementById('livesDisponiveis');
+        livesNaDataSelecionada = lives || [];
+        const listaLivesDiv = document.getElementById('listaLives');
 
-                if (livesNaDataSelecionada.length === 0) {
-                    // Não há lives nesta data - criar nova automaticamente
-                    listaLivesDiv.innerHTML = '<p style="color: #6c757d; text-align: center;">Nenhuma live encontrada nesta data. Clique em "Criar Nova Live".</p>';
-                    livesDisponiveisDiv.classList.add('active');
-                    liveSelecionada = null;
-                    document.getElementById('btnIniciarCadastro').style.display = 'none';
-                } else {
-                    // Mostrar opções de lives
-                    let html = '';
-                    livesNaDataSelecionada.forEach((live, index) => {
-                        const statusClass = live.status === 'ativa' ? 'ativa' : 'finalizada';
-                        const statusText = live.status === 'ativa' ? 'ATIVA' : 'FINALIZADA';
-                        const selected = index === 0 ? 'selected' : '';
-                        const checked = index === 0 ? 'checked' : '';
-                        
-                        html += `
-                            <div class="live-option ${selected}" onclick="selecionarLive('${live.codigo}')" data-codigo="${live.codigo}">
-                                <input type="radio" name="liveSelecionada" value="${live.codigo}" ${checked} onchange="selecionarLive('${live.codigo}')">
-                                <div class="live-option-info">
-                                    <div class="live-option-code">${live.codigo}</div>
-                                    <div class="live-option-date">Criada em: ${new Date(live.created_at).toLocaleString('pt-BR')}</div>
-                                </div>
-                                <span class="live-option-status ${statusClass}">${statusText}</span>
-                            </div>
-                        `;
-                    });
-                    
-                    listaLivesDiv.innerHTML = html;
-                    livesDisponiveisDiv.classList.add('active');
-                    
-                    // Seleciona a primeira live por padrão
-                    liveSelecionada = livesNaDataSelecionada[0];
-                    document.getElementById('btnIniciarCadastro').style.display = 'inline-block';
-                }
-
-            } catch (error) {
-                showStatus('Erro ao buscar lives: ' + error.message, 'error');
-            }
-        }
-
-        function selecionarLive(codigo) {
-            liveSelecionada = livesNaDataSelecionada.find(l => l.codigo === codigo);
-            
-            // Atualiza visual da seleção
-            document.querySelectorAll('.live-option').forEach(el => {
-                el.classList.remove('selected');
-                if (el.dataset.codigo === codigo) {
-                    el.classList.add('selected');
-                    el.querySelector('input[type="radio"]').checked = true;
-                }
+        if (livesNaDataSelecionada.length === 0) {
+            listaLivesDiv.innerHTML = '<p style="color: #6c757d; text-align: center; font-size: 11px; margin: 3px 0;">Nenhuma live nesta data.</p>';
+            livesDiv.style.display = 'block';
+            liveSelecionada = null;
+            btnIniciar.style.display = 'none';
+        } else {
+            let html = '';
+            livesNaDataSelecionada.forEach((live, index) => {
+                const statusClass = live.status === 'ativa' ? 'ativa' : 'finalizada';
+                const statusText = live.status === 'ativa' ? 'ATIVA' : 'FINALIZADA';
+                const selected = index === 0 ? 'selected' : '';
+                
+                html += `
+                    <div class="live-option-compact ${selected}" onclick="selecionarLive('${live.codigo}')" data-codigo="${live.codigo}">
+                        <input type="radio" name="liveSelecionada" value="${live.codigo}" ${index === 0 ? 'checked' : ''} onchange="selecionarLive('${live.codigo}')">
+                        <div class="live-option-info-compact">
+                            <span class="live-option-code-compact">${live.codigo}</span>
+                            <span class="live-option-date-compact">${new Date(live.created_at).toLocaleString('pt-BR')}</span>
+                        </div>
+                        <span class="live-option-status-compact ${statusClass}">${statusText}</span>
+                        <button class="btn-excluir-live" onclick="event.stopPropagation(); confirmarExcluirLive('${live.codigo}')" title="Excluir live">🗑️</button>
+                    </div>
+                `;
             });
             
-            document.getElementById('btnIniciarCadastro').style.display = 'inline-block';
+            listaLivesDiv.innerHTML = html;
+            livesDiv.style.display = 'block';
+            liveSelecionada = livesNaDataSelecionada[0];
+            btnIniciar.style.display = 'inline-block';
         }
 
+    } catch (error) {
+        showStatus('Erro ao buscar lives: ' + error.message, 'error');
+    }
+}
+
+// ADICIONE estas novas funções no final do script:
+let liveParaExcluir = null;
+
+function confirmarExcluirLive(codigo) {
+    liveParaExcluir = codigo;
+    document.getElementById('textoConfirmExcluir').innerHTML = `Tem certeza que deseja excluir a live <strong>${codigo}</strong>?<br><small style="color: #dc3545;">Todas as vendas desta live serão apagadas!</small>`;
+    document.getElementById('confirmExcluirLiveDialog').classList.add('active');
+}
+
+function fecharConfirmExcluirLive() {
+    document.getElementById('confirmExcluirLiveDialog').classList.remove('active');
+    liveParaExcluir = null;
+}
+
+async function executarExcluirLive() {
+    if (!liveParaExcluir) return;
+    
+    fecharConfirmExcluirLive();
+    showStatus('Excluindo live...', 'info');
+    
+    try {
+        // Primeiro exclui todas as vendas da live
+        const { error: errorVendas } = await supabaseClient
+            .from('vendas_live')
+            .delete()
+            .eq('codigo_live', liveParaExcluir);
+        
+        if (errorVendas) throw errorVendas;
+        
+        // Depois exclui a live
+        const { error: errorLive } = await supabaseClient
+            .from('lives_pg')
+            .delete()
+            .eq('codigo', liveParaExcluir);
+        
+        if (errorLive) throw errorLive;
+        
+        showStatus(`Live ${liveParaExcluir} excluída!`, 'success');
+        
+        // Atualiza a lista
+        await verificarLivesNaData();
+        
+    } catch (error) {
+        showStatus('Erro ao excluir: ' + error.message, 'error');
+    }
+}
         async function criarNovaLiveNaData() {
             const dataInput = document.getElementById('dataLiveInput').value;
             if (!dataInput) {
