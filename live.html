@@ -9,7 +9,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
         .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; }
         .header h1 { font-size: 2rem; margin-bottom: 10px; }
         .content { padding: 30px; }
         .table-container { overflow-x: auto; max-height: 70vh; overflow-y: auto; margin-bottom: 30px; border: 1px solid #dee2e6; border-radius: 8px; }
@@ -19,15 +19,7 @@
         tr:hover { background: #f8f9fa; }
         input { width: 100%; padding: 6px 8px; border: 1px solid #e9ecef; border-radius: 4px; font-size: 13px; transition: all 0.3s ease; }
         input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1); }
-        input.saving { border-color: #ffc107; background: #fff3cd; }
-        input.saved { border-color: #28a745; background: #d4edda; }
-        input:disabled, input[readonly] { background: #e9ecef; cursor: not-allowed; opacity: 0.7; }
-        /* NOVO: Campos obrigatórios não preenchidos */
-        input.obrigatorio-pendente { 
-            border-color: #dc3545 !important; 
-            background: #f8d7da !important; 
-            box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25) !important;
-        }
+        input.obrigatorio-pendente { border-color: #dc3545 !important; background: #f8d7da !important; box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25) !important; }
         .valor-input { text-align: right; font-weight: 600; }
         .autocomplete-container { position: relative; display: flex; align-items: center; gap: 4px; }
         .autocomplete-container input { flex: 1; }
@@ -36,37 +28,22 @@
         .mic-btn:disabled { background: #adb5bd; cursor: not-allowed; }
         .mic-btn.recording { background: #dc3545; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        .mic-btn.recording::before { content: "🔴"; }
         .suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #dee2e6; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 200px; overflow-y: auto; z-index: 1000; display: none; }
         .suggestions.active { display: block; }
         .suggestion-item { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #f1f3f4; transition: background 0.2s; font-size: 13px; }
         .suggestion-item:hover, .suggestion-item.selected { background: #667eea; color: white; }
-        .suggestion-item.selected .suggestion-secondary { color: rgba(255,255,255,0.8); }
-        .suggestion-item .suggestion-main { font-weight: 600; color: #333; }
-        .suggestion-item:hover .suggestion-main, .suggestion-item.selected .suggestion-main { color: white; }
-        .suggestion-item .suggestion-secondary { font-size: 11px; color: #666; margin-top: 2px; }
         .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease; margin-right: 10px; }
         .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
         .btn-success { background: #28a745; color: white; }
-        .btn-warning { background: #ffc107; color: #212529; }
         .btn-danger { background: #dc3545; color: white; }
-        .btn-danger:hover { background: #c82333; }
-        .btn-info { background: #17a2b8; color: white; }
         .btn-purple { background: #6f42c1; color: white; }
-        .btn-purple:hover { background: #5a32a3; }
         .btn-orange { background: #fd7e14; color: white; }
-        .btn-orange:hover { background: #e56b0a; }
         .btn-dark { background: #343a40; color: white; }
-        .btn-dark:hover { background: #23272b; }
         .btn-secondary { background: #6c757d; color: white; }
-        .btn:disabled { background: #adb5bd; cursor: not-allowed; opacity: 0.7; }
         .actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .config-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .config-section h3 { margin-bottom: 15px; color: #495057; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #495057; }
         .form-group input { width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 6px; font-size: 14px; }
-        .form-group input:focus { border-color: #667eea; outline: none; }
         .status-message { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; font-weight: 600; display: none; animation: slideUp 0.3s ease; z-index: 3000; }
         @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .status-message.success { background: #28a745; display: block; }
@@ -74,342 +51,108 @@
         .status-message.info { background: #17a2b8; display: block; }
         .item-number { font-weight: bold; color: #667eea; }
         .delete-btn { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 10px; }
-        .delete-btn:disabled { background: #adb5bd; cursor: not-allowed; }
-        /* NOVO: Botão salvar vermelho quando não salvo, verde quando salvo */
-        .btn-save { 
-            background: #dc3545; /* Vermelho por padrão - não salvo */
-            color: white; 
-            border: none; 
-            border-radius: 4px; 
-            padding: 3px 6px; 
-            cursor: pointer; 
-            font-size: 10px; 
-            font-weight: 600;
-            margin-right: 4px; 
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .btn-save:hover { 
-            transform: scale(1.05); 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-        .btn-save:active {
-            transform: scale(0.95);
-        }
-        .btn-save:disabled { 
-            background: #adb5bd; 
-            cursor: not-allowed; 
-            transform: none;
-            box-shadow: none;
-        }
-        .btn-save.saving {
-            background: #ffc107;
-            color: #212529;
-        }
-        .btn-save.saved {
-            background: #28a745; /* Verde quando salvo */
-            animation: pulseSave 0.5s ease;
-        }
-        @keyframes pulseSave {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
+        .btn-save { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 10px; font-weight: 600; margin-right: 4px; transition: all 0.2s ease; }
+        .btn-save.saved { background: #28a745; }
+        .btn-save.saving { background: #ffc107; color: #212529; }
         .info-text { color: #6c757d; font-size: 12px; margin-top: 5px; }
-        .sql-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 15px; margin-top: 10px; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
         .live-info { background: #d4edda; border: 1px solid #28a745; border-radius: 6px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .live-info.bloqueada { background: #fff3cd; border-color: #ffc107; }
-        .live-info.bloqueada h4, .live-info.bloqueada p { color: #856404; }
-        .live-info h4 { color: #155724; margin: 0; }
-        .live-info p { color: #155724; margin: 5px 0 0 0; font-size: 14px; }
         .change-date-btn { background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-        .change-date-btn:hover { background: #5a6268; }
         .voice-hint { font-size: 11px; color: #6c757d; margin-left: 5px; }
         .confirm-dialog { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 4000; }
         .confirm-dialog.active { display: flex; }
         .confirm-box { background: white; padding: 30px; border-radius: 12px; max-width: 500px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .confirm-box h3 { color: #dc3545; margin-bottom: 15px; }
-        .confirm-box p { margin-bottom: 25px; color: #495057; line-height: 1.5; }
-        .confirm-box .btn { margin: 0 10px; }
         .venda-dialog, .cliente-dialog { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 4000; }
         .venda-dialog.active, .cliente-dialog.active { display: flex; }
         .venda-box, .cliente-box { background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .venda-box h3, .cliente-box h3 { margin-bottom: 20px; color: #495057; text-align: center; }
         .venda-info { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .venda-info p { margin: 5px 0; color: #495057; }
-        .venda-info strong { color: #667eea; }
         .form-row { display: flex; gap: 15px; }
-        .form-row .form-group { flex: 1; }
         .sugestao-cadastro { background: #e7f3ff; border: 1px solid #667eea; border-radius: 6px; padding: 10px; margin-top: 10px; cursor: pointer; text-align: center; color: #667eea; font-weight: 600; }
-        .sugestao-cadastro:hover { background: #667eea; color: white; }
         .campo-opcional { color: #6c757d; font-size: 12px; font-weight: normal; }
-        
-        .date-selector-compact {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 15px 20px;
-            border-radius: 8px;
-            border: 2px solid #667eea;
-            max-width: 600px;
-        }
-        
-        .date-selector-compact h3 {
-            margin-bottom: 12px;
-            font-size: 16px;
-            color: #495057;
-        }
-        
-        .date-input-compact {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .date-input-compact input[type="date"] {
-            padding: 8px 12px;
-            font-size: 14px;
-            border: 2px solid #667eea;
-            border-radius: 6px;
-            min-width: 150px;
-            width: auto;
-            height: 38px;
-        }
-        
-        .date-input-compact .btn {
-            padding: 8px 16px;
-            font-size: 13px;
-            height: 38px;
-            margin: 0;
-        }
-        
-        .info-text-small {
-            font-size: 11px;
-            color: #6c757d;
-            margin-top: 8px;
-        }
-        
-        .live-selection-compact {
-            margin-top: 10px;
-            padding: 10px;
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 6px;
-        }
-        
-        .live-selection-compact h4 {
-            margin-bottom: 6px;
-            font-size: 12px;
-            color: #856404;
-        }
-        
-        .live-option-compact {
-            display: flex;
-            align-items: center;
-            padding: 6px 8px;
-            margin: 3px 0;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 12px;
-        }
-        
-        .live-option-compact:hover {
-            border-color: #667eea;
-            background: #f8f9fa;
-        }
-        
-        .live-option-compact.selected {
-            border-color: #28a745;
-            background: #d4edda;
-        }
-        
-        .live-option-compact input[type="radio"] {
-            margin-right: 8px;
-            width: 14px;
-            height: 14px;
-        }
-        
-        .live-option-info-compact {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .live-option-code-compact {
-            font-weight: bold;
-            color: #667eea;
-            font-size: 13px;
-            min-width: 70px;
-        }
-        
-        .live-option-date-compact {
-            color: #6c757d;
-            font-size: 10px;
-        }
-        
-        .live-option-status-compact {
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 9px;
-            font-weight: 600;
-            margin-right: 8px;
-        }
-        
-        .live-option-status-compact.ativa {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .live-option-status-compact.finalizada {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .btn-excluir-live {
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            padding: 3px 6px;
-            cursor: pointer;
-            font-size: 10px;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        
-        .live-option-compact:hover .btn-excluir-live {
-            opacity: 1;
-        }
-        
-        .btn-excluir-live:hover {
-            background: #c82333;
-        }
-        
-        .nova-live-btn-compact {
-            margin-top: 6px;
-            padding: 6px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: 600;
-            font-size: 12px;
-        }
-        
-        .nova-live-btn-compact:hover {
-            background: #218838;
-        }
-        
-        .confirm-excluir-live {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 5000;
-        }
-        
-        .confirm-excluir-live.active {
-            display: flex;
-        }
-        
-        .confirm-box-compact {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            max-width: 350px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        
-        .confirm-box-compact h3 {
-            color: #dc3545;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        
-        .confirm-box-compact p {
-            margin-bottom: 15px;
-            color: #495057;
-            font-size: 13px;
-        }
-        
-        .confirm-box-compact .btn {
-            padding: 6px 12px;
-            font-size: 12px;
-            margin: 0 5px;
-        }
+
+        .date-selector-compact { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 15px 20px; border-radius: 8px; border: 2px solid #667eea; max-width: 600px; }
+        .date-input-compact { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .date-input-compact input[type="date"] { padding: 8px 12px; font-size: 14px; border: 2px solid #667eea; border-radius: 6px; min-width: 150px; width: auto; height: 38px; }
+        .date-input-compact .btn { padding: 8px 16px; font-size: 13px; height: 38px; margin: 0; }
+        .info-text-small { font-size: 11px; color: #6c757d; margin-top: 8px; }
+        .live-selection-compact { margin-top: 10px; padding: 10px; background: #fff3cd; border: 2px solid #ffc107; border-radius: 6px; }
+        .live-option-compact { display: flex; align-items: center; padding: 6px 8px; margin: 3px 0; background: white; border: 1px solid #dee2e6; border-radius: 4px; cursor: pointer; transition: all 0.2s; font-size: 12px; }
+        .live-option-compact.selected { border-color: #28a745; background: #d4edda; }
+        .live-option-compact input[type="radio"] { margin-right: 8px; }
+        .live-option-code-compact { font-weight: bold; color: #667eea; font-size: 13px; min-width: 70px; }
+        .live-option-status-compact { padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 600; margin-right: 8px; }
+        .live-option-status-compact.ativa { background: #d4edda; color: #155724; }
+        .live-option-status-compact.finalizada { background: #f8d7da; color: #721c24; }
+        .btn-excluir-live { background: #dc3545; color: white; border: none; border-radius: 3px; padding: 3px 6px; cursor: pointer; font-size: 10px; opacity: 0; transition: opacity 0.2s; }
+        .live-option-compact:hover .btn-excluir-live { opacity: 1; }
+        .nova-live-btn-compact { margin-top: 6px; padding: 6px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: 600; font-size: 12px; }
+        .confirm-excluir-live { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 5000; }
+        .confirm-excluir-live.active { display: flex; }
+        .confirm-box-compact { background: white; padding: 20px; border-radius: 8px; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+
+        /* Tela de senha */
+        .senha-section { max-width: 400px; margin: 50px auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center; }
+        .senha-section h2 { color: #667eea; margin-bottom: 20px; }
+        .erro-senha { color: #dc3545; font-size: 14px; margin-top: 10px; display: none; }
+        .erro-senha.active { display: block; }
+
+        /* Header com botão voltar */
+        .header-content { display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto; }
+        .btn-voltar { background: rgba(255,255,255,0.2); color: white; border: 2px solid rgba(255,255,255,0.5); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-voltar:hover { background: rgba(255,255,255,0.3); border-color: white; transform: translateX(-2px); }
+        .header-title { flex: 1; text-align: center; }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🛍️ Registro de Vendas - Live</h1>
-            <p>Gerencie suas vendas em tempo real por data</p>
+        <!-- Tela de Senha -->
+        <div id="senhaSection" class="senha-section">
+            <h2>🔐 Acesso Restrito</h2>
+            <p style="color: #6c757d; margin-bottom: 20px;">Digite a senha para acessar o registro de vendas</p>
+            <div class="form-group">
+                <label>Senha:</label>
+                <input type="password" id="senhaInput" placeholder="••••••" maxlength="6">
+            </div>
+            <button class="btn btn-primary" onclick="verificarSenha()">Entrar</button>
+            <p id="erroSenha" class="erro-senha">Senha incorreta! Tente novamente.</p>
         </div>
-        <div class="content">
-            <div class="config-section" id="configSection">
-                <h3>🔧 Configuração do Supabase</h3>
-                <div class="form-group">
-                    <label>URL do Supabase:</label>
-                    <input type="text" id="supabaseUrl" value="https://ytnfjzngalfapfnbobfm.supabase.co" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Chave Anônima (Anon Key):</label>
-                    <input type="password" id="supabaseKey" placeholder="Digite sua chave anon key aqui">
-                </div>
-                <button class="btn btn-primary" onclick="conectarSupabase()">Conectar</button>
-                <div id="sqlHelper" style="display: none; margin-top: 20px;">
-                    <p style="color: #dc3545; font-weight: bold;">⚠️ Execute este SQL no Editor do Supabase primeiro:</p>
-                    <div class="sql-box">-- Tabela de controle das lives (código sequencial)
-create table if not exists lives_pg (
-    id uuid default gen_random_uuid() primary key,
-    codigo text unique not null,  -- Ex: LIVE-001, LIVE-002
-    data_live date not null,
-    status text default 'ativa',  -- ativa, finalizada
-    total_vendas decimal(10,2) default 0,
-    created_at timestamp with time zone default timezone('utc'::text, now()),
-    updated_at timestamp with time zone default timezone('utc'::text, now())
-);
 
--- Tabela de vendas vinculada ao código da live
-create table if not exists vendas_live (
-    id uuid default gen_random_uuid() primary key,
-    codigo_live text not null references lives_pg(codigo),  -- Chave estrangeira
-    linha_id integer not null,
-    data_live date not null,
-    item integer,
-    valor decimal(10,2) default 0,
-    codigo text,
-    comprador text,
-    fila text,
-    total decimal(10,2) default 0,
-    created_at timestamp with time zone default timezone('utc'::text, now()),
-    updated_at timestamp with time zone default timezone('utc'::text, now()),
-    bloqueada boolean default false
-);
-
--- Índices para performance
-create index if not exists idx_vendas_live_codigo_live on vendas_live(codigo_live);
-create index if not exists idx_vendas_live_linha on vendas_live(linha_id);
-create index if not exists idx_vendas_live_data on vendas_live(data_live);
-create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
+        <!-- Tela de Carregamento -->
+        <div id="configSection" style="display: none;">
+            <div class="header">
+                <div class="header-content">
+                    <a href="dashboard.html" class="btn-voltar">← Voltar</a>
+                    <div class="header-title">
+                        <h1>🛍️ Registro de Vendas - Live</h1>
+                        <p>Gerencie suas vendas em tempo real por data</p>
+                    </div>
+                    <div style="width: 80px;"></div>
                 </div>
             </div>
-            <div id="dateSelectorSection" style="display: none;">
+            <div class="content" style="text-align: center; padding: 40px;">
+                <p>Conectando ao Supabase...</p>
+                <div style="margin-top: 20px; color: #6c757d;">Aguarde um momento</div>
+            </div>
+        </div>
+
+        <!-- Seletor de Data -->
+        <div id="dateSelectorSection" style="display: none;">
+            <div class="header">
+                <div class="header-content">
+                    <a href="dashboard.html" class="btn-voltar">← Voltar</a>
+                    <div class="header-title">
+                        <h1>🛍️ Registro de Vendas - Live</h1>
+                        <p>Gerencie suas vendas em tempo real por data</p>
+                    </div>
+                    <div style="width: 80px;"></div>
+                </div>
+            </div>
+            <div class="content">
                 <div class="date-selector-compact">
                     <h3>📅 Selecione a Data da Live</h3>
                     <div class="date-input-compact">
-                        <input type="date" id="dataLiveInput" value="" onchange="verificarLivesNaData()">
+                        <input type="date" id="dataLiveInput" onchange="verificarLivesNaData()">
                         <button class="btn btn-primary" id="btnIniciarCadastro" onclick="iniciarLive()" style="display: none;">Iniciar Cadastro</button>
                     </div>
                     <div id="livesDisponiveis" class="live-selection-compact" style="display: none;">
@@ -420,7 +163,21 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     <p class="info-text-small">💡 Selecione uma data para ver as lives disponíveis.</p>
                 </div>
             </div>
-            <div id="appSection" style="display: none;">
+        </div>
+
+        <!-- App Principal -->
+        <div id="appSection" style="display: none;">
+            <div class="header">
+                <div class="header-content">
+                    <a href="dashboard.html" class="btn-voltar">← Voltar</a>
+                    <div class="header-title">
+                        <h1>🛍️ Registro de Vendas - Live</h1>
+                        <p>Gerencie suas vendas em tempo real por data</p>
+                    </div>
+                    <div style="width: 80px;"></div>
+                </div>
+            </div>
+            <div class="content">
                 <div class="live-info" id="liveInfoBanner">
                     <div>
                         <h4>📅 Live do dia: <span id="dataLiveDisplay"></span></h4>
@@ -453,7 +210,9 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             </div>
         </div>
     </div>
+
     <div class="status-message" id="statusMessage"></div>
+
     <div class="confirm-dialog" id="confirmResetDialog">
         <div class="confirm-box">
             <h3>⚠️ Atenção!</h3>
@@ -464,16 +223,18 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             </div>
         </div>
     </div>
+
     <div class="confirm-excluir-live" id="confirmExcluirLiveDialog">
         <div class="confirm-box-compact">
             <h3>⚠️ Excluir Live</h3>
-            <p id="textoConfirmExcluir">Tem certeza que deseja excluir esta live?</p>
+            <p id="textoConfirmExcluir">Tem certeza?</p>
             <div>
                 <button class="btn btn-secondary" onclick="fecharConfirmExcluirLive()">Cancelar</button>
                 <button class="btn btn-danger" onclick="executarExcluirLive()">Sim, Excluir</button>
             </div>
         </div>
     </div>
+
     <div class="venda-dialog" id="vendaDialog">
         <div class="venda-box">
             <h3>💰 Confirmar Registro</h3>
@@ -484,6 +245,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             </div>
         </div>
     </div>
+
     <div class="cliente-dialog" id="clienteDialog">
         <div class="cliente-box">
             <h3>👤 Cadastrar Cliente</h3>
@@ -501,7 +263,12 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             </div>
         </div>
     </div>
+
     <script>
+        // CONFIGURAÇÃO DO SUPABASE (HARDCODED)
+        const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE1MTQ0NDEsImV4cCI6MjA0NzA5MDQ0MX0.0zV9I8W2h5X7X9X9X9X9X9X9X9X9X9X9X9X9X9X9X9X9X9X9X9X9X9X9X9X9';
+
         let supabaseClient = null;
         let clientes = [];
         let vendas = [];
@@ -518,9 +285,70 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
         let livesNaDataSelecionada = [];
         let liveSelecionada = null;
         let liveParaExcluir = null;
-        // NOVO: Rastrear linhas não salvas
         let linhasNaoSalvas = new Set();
 
+        // INICIALIZAÇÃO
+        document.addEventListener('DOMContentLoaded', () => {
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('dataLiveInput').value = hoje;
+            inicializarReconhecimentoVoz();
+
+            // Verifica se já está logado
+            if (sessionStorage.getItem('liveLoggedIn') === 'true') {
+                document.getElementById('senhaSection').style.display = 'none';
+                document.getElementById('configSection').style.display = 'block';
+                conectarSupabaseAutomatico();
+            }
+
+            // Enter na senha
+            document.getElementById('senhaInput')?.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') verificarSenha();
+            });
+        });
+
+        // VERIFICAR SENHA
+        function verificarSenha() {
+            const senha = document.getElementById('senhaInput').value;
+            if (senha === '770057') {
+                sessionStorage.setItem('liveLoggedIn', 'true');
+                document.getElementById('senhaSection').style.display = 'none';
+                document.getElementById('configSection').style.display = 'block';
+                conectarSupabaseAutomatico();
+            } else {
+                document.getElementById('erroSenha').classList.add('active');
+                document.getElementById('senhaInput').value = '';
+                document.getElementById('senhaInput').focus();
+                setTimeout(() => document.getElementById('erroSenha').classList.remove('active'), 3000);
+            }
+        }
+
+        // CONEXÃO AUTOMÁTICA COM SUPABASE
+        async function conectarSupabaseAutomatico() {
+            try {
+                const { createClient } = supabase;
+                supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+                const { data, error } = await supabaseClient.from('clientes_pg').select('*').limit(1);
+                if (error) throw new Error('Erro na tabela clientes_pg: ' + error.message);
+
+                await carregarClientes();
+
+                const { error: vendasError } = await supabaseClient.from('vendas_live').select('id').limit(1);
+                if (vendasError && vendasError.message.includes('does not exist')) {
+                    showStatus('Erro: Tabela vendas_live não existe', 'error');
+                    return;
+                }
+
+                document.getElementById('configSection').style.display = 'none';
+                document.getElementById('dateSelectorSection').style.display = 'block';
+                showStatus('Conectado com sucesso!', 'success');
+
+            } catch (error) {
+                showStatus('Erro de conexão: ' + error.message, 'error');
+            }
+        }
+
+        // FUNÇÕES DE RECONHECIMENTO DE VOZ
         function inicializarReconhecimentoVoz() {
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -533,25 +361,11 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     if (activeInput) {
                         activeInput.value = transcript;
                         activeInput.dispatchEvent(new Event('input'));
-                        // NOVO: Marcar como não salvo ao digitar
                         marcarLinhaComoNaoSalva(activeInput);
-                        setTimeout(() => {
-                            const linhaId = activeInput.id.split('-')[1];
-                            const tipoCampo = activeInput.id.split('-')[0];
-                            const sugestoesDiv = document.getElementById(`sugestoes-${tipoCampo}-${linhaId}`);
-                            if (sugestoesDiv && sugestoesDiv.classList.contains('active')) {
-                                const primeiraSugestao = sugestoesDiv.querySelector('.suggestion-item');
-                                if (primeiraSugestao) primeiraSugestao.click();
-                            }
-                        }, 100);
                     }
                     pararGravacao();
                 };
-                recognition.onerror = (event) => {
-                    console.error('Erro no reconhecimento:', event.error);
-                    showStatus('Erro no reconhecimento de voz: ' + event.error, 'error');
-                    pararGravacao();
-                };
+                recognition.onerror = () => pararGravacao();
                 recognition.onend = () => pararGravacao();
             }
         }
@@ -564,19 +378,12 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             activeInput = input;
             btn.classList.add('recording');
             btn.innerHTML = '🔴';
-            try {
-                recognition.start();
-                showStatus('🎤 Ouvindo...', 'info');
-            } catch (e) {
-                console.error('Erro ao iniciar:', e);
-                pararGravacao();
-            }
+            try { recognition.start(); showStatus('🎤 Ouvindo...', 'info'); } 
+            catch (e) { pararGravacao(); }
         }
 
         function pararGravacao() {
-            if (recognition) {
-                try { recognition.stop(); } catch (e) {}
-            }
+            if (recognition) { try { recognition.stop(); } catch (e) {} }
             document.querySelectorAll('.mic-btn').forEach(btn => {
                 btn.classList.remove('recording');
                 btn.innerHTML = '🎤';
@@ -584,54 +391,20 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             activeInput = null;
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const hoje = new Date().toISOString().split('T')[0];
-            document.getElementById('dataLiveInput').value = hoje;
-            inicializarReconhecimentoVoz();
-        });
-
-        async function conectarSupabase() {
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-            if (!url || !key) {
-                showStatus('Preencha URL e chave!', 'error');
-                return;
-            }
-            try {
-                const { createClient } = supabase;
-                supabaseClient = createClient(url, key);
-                const { data, error } = await supabaseClient.from('clientes_pg').select('*').limit(1);
-                if (error) throw new Error('Erro na tabela clientes_pg: ' + error.message);
-                await carregarClientes();
-                const { error: vendasError } = await supabaseClient.from('vendas_live').select('id').limit(1);
-                if (vendasError && vendasError.message.includes('does not exist')) {
-                    document.getElementById('sqlHelper').style.display = 'block';
-                    showStatus('Crie a tabela vendas_live primeiro', 'error');
-                    return;
-                }
-                document.getElementById('configSection').style.display = 'none';
-                document.getElementById('dateSelectorSection').style.display = 'block';
-                showStatus('Conectado!', 'success');
-            } catch (error) {
-                showStatus('Erro: ' + error.message, 'error');
-            }
-        }
-
         async function carregarClientes() {
             try {
                 const { data, error } = await supabaseClient.from('clientes_pg').select('*');
                 if (error) throw error;
                 clientes = data || [];
-            } catch (error) {
-                throw error;
-            }
+            } catch (error) { throw error; }
         }
 
+        // FUNÇÕES DE LIVE
         async function verificarLivesNaData() {
             const dataInput = document.getElementById('dataLiveInput').value;
             const livesDiv = document.getElementById('livesDisponiveis');
             const btnIniciar = document.getElementById('btnIniciarCadastro');
-            
+
             if (!dataInput) {
                 livesDiv.style.display = 'none';
                 btnIniciar.style.display = 'none';
@@ -653,7 +426,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 const listaLivesDiv = document.getElementById('listaLives');
 
                 if (livesNaDataSelecionada.length === 0) {
-                    listaLivesDiv.innerHTML = '<p style="color: #6c757d; text-align: center; font-size: 11px; margin: 3px 0;">Nenhuma live nesta data.</p>';
+                    listaLivesDiv.innerHTML = '<p style="color: #6c757d; text-align: center; font-size: 11px;">Nenhuma live nesta data.</p>';
                     livesDiv.style.display = 'block';
                     liveSelecionada = null;
                     btnIniciar.style.display = 'none';
@@ -663,26 +436,25 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                         const statusClass = live.status === 'ativa' ? 'ativa' : 'finalizada';
                         const statusText = live.status === 'ativa' ? 'ATIVA' : 'FINALIZADA';
                         const selected = index === 0 ? 'selected' : '';
-                        
+
                         html += `
                             <div class="live-option-compact ${selected}" onclick="selecionarLive('${live.codigo}')" data-codigo="${live.codigo}">
                                 <input type="radio" name="liveSelecionada" value="${live.codigo}" ${index === 0 ? 'checked' : ''} onchange="selecionarLive('${live.codigo}')">
-                                <div class="live-option-info-compact">
+                                <div style="flex:1; display:flex; align-items:center; gap:10px;">
                                     <span class="live-option-code-compact">${live.codigo}</span>
-                                    <span class="live-option-date-compact">${new Date(live.created_at).toLocaleString('pt-BR')}</span>
+                                    <span style="color: #6c757d; font-size: 10px;">${new Date(live.created_at).toLocaleString('pt-BR')}</span>
                                 </div>
                                 <span class="live-option-status-compact ${statusClass}">${statusText}</span>
-                                <button class="btn-excluir-live" onclick="event.stopPropagation(); confirmarExcluirLive('${live.codigo}')" title="Excluir live">🗑️</button>
+                                <button class="btn-excluir-live" onclick="event.stopPropagation(); confirmarExcluirLive('${live.codigo}')">🗑️</button>
                             </div>
                         `;
                     });
-                    
+
                     listaLivesDiv.innerHTML = html;
                     livesDiv.style.display = 'block';
                     liveSelecionada = livesNaDataSelecionada[0];
                     btnIniciar.style.display = 'inline-block';
                 }
-
             } catch (error) {
                 showStatus('Erro ao buscar lives: ' + error.message, 'error');
             }
@@ -690,7 +462,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
 
         function selecionarLive(codigo) {
             liveSelecionada = livesNaDataSelecionada.find(l => l.codigo === codigo);
-            
             document.querySelectorAll('.live-option-compact').forEach(el => {
                 el.classList.remove('selected');
                 if (el.dataset.codigo === codigo) {
@@ -698,7 +469,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     el.querySelector('input[type="radio"]').checked = true;
                 }
             });
-            
             document.getElementById('btnIniciarCadastro').style.display = 'inline-block';
         }
 
@@ -715,37 +485,18 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
 
         async function executarExcluirLive() {
             if (!liveParaExcluir) return;
-            
             fecharConfirmExcluirLive();
             showStatus('Excluindo live...', 'info');
-            
+
             try {
-                // Primeiro exclui todas as vendas da live
-                const { error: errorVendas } = await supabaseClient
-                    .from('vendas_live')
-                    .delete()
-                    .eq('codigo_live', liveParaExcluir);
-                
-                if (errorVendas) throw errorVendas;
-                
-                // Depois exclui a live
-                const { error: errorLive } = await supabaseClient
-                    .from('lives_pg')
-                    .delete()
-                    .eq('codigo', liveParaExcluir);
-                
-                if (errorLive) throw errorLive;
-                
+                await supabaseClient.from('vendas_live').delete().eq('codigo_live', liveParaExcluir);
+                await supabaseClient.from('lives_pg').delete().eq('codigo', liveParaExcluir);
+
                 showStatus(`Live ${liveParaExcluir} excluída!`, 'success');
-                
-                // NOVO: Remove a live do array local e atualiza a lista
                 livesNaDataSelecionada = livesNaDataSelecionada.filter(l => l.codigo !== liveParaExcluir);
                 liveParaExcluir = null;
                 liveSelecionada = livesNaDataSelecionada.length > 0 ? livesNaDataSelecionada[0] : null;
-                
-                // Atualiza a visualização
                 await verificarLivesNaData();
-                
             } catch (error) {
                 showStatus('Erro ao excluir: ' + error.message, 'error');
             }
@@ -782,19 +533,12 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 if (error) throw error;
 
                 let proximoNumero = 1;
-
                 if (data && data.length > 0 && data[0].codigo) {
                     const match = data[0].codigo.match(/LIVE-(\d+)/);
-                    if (match) {
-                        proximoNumero = parseInt(match[1]) + 1;
-                    }
+                    if (match) proximoNumero = parseInt(match[1]) + 1;
                 }
-
-                const novoCodigo = `LIVE-${String(proximoNumero).padStart(3, '0')}`;
-                return novoCodigo;
-
+                return `LIVE-${String(proximoNumero).padStart(3, '0')}`;
             } catch (error) {
-                console.error('Erro ao gerar código:', error);
                 const timestamp = new Date().getTime();
                 return `LIVE-${timestamp.toString().slice(-6)}`;
             }
@@ -815,11 +559,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
 
                 if (error) throw error;
                 return data ? data[0] : null;
-
-            } catch (error) {
-                console.error('Erro ao criar live:', error);
-                throw error;
-            }
+            } catch (error) { throw error; }
         }
 
         async function iniciarLive() {
@@ -834,7 +574,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             try {
                 dataLiveAtual = dataInput;
                 codigoLiveAtual = liveSelecionada.codigo;
-
                 linhasInicializadas = false;
                 liveBloqueada = liveSelecionada.status === 'finalizada';
 
@@ -847,7 +586,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
 
                 await carregarVendasExistentes();
                 showStatus(`Live ${codigoLiveAtual} iniciada!`, 'success');
-
             } catch (error) {
                 showStatus('Erro ao iniciar live: ' + error.message, 'error');
             }
@@ -893,9 +631,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     .eq('codigo', codigoLiveAtual)
                     .single();
 
-                if (!liveError && liveData) {
-                    liveBloqueada = liveData.status === 'finalizada';
-                }
+                if (!liveError && liveData) liveBloqueada = liveData.status === 'finalizada';
 
                 const { data, error } = await supabaseClient
                     .from('vendas_live')
@@ -904,37 +640,32 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     .order('linha_id', { ascending: true });
 
                 if (error) {
-                    console.error('Erro ao carregar:', error);
                     vendas = [];
                     return;
                 }
 
-                vendas = (data || []).filter(v => 
-                    v.valor > 0 || v.comprador?.trim() || v.codigo?.trim()
-                );
+                vendas = (data || []).filter(v => v.valor > 0 || v.comprador?.trim() || v.codigo?.trim());
 
                 if (vendas.length === 0) {
                     for (let i = 0; i < 150; i++) adicionarLinha();
-                    showStatus(`Live ${codigoLiveAtual} iniciada! Adicione os itens.`, 'success');
                 } else {
                     vendas.forEach(v => criarLinhaComDados(v));
                     const maxLinhaId = Math.max(...vendas.map(v => v.linha_id), 0);
                     linhaCount = maxLinhaId;
                     for (let i = vendas.length; i < 150; i++) adicionarLinha();
-                    showStatus(`Carregadas ${vendas.length} vendas da ${codigoLiveAtual}`, 'success');
                 }
 
                 liveBloqueada ? bloquearCampos() : liberarCampos();
                 linhasInicializadas = true;
                 atualizarContagemItens();
             } catch (error) {
-                console.error('Erro:', error);
                 vendas = [];
             }
         }
 
-        async function limparDuplicadosNoBanco() {
+        async function sanitizarDuplicados() {
             try {
+                showStatus('Verificando duplicados...', 'info');
                 const { data, error } = await supabaseClient
                     .from('vendas_live')
                     .select('id, linha_id, updated_at, created_at')
@@ -951,11 +682,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 const idsDeletar = [];
                 for (const registros of Object.values(porLinhaId)) {
                     if (registros.length > 1) {
-                        registros.sort((a, b) => {
-                            const dataA = new Date(a.updated_at || a.created_at);
-                            const dataB = new Date(b.updated_at || b.created_at);
-                            return dataB - dataA;
-                        });
+                        registros.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
                         for (let i = 1; i < registros.length; i++) idsDeletar.push(registros[i].id);
                     }
                 }
@@ -963,28 +690,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 if (idsDeletar.length > 0) {
                     await supabaseClient.from('vendas_live').delete().in('id', idsDeletar);
                 }
-            } catch (e) {
-                console.error('Erro ao limpar:', e);
-            }
-        }
 
-        async function limparDuplicadosPorLinhaId(linhaId, manterId) {
-            try {
-                await supabaseClient
-                    .from('vendas_live')
-                    .delete()
-                    .eq('linha_id', linhaId)
-                    .eq('data_live', dataLiveAtual)
-                    .neq('id', manterId);
-            } catch (e) {
-                console.warn('Erro ao limpar duplicados da linha:', e);
-            }
-        }
-
-        async function sanitizarDuplicados() {
-            try {
-                showStatus('Verificando duplicados...', 'info');
-                await limparDuplicadosNoBanco();
                 await carregarVendasExistentes();
                 showStatus('Duplicados removidos!', 'success');
             } catch (e) {
@@ -992,75 +698,58 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             }
         }
 
-        // NOVO: Funções para rastrear linhas não salvas
         function marcarLinhaComoNaoSalva(input) {
             const linhaId = input.id.split('-')[1];
             if (!linhaId) return;
-            
+
             linhasNaoSalvas.add(parseInt(linhaId));
-            
+
             const btnSalvar = document.getElementById(`btn-save-${linhaId}`);
             if (btnSalvar) {
                 btnSalvar.classList.remove('saved');
-                btnSalvar.style.background = '#dc3545'; // Vermelho
+                btnSalvar.style.background = '#dc3545';
             }
-            
-            // Verificar campos obrigatórios
+
             verificarCamposObrigatorios(linhaId);
         }
 
         function verificarCamposObrigatorios(linhaId) {
             const valorInput = document.getElementById(`valor-${linhaId}`);
             const codigoInput = document.getElementById(`codigo-${linhaId}`);
-            
-            if (valorInput && !valorInput.value) {
-                valorInput.classList.add('obrigatorio-pendente');
-            } else if (valorInput) {
-                valorInput.classList.remove('obrigatorio-pendente');
-            }
-            
-            if (codigoInput && !codigoInput.value) {
-                codigoInput.classList.add('obrigatorio-pendente');
-            } else if (codigoInput) {
-                codigoInput.classList.remove('obrigatorio-pendente');
-            }
+
+            if (valorInput && !valorInput.value) valorInput.classList.add('obrigatorio-pendente');
+            else if (valorInput) valorInput.classList.remove('obrigatorio-pendente');
+
+            if (codigoInput && !codigoInput.value) codigoInput.classList.add('obrigatorio-pendente');
+            else if (codigoInput) codigoInput.classList.remove('obrigatorio-pendente');
         }
 
         function marcarLinhaComoSalva(linhaId) {
             linhasNaoSalvas.delete(parseInt(linhaId));
-            
+
             const btnSalvar = document.getElementById(`btn-save-${linhaId}`);
             if (btnSalvar) {
                 btnSalvar.classList.add('saved');
-                btnSalvar.style.background = ''; // Remove inline style, usa classe CSS
+                btnSalvar.style.background = '';
             }
-            
-            // Remove destaque de obrigatório
+
             const valorInput = document.getElementById(`valor-${linhaId}`);
             const codigoInput = document.getElementById(`codigo-${linhaId}`);
             if (valorInput) valorInput.classList.remove('obrigatorio-pendente');
             if (codigoInput) codigoInput.classList.remove('obrigatorio-pendente');
         }
 
-        // NOVO: Verificar e salvar todas as linhas pendentes
         async function verificarESalvarTodasLinhasPendentes() {
             if (linhasNaoSalvas.size === 0) return true;
-            
+
             showStatus(`Salvando ${linhasNaoSalvas.size} linha(s) pendente(s)...`, 'info');
-            
+
             const linhasParaSalvar = Array.from(linhasNaoSalvas);
-            let sucesso = true;
-            
             for (const linhaId of linhasParaSalvar) {
-                try {
-                    await salvarVendaSilencioso(linhaId);
-                } catch (error) {
-                    console.error(`Erro ao salvar linha ${linhaId}:`, error);
-                    sucesso = false;
-                }
+                try { await salvarVendaSilencioso(linhaId); } 
+                catch (error) { console.error(`Erro ao salvar linha ${linhaId}:`, error); }
             }
-            
-            return sucesso;
+            return true;
         }
 
         async function salvarVendaSilencioso(linhaId) {
@@ -1069,7 +758,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             const comprador = document.getElementById(`comprador-${linhaId}`).value.trim();
             const fila = document.getElementById(`fila-${linhaId}`).value.trim();
 
-            // Só salva se tiver valor ou código ou comprador (não salva linha vazia)
             if (valor === 0 && !codigo && !comprador) {
                 marcarLinhaComoSalva(linhaId);
                 return;
@@ -1103,20 +791,12 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             let result;
 
             if (existente) {
-                result = await supabaseClient
-                    .from('vendas_live')
-                    .update(vendaData)
-                    .eq('id', existente.id);
-
+                result = await supabaseClient.from('vendas_live').update(vendaData).eq('id', existente.id);
                 const idx = vendas.findIndex(v => v.linha_id === linhaId && v.codigo_live === codigoLiveAtual);
                 if (idx !== -1) vendas[idx] = { ...vendaData, id: existente.id };
                 else vendas.push({ ...vendaData, id: existente.id });
             } else {
-                result = await supabaseClient
-                    .from('vendas_live')
-                    .insert([{ ...vendaData, created_at: new Date().toISOString(), bloqueada: false }])
-                    .select();
-
+                result = await supabaseClient.from('vendas_live').insert([{ ...vendaData, created_at: new Date().toISOString(), bloqueada: false }]).select();
                 if (result.data?.[0]) {
                     const idx = vendas.findIndex(v => v.linha_id === linhaId && v.codigo_live === codigoLiveAtual);
                     if (idx !== -1) vendas[idx] = result.data[0];
@@ -1125,11 +805,9 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             }
 
             if (result.error) throw result.error;
-            
             marcarLinhaComoSalva(linhaId);
         }
 
-        // NOVO: Funções para verificar antes de ações importantes
         async function verificarESalvarAntesDeVerRelatorio() {
             await verificarESalvarTodasLinhasPendentes();
             gerarRelatorioNovaAba();
@@ -1183,20 +861,12 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 let result;
 
                 if (existente) {
-                    result = await supabaseClient
-                        .from('vendas_live')
-                        .update(vendaData)
-                        .eq('id', existente.id);
-
+                    result = await supabaseClient.from('vendas_live').update(vendaData).eq('id', existente.id);
                     const idx = vendas.findIndex(v => v.linha_id === linhaId && v.codigo_live === codigoLiveAtual);
                     if (idx !== -1) vendas[idx] = { ...vendaData, id: existente.id };
                     else vendas.push({ ...vendaData, id: existente.id });
                 } else {
-                    result = await supabaseClient
-                        .from('vendas_live')
-                        .insert([{ ...vendaData, created_at: new Date().toISOString(), bloqueada: false }])
-                        .select();
-
+                    result = await supabaseClient.from('vendas_live').insert([{ ...vendaData, created_at: new Date().toISOString(), bloqueada: false }]).select();
                     if (result.data?.[0]) {
                         const idx = vendas.findIndex(v => v.linha_id === linhaId && v.codigo_live === codigoLiveAtual);
                         if (idx !== -1) vendas[idx] = result.data[0];
@@ -1212,9 +882,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 if (btnSalvar) {
                     btnSalvar.classList.remove('saving');
                     btnSalvar.textContent = '✓';
-                    setTimeout(() => {
-                        btnSalvar.textContent = '💾';
-                    }, 1500);
+                    setTimeout(() => btnSalvar.textContent = '💾', 1500);
                 }
 
                 showStatus('Item salvo com sucesso!', 'success');
@@ -1229,7 +897,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 }, 100);
 
             } catch (error) {
-                console.error('Erro ao salvar:', error);
                 if (btnSalvar) {
                     btnSalvar.classList.remove('saving');
                     btnSalvar.textContent = '💾';
@@ -1244,12 +911,11 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             const tr = document.createElement('tr');
             tr.id = `linha-${venda.linha_id}`;
             tr.dataset.linhaId = venda.linha_id;
-            
-            // Verifica se já existe no banco (tem ID) para definir cor do botão
+
             const jaSalvo = venda.id ? true : false;
             const btnClass = jaSalvo ? 'btn-save saved' : 'btn-save';
             const btnStyle = jaSalvo ? '' : 'background: #dc3545;';
-            
+
             tr.innerHTML = `
                 <td><span class="item-number" id="numero-${venda.linha_id}">${venda.linha_id}</span></td>
                 <td><input type="number" step="0.01" class="valor-input" id="valor-${venda.linha_id}" value="${venda.valor || ''}" placeholder="0,00" onkeydown="navegarCampos(event, ${venda.linha_id}, 'valor')" oninput="marcarLinhaComoNaoSalva(this)" ${liveBloqueada ? 'disabled' : ''}></td>
@@ -1274,11 +940,8 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 </td>
             `;
             tbody.appendChild(tr);
-            
-            // Verifica campos obrigatórios
-            if (!jaSalvo) {
-                verificarCamposObrigatorios(venda.linha_id);
-            }
+
+            if (!jaSalvo) verificarCamposObrigatorios(venda.linha_id);
         }
 
         function adicionarLinha() {
@@ -1315,8 +978,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 </td>
             `;
             tbody.appendChild(tr);
-            
-            // Marca como não salva e verifica obrigatórios
             linhasNaoSalvas.add(linhaCount);
             verificarCamposObrigatorios(linhaCount);
         }
@@ -1397,9 +1058,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 return;
             }
 
-            if (event.key.length === 1 || event.key === 'Backspace') {
-                selectedSuggestionIndex = -1;
-            }
+            if (event.key.length === 1 || event.key === 'Backspace') selectedSuggestionIndex = -1;
         }
 
         function atualizarSelecaoSugestao(itens) {
@@ -1626,15 +1285,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                                         el.setAttribute('onkeydown', novoOnkeydown);
                                     }
                                 }
-                                if (el.oninput) {
-                                    const oninputStr = el.getAttribute('oninput');
-                                    if (oninputStr && oninputStr.includes('marcarLinhaComoNaoSalva')) {
-                                        // Mantém o oninput existente
-                                    } else if (oninputStr) {
-                                        const tipoCampo = el.id.split('-')[0];
-                                        el.setAttribute('oninput', `filtrarSugestoes(this, '${tipoCampo}'); marcarLinhaComoNaoSalva(this)`);
-                                    }
-                                }
                             }
                         });
                     }
@@ -1656,14 +1306,9 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     .select('*')
                     .eq('data_live', dataLiveAtual)
                     .order('linha_id', { ascending: true });
-                if (error) {
-                    console.error('Erro ao recarregar:', error);
-                    return;
-                }
+                if (error) return;
                 vendas = data || [];
-            } catch (error) {
-                console.error('Erro:', error);
-            }
+            } catch (error) {}
         }
 
         async function finalizarLive() {
