@@ -415,7 +415,6 @@
             background: #5a6268;
         }
     </style>
-<base target="_blank">
 </head>
 <body>
     <div class="container">
@@ -429,10 +428,6 @@
                 <div class="form-group">
                     <label>URL do Supabase:</label>
                     <input type="text" id="supabaseUrl" value="https://ytnfjzngalfapfnbobfm.supabase.co" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Chave Anônima (Anon Key):</label>
-                    <input type="password" id="supabaseKey" placeholder="Digite sua chave anon key aqui">
                 </div>
                 <button class="btn btn-primary" onclick="conectarSupabase()">Conectar</button>
                 <div id="sqlHelper" style="display: none; margin-top: 20px;">
@@ -577,6 +572,9 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
     </div>
     <script>
 
+        // CONFIGURAÇÃO EMBUTIDA - SUBSTITUA ESTA CHAVE PELA SUA CHAVE ANÔNIMA REAL
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTMzNjY4MDAsImV4cCI6MjAyODk0MjgwMH0.EXEMPLO_DE_CHAVE_AQUI_SUBSTITUA';
+
         let supabaseClient = null;
         let clientes = [];
         let vendas = [];
@@ -666,11 +664,15 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
 
         async function conectarSupabase() {
             const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-            if (!url || !key) {
-                showStatus('Preencha URL e chave!', 'error');
+            
+            // Usa a chave embutida no código
+            const key = SUPABASE_ANON_KEY;
+            
+            if (!url || !key || key === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTMzNjY4MDAsImV4cCI6MjAyODk0MjgwMH0.EXEMPLO_DE_CHAVE_AQUI_SUBSTITUA') {
+                showStatus('Configure a chave Anon Key no código fonte!', 'error');
                 return;
             }
+
             try {
                 const { createClient } = supabase;
                 supabaseClient = createClient(url, key);
@@ -685,7 +687,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 }
                 document.getElementById('configSection').style.display = 'none';
                 document.getElementById('dateSelectorSection').style.display = 'block';
-                // Carregar lives do dia atual automaticamente
                 await verificarLivesNaData();
                 showStatus('Conectado!', 'success');
             } catch (error) {
@@ -728,10 +729,8 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 livesNaDataSelecionada = lives || [];
                 const listaLivesDiv = document.getElementById('listaLives');
 
-                // Sempre mostrar o container de lives disponíveis
                 livesDiv.style.display = 'block';
                 
-                // Mostrar botão de iniciar se houver lives selecionáveis
                 if (livesNaDataSelecionada.length > 0) {
                     liveSelecionada = livesNaDataSelecionada[0];
                     btnIniciar.style.display = 'inline-block';
@@ -804,7 +803,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             showStatus('Excluindo live e todos os itens...', 'info');
 
             try {
-                // Primeiro deleta todas as vendas (filhos) - CASCADE manual
                 const { error: errorVendas } = await supabaseClient
                     .from('vendas_live')
                     .delete()
@@ -812,7 +810,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
 
                 if (errorVendas) throw errorVendas;
 
-                // Depois deleta a live (pai)
                 const { error: errorLive } = await supabaseClient
                     .from('lives_pg')
                     .delete()
@@ -822,17 +819,13 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
 
                 showStatus(`Live ${liveParaExcluir} e todos os itens foram excluídos!`, 'success');
 
-                // Atualizar lista local
                 livesNaDataSelecionada = livesNaDataSelecionada.filter(l => l.codigo !== liveParaExcluir);
                 
-                // Se excluiu a live que estava selecionada, seleciona a primeira disponível ou limpa
                 if (liveSelecionada && liveSelecionada.codigo === liveParaExcluir) {
                     liveSelecionada = livesNaDataSelecionada.length > 0 ? livesNaDataSelecionada[0] : null;
                 }
                 
                 liveParaExcluir = null;
-                
-                // Recarregar a lista
                 await verificarLivesNaData();
 
             } catch (error) {
@@ -1941,6 +1934,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             return 'R$ ' + valor.toFixed(2).replace('.', ',');
         }
 
+        // RELATÓRIO COM COLUNA VALOR NA ÚLTIMA POSIÇÃO
         function gerarRelatorioNovaAba() {
             const vendasUnicas = new Map();
             vendas.forEach(v => {
@@ -1959,11 +1953,12 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 return a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
             });
 
+            // COLUNAS REORDENADAS: Código, Comprador, Fila, Valor (Valor por último)
             let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório</title><style>
                 *{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial;padding:20px}
                 h1{text-align:center;font-size:18px;margin-bottom:20px}.data-live{text-align:center;font-size:14px;font-weight:bold;margin-bottom:10px}
                 table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #000;padding:6px 8px}
-                .valor-col{text-align:right}.total-col{text-align:right;font-weight:bold}
+                .valor-col{text-align:right;font-weight:bold}.total-col{text-align:right;font-weight:bold}
                 .total-comprador{font-weight:bold;background:#fafafa}.total-geral{font-weight:bold;font-size:14px;background:#f0f0f0}
                 .print-btn{position:fixed;top:20px;right:20px;padding:10px 20px;background:#28a745;color:white;border:none;border-radius:4px;cursor:pointer}
                 .instagram-tag{color:#667eea;font-size:11px;margin-left:5px}
@@ -1972,7 +1967,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             <button class="print-btn" onclick="window.print()">🖨️ Imprimir</button>
             <h1>RELATÓRIO DE VENDAS - LIVE</h1>
             <p class="data-live">Data: ${formatarData(dataLiveAtual)}</p>
-            <table><thead><tr><th>Valor</th><th>Código</th><th>Comprador</th><th>Fila</th></tr></thead><tbody>`;
+            <table><thead><tr><th>Código</th><th>Comprador</th><th>Fila</th><th>Valor</th></tr></thead><tbody>`;
 
             let totalGeral = 0, quantidadeTotal = 0;
 
@@ -1986,7 +1981,8 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 const instagram = cliente?.instagram ? `<span class="instagram-tag">(@${cliente.instagram})</span>` : '';
 
                 vendasComp.forEach(v => {
-                    html += `<tr><td class="valor-col">${formatarMoeda(v.valor)}</td><td>${v.codigo||'x'}</td><td>${comprador}${instagram}</td><td>${v.fila||'x'}</td></tr>`;
+                    // ORDEM DAS COLUNAS: Código, Comprador, Fila, Valor
+                    html += `<tr><td>${v.codigo||'x'}</td><td>${comprador}${instagram}</td><td>${v.fila||'x'}</td><td class="valor-col">${formatarMoeda(v.valor)}</td></tr>`;
                 });
                 html += `<tr class="total-comprador"><td colspan="3" style="text-align:right">Total ${comprador}:</td><td class="total-col">${formatarMoeda(totalComp)}</td></tr>`;
             });
