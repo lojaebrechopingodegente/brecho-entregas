@@ -478,25 +478,21 @@ create index if not exists idx_vendas_live_data on vendas_live(data_live);
 create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 </div>
             </div>
-            <!-- SUBSTITUA a div dateSelectorSection completa por esta: -->
-<div id="dateSelectorSection" style="display: none;">
-    <div style="margin-bottom: 15px;">
-        <a href="dashboard.html" class="btn-voltar">← Voltar para Dashboard</a>
-    </div>
-    <div class="date-selector-compact">
-        <h3>📅 Selecione a Data da Live</h3>
-        <div class="date-input-compact">
-            <input type="date" id="dataLiveInput" value="" onchange="verificarLivesNaData()">
-            <button class="btn btn-primary" id="btnIniciarCadastro" onclick="iniciarLive()" style="display: none;">Iniciar Cadastro</button>
-        </div>
-        <div id="livesDisponiveis" class="live-selection-compact" style="display: none;">
-            <h4>📺 Lives disponíveis:</h4>
-            <div id="listaLives"></div>
-            <button class="nova-live-btn-compact" onclick="criarNovaLiveNaData()">+ Criar Nova Live</button>
-        </div>
-        <p class="info-text-small">💡 Selecione uma data para ver as lives disponíveis.</p>
-    </div>
-</div>
+            <div id="dateSelectorSection" style="display: none;">
+                <div class="date-selector-compact">
+                    <h3>📅 Selecione a Data da Live</h3>
+                    <div class="date-input-compact">
+                        <input type="date" id="dataLiveInput" value="" onchange="verificarLivesNaData()">
+                        <button class="btn btn-primary" id="btnIniciarCadastro" onclick="iniciarLive()" style="display: none;">Iniciar Cadastro</button>
+                    </div>
+                    <div id="livesDisponiveis" class="live-selection-compact" style="display: none;">
+                        <h4>📺 Lives disponíveis:</h4>
+                        <div id="listaLives"></div>
+                        <button class="nova-live-btn-compact" onclick="criarNovaLiveNaData()">+ Criar Nova Live</button>
+                    </div>
+                    <p class="info-text-small">💡 Selecione uma data para ver as lives disponíveis.</p>
+                </div>
+            </div>
             <div id="appSection" style="display: none;">
                 <div class="live-info" id="liveInfoBanner">
                     <div>
@@ -710,73 +706,66 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             }
         }
 
-        // SUBSTITUA a função verificarLivesNaData() por esta versão corrigida:
-async function verificarLivesNaData() {
-    const dataInput = document.getElementById('dataLiveInput').value;
-    const livesDiv = document.getElementById('livesDisponiveis');
-    const btnIniciar = document.getElementById('btnIniciarCadastro');
+        async function verificarLivesNaData() {
+            const dataInput = document.getElementById('dataLiveInput').value;
+            const livesDiv = document.getElementById('livesDisponiveis');
+            const btnIniciar = document.getElementById('btnIniciarCadastro');
 
-    if (!dataInput) {
-        livesDiv.style.display = 'none';
-        btnIniciar.style.display = 'none';
-        return;
-    }
+            if (!dataInput) {
+                livesDiv.style.display = 'none';
+                btnIniciar.style.display = 'none';
+                return;
+            }
 
-    showStatus('Buscando lives...', 'info');
+            showStatus('Buscando lives...', 'info');
 
-    try {
-        const { data: lives, error } = await supabaseClient
-            .from('lives_pg')
-            .select('*')
-            .eq('data_live', dataInput)
-            .order('created_at', { ascending: false });
+            try {
+                const { data: lives, error } = await supabaseClient
+                    .from('lives_pg')
+                    .select('*')
+                    .eq('data_live', dataInput)
+                    .order('created_at', { ascending: false });
 
-        if (error) throw error;
+                if (error) throw error;
 
-        livesNaDataSelecionada = lives || [];
-        const listaLivesDiv = document.getElementById('listaLives');
+                livesNaDataSelecionada = lives || [];
+                const listaLivesDiv = document.getElementById('listaLives');
 
-        // Sempre mostrar o container de lives disponíveis
-        livesDiv.style.display = 'block';
-        
-        // Mostrar botão de iniciar se houver lives selecionáveis
-        if (livesNaDataSelecionada.length > 0) {
-            liveSelecionada = livesNaDataSelecionada[0];
-            btnIniciar.style.display = 'inline-block';
-        } else {
-            liveSelecionada = null;
-            btnIniciar.style.display = 'none';
+                if (livesNaDataSelecionada.length === 0) {
+                    listaLivesDiv.innerHTML = '<p style="color: #6c757d; text-align: center; font-size: 11px; margin: 3px 0;">Nenhuma live nesta data.</p>';
+                    livesDiv.style.display = 'block';
+                    liveSelecionada = null;
+                    btnIniciar.style.display = 'none';
+                } else {
+                    let html = '';
+                    livesNaDataSelecionada.forEach((live, index) => {
+                        const statusClass = live.status === 'ativa' ? 'ativa' : 'finalizada';
+                        const statusText = live.status === 'ativa' ? 'ATIVA' : 'FINALIZADA';
+                        const selected = index === 0 ? 'selected' : '';
+
+                        html += `
+                            <div class="live-option-compact ${selected}" onclick="selecionarLive('${live.codigo}')" data-codigo="${live.codigo}">
+                                <input type="radio" name="liveSelecionada" value="${live.codigo}" ${index === 0 ? 'checked' : ''} onchange="selecionarLive('${live.codigo}')">
+                                <div class="live-option-info-compact">
+                                    <span class="live-option-code-compact">${live.codigo}</span>
+                                    <span class="live-option-date-compact">${new Date(live.created_at).toLocaleString('pt-BR')}</span>
+                                </div>
+                                <span class="live-option-status-compact ${statusClass}">${statusText}</span>
+                                <button class="btn-excluir-live" onclick="event.stopPropagation(); confirmarExcluirLive('${live.codigo}')" title="Excluir live">🗑️</button>
+                            </div>
+                        `;
+                    });
+
+                    listaLivesDiv.innerHTML = html;
+                    livesDiv.style.display = 'block';
+                    liveSelecionada = livesNaDataSelecionada[0];
+                    btnIniciar.style.display = 'inline-block';
+                }
+
+            } catch (error) {
+                showStatus('Erro ao buscar lives: ' + error.message, 'error');
+            }
         }
-
-        if (livesNaDataSelecionada.length === 0) {
-            listaLivesDiv.innerHTML = '<p style="color: #6c757d; text-align: center; font-size: 11px; margin: 3px 0;">Nenhuma live nesta data. Crie uma nova!</p>';
-        } else {
-            let html = '';
-            livesNaDataSelecionada.forEach((live, index) => {
-                const statusClass = live.status === 'ativa' ? 'ativa' : 'finalizada';
-                const statusText = live.status === 'ativa' ? 'ATIVA' : 'FINALIZADA';
-                const selected = index === 0 ? 'selected' : '';
-
-                html += `
-                    <div class="live-option-compact ${selected}" onclick="selecionarLive('${live.codigo}')" data-codigo="${live.codigo}">
-                        <input type="radio" name="liveSelecionada" value="${live.codigo}" ${index === 0 ? 'checked' : ''} onchange="selecionarLive('${live.codigo}')">
-                        <div class="live-option-info-compact">
-                            <span class="live-option-code-compact">${live.codigo}</span>
-                            <span class="live-option-date-compact">${new Date(live.created_at).toLocaleString('pt-BR')}</span>
-                        </div>
-                        <span class="live-option-status-compact ${statusClass}">${statusText}</span>
-                        <button type="button" class="btn-excluir-live" onclick="confirmarExcluirLive(event, '${live.codigo}')" title="Excluir live">🗑️</button>
-                    </div>
-                `;
-            });
-
-            listaLivesDiv.innerHTML = html;
-        }
-
-    } catch (error) {
-        showStatus('Erro ao buscar lives: ' + error.message, 'error');
-    }
-}
 
         function selecionarLive(codigo) {
             liveSelecionada = livesNaDataSelecionada.find(l => l.codigo === codigo);
@@ -792,64 +781,51 @@ async function verificarLivesNaData() {
             document.getElementById('btnIniciarCadastro').style.display = 'inline-block';
         }
 
-      // SUBSTITUA a função confirmarExcluirLive() por esta:
-function confirmarExcluirLive(event, codigo) {
-    event.stopPropagation(); // Impede que o clique selecione a live
-    event.preventDefault();  // Impede comportamento padrão
-    liveParaExcluir = codigo;
-    document.getElementById('textoConfirmExcluir').innerHTML = `Tem certeza que deseja excluir a live <strong>${codigo}</strong>?<br><small style="color: #dc3545;">Todas as vendas desta live serão apagadas!</small>`;
-    document.getElementById('confirmExcluirLiveDialog').classList.add('active');
-}
+        function confirmarExcluirLive(codigo) {
+            liveParaExcluir = codigo;
+            document.getElementById('textoConfirmExcluir').innerHTML = `Tem certeza que deseja excluir a live <strong>${codigo}</strong>?<br><small style="color: #dc3545;">Todas as vendas desta live serão apagadas!</small>`;
+            document.getElementById('confirmExcluirLiveDialog').classList.add('active');
+        }
 
         function fecharConfirmExcluirLive() {
             document.getElementById('confirmExcluirLiveDialog').classList.remove('active');
             liveParaExcluir = null;
         }
 
-        // SUBSTITUA a função executarExcluirLive() por esta versão com cascade:
-async function executarExcluirLive() {
-    if (!liveParaExcluir) return;
+        async function executarExcluirLive() {
+            if (!liveParaExcluir) return;
 
-    fecharConfirmExcluirLive();
-    showStatus('Excluindo live e todos os itens...', 'info');
+            fecharConfirmExcluirLive();
+            showStatus('Excluindo live...', 'info');
 
-    try {
-        // Primeiro deleta todas as vendas (filhos) - CASCADE manual
-        const { error: errorVendas } = await supabaseClient
-            .from('vendas_live')
-            .delete()
-            .eq('codigo_live', liveParaExcluir);
+            try {
+                const { error: errorVendas } = await supabaseClient
+                    .from('vendas_live')
+                    .delete()
+                    .eq('codigo_live', liveParaExcluir);
 
-        if (errorVendas) throw errorVendas;
+                if (errorVendas) throw errorVendas;
 
-        // Depois deleta a live (pai)
-        const { error: errorLive } = await supabaseClient
-            .from('lives_pg')
-            .delete()
-            .eq('codigo', liveParaExcluir);
+                const { error: errorLive } = await supabaseClient
+                    .from('lives_pg')
+                    .delete()
+                    .eq('codigo', liveParaExcluir);
 
-        if (errorLive) throw errorLive;
+                if (errorLive) throw errorLive;
 
-        showStatus(`Live ${liveParaExcluir} e todos os itens foram excluídos!`, 'success');
+                showStatus(`Live ${liveParaExcluir} excluída!`, 'success');
 
-        // Atualizar lista local
-        livesNaDataSelecionada = livesNaDataSelecionada.filter(l => l.codigo !== liveParaExcluir);
-        
-        // Se excluiu a live que estava selecionada, seleciona a primeira disponível ou limpa
-        if (liveSelecionada && liveSelecionada.codigo === liveParaExcluir) {
-            liveSelecionada = livesNaDataSelecionada.length > 0 ? livesNaDataSelecionada[0] : null;
+                livesNaDataSelecionada = livesNaDataSelecionada.filter(l => l.codigo !== liveParaExcluir);
+                liveParaExcluir = null;
+                liveSelecionada = livesNaDataSelecionada.length > 0 ? livesNaDataSelecionada[0] : null;
+
+                await verificarLivesNaData();
+
+            } catch (error) {
+                showStatus('Erro ao excluir: ' + error.message, 'error');
+            }
         }
-        
-        liveParaExcluir = null;
-        
-        // Recarregar a lista
-        await verificarLivesNaData();
 
-    } catch (error) {
-        showStatus('Erro ao excluir: ' + error.message, 'error');
-        console.error('Erro completo:', error);
-    }
-}
         async function criarNovaLiveNaData() {
             const dataInput = document.getElementById('dataLiveInput').value;
             if (!dataInput) {
