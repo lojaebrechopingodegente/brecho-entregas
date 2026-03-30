@@ -1872,7 +1872,10 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             fecharConfirmReset();
             try {
                 showStatus('Apagando...', 'info');
-                await supabaseClient.from('vendas_live').delete().eq('data_live', dataLiveAtual);
+                await supabaseClient
+    .from('vendas_live')
+    .delete()
+    .eq('codigo_live', codigoLiveAtual);
                 vendas = [];
                 document.getElementById('vendasBody').innerHTML = '';
                 linhaCount = 0;
