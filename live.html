@@ -22,21 +22,7 @@
         input.saving { border-color: #ffc107; background: #fff3cd; }
         input.saved { border-color: #28a745; background: #d4edda; }
         input:disabled, input[readonly] { background: #e9ecef; cursor: not-allowed; opacity: 0.7; }
-        /* NOVO: Campos obrigatórios não preenchidos */
-        input.obrigatorio-pendente { 
-            border-color: #dc3545 !important; 
-            background: #f8d7da !important; 
-            box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25) !important;
-        }
-        /* NOVO: Remover setas do input number */
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
+        input.obrigatorio-pendente { border-color: #dc3545 !important; background: #f8d7da !important; box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25) !important; }
         .valor-input { text-align: right; font-weight: 600; }
         .autocomplete-container { position: relative; display: flex; align-items: center; gap: 4px; }
         .autocomplete-container input { flex: 1; }
@@ -54,26 +40,6 @@
         .suggestion-item .suggestion-main { font-weight: 600; color: #333; }
         .suggestion-item:hover .suggestion-main, .suggestion-item.selected .suggestion-main { color: white; }
         .suggestion-item .suggestion-secondary { font-size: 11px; color: #666; margin-top: 2px; }
-        /* NOVO: Estilo para sugestão de comprador já usado na live */
-        .suggestion-item.sugestao-usada-na-live {
-            background: #fff3cd;
-            border-left: 3px solid #ffc107;
-        }
-        .suggestion-item.sugestao-usada-na-live:hover {
-            background: #667eea;
-            color: white;
-        }
-        .suggestion-item.sugestao-usada-na-live .suggestion-main {
-            font-weight: bold;
-        }
-        .badge-usada {
-            font-size: 10px;
-            color: #856404;
-            background: #ffc107;
-            padding: 2px 6px;
-            border-radius: 3px;
-            margin-left: 8px;
-        }
         .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease; margin-right: 10px; }
         .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
         .btn-success { background: #28a745; color: white; }
@@ -104,46 +70,13 @@
         .item-number { font-weight: bold; color: #667eea; }
         .delete-btn { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 10px; }
         .delete-btn:disabled { background: #adb5bd; cursor: not-allowed; }
-        /* NOVO: Botão salvar vermelho quando não salvo, verde quando salvo */
-        .btn-save { 
-            background: #dc3545; /* Vermelho por padrão - não salvo */
-            color: white; 
-            border: none; 
-            border-radius: 4px; 
-            padding: 3px 6px; 
-            cursor: pointer; 
-            font-size: 10px; 
-            font-weight: 600;
-            margin-right: 4px; 
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .btn-save:hover { 
-            transform: scale(1.05); 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-        .btn-save:active {
-            transform: scale(0.95);
-        }
-        .btn-save:disabled { 
-            background: #adb5bd; 
-            cursor: not-allowed; 
-            transform: none;
-            box-shadow: none;
-        }
-        .btn-save.saving {
-            background: #ffc107;
-            color: #212529;
-        }
-        .btn-save.saved {
-            background: #28a745; /* Verde quando salvo */
-            animation: pulseSave 0.5s ease;
-        }
-        @keyframes pulseSave {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
+        .btn-save { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 10px; font-weight: 600; margin-right: 4px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-save:hover { transform: scale(1.05); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .btn-save:active { transform: scale(0.95); }
+        .btn-save:disabled { background: #adb5bd; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-save.saving { background: #ffc107; color: #212529; }
+        .btn-save.saved { background: #28a745; animation: pulseSave 0.5s ease; }
+        @keyframes pulseSave { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
         .info-text { color: #6c757d; font-size: 12px; margin-top: 5px; }
         .sql-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 15px; margin-top: 10px; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
         .live-info { background: #d4edda; border: 1px solid #28a745; border-radius: 6px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
@@ -172,7 +105,7 @@
         .sugestao-cadastro { background: #e7f3ff; border: 1px solid #667eea; border-radius: 6px; padding: 10px; margin-top: 10px; cursor: pointer; text-align: center; color: #667eea; font-weight: 600; }
         .sugestao-cadastro:hover { background: #667eea; color: white; }
         .campo-opcional { color: #6c757d; font-size: 12px; font-weight: normal; }
-
+        
         .date-selector-compact {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             padding: 15px 20px;
@@ -180,20 +113,20 @@
             border: 2px solid #667eea;
             max-width: 600px;
         }
-
+        
         .date-selector-compact h3 {
             margin-bottom: 12px;
             font-size: 16px;
             color: #495057;
         }
-
+        
         .date-input-compact {
             display: flex;
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
         }
-
+        
         .date-input-compact input[type="date"] {
             padding: 8px 12px;
             font-size: 14px;
@@ -203,20 +136,20 @@
             width: auto;
             height: 38px;
         }
-
+        
         .date-input-compact .btn {
             padding: 8px 16px;
             font-size: 13px;
             height: 38px;
             margin: 0;
         }
-
+        
         .info-text-small {
             font-size: 11px;
             color: #6c757d;
             margin-top: 8px;
         }
-
+        
         .live-selection-compact {
             margin-top: 10px;
             padding: 10px;
@@ -224,13 +157,13 @@
             border: 2px solid #ffc107;
             border-radius: 6px;
         }
-
+        
         .live-selection-compact h4 {
             margin-bottom: 6px;
             font-size: 12px;
             color: #856404;
         }
-
+        
         .live-option-compact {
             display: flex;
             align-items: center;
@@ -243,42 +176,42 @@
             transition: all 0.2s;
             font-size: 12px;
         }
-
+        
         .live-option-compact:hover {
             border-color: #667eea;
             background: #f8f9fa;
         }
-
+        
         .live-option-compact.selected {
             border-color: #28a745;
             background: #d4edda;
         }
-
+        
         .live-option-compact input[type="radio"] {
             margin-right: 8px;
             width: 14px;
             height: 14px;
         }
-
+        
         .live-option-info-compact {
             flex: 1;
             display: flex;
             align-items: center;
             gap: 10px;
         }
-
+        
         .live-option-code-compact {
             font-weight: bold;
             color: #667eea;
             font-size: 13px;
             min-width: 70px;
         }
-
+        
         .live-option-date-compact {
             color: #6c757d;
             font-size: 10px;
         }
-
+        
         .live-option-status-compact {
             padding: 2px 6px;
             border-radius: 3px;
@@ -286,17 +219,17 @@
             font-weight: 600;
             margin-right: 8px;
         }
-
+        
         .live-option-status-compact.ativa {
             background: #d4edda;
             color: #155724;
         }
-
+        
         .live-option-status-compact.finalizada {
             background: #f8d7da;
             color: #721c24;
         }
-
+        
         .btn-excluir-live {
             background: #dc3545;
             color: white;
@@ -308,15 +241,15 @@
             opacity: 0;
             transition: opacity 0.2s;
         }
-
+        
         .live-option-compact:hover .btn-excluir-live {
             opacity: 1;
         }
-
+        
         .btn-excluir-live:hover {
             background: #c82333;
         }
-
+        
         .nova-live-btn-compact {
             margin-top: 6px;
             padding: 6px;
@@ -329,11 +262,11 @@
             font-weight: 600;
             font-size: 12px;
         }
-
+        
         .nova-live-btn-compact:hover {
             background: #218838;
         }
-
+        
         .confirm-excluir-live {
             position: fixed;
             top: 0;
@@ -346,11 +279,11 @@
             align-items: center;
             z-index: 5000;
         }
-
+        
         .confirm-excluir-live.active {
             display: flex;
         }
-
+        
         .confirm-box-compact {
             background: white;
             padding: 20px;
@@ -359,69 +292,78 @@
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-
+        
         .confirm-box-compact h3 {
             color: #dc3545;
             margin-bottom: 10px;
             font-size: 16px;
         }
-
+        
         .confirm-box-compact p {
             margin-bottom: 15px;
             color: #495057;
             font-size: 13px;
         }
-
+        
         .confirm-box-compact .btn {
             padding: 6px 12px;
             font-size: 12px;
             margin: 0 5px;
         }
 
-        /* NOVO: Estilo para o total vendido no cabeçalho */
-        .total-vendido-header {
-            background: #28a745;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 150px;
-        }
-
-        .total-vendido-header span {
-            font-size: 12px;
-            font-weight: normal;
-            opacity: 0.9;
-        }
-
-        .total-vendido-header strong {
-            font-size: 18px;
-        }
-
-        /* NOVO: Botão voltar */
+        /* NOVO: Botão voltar para dashboard */
         .btn-voltar {
             background: #6c757d;
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 10px 20px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 13px;
-            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
         }
-
+        
         .btn-voltar:hover {
             background: #5a6268;
         }
+
+        /* NOVO: Configuração inline */
+        .config-inline {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #667eea;
+        }
+        
+        .config-inline h4 {
+            margin-bottom: 10px;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        .config-fields {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        
+        .config-fields .form-group {
+            margin-bottom: 0;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .config-fields input {
+            padding: 8px 12px;
+            font-size: 13px;
+        }
     </style>
-<base target="_blank">
 </head>
 <body>
     <div class="container">
@@ -430,34 +372,36 @@
             <p>Gerencie suas vendas em tempo real por data</p>
         </div>
         <div class="content">
-            <div class="config-section" id="configSection">
-                <h3>🔧 Configuração do Supabase</h3>
-                <div class="form-group">
-                    <label>URL do Supabase:</label>
-                    <input type="text" id="supabaseUrl" value="https://ytnfjzngalfapfnbobfm.supabase.co" readonly>
+            <!-- NOVO: Configuração inline direto na página -->
+            <div class="config-inline" id="configInline">
+                <h4>🔧 Configuração do Supabase</h4>
+                <div class="config-fields">
+                    <div class="form-group">
+                        <label style="font-size: 12px;">URL do Supabase:</label>
+                        <input type="text" id="supabaseUrl" value="https://ytnfjzngalfapfnbobfm.supabase.co" readonly style="background: #e9ecef;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 12px;">Chave Anônima (Anon Key):</label>
+                        <input type="password" id="supabaseKey" placeholder="Cole sua chave anon key aqui">
+                    </div>
+                    <button class="btn btn-primary" onclick="conectarSupabase()" style="height: 38px; margin: 0;">Conectar</button>
                 </div>
-                <div class="form-group">
-                    <label>Chave Anônima (Anon Key):</label>
-                    <input type="password" id="supabaseKey" placeholder="Digite sua chave anon key aqui">
-                </div>
-                <button class="btn btn-primary" onclick="conectarSupabase()">Conectar</button>
-                <div id="sqlHelper" style="display: none; margin-top: 20px;">
-                    <p style="color: #dc3545; font-weight: bold;">⚠️ Execute este SQL no Editor do Supabase primeiro:</p>
-                    <div class="sql-box">-- Tabela de controle das lives (código sequencial)
+                <div id="sqlHelper" style="display: none; margin-top: 15px;">
+                    <p style="color: #dc3545; font-weight: bold; font-size: 12px;">⚠️ Execute este SQL no Editor do Supabase primeiro:</p>
+                    <div class="sql-box" style="font-size: 11px; padding: 10px;">-- Tabela de controle das lives (código sequencial)
 create table if not exists lives_pg (
     id uuid default gen_random_uuid() primary key,
-    codigo text unique not null,  -- Ex: LIVE-001, LIVE-002
+    codigo text unique not null,
     data_live date not null,
-    status text default 'ativa',  -- ativa, finalizada
+    status text default 'ativa',
     total_vendas decimal(10,2) default 0,
     created_at timestamp with time zone default timezone('utc'::text, now()),
     updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- Tabela de vendas vinculada ao código da live
 create table if not exists vendas_live (
     id uuid default gen_random_uuid() primary key,
-    codigo_live text not null references lives_pg(codigo),  -- Chave estrangeira
+    codigo_live text not null references lives_pg(codigo),
     linha_id integer not null,
     data_live date not null,
     item integer,
@@ -471,14 +415,19 @@ create table if not exists vendas_live (
     bloqueada boolean default false
 );
 
--- Índices para performance
 create index if not exists idx_vendas_live_codigo_live on vendas_live(codigo_live);
 create index if not exists idx_vendas_live_linha on vendas_live(linha_id);
 create index if not exists idx_vendas_live_data on vendas_live(data_live);
 create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 </div>
             </div>
+            
             <div id="dateSelectorSection" style="display: none;">
+                <!-- NOVO: Botão voltar para dashboard -->
+                <button class="btn-voltar" onclick="voltarParaDashboard()">
+                    ← Voltar para Dashboard
+                </button>
+                
                 <div class="date-selector-compact">
                     <h3>📅 Selecione a Data da Live</h3>
                     <div class="date-input-compact">
@@ -493,6 +442,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     <p class="info-text-small">💡 Selecione uma data para ver as lives disponíveis.</p>
                 </div>
             </div>
+            
             <div id="appSection" style="display: none;">
                 <div class="live-info" id="liveInfoBanner">
                     <div>
@@ -501,13 +451,8 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                         <p>Total de itens cadastrados: <span id="totalItens">0</span></p>
                         <p id="statusLive" style="font-weight: bold; color: #28a745;"></p>
                     </div>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <!-- NOVO: Total vendido no cabeçalho -->
-                        <div class="total-vendido-header">
-                            <span>Total Vendido</span>
-                            <strong id="totalVendidoHeader">R$ 0,00</strong>
-                        </div>
-                        <a href="dashboard.html" class="btn-voltar">← Voltar</a>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="sanitizarDuplicados()">🧹 Limpar Duplicados</button>
                         <button class="change-date-btn" onclick="trocarData()">🔄 Trocar Data</button>
                     </div>
                 </div>
@@ -580,7 +525,13 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
         </div>
     </div>
     <script>
-
+        // ==========================================
+        // CONFIGURAÇÃO DIRETA NO CÓDIGO
+        // ==========================================
+        const SUPABASE_URL_CONFIG = 'https://ytnfjzngalfapfnbobfm.supabase.co';
+        // COLE SUA CHAVE AQUI ↓↓↓
+        const SUPABASE_KEY_CONFIG = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUwOTgyOSwiZXhwIjoyMDg5MDg1ODI5fQ.OAncCiV4qtdhCTDaVFqjWFh6llf5qSkNN8ZQV4dLaxs';
+        
         let supabaseClient = null;
         let clientes = [];
         let vendas = [];
@@ -598,8 +549,19 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
         let liveSelecionada = null;
         let liveParaExcluir = null;
         let linhasNaoSalvas = new Set();
-        // NOVO: Rastrear compradores já usados na live atual
-        let compradoresNaLive = new Set();
+
+        // NOVO: Inicializar com data de hoje e verificar lives automaticamente
+        document.addEventListener('DOMContentLoaded', () => {
+            const hoje = new Date().toISOString().split('T')[0];
+            const dataInput = document.getElementById('dataLiveInput');
+            dataInput.value = hoje;
+            
+            // Preencher campos de config se existirem
+            document.getElementById('supabaseUrl').value = SUPABASE_URL_CONFIG;
+            if (SUPABASE_KEY_CONFIG && SUPABASE_KEY_CONFIG !== 'COLE_SUA_CHAVE_AQUI') {
+                document.getElementById('supabaseKey').value = SUPABASE_KEY_CONFIG;
+            }
+        });
 
         function inicializarReconhecimentoVoz() {
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -663,19 +625,25 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             activeInput = null;
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const hoje = new Date().toISOString().split('T')[0];
-            document.getElementById('dataLiveInput').value = hoje;
-            inicializarReconhecimentoVoz();
-        });
+        // NOVO: Função para voltar ao dashboard
+        function voltarParaDashboard() {
+            window.location.href = 'dashboard.html';
+        }
 
         async function conectarSupabase() {
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-            if (!url || !key) {
+            // Usar valor do input ou da configuração
+            let url = document.getElementById('supabaseUrl').value.trim();
+            let key = document.getElementById('supabaseKey').value.trim();
+            
+            // Se campos vazios, usar configuração inline
+            if (!url) url = SUPABASE_URL_CONFIG;
+            if (!key || key === 'COLE_SUA_CHAVE_AQUI') key = SUPABASE_KEY_CONFIG;
+            
+            if (!url || !key || key === 'COLE_SUA_CHAVE_AQUI') {
                 showStatus('Preencha URL e chave!', 'error');
                 return;
             }
+            
             try {
                 const { createClient } = supabase;
                 supabaseClient = createClient(url, key);
@@ -688,8 +656,14 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     showStatus('Crie a tabela vendas_live primeiro', 'error');
                     return;
                 }
-                document.getElementById('configSection').style.display = 'none';
+                
+                // Esconder config e mostrar seletor de data
+                document.getElementById('configInline').style.display = 'none';
                 document.getElementById('dateSelectorSection').style.display = 'block';
+                
+                // NOVO: Verificar lives automaticamente ao conectar
+                await verificarLivesNaData();
+                
                 showStatus('Conectado!', 'success');
             } catch (error) {
                 showStatus('Erro: ' + error.message, 'error');
@@ -706,11 +680,12 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             }
         }
 
+        // CORRIGIDO: Verificar lives na data com tratamento melhor para data de hoje
         async function verificarLivesNaData() {
             const dataInput = document.getElementById('dataLiveInput').value;
             const livesDiv = document.getElementById('livesDisponiveis');
             const btnIniciar = document.getElementById('btnIniciarCadastro');
-
+            
             if (!dataInput) {
                 livesDiv.style.display = 'none';
                 btnIniciar.style.display = 'none';
@@ -731,9 +706,11 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 livesNaDataSelecionada = lives || [];
                 const listaLivesDiv = document.getElementById('listaLives');
 
+                // CORRIGIDO: Sempre mostrar a seção de lives, mesmo que vazia
+                livesDiv.style.display = 'block';
+                
                 if (livesNaDataSelecionada.length === 0) {
                     listaLivesDiv.innerHTML = '<p style="color: #6c757d; text-align: center; font-size: 11px; margin: 3px 0;">Nenhuma live nesta data.</p>';
-                    livesDiv.style.display = 'block';
                     liveSelecionada = null;
                     btnIniciar.style.display = 'none';
                 } else {
@@ -742,7 +719,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                         const statusClass = live.status === 'ativa' ? 'ativa' : 'finalizada';
                         const statusText = live.status === 'ativa' ? 'ATIVA' : 'FINALIZADA';
                         const selected = index === 0 ? 'selected' : '';
-
+                        
                         html += `
                             <div class="live-option-compact ${selected}" onclick="selecionarLive('${live.codigo}')" data-codigo="${live.codigo}">
                                 <input type="radio" name="liveSelecionada" value="${live.codigo}" ${index === 0 ? 'checked' : ''} onchange="selecionarLive('${live.codigo}')">
@@ -755,21 +732,23 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                             </div>
                         `;
                     });
-
+                    
                     listaLivesDiv.innerHTML = html;
-                    livesDiv.style.display = 'block';
                     liveSelecionada = livesNaDataSelecionada[0];
                     btnIniciar.style.display = 'inline-block';
                 }
 
             } catch (error) {
                 showStatus('Erro ao buscar lives: ' + error.message, 'error');
+                // Mesmo com erro, mostrar opção de criar nova live
+                document.getElementById('livesDisponiveis').style.display = 'block';
+                document.getElementById('listaLives').innerHTML = '<p style="color: #dc3545; text-align: center; font-size: 11px;">Erro ao carregar lives. Você pode criar uma nova.</p>';
             }
         }
 
         function selecionarLive(codigo) {
             liveSelecionada = livesNaDataSelecionada.find(l => l.codigo === codigo);
-
+            
             document.querySelectorAll('.live-option-compact').forEach(el => {
                 el.classList.remove('selected');
                 if (el.dataset.codigo === codigo) {
@@ -777,7 +756,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     el.querySelector('input[type="radio"]').checked = true;
                 }
             });
-
+            
             document.getElementById('btnIniciarCadastro').style.display = 'inline-block';
         }
 
@@ -792,35 +771,40 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             liveParaExcluir = null;
         }
 
+        // CORRIGIDO: Excluir live com CASCADE nas vendas
         async function executarExcluirLive() {
             if (!liveParaExcluir) return;
-
+            
             fecharConfirmExcluirLive();
             showStatus('Excluindo live...', 'info');
-
+            
             try {
+                // CORRIGIDO: Usar codigo_live para excluir apenas desta live específica
                 const { error: errorVendas } = await supabaseClient
                     .from('vendas_live')
                     .delete()
                     .eq('codigo_live', liveParaExcluir);
-
+                
                 if (errorVendas) throw errorVendas;
-
+                
+                // Depois exclui a live
                 const { error: errorLive } = await supabaseClient
                     .from('lives_pg')
                     .delete()
                     .eq('codigo', liveParaExcluir);
-
+                
                 if (errorLive) throw errorLive;
-
+                
                 showStatus(`Live ${liveParaExcluir} excluída!`, 'success');
-
+                
+                // Remove a live do array local e atualiza a lista
                 livesNaDataSelecionada = livesNaDataSelecionada.filter(l => l.codigo !== liveParaExcluir);
                 liveParaExcluir = null;
                 liveSelecionada = livesNaDataSelecionada.length > 0 ? livesNaDataSelecionada[0] : null;
-
+                
+                // Atualiza a visualização
                 await verificarLivesNaData();
-
+                
             } catch (error) {
                 showStatus('Erro ao excluir: ' + error.message, 'error');
             }
@@ -940,22 +924,21 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 liveSelecionada = null;
                 livesNaDataSelecionada = [];
                 linhasNaoSalvas.clear();
-                compradoresNaLive.clear();
+                
+                // CORRIGIDO: Resetar visualização e verificar lives na data atual
                 document.getElementById('livesDisponiveis').style.display = 'none';
                 document.getElementById('btnIniciarCadastro').style.display = 'none';
+                
+                // Verificar lives na data atual
+                const hoje = new Date().toISOString().split('T')[0];
+                document.getElementById('dataLiveInput').value = hoje;
+                verificarLivesNaData();
             }
         }
 
         function atualizarContagemItens() {
             const linhasCompletas = vendas.filter(v => v.valor > 0 && v.codigo?.trim() && v.comprador?.trim() && v.fila?.trim());
             document.getElementById('totalItens').textContent = linhasCompletas.length;
-        }
-
-        // NOVO: Atualizar total vendido no cabeçalho
-        function atualizarTotalVendidoHeader() {
-            const vendasValidas = vendas.filter(v => v.valor > 0 && v.comprador?.trim());
-            const total = vendasValidas.reduce((sum, v) => sum + (parseFloat(v.valor) || 0), 0);
-            document.getElementById('totalVendidoHeader').textContent = formatarMoeda(total);
         }
 
         function formatarData(dataString) {
@@ -969,7 +952,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 document.getElementById('vendasBody').innerHTML = '';
                 linhaCount = 0;
                 linhasNaoSalvas.clear();
-                compradoresNaLive.clear();
 
                 const { data: liveData, error: liveError } = await supabaseClient
                     .from('lives_pg')
@@ -981,6 +963,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     liveBloqueada = liveData.status === 'finalizada';
                 }
 
+                // CORRIGIDO: Carregar apenas vendas desta live específica
                 const { data, error } = await supabaseClient
                     .from('vendas_live')
                     .select('*')
@@ -997,13 +980,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     v.valor > 0 || v.comprador?.trim() || v.codigo?.trim()
                 );
 
-                // NOVO: Atualizar compradores já usados na live
-                vendas.forEach(v => {
-                    if (v.comprador?.trim()) {
-                        compradoresNaLive.add(v.comprador.trim().toLowerCase());
-                    }
-                });
-
                 if (vendas.length === 0) {
                     for (let i = 0; i < 150; i++) adicionarLinha();
                     showStatus(`Live ${codigoLiveAtual} iniciada! Adicione os itens.`, 'success');
@@ -1018,38 +994,83 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 liveBloqueada ? bloquearCampos() : liberarCampos();
                 linhasInicializadas = true;
                 atualizarContagemItens();
-                atualizarTotalVendidoHeader();
             } catch (error) {
                 console.error('Erro:', error);
                 vendas = [];
             }
         }
 
+        async function limparDuplicadosNoBanco() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('vendas_live')
+                    .select('id, linha_id, updated_at, created_at')
+                    .eq('codigo_live', codigoLiveAtual);
+
+                if (error) return;
+
+                const porLinhaId = {};
+                for (const reg of data) {
+                    if (!porLinhaId[reg.linha_id]) porLinhaId[reg.linha_id] = [];
+                    porLinhaId[reg.linha_id].push(reg);
+                }
+
+                const idsDeletar = [];
+                for (const registros of Object.values(porLinhaId)) {
+                    if (registros.length > 1) {
+                        registros.sort((a, b) => {
+                            const dataA = new Date(a.updated_at || a.created_at);
+                            const dataB = new Date(b.updated_at || b.created_at);
+                            return dataB - dataA;
+                        });
+                        for (let i = 1; i < registros.length; i++) idsDeletar.push(registros[i].id);
+                    }
+                }
+
+                if (idsDeletar.length > 0) {
+                    await supabaseClient.from('vendas_live').delete().in('id', idsDeletar);
+                }
+            } catch (e) {
+                console.error('Erro ao limpar:', e);
+            }
+        }
+
+        async function sanitizarDuplicados() {
+            try {
+                showStatus('Verificando duplicados...', 'info');
+                await limparDuplicadosNoBanco();
+                await carregarVendasExistentes();
+                showStatus('Duplicados removidos!', 'success');
+            } catch (e) {
+                showStatus('Erro: ' + e.message, 'error');
+            }
+        }
+
         function marcarLinhaComoNaoSalva(input) {
             const linhaId = input.id.split('-')[1];
             if (!linhaId) return;
-
+            
             linhasNaoSalvas.add(parseInt(linhaId));
-
+            
             const btnSalvar = document.getElementById(`btn-save-${linhaId}`);
             if (btnSalvar) {
                 btnSalvar.classList.remove('saved');
                 btnSalvar.style.background = '#dc3545';
             }
-
+            
             verificarCamposObrigatorios(linhaId);
         }
 
         function verificarCamposObrigatorios(linhaId) {
             const valorInput = document.getElementById(`valor-${linhaId}`);
             const codigoInput = document.getElementById(`codigo-${linhaId}`);
-
+            
             if (valorInput && !valorInput.value) {
                 valorInput.classList.add('obrigatorio-pendente');
             } else if (valorInput) {
                 valorInput.classList.remove('obrigatorio-pendente');
             }
-
+            
             if (codigoInput && !codigoInput.value) {
                 codigoInput.classList.add('obrigatorio-pendente');
             } else if (codigoInput) {
@@ -1059,66 +1080,27 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
 
         function marcarLinhaComoSalva(linhaId) {
             linhasNaoSalvas.delete(parseInt(linhaId));
-
+            
             const btnSalvar = document.getElementById(`btn-save-${linhaId}`);
             if (btnSalvar) {
                 btnSalvar.classList.add('saved');
                 btnSalvar.style.background = '';
             }
-
+            
             const valorInput = document.getElementById(`valor-${linhaId}`);
             const codigoInput = document.getElementById(`codigo-${linhaId}`);
             if (valorInput) valorInput.classList.remove('obrigatorio-pendente');
             if (codigoInput) codigoInput.classList.remove('obrigatorio-pendente');
         }
 
-        // NOVO: Formatar valor com vírgula automática após 3 dígitos
-        function formatarValorInput(input) {
-            let valor = input.value.replace(/\D/g, '');
-
-            if (valor.length === 0) {
-                input.value = '';
-                return;
-            }
-
-            // Converte para número e divide por 100 para ter 2 casas decimais
-            let numero = parseInt(valor) / 100;
-
-            // Formata com vírgula como separador decimal
-            input.value = numero.toLocaleString('pt-BR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        }
-
-        // NOVO: Verificar e salvar apenas linhas com dados
         async function verificarESalvarTodasLinhasPendentes() {
             if (linhasNaoSalvas.size === 0) return true;
-
-            const linhasParaSalvar = [];
-
-            // Verificar quais linhas têm dados para salvar
-            for (const linhaId of linhasNaoSalvas) {
-                const valor = parseFloat(document.getElementById(`valor-${linhaId}`)?.value?.replace(/\./g, '').replace(',', '.')) || 0;
-                const codigo = document.getElementById(`codigo-${linhaId}`)?.value?.trim() || '';
-                const comprador = document.getElementById(`comprador-${linhaId}`)?.value?.trim() || '';
-                const fila = document.getElementById(`fila-${linhaId}`)?.value?.trim() || '';
-
-                // Só salva se tiver pelo menos um campo preenchido
-                if (valor > 0 || codigo || comprador || fila) {
-                    linhasParaSalvar.push(linhaId);
-                } else {
-                    // Remove da lista de não salvas se estiver vazia
-                    linhasNaoSalvas.delete(linhaId);
-                }
-            }
-
-            if (linhasParaSalvar.length === 0) return true;
-
-            showStatus(`Salvando ${linhasParaSalvar.length} linha(s) com dados...`, 'info');
-
+            
+            showStatus(`Salvando ${linhasNaoSalvas.size} linha(s) pendente(s)...`, 'info');
+            
+            const linhasParaSalvar = Array.from(linhasNaoSalvas);
             let sucesso = true;
-
+            
             for (const linhaId of linhasParaSalvar) {
                 try {
                     await salvarVendaSilencioso(linhaId);
@@ -1127,18 +1109,16 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     sucesso = false;
                 }
             }
-
+            
             return sucesso;
         }
 
         async function salvarVendaSilencioso(linhaId) {
-            const valorInput = document.getElementById(`valor-${linhaId}`);
-            const valor = parseFloat(valorInput?.value?.replace(/\./g, '').replace(',', '.')) || 0;
-            const codigo = document.getElementById(`codigo-${linhaId}`)?.value || '';
-            const comprador = document.getElementById(`comprador-${linhaId}`)?.value?.trim() || '';
-            const fila = document.getElementById(`fila-${linhaId}`)?.value?.trim() || '';
+            const valor = parseFloat(document.getElementById(`valor-${linhaId}`).value) || 0;
+            const codigo = document.getElementById(`codigo-${linhaId}`).value;
+            const comprador = document.getElementById(`comprador-${linhaId}`).value.trim();
+            const fila = document.getElementById(`fila-${linhaId}`).value.trim();
 
-            // Só salva se tiver valor ou código ou comprador
             if (valor === 0 && !codigo && !comprador) {
                 marcarLinhaComoSalva(linhaId);
                 return;
@@ -1194,12 +1174,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             }
 
             if (result.error) throw result.error;
-
-            // NOVO: Adicionar comprador ao conjunto de compradores da live
-            if (comprador) {
-                compradoresNaLive.add(comprador.toLowerCase());
-            }
-
+            
             marcarLinhaComoSalva(linhaId);
         }
 
@@ -1222,11 +1197,10 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 btnSalvar.textContent = '⏳';
             }
 
-            const valorInput = document.getElementById(`valor-${linhaId}`);
-            const valor = parseFloat(valorInput?.value?.replace(/\./g, '').replace(',', '.')) || 0;
-            const codigo = document.getElementById(`codigo-${linhaId}`)?.value || '';
-            const comprador = document.getElementById(`comprador-${linhaId}`)?.value?.trim() || '';
-            const fila = document.getElementById(`fila-${linhaId}`)?.value?.trim() || '';
+            const valor = parseFloat(document.getElementById(`valor-${linhaId}`).value) || 0;
+            const codigo = document.getElementById(`codigo-${linhaId}`).value;
+            const comprador = document.getElementById(`comprador-${linhaId}`).value.trim();
+            const fila = document.getElementById(`fila-${linhaId}`).value.trim();
 
             try {
                 const { data: existentes, error: checkError } = await supabaseClient
@@ -1280,13 +1254,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
 
                 if (result.error) throw result.error;
 
-                // NOVO: Adicionar comprador ao conjunto de compradores da live
-                if (comprador) {
-                    compradoresNaLive.add(comprador.toLowerCase());
-                }
-
                 atualizarContagemItens();
-                atualizarTotalVendidoHeader();
                 marcarLinhaComoSalva(linhaId);
 
                 if (btnSalvar) {
@@ -1324,14 +1292,14 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             const tr = document.createElement('tr');
             tr.id = `linha-${venda.linha_id}`;
             tr.dataset.linhaId = venda.linha_id;
-
+            
             const jaSalvo = venda.id ? true : false;
             const btnClass = jaSalvo ? 'btn-save saved' : 'btn-save';
             const btnStyle = jaSalvo ? '' : 'background: #dc3545;';
-
+            
             tr.innerHTML = `
                 <td><span class="item-number" id="numero-${venda.linha_id}">${venda.linha_id}</span></td>
-                <td><input type="text" class="valor-input" id="valor-${venda.linha_id}" value="${venda.valor ? venda.valor.toFixed(2).replace('.', ',') : ''}" placeholder="0,00" onkeydown="navegarCampos(event, ${venda.linha_id}, 'valor')" oninput="formatarValorInput(this); marcarLinhaComoNaoSalva(this)" ${liveBloqueada ? 'disabled' : ''}></td>
+                <td><input type="number" step="0.01" class="valor-input" id="valor-${venda.linha_id}" value="${venda.valor || ''}" placeholder="0,00" onkeydown="navegarCampos(event, ${venda.linha_id}, 'valor')" oninput="marcarLinhaComoNaoSalva(this)" ${liveBloqueada ? 'disabled' : ''}></td>
                 <td><input type="text" id="codigo-${venda.linha_id}" value="${venda.codigo || ''}" onkeydown="navegarCampos(event, ${venda.linha_id}, 'codigo')" oninput="marcarLinhaComoNaoSalva(this)" ${liveBloqueada ? 'disabled' : ''}></td>
                 <td>
                     <div class="autocomplete-container">
@@ -1353,7 +1321,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 </td>
             `;
             tbody.appendChild(tr);
-
+            
             if (!jaSalvo) {
                 verificarCamposObrigatorios(venda.linha_id);
             }
@@ -1371,7 +1339,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             tr.dataset.linhaId = linhaCount;
             tr.innerHTML = `
                 <td><span class="item-number">${linhaCount}</span></td>
-                <td><input type="text" class="valor-input" id="valor-${linhaCount}" placeholder="0,00" onkeydown="navegarCampos(event, ${linhaCount}, 'valor')" oninput="formatarValorInput(this); marcarLinhaComoNaoSalva(this)"></td>
+                <td><input type="number" step="0.01" class="valor-input" id="valor-${linhaCount}" placeholder="0,00" onkeydown="navegarCampos(event, ${linhaCount}, 'valor')" oninput="marcarLinhaComoNaoSalva(this)"></td>
                 <td><input type="text" id="codigo-${linhaCount}" onkeydown="navegarCampos(event, ${linhaCount}, 'codigo')" oninput="marcarLinhaComoNaoSalva(this)"></td>
                 <td>
                     <div class="autocomplete-container">
@@ -1393,7 +1361,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 </td>
             `;
             tbody.appendChild(tr);
-
+            
             linhasNaoSalvas.add(linhaCount);
             verificarCamposObrigatorios(linhaCount);
         }
@@ -1490,7 +1458,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             });
         }
 
-        // NOVO: Filtrar sugestões priorizando compradores já usados na live
         function filtrarSugestoes(input, tipoCampo) {
             if (liveBloqueada) return;
             const valor = input.value.toLowerCase().trim();
@@ -1503,31 +1470,11 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 return;
             }
 
-            // Separar clientes em já usados na live e outros
-            const usadosNaLive = [];
-            const outros = [];
-
-            clientes.forEach(c => {
+            const filtrados = clientes.filter(c => {
                 const nome = c.nome?.toString().toLowerCase() || '';
                 const insta = c.instagram?.toString().toLowerCase() || '';
-
-                if (nome.includes(valor) || insta.includes(valor)) {
-                    // Verifica se este comprador já foi usado na live atual
-                    const nomeLower = c.nome?.trim().toLowerCase();
-                    const instaLower = c.instagram?.trim().toLowerCase();
-
-                    if (nomeLower && compradoresNaLive.has(nomeLower)) {
-                        usadosNaLive.push(c);
-                    } else if (instaLower && compradoresNaLive.has(instaLower)) {
-                        usadosNaLive.push(c);
-                    } else {
-                        outros.push(c);
-                    }
-                }
-            });
-
-            // Combinar: primeiro os usados na live, depois os outros
-            const filtrados = [...usadosNaLive, ...outros].slice(0, 10);
+                return nome.includes(valor) || insta.includes(valor);
+            }).slice(0, 10);
 
             if (filtrados.length === 0 && valor.length >= 2) {
                 sugestoesDiv.innerHTML = `<div class="sugestao-cadastro" onclick="abrirCadastroCliente('${valor}', '${linhaId}', '${tipoCampo}')">+ Cadastrar "${valor}"</div>`;
@@ -1545,25 +1492,15 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 const insta = c.instagram || '';
                 const nomeMatch = nome.toLowerCase().includes(valor);
                 const instaMatch = insta.toLowerCase().includes(valor);
-
-                // Verifica se foi usado na live
-                const nomeLower = nome.trim().toLowerCase();
-                const instaLower = insta.trim().toLowerCase();
-                const foiUsadoNaLive = (nomeLower && compradoresNaLive.has(nomeLower)) || 
-                                       (instaLower && compradoresNaLive.has(instaLower));
-
-                const classeUsado = foiUsadoNaLive ? 'sugestao-usada-na-live' : '';
-                const badgeUsado = foiUsadoNaLive ? '<span class="badge-usada">USADO</span>' : '';
-
                 let html = '';
                 if (nomeMatch && instaMatch) {
-                    html = `<div class="suggestion-main">${nome}${badgeUsado}</div><div class="suggestion-secondary">@${insta}</div>`;
+                    html = `<div class="suggestion-main">${nome}</div><div class="suggestion-secondary">@${insta}</div>`;
                 } else if (nomeMatch) {
-                    html = `<div class="suggestion-main">${nome}${badgeUsado}</div>${insta ? `<div class="suggestion-secondary">@${insta}</div>` : ''}`;
+                    html = `<div class="suggestion-main">${nome}</div>${insta ? `<div class="suggestion-secondary">@${insta}</div>` : ''}`;
                 } else {
-                    html = `<div class="suggestion-main">@${insta}${badgeUsado}</div>${nome ? `<div class="suggestion-secondary">${nome}</div>` : ''}`;
+                    html = `<div class="suggestion-main">@${insta}</div>${nome ? `<div class="suggestion-secondary">${nome}</div>` : ''}`;
                 }
-                return `<div class="suggestion-item ${classeUsado}" onclick="selecionarSugestao('${linhaId}', '${tipoCampo}', '${nome}', '${insta}')">${html}</div>`;
+                return `<div class="suggestion-item" onclick="selecionarSugestao('${linhaId}', '${tipoCampo}', '${nome}', '${insta}')">${html}</div>`;
             }).join('');
             sugestoesDiv.classList.add('active');
         }
@@ -1682,14 +1619,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
 
             try {
                 showStatus('Excluindo...', 'info');
-
-                // Remover comprador do conjunto se existir
-                const compradorExcluido = vendas.find(v => v.linha_id === linhaId)?.comprador?.trim().toLowerCase();
-                if (compradorExcluido) {
-                    compradoresNaLive.delete(compradorExcluido);
-                }
-
-                await supabaseClient.from('vendas_live').delete().eq('linha_id', linhaId).eq('data_live', dataLiveAtual);
+                await supabaseClient.from('vendas_live').delete().eq('linha_id', linhaId).eq('codigo_live', codigoLiveAtual);
                 vendas = vendas.filter(v => v.linha_id !== linhaId);
                 linhasNaoSalvas.delete(parseInt(linhaId));
 
@@ -1741,19 +1671,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                                         el.setAttribute('onkeydown', novoOnkeydown);
                                     }
                                 }
-                                if (el.oninput) {
-                                    const oninputStr = el.getAttribute('oninput');
-                                    if (oninputStr && oninputStr.includes('marcarLinhaComoNaoSalva')) {
-                                        // Mantém o oninput existente
-                                    } else if (oninputStr) {
-                                        const tipoCampo = el.id.split('-')[0];
-                                        if (tipoCampo === 'valor') {
-                                            el.setAttribute('oninput', `formatarValorInput(this); marcarLinhaComoNaoSalva(this)`);
-                                        } else {
-                                            el.setAttribute('oninput', `filtrarSugestoes(this, '${tipoCampo}'); marcarLinhaComoNaoSalva(this)`);
-                                        }
-                                    }
-                                }
                             }
                         });
                     }
@@ -1762,7 +1679,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 linhaCount = todasLinhas.length;
                 await recarregarVendasArray();
                 atualizarContagemItens();
-                atualizarTotalVendidoHeader();
                 showStatus(`Item ${linhaId} excluído!`, 'success');
             } catch (error) {
                 showStatus('Erro ao excluir: ' + error.message, 'error');
@@ -1774,21 +1690,13 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 const { data, error } = await supabaseClient
                     .from('vendas_live')
                     .select('*')
-                    .eq('data_live', dataLiveAtual)
+                    .eq('codigo_live', codigoLiveAtual)
                     .order('linha_id', { ascending: true });
                 if (error) {
                     console.error('Erro ao recarregar:', error);
                     return;
                 }
                 vendas = data || [];
-
-                // Atualizar conjunto de compradores
-                compradoresNaLive.clear();
-                vendas.forEach(v => {
-                    if (v.comprador?.trim()) {
-                        compradoresNaLive.add(v.comprador.trim().toLowerCase());
-                    }
-                });
             } catch (error) {
                 console.error('Erro:', error);
             }
@@ -1868,24 +1776,26 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             document.getElementById('confirmResetDialog').classList.remove('active');
         }
 
+        // CORRIGIDO: Resetar apenas a live atual (por codigo_live)
         async function executarResetarLive() {
             fecharConfirmReset();
             try {
                 showStatus('Apagando...', 'info');
+                
+                // CORRIGIDO: Usar codigo_live em vez de data_live
                 await supabaseClient
-    .from('vendas_live')
-    .delete()
-    .eq('codigo_live', codigoLiveAtual);
+                    .from('vendas_live')
+                    .delete()
+                    .eq('codigo_live', codigoLiveAtual);
+                
                 vendas = [];
                 document.getElementById('vendasBody').innerHTML = '';
                 linhaCount = 0;
                 liveBloqueada = false;
                 linhasNaoSalvas.clear();
-                compradoresNaLive.clear();
                 for (let i = 0; i < 150; i++) adicionarLinha();
                 liberarCampos();
                 atualizarContagemItens();
-                atualizarTotalVendidoHeader();
                 showStatus('Live resetada!', 'success');
             } catch (error) {
                 showStatus('Erro: ' + error.message, 'error');
@@ -1946,7 +1856,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             return 'R$ ' + valor.toFixed(2).replace('.', ',');
         }
 
-        // NOVO: Relatório em ordem alfabética com Instagram
         function gerarRelatorioNovaAba() {
             const vendasUnicas = new Map();
             vendas.forEach(v => {
@@ -1961,9 +1870,10 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 vendasPorComprador[v.comprador].push(v);
             }
 
-            // Ordenar alfabeticamente por nome do comprador
             const compradoresOrdenados = Object.keys(vendasPorComprador).sort((a, b) => {
-                return a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
+                const totalA = vendasPorComprador[a].reduce((sum, v) => sum + v.total, 0);
+                const totalB = vendasPorComprador[b].reduce((sum, v) => sum + v.total, 0);
+                return totalB - totalA;
             });
 
             let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório</title><style>
@@ -1973,32 +1883,24 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 .valor-col{text-align:right}.total-col{text-align:right;font-weight:bold}
                 .total-comprador{font-weight:bold;background:#fafafa}.total-geral{font-weight:bold;font-size:14px;background:#f0f0f0}
                 .print-btn{position:fixed;top:20px;right:20px;padding:10px 20px;background:#28a745;color:white;border:none;border-radius:4px;cursor:pointer}
-                .instagram-tag{color:#667eea;font-size:11px;margin-left:5px}
                 @media print{.print-btn{display:none}}
             </style></head><body>
             <button class="print-btn" onclick="window.print()">🖨️ Imprimir</button>
             <h1>RELATÓRIO DE VENDAS - LIVE</h1>
-            <p class="data-live">Data: ${formatarData(dataLiveAtual)}</p>
+            <p class="data-live">Data: ${formatarData(dataLiveAtual)} | Código: ${codigoLiveAtual}</p>
             <table><thead><tr><th>Valor</th><th>Código</th><th>Comprador</th><th>Fila</th></tr></thead><tbody>`;
 
             let totalGeral = 0, quantidadeTotal = 0;
-
             compradoresOrdenados.forEach(comprador => {
                 const vendasComp = vendasPorComprador[comprador];
                 const totalComp = vendasComp.reduce((sum, v) => sum + v.total, 0);
                 totalGeral += totalComp;
                 quantidadeTotal += vendasComp.length;
-
-                // Buscar Instagram do cliente
-                const cliente = clientes.find(c => c.nome?.toLowerCase() === comprador.toLowerCase());
-                const instagram = cliente?.instagram ? `<span class="instagram-tag">(@${cliente.instagram})</span>` : '';
-
                 vendasComp.forEach(v => {
-                    html += `<tr><td class="valor-col">${formatarMoeda(v.valor)}</td><td>${v.codigo||'x'}</td><td>${comprador}${instagram}</td><td>${v.fila||'x'}</td></tr>`;
+                    html += `<tr><td class="valor-col">${formatarMoeda(v.valor)}</td><td>${v.codigo||'x'}</td><td>${comprador}</td><td>${v.fila||'x'}</td></tr>`;
                 });
                 html += `<tr class="total-comprador"><td colspan="3" style="text-align:right">Total ${comprador}:</td><td class="total-col">${formatarMoeda(totalComp)}</td></tr>`;
             });
-
             html += `<tr class="total-geral"><td colspan="3" style="text-align:right">TOTAL (${quantidadeTotal} itens):</td><td class="total-col">${formatarMoeda(totalGeral)}</td></tr></tbody></table></body></html>`;
 
             const novaAba = window.open('', '_blank');
