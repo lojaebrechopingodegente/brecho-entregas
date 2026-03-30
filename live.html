@@ -414,16 +414,38 @@
         .btn-voltar:hover {
             background: #5a6268;
         }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(102, 126, 234, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div>🔄 Conectando ao Supabase...</div>
+    </div>
+
     <div class="container">
         <div class="header">
             <h1>🛍️ Registro de Vendas - Live</h1>
             <p>Gerencie suas vendas em tempo real por data</p>
         </div>
         <div class="content">
-            <div class="config-section" id="configSection">
+            <!-- Tela de configuração oculta por padrão -->
+            <div class="config-section" id="configSection" style="display: none;">
                 <h3>🔧 Configuração do Supabase</h3>
                 <div class="form-group">
                     <label>URL do Supabase:</label>
@@ -467,6 +489,7 @@ create index if not exists idx_vendas_live_data on vendas_live(data_live);
 create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 </div>
             </div>
+
             <div id="dateSelectorSection" style="display: none;">
                 <div style="margin-bottom: 15px;">
                     <a href="dashboard.html" class="btn-voltar">← Voltar para Dashboard</a>
@@ -485,6 +508,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     <p class="info-text-small">💡 Selecione uma data para ver as lives disponíveis.</p>
                 </div>
             </div>
+
             <div id="appSection" style="display: none;">
                 <div class="live-info" id="liveInfoBanner">
                     <div>
@@ -573,7 +597,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
     <script>
 
         // CONFIGURAÇÃO EMBUTIDA - SUBSTITUA ESTA CHAVE PELA SUA CHAVE ANÔNIMA REAL
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTMzNjY4MDAsImV4cCI6MjAyODk0MjgwMH0.EXEMPLO_DE_CHAVE_AQUI_SUBSTITUA';
 
         let supabaseClient = null;
         let clientes = [];
@@ -656,19 +680,25 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             activeInput = null;
         }
 
+        // CONEXÃO AUTOMÁTICA AO CARREGAR A PÁGINA
         document.addEventListener('DOMContentLoaded', () => {
             const hoje = new Date().toISOString().split('T')[0];
             document.getElementById('dataLiveInput').value = hoje;
             inicializarReconhecimentoVoz();
+            
+            // Conectar automaticamente após 500ms
+            setTimeout(() => {
+                conectarSupabaseAutomatico();
+            }, 500);
         });
 
-        async function conectarSupabase() {
-            const url = document.getElementById('supabaseUrl').value.trim();
-            
-            // Usa a chave embutida no código
+        async function conectarSupabaseAutomatico() {
+            const url = 'https://ytnfjzngalfapfnbobfm.supabase.co';
             const key = SUPABASE_ANON_KEY;
             
-            if (!url || !key || key === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTMzNjY4MDAsImV4cCI6MjAyODk0MjgwMH0.EXEMPLO_DE_CHAVE_AQUI_SUBSTITUA') {
+            if (!key || key === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls') {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('configSection').style.display = 'block';
                 showStatus('Configure a chave Anon Key no código fonte!', 'error');
                 return;
             }
@@ -681,17 +711,29 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 await carregarClientes();
                 const { error: vendasError } = await supabaseClient.from('vendas_live').select('id').limit(1);
                 if (vendasError && vendasError.message.includes('does not exist')) {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    document.getElementById('configSection').style.display = 'block';
                     document.getElementById('sqlHelper').style.display = 'block';
                     showStatus('Crie a tabela vendas_live primeiro', 'error');
                     return;
                 }
+                
+                // Esconder loading e mostrar tela de seleção de data
+                document.getElementById('loadingOverlay').style.display = 'none';
                 document.getElementById('configSection').style.display = 'none';
                 document.getElementById('dateSelectorSection').style.display = 'block';
                 await verificarLivesNaData();
                 showStatus('Conectado!', 'success');
             } catch (error) {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('configSection').style.display = 'block';
                 showStatus('Erro: ' + error.message, 'error');
             }
+        }
+
+        // Função manual caso precise reconectar
+        async function conectarSupabase() {
+            await conectarSupabaseAutomatico();
         }
 
         async function carregarClientes() {
@@ -1934,7 +1976,8 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             return 'R$ ' + valor.toFixed(2).replace('.', ',');
         }
 
-        // RELATÓRIO COM COLUNA VALOR NA ÚLTIMA POSIÇÃO
+        // RELATÓRIO COM COLUNAS PROPORCIONAIS - VALOR NA ÚLTIMA POSIÇÃO
+        // Fila maior (35%), Comprador médio (30%), Código pequeno (15%), Valor pequeno (20%)
         function gerarRelatorioNovaAba() {
             const vendasUnicas = new Map();
             vendas.forEach(v => {
@@ -1953,12 +1996,12 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 return a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
             });
 
-            // COLUNAS REORDENADAS: Código, Comprador, Fila, Valor (Valor por último)
+            // LAYOUT: Código (15%) | Comprador (30%) | Fila (35%) | Valor (20%)
             let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório</title><style>
                 *{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial;padding:20px}
                 h1{text-align:center;font-size:18px;margin-bottom:20px}.data-live{text-align:center;font-size:14px;font-weight:bold;margin-bottom:10px}
                 table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #000;padding:6px 8px}
-                .valor-col{text-align:right;font-weight:bold}.total-col{text-align:right;font-weight:bold}
+                .col-codigo{width:15%;text-align:center}.col-comprador{width:30%}.col-fila{width:35%}.col-valor{width:20%;text-align:right;font-weight:bold}
                 .total-comprador{font-weight:bold;background:#fafafa}.total-geral{font-weight:bold;font-size:14px;background:#f0f0f0}
                 .print-btn{position:fixed;top:20px;right:20px;padding:10px 20px;background:#28a745;color:white;border:none;border-radius:4px;cursor:pointer}
                 .instagram-tag{color:#667eea;font-size:11px;margin-left:5px}
@@ -1967,7 +2010,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             <button class="print-btn" onclick="window.print()">🖨️ Imprimir</button>
             <h1>RELATÓRIO DE VENDAS - LIVE</h1>
             <p class="data-live">Data: ${formatarData(dataLiveAtual)}</p>
-            <table><thead><tr><th>Código</th><th>Comprador</th><th>Fila</th><th>Valor</th></tr></thead><tbody>`;
+            <table><thead><tr><th class="col-codigo">Código</th><th class="col-comprador">Comprador</th><th class="col-fila">Fila</th><th class="col-valor">Valor</th></tr></thead><tbody>`;
 
             let totalGeral = 0, quantidadeTotal = 0;
 
@@ -1981,13 +2024,24 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 const instagram = cliente?.instagram ? `<span class="instagram-tag">(@${cliente.instagram})</span>` : '';
 
                 vendasComp.forEach(v => {
-                    // ORDEM DAS COLUNAS: Código, Comprador, Fila, Valor
-                    html += `<tr><td>${v.codigo||'x'}</td><td>${comprador}${instagram}</td><td>${v.fila||'x'}</td><td class="valor-col">${formatarMoeda(v.valor)}</td></tr>`;
+                    // ORDEM: Código | Comprador | Fila | Valor
+                    html += `<tr>
+                        <td class="col-codigo">${v.codigo||'x'}</td>
+                        <td class="col-comprador">${comprador}${instagram}</td>
+                        <td class="col-fila">${v.fila||'x'}</td>
+                        <td class="col-valor">${formatarMoeda(v.valor)}</td>
+                    </tr>`;
                 });
-                html += `<tr class="total-comprador"><td colspan="3" style="text-align:right">Total ${comprador}:</td><td class="total-col">${formatarMoeda(totalComp)}</td></tr>`;
+                html += `<tr class="total-comprador">
+                    <td colspan="3" style="text-align:right">Total ${comprador}:</td>
+                    <td class="col-valor">${formatarMoeda(totalComp)}</td>
+                </tr>`;
             });
 
-            html += `<tr class="total-geral"><td colspan="3" style="text-align:right">TOTAL (${quantidadeTotal} itens):</td><td class="total-col">${formatarMoeda(totalGeral)}</td></tr></tbody></table></body></html>`;
+            html += `<tr class="total-geral">
+                <td colspan="3" style="text-align:right">TOTAL (${quantidadeTotal} itens):</td>
+                <td class="col-valor">${formatarMoeda(totalGeral)}</td>
+            </tr></tbody></table></body></html>`;
 
             const novaAba = window.open('', '_blank');
             if (novaAba) {
