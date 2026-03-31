@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cobrança Live - Pingo de Gente (Sheets)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #FFF5F7 0%, #F0FFF4 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(255, 139, 167, 0.15);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .btn-voltar { background: linear-gradient(135deg, #A8E6CF, #7FCDCD); color: #2D3436; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 0.95rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s; }
+        .btn-voltar:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(168, 230, 207, 0.4); }
+        .header h1 { color: #FF6B8A; font-size: 1.8rem; margin-bottom: 5px; }
+        .header p { color: #636E72; font-size: 0.9rem; }
+        .btn-logout { background: linear-gradient(135deg, #FF6B6B, #EE5A6F); color: white; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 0.95rem; font-weight: 600; transition: all 0.3s; }
+        .btn-logout:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(238, 90, 111, 0.4); }
+
+        .config-section { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); border: 2px solid #4CAF50; border-radius: 15px; padding: 25px; margin-bottom: 25px; }
+        .config-section h2 { color: #2E7D32; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 1.3rem; }
+        .config-input { width: 100%; padding: 15px; border: 2px solid #A5D6A7; border-radius: 10px; font-size: 1rem; margin-bottom: 15px; }
+        .config-input:focus { outline: none; border-color: #4CAF50; box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.1); }
+        .config-help { color: #555; font-size: 0.9rem; margin-top: 10px; line-height: 1.5; }
+        .config-help code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+
+        .filtros-container { background: white; padding: 25px; border-radius: 20px; margin-bottom: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
+        .filtros-titulo { color: #2D3436; font-size: 1.3rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .filtros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .campo-filtro { display: flex; flex-direction: column; gap: 8px; }
+        .campo-filtro label { font-weight: 600; color: #2D3436; font-size: 0.9rem; }
+        .campo-filtro input, .campo-filtro select { padding: 12px 15px; border: 2px solid #E0E0E0; border-radius: 12px; font-size: 1rem; transition: all 0.3s; }
+        .campo-filtro input:focus, .campo-filtro select:focus { outline: none; border-color: #FF8BA7; box-shadow: 0 0 0 4px rgba(255, 139, 167, 0.1); }
+        .botoes-filtro { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; }
+        .btn { padding: 14px 28px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 107, 138, 0.4); }
+        .btn-secondary { background: linear-gradient(135deg, #A8E6CF, #7FCDCD); color: #2D3436; }
+        .btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(168, 230, 207, 0.4); }
+        .btn-sheets { background: linear-gradient(135deg, #0F9D58, #34A853); color: white; }
+        .btn-sheets:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(15, 157, 88, 0.4); }
+        .btn-sheets:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; }
+        .btn-instagram:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(220, 39, 67, 0.4); }
+        .btn-instagram:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 3px 15px rgba(0,0,0,0.08); border-left: 4px solid #FF6B8A; }
+        .stat-card h3 { color: #636E72; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .stat-card .valor { color: #FF6B8A; font-size: 2rem; font-weight: bold; }
+        .tabela-container { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
+        .tabela-header { padding: 20px 25px; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .tabela-header h2 { font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        thead { background: #F8F9FA; }
+        th { padding: 15px; text-align: left; font-weight: 600; color: #2D3436; border-bottom: 2px solid #E0E0E0; white-space: nowrap; position: sticky; top: 0; background: #F8F9FA; z-index: 10; }
+        td { padding: 15px; border-bottom: 1px solid #E0E0E0; color: #636E72; }
+        tr:hover { background: #FFF5F7; }
+        tr.selecionado { background: #E8F5E9 !important; border-left: 4px solid #4CAF50; }
+        tr.exportado { background: #E3F2FD !important; border-left: 4px solid #2196F3; }
+        .checkbox-selecao { width: 20px; height: 20px; cursor: pointer; accent-color: #FF6B8A; }
+        
+        .acoes-container { display: flex; gap: 5px; flex-wrap: nowrap; }
+        .btn-acao { padding: 6px 10px; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-acao:hover { transform: scale(1.05); }
+        .btn-ver-itens { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-cobrar { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; }
+        .btn-cobrar:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .btn-add-instagram { background: linear-gradient(135deg, #FF6B6B, #EE5A6F); color: white; }
+        
+        .valor-total { font-weight: bold; color: #FF6B8A; font-size: 1.1rem; }
+        .qtd-itens { background: #FF8BA7; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; font-weight: 600; }
+        .badge-exportado { background: #2196F3; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; }
+        .badge-pendente { background: #FF9800; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; overflow-y: auto; }
+        .modal-overlay.ativo { display: flex; }
+        .modal { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 600px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; margin: 20px auto; }
+        .modal-itens { background: white; padding: 0; border-radius: 20px; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; margin: 20px auto; }
+        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .modal-header h3 { color: #FF6B8A; font-size: 1.3rem; display: flex; align-items: center; gap: 10px; }
+        .btn-fechar { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #636E72; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #2D3436; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 15px; border: 2px solid #E0E0E0; border-radius: 10px; font-size: 1rem; font-family: inherit; transition: all 0.3s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #FF8BA7; box-shadow: 0 0 0 4px rgba(255, 139, 167, 0.1); }
+        .form-group textarea { resize: vertical; min-height: 120px; }
+        
+        .btn-salvar { width: 100%; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s; }
+        .btn-salvar:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 107, 138, 0.4); }
+        .btn-cancelar { background: #E0E0E0; color: #2D3436; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-cancelar:hover { background: #D0D0D0; }
+        
+        .preview-instagram { background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 15px; padding: 20px; margin-top: 20px; border: 2px dashed #FF8BA7; }
+        .preview-instagram h4 { color: #FF6B8A; margin-bottom: 10px; font-size: 0.9rem; text-transform: uppercase; }
+        .preview-texto { background: white; padding: 15px; border-radius: 10px; font-size: 0.95rem; line-height: 1.6; color: #2D3436; white-space: pre-wrap; font-family: monospace; }
+        
+        .info-pagamento { background: linear-gradient(135deg, #E3F2FD, #BBDEFB); border: 2px solid #2196F3; border-radius: 10px; padding: 20px; margin-top: 20px; }
+        .info-pagamento h4 { color: #1565C0; margin-bottom: 15px; font-size: 1rem; }
+        .pix-box { background: white; padding: 20px; border-radius: 12px; border: 3px dashed #2196F3; text-align: center; }
+        .pix-label { font-size: 0.9rem; color: #424242; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .pix-chave { font-size: 1.8rem; font-weight: bold; color: #1565C0; font-family: 'Courier New', monospace; letter-spacing: 2px; word-break: break-all; }
+        .pix-nome { margin-top: 10px; font-size: 1rem; color: #616161; font-weight: 500; }
+        
+        .progresso-container { background: #F5F5F5; border-radius: 10px; padding: 20px; margin: 20px 0; display: none; }
+        .progresso-barra { width: 100%; height: 20px; background: #E0E0E0; border-radius: 10px; overflow: hidden; }
+        .progresso-preenchimento { height: 100%; background: linear-gradient(135deg, #0F9D58, #34A853); transition: width 0.3s; width: 0%; }
+        .progresso-texto { text-align: center; margin-top: 10px; font-weight: 600; color: #636E72; }
+        
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.5rem; }
+            .filtros-grid { grid-template-columns: 1fr; }
+            th, td { padding: 10px; font-size: 0.85rem; }
+            .botoes-filtro { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+        }
+        
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .sem-instagram { color: #dc3545; font-style: italic; font-size: 0.85rem; }
+        .com-instagram { color: #E1306C; font-weight: 600; }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: #636E72; }
+        .loading { text-align: center; padding: 40px; color: #FF6B8A; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #FF6B8A; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <a href="dashboard.html" class="btn-voltar">← Voltar ao Dashboard</a>
+                <div>
+                    <h1>💰 Cobrança Live + Sheets</h1>
+                    <p>Exporte para Google Sheets → Manychat envia automaticamente</p>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
+        </div>
+
+        <!-- Configuração Google Sheets -->
+        <div class="config-section">
+            <h2>⚙️ Configuração do Google Apps Script</h2>
+            <input type="text" id="sheetsUrl" class="config-input" placeholder="Cole aqui a URL do Web App do Google Apps Script...">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" onclick="testarConexaoSheets()">🔄 Testar Conexão</button>
+                <button class="btn btn-primary" onclick="salvarConfiguracaoSheets()">💾 Salvar URL</button>
+            </div>
+            <div class="config-help">
+                <strong>Como obter esta URL:</strong><br>
+                1. Crie uma planilha no Google Sheets<br>
+                2. Vá em Extensões → Apps Script<br>
+                3. Cole o código do Apps Script (fornecido na documentação)<br>
+                4. Clique em Implementação → Nova implementação → Web App<br>
+                5. Copie a URL e cole aqui 👆<br>
+                <br>
+                <strong>Exemplo de URL:</strong> <code>https://script.google.com/macros/s/AKfycbz.../exec</code>
+            </div>
+        </div>
+
+        <div class="filtros-container" id="filtrosContainer" style="opacity: 0.5; pointer-events: none;">
+            <h2 class="filtros-titulo">📅 Selecionar Live</h2>
+            
+            <div class="filtros-grid">
+                <div class="campo-filtro">
+                    <label>Data da Live</label>
+                    <input type="date" id="dataLive" onchange="carregarLivesNaData()">
+                </div>
+                <div class="campo-filtro">
+                    <label>Código da Live</label>
+                    <select id="selectLive" onchange="selecionarLive()">
+                        <option value="">Selecione uma data primeiro</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="botoes-filtro">
+                <button class="btn btn-primary" onclick="carregarVendas()">🔍 Carregar Clientes</button>
+                <button class="btn btn-secondary" onclick="limparFiltros()">🧹 Limpar</button>
+                <button class="btn btn-sheets" id="btnExportarSheets" onclick="exportarParaSheets()" disabled>📊 Exportar p/ Sheets</button>
+                <button class="btn btn-instagram" id="btnCobrarManual" onclick="cobrarSelecionadosManual()" disabled>📱 Cobrar Manual</button>
+            </div>
+        </div>
+
+        <!-- Barra de progresso -->
+        <div class="progresso-container" id="progressoContainer">
+            <div class="progresso-barra">
+                <div class="progresso-preenchimento" id="progressoBarra"></div>
+            </div>
+            <div class="progresso-texto" id="progressoTexto">0 de 0 exportados</div>
+        </div>
+
+        <div class="stats-container" id="statsContainer" style="display: none;">
+            <div class="stat-card"><h3>Total de Clientes</h3><div class="valor" id="statTotalClientes">-</div></div>
+            <div class="stat-card"><h3>Valor Total</h3><div class="valor" id="statValorTotal">-</div></div>
+            <div class="stat-card"><h3>Selecionados</h3><div class="valor" id="statSelecionados">-</div></div>
+            <div class="stat-card"><h3>Exportados</h3><div class="valor" id="statExportados">-</div></div>
+        </div>
+
+        <div class="tabela-container" id="tabelaContainer" style="display: none;">
+            <div class="tabela-header">
+                <h2>👥 Clientes da Live</h2>
+                <span id="infoLive"></span>
+            </div>
+            <div class="selecao-massa" style="padding: 15px 25px; background: #F8F9FA; border-bottom: 1px solid #E0E0E0;">
+                <label><input type="checkbox" id="selecionarTodos" onchange="toggleSelecionarTodos()"> Selecionar todos</label>
+                <span id="infoSelecao" style="color: #636E72; font-size: 0.9rem;"></span>
+            </div>
+            <div class="table-responsive">
+                <table id="tabelaClientes">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="checkboxHeader" onchange="toggleSelecionarTodos()"></th>
+                            <th>Cliente</th>
+                            <th>Instagram</th>
+                            <th>Qtd Itens</th>
+                            <th>Valor Total</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="empty-state" id="emptyState">
+            <div style="font-size: 4rem; margin-bottom: 20px;">📅</div>
+            <h3>Selecione uma data e live</h3>
+            <p>Configure a URL do Google Apps Script e escolha a live para começar</p>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Carregando...</p>
+        </div>
+    </div>
+
+    <!-- Modal Ver Itens -->
+    <div class="modal-overlay" id="modalItens">
+        <div class="modal-itens">
+            <div style="background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; padding: 25px 30px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="font-size: 1.4rem;">🛍️ Itens do Cliente</h3>
+                    <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 5px;" id="subtituloItens"></div>
+                </div>
+                <button class="btn-fechar" onclick="fecharModal('modalItens')" style="color: white; font-size: 1.8rem;">×</button>
+            </div>
+            <div style="padding: 30px;">
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <thead>
+                        <tr style="background: #F8F9FA;">
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #E0E0E0;">Código</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #E0E0E0;">Valor</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #E0E0E0;">Fila</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itensBody"></tbody>
+                </table>
+                <div style="background: #E8F5E9; padding: 15px; border-radius: 10px; text-align: right; font-size: 1.2rem; font-weight: bold; color: #2E7D32;" id="totalItensCliente">Total: R$ 0,00</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Instagram Manual -->
+    <div class="modal-overlay" id="modalInstagram">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>📱 Cobrança Manual</h3>
+                <button class="btn-fechar" onclick="fecharModal('modalInstagram')">×</button>
+            </div>
+            <div class="form-group">
+                <label>Cliente</label>
+                <input type="text" id="igClienteNome" readonly>
+            </div>
+            <div class="form-group">
+                <label for="igMensagem">Mensagem (copie e cole)</label>
+                <textarea id="igMensagem" readonly></textarea>
+            </div>
+            <div class="preview-instagram">
+                <h4>👁️ Pré-visualização</h4>
+                <div class="preview-texto" id="igPreview"></div>
+            </div>
+            <div class="info-pagamento">
+                <h4>💳 Dados para Pagamento</h4>
+                <div class="pix-box">
+                    <div class="pix-label">Chave Pix (CNPJ)</div>
+                    <div class="pix-chave">50403919000102</div>
+                    <div class="pix-nome">Amanda Marcelino</div>
+                </div>
+            </div>
+            <button class="btn-salvar" onclick="copiarParaInstagram()" style="margin-top: 20px;">📋 Copiar Mensagem</button>
+        </div>
+    </div>
+
+    <!-- Modal Cadastrar Instagram -->
+    <div class="modal-overlay" id="modalInstagramCadastro">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>📱 Cadastrar Instagram</h3>
+                <button class="btn-fechar" onclick="fecharModal('modalInstagramCadastro')">×</button>
+            </div>
+            <div class="form-group">
+                <label>Cliente</label>
+                <input type="text" id="cadastroClienteNome" readonly>
+                <input type="hidden" id="cadastroClienteIndex">
+            </div>
+            <div class="form-group">
+                <label for="cadastroInstagram">Instagram <span style="font-weight: normal; color: #666;">(sem @)</span></label>
+                <input type="text" id="cadastroInstagram" placeholder="Digite o nome do Instagram...">
+            </div>
+            <div class="form-group" id="novoClienteSection" style="display: none;">
+                <div style="background: #FFF3E0; border: 2px solid #FF9800; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                    <strong>⚠️ Cliente não cadastrado</strong>
+                    <p style="margin-top: 5px; font-size: 0.9rem; color: #E65100;">Este comprador não está na base de clientes.</p>
+                </div>
+                <label for="cadastroWhatsapp">WhatsApp <span style="font-weight: normal; color: #666;">(opcional)</span></label>
+                <input type="text" id="cadastroWhatsapp" placeholder="(00) 00000-0000">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-cancelar" onclick="fecharModal('modalInstagramCadastro')" style="flex: 1;">Cancelar</button>
+                <button class="btn-salvar" onclick="salvarInstagram()" style="flex: 2;">💾 Salvar Instagram</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURAÇÃO
+        // ============================================
+        const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
+        
+        const CHAVE_PIX = '50403919000102';
+        const NOME_PIX = 'Amanda Marcelino';
+        
+        let supabaseClient = null;
+        let SHEETS_WEBHOOK_URL = localStorage.getItem('sheets_webhook_url') || '';
+        let vendasData = [];
+        let clientesAgrupados = [];
+        let clientesCache = {};
+        let instagramAtual = '';
+        let idsSelecionados = new Set();
+        let codigoLiveAtual = '';
+        let dataLiveAtual = '';
+        let clienteIndexAtual = null;
+        let clientesExportados = new Set();
+
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        function inicializar() {
+            // Verificar acesso
+            const STORAGE_SENHA = 'pingo_senha_hash';
+            const SENHA_CORRETA = '770057';
+            function criarHash(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString(16);
+            }
+            const senhaSalva = localStorage.getItem(STORAGE_SENHA);
+            if (!senhaSalva || criarHash(SENHA_CORRETA) !== senhaSalva) {
+                window.location.replace('login.html');
+                return;
+            }
+
+            // Carregar configuração
+            document.getElementById('sheetsUrl').value = SHEETS_WEBHOOK_URL;
+            
+            // Inicializar Supabase
+            try {
+                if (typeof supabase !== 'undefined') {
+                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    const hoje = new Date();
+                    document.getElementById('dataLive').value = hoje.toISOString().split('T')[0];
+                    testarConexaoSupabase();
+                }
+            } catch (e) {
+                console.error('Erro Supabase:', e);
+            }
+
+            // Event listeners
+            document.getElementById('modalItens').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalItens'); });
+            document.getElementById('modalInstagram').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalInstagram'); });
+            document.getElementById('modalInstagramCadastro').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalInstagramCadastro'); });
+        }
+
+        async function testarConexaoSupabase() {
+            try {
+                const { error } = await supabaseClient.from('lives_pg').select('count').limit(1);
+                if (!error) {
+                    document.getElementById('filtrosContainer').style.opacity = '1';
+                    document.getElementById('filtrosContainer').style.pointerEvents = 'auto';
+                    carregarLivesNaData();
+                }
+            } catch (e) {
+                console.error('Erro Supabase:', e);
+            }
+        }
+
+        function salvarConfiguracaoSheets() {
+            SHEETS_WEBHOOK_URL = document.getElementById('sheetsUrl').value.trim();
+            localStorage.setItem('sheets_webhook_url', SHEETS_WEBHOOK_URL);
+            alert('✅ URL do Google Apps Script salva!');
+        }
+
+        async function testarConexaoSheets() {
+            if (!SHEETS_WEBHOOK_URL) {
+                alert('⚠️ Configure a URL primeiro!');
+                return;
+            }
+            
+            try {
+                const response = await fetch(SHEETS_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        instagram_username: 'teste',
+                        nome: 'Teste',
+                        valor_total: '1.00',
+                        teste: true
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('✅ Conexão OK! O Apps Script está respondendo.');
+                } else {
+                    alert('❌ Erro na conexão. Verifique a URL.');
+                }
+            } catch (error) {
+                alert('❌ Erro: ' + error.message);
+            }
+        }
+
+        // ============================================
+        // FUNÇÕES DE FORMATAÇÃO
+        // ============================================
+        function formatarDataBr(data) { 
+            if (!data) return '-'; 
+            const d = new Date(data); 
+            return isNaN(d.getTime()) ? data : d.toLocaleDateString('pt-BR'); 
+        }
+        
+        function formatarMoeda(valor) {
+            return 'R$ ' + parseFloat(valor || 0).toFixed(2).replace('.', ',');
+        }
+
+        // ============================================
+        // CARREGAR DADOS
+        // ============================================
+        async function carregarLivesNaData() {
+            const data = document.getElementById('dataLive').value;
+            if (!data) return;
+
+            const select = document.getElementById('selectLive');
+            select.innerHTML = '<option value="">Carregando...</option>';
+
+            try {
+                const { data: lives, error } = await supabaseClient
+                    .from('lives_pg')
+                    .select('*')
+                    .eq('data_live', data)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!lives || lives.length === 0) {
+                    select.innerHTML = '<option value="">Nenhuma live nesta data</option>';
+                    return;
+                }
+
+                let html = '<option value="">Selecione a live</option>';
+                lives.forEach(live => {
+                    const status = live.status === 'ativa' ? '🟢' : '🔒';
+                    html += `<option value="${live.codigo}" data-data="${live.data_live}">${status} ${live.codigo}</option>`;
+                });
+                select.innerHTML = html;
+            } catch (e) {
+                select.innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }
+
+        function selecionarLive() {
+            const select = document.getElementById('selectLive');
+            const option = select.options[select.selectedIndex];
+            codigoLiveAtual = select.value;
+            dataLiveAtual = option.dataset.data;
+        }
+
+        async function carregarTodosClientes() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('clientes_pg')
+                    .select('id, nome, instagram, whatsapp');
+                
+                if (error) throw error;
+                
+                clientesCache = {};
+                (data || []).forEach(cliente => {
+                    if (cliente.nome) {
+                        const nomeKey = cliente.nome.trim().toLowerCase();
+                        clientesCache[nomeKey] = cliente;
+                    }
+                });
+            } catch (e) {
+                console.error('Erro ao carregar clientes:', e);
+            }
+        }
+
+        async function carregarVendas() {
+            if (!codigoLiveAtual) {
+                alert('⚠️ Selecione uma live primeiro!');
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('tabelaContainer').style.display = 'none';
+            document.getElementById('statsContainer').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                await carregarTodosClientes();
+
+                const { data, error } = await supabaseClient
+                    .from('vendas_live')
+                    .select('*')
+                    .eq('codigo_live', codigoLiveAtual)
+                    .order('linha_id', { ascending: true });
+
+                if (error) throw error;
+
+                vendasData = (data || []).filter(v => v.valor > 0 && v.comprador?.trim());
+
+                const agrupados = {};
+                vendasData.forEach(v => {
+                    const nome = v.comprador.trim();
+                    const clienteInfo = buscarClientePorNome(nome);
+                    
+                    if (!agrupados[nome]) {
+                        agrupados[nome] = {
+                            nome: nome,
+                            instagram: clienteInfo?.instagram || '',
+                            whatsapp: clienteInfo?.whatsapp || '',
+                            clienteId: clienteInfo?.id || null,
+                            itens: [],
+                            total: 0
+                        };
+                    }
+                    agrupados[nome].itens.push(v);
+                    agrupados[nome].total += parseFloat(v.valor) || 0;
+                });
+
+                clientesAgrupados = Object.values(agrupados).sort((a, b) => a.nome.localeCompare(b.nome));
+
+                document.getElementById('infoLive').textContent = `${codigoLiveAtual} - ${formatarDataBr(dataLiveAtual)}`;
+                
+                idsSelecionados.clear();
+                clientesExportados.clear();
+                atualizarStats();
+                renderizarTabela();
+                
+            } catch (e) {
+                console.error('Erro:', e);
+                alert('❌ Erro ao carregar vendas');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function buscarClientePorNome(nome) {
+            if (!nome) return null;
+            const nomeKey = nome.trim().toLowerCase();
+            return clientesCache[nomeKey] || null;
+        }
+
+        // ============================================
+        // RENDERIZAR TABELA
+        // ============================================
+        function renderizarTabela() {
+            const tbody = document.getElementById('tabelaBody');
+            tbody.innerHTML = '';
+            
+            if (clientesAgrupados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">Nenhum cliente encontrado</td></tr>';
+                document.getElementById('tabelaContainer').style.display = 'block';
+                return;
+            }
+
+            clientesAgrupados.forEach((cliente, index) => {
+                const tr = document.createElement('tr');
+                tr.dataset.index = index;
+                
+                const temInstagram = cliente.instagram && cliente.instagram.trim() !== '';
+                const exportado = clientesExportados.has(index);
+                
+                tr.className = exportado ? 'exportado' : idsSelecionados.has(index) ? 'selecionado' : '';
+                
+                tr.innerHTML = `
+                    <td><input type="checkbox" class="checkbox-selecao" onchange="toggleSelecao(${index})" ${idsSelecionados.has(index) ? 'checked' : ''} ${exportado ? 'disabled' : ''}></td>
+                    <td><strong>${cliente.nome}</strong></td>
+                    <td>
+                        ${temInstagram 
+                            ? `<span class="com-instagram">@${cliente.instagram}</span>` 
+                            : `<span class="sem-instagram">❌ Sem Instagram</span>`}
+                    </td>
+                    <td><span class="qtd-itens">${cliente.itens.length}</span></td>
+                    <td><span class="valor-total">${formatarMoeda(cliente.total)}</span></td>
+                    <td>
+                        ${exportado 
+                            ? '<span class="badge-exportado">📤 Exportado</span>' 
+                            : '<span class="badge-pendente">⏳ Pendente</span>'}
+                    </td>
+                    <td>
+                        <div class="acoes-container">
+                            <button class="btn-acao btn-ver-itens" onclick="verItens(${index})">👁️ Ver</button>
+                            <button class="btn-acao btn-add-instagram" onclick="abrirCadastroInstagram(${index})">${temInstagram ? '✏️ IG' : '➕ IG'}</button>
+                            ${!exportado ? `
+                                <button class="btn-acao btn-cobrar" onclick="cobrarClienteManual(${index})" ${!temInstagram ? 'disabled' : ''}>📱 Manual</button>
+                            ` : '<span style="color: #2196F3; font-size: 0.8rem;">✓ Enviado</span>'}
+                        </div>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+            
+            document.getElementById('tabelaContainer').style.display = 'block';
+            atualizarContadores();
+            atualizarBotoes();
+        }
+
+        // ============================================
+        // EXPORTAR PARA GOOGLE SHEETS
+        // ============================================
+        async function exportarParaSheets() {
+            if (idsSelecionados.size === 0) {
+                alert('⚠️ Selecione pelo menos um cliente!');
+                return;
+            }
+
+            if (!SHEETS_WEBHOOK_URL) {
+                alert('⚠️ Configure a URL do Google Apps Script primeiro!');
+                return;
+            }
+
+            const indices = Array.from(idsSelecionados);
+            const clientesParaExportar = indices.map(index => ({
+                index,
+                ...clientesAgrupados[index]
+            })).filter(c => c.instagram && !clientesExportados.has(c.index));
+
+            if (clientesParaExportar.length === 0) {
+                alert('Nenhum cliente válido para exportar (verifique Instagram e status)');
+                return;
+            }
+
+            // Mostrar progresso
+            document.getElementById('progressoContainer').style.display = 'block';
+            const total = clientesParaExportar.length;
+            let sucessos = 0;
+            let erros = 0;
+
+            for (let i = 0; i < clientesParaExportar.length; i++) {
+                const cliente = clientesParaExportar[i];
+                
+                try {
+                    const dadosExportacao = {
+                        instagram_username: cliente.instagram.replace('@', ''),
+                        nome: cliente.nome,
+                        valor_total: cliente.total.toFixed(2),
+                        itens: cliente.itens.map(item => item.codigo).join(', '),
+                        quantidade_itens: cliente.itens.length.toString(),
+                        live_id: codigoLiveAtual,
+                        data_live: dataLiveAtual
+                    };
+
+                    const response = await fetch(SHEETS_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(dadosExportacao)
+                    });
+
+                    if (response.ok) {
+                        const resultado = await response.json();
+                        if (resultado.success) {
+                            clientesExportados.add(cliente.index);
+                            sucessos++;
+                        } else {
+                            throw new Error(resultado.message || 'Erro no Apps Script');
+                        }
+                    } else {
+                        throw new Error('Erro HTTP: ' + response.status);
+                    }
+                } catch (error) {
+                    console.error(`Erro ao exportar ${cliente.nome}:`, error);
+                    erros++;
+                }
+
+                // Atualizar progresso
+                const percentual = ((i + 1) / total) * 100;
+                document.getElementById('progressoBarra').style.width = `${percentual}%`;
+                document.getElementById('progressoTexto').textContent = `${i + 1} de ${total} exportados`;
+                
+                // Delay para não sobrecarregar
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            renderizarTabela();
+            atualizarStats();
+            
+            setTimeout(() => {
+                document.getElementById('progressoContainer').style.display = 'none';
+                document.getElementById('progressoBarra').style.width = '0%';
+            }, 3000);
+
+            if (erros === 0) {
+                alert(`✅ ${sucessos} clientes exportados com sucesso!\n\nO Google Apps Script vai processar e enviar as mensagens automaticamente.`);
+            } else {
+                alert(`⚠️ ${sucessos} exportados, ${erros} erros.\nVerifique os logs no Google Apps Script.`);
+            }
+        }
+
+        // ============================================
+        // SELEÇÃO E ESTATÍSTICAS
+        // ============================================
+        function toggleSelecao(index) {
+            if (clientesExportados.has(index)) return;
+            
+            if (idsSelecionados.has(index)) idsSelecionados.delete(index);
+            else idsSelecionados.add(index);
+            
+            const tr = document.querySelector(`tr[data-index="${index}"]`);
+            if (tr) tr.classList.toggle('selecionado', idsSelecionados.has(index));
+            
+            atualizarContadores();
+            atualizarBotoes();
+        }
+
+        function toggleSelecionarTodos() {
+            const checked = document.getElementById('checkboxHeader').checked;
+            document.getElementById('selecionarTodos').checked = checked;
+            
+            idsSelecionados.clear();
+            if (checked) {
+                clientesAgrupados.forEach((c, i) => {
+                    if (c.instagram && c.instagram.trim() && !clientesExportados.has(i)) {
+                        idsSelecionados.add(i);
+                    }
+                });
+            }
+            
+            renderizarTabela();
+        }
+
+        function atualizarStats() {
+            document.getElementById('statTotalClientes').textContent = clientesAgrupados.length;
+            document.getElementById('statValorTotal').textContent = formatarMoeda(
+                clientesAgrupados.reduce((sum, c) => sum + c.total, 0)
+            );
+            document.getElementById('statSelecionados').textContent = idsSelecionados.size;
+            document.getElementById('statExportados').textContent = clientesExportados.size;
+            document.getElementById('statsContainer').style.display = 'grid';
+        }
+
+        function atualizarContadores() {
+            document.getElementById('infoSelecao').textContent = idsSelecionados.size > 0 ? `${idsSelecionados.size} selecionados` : '';
+            document.getElementById('statSelecionados').textContent = idsSelecionados.size;
+        }
+
+        function atualizarBotoes() {
+            const habilitado = idsSelecionados.size > 0;
+            document.getElementById('btnExportarSheets').disabled = !habilitado || !SHEETS_WEBHOOK_URL;
+            document.getElementById('btnCobrarManual').disabled = !habilitado;
+        }
+
+        // ============================================
+        // COBRANÇA MANUAL (fallback)
+        // ============================================
+        function cobrarClienteManual(index) {
+            const cliente = clientesAgrupados[index];
+            if (!cliente || !cliente.instagram) {
+                alert('Cliente sem Instagram cadastrado');
+                return;
+            }
+
+            instagramAtual = cliente.instagram.replace('@', '').trim();
+            document.getElementById('igClienteNome').value = `${cliente.nome} (@${instagramAtual})`;
+
+            const mensagem = gerarMensagemCobranca(cliente);
+            document.getElementById('igMensagem').value = mensagem;
+            document.getElementById('igPreview').textContent = mensagem;
+
+            document.getElementById('modalInstagram').classList.add('ativo');
+        }
+
+        function cobrarSelecionadosManual() {
+            if (idsSelecionados.size === 0) return;
+            
+            const indices = Array.from(idsSelecionados);
+            let mensagemCompleta = '';
+            
+            indices.forEach((index, i) => {
+                const cliente = clientesAgrupados[index];
+                if (!cliente?.instagram) return;
+                
+                mensagemCompleta += gerarMensagemCobranca(cliente);
+                if (i < indices.length - 1) mensagemCompleta += '\n\n---\n\n';
+            });
+
+            instagramAtual = '';
+            document.getElementById('igClienteNome').value = `${idsSelecionados.size} clientes selecionados`;
+            document.getElementById('igMensagem').value = mensagemCompleta;
+            document.getElementById('igPreview').textContent = mensagemCompleta;
+
+            document.getElementById('modalInstagram').classList.add('ativo');
+        }
+
+        function gerarMensagemCobranca(cliente) {
+            const primeiroNome = cliente.nome.split(' ')[0];
+            const dataAmanha = new Date();
+            dataAmanha.setDate(dataAmanha.getDate() + 1);
+            const dataLimite = dataAmanha.toLocaleDateString('pt-BR');
+
+            let mensagem = `Olá, ${primeiroNome} gratidão por acompanhar a nossa live!!\n\n`;
+            mensagem += `Segue o valor da sua compra ${formatarMoeda(cliente.total)}\n\n`;
+            mensagem += `Itens:\n\n`;
+            mensagem += `Código do Item      Valor\n`;
+
+            cliente.itens.forEach(item => {
+                const codigo = (item.codigo || 'N/A').toString().padEnd(20, ' ');
+                const valor = formatarMoeda(item.valor).padStart(10, ' ');
+                mensagem += `  ${codigo}${valor}\n`;
+            });
+
+            mensagem += `\n\nEste é o valor total das compras caso já tenha pago alguma peça durante a live só fazer o pix da diferença.\n\n`;
+            mensagem += `Aguardaremos o pagamento até às 12:00 de amanhã (${dataLimite}) ou seguiremos a fila de espera como de costume!\n\n`;
+            mensagem += `Enviar comprovante de pagamento aqui no direct.\n\n`;
+            mensagem += `Caso tenha crédito ou consignados conosco nos avise para descontarmos. 💳\n\n`;
+            mensagem += `Obrigada ❣️\n\n`;
+            mensagem += `💳 Dados para Pagamento:\n\n`;
+            mensagem += `Chave Pix (CNPJ):\n`;
+            mensagem += `${CHAVE_PIX}\n\n`;
+            mensagem += `Nome: ${NOME_PIX}\n\n`;
+            mensagem += `Valor: ${formatarMoeda(cliente.total)}`;
+
+            return mensagem;
+        }
+
+        function copiarParaInstagram() {
+            const mensagem = document.getElementById('igMensagem').value;
+            navigator.clipboard.writeText(mensagem).then(() => {
+                alert('✅ Mensagem copiada!');
+            });
+        }
+
+        // ============================================
+        // CADASTRO DE INSTAGRAM
+        // ============================================
+        function abrirCadastroInstagram(index) {
+            const cliente = clientesAgrupados[index];
+            if (!cliente) return;
+
+            clienteIndexAtual = index;
+            document.getElementById('cadastroClienteIndex').value = index;
+            document.getElementById('cadastroClienteNome').value = cliente.nome;
+            document.getElementById('cadastroInstagram').value = cliente.instagram || '';
+            document.getElementById('cadastroWhatsapp').value = cliente.whatsapp || '';
+            document.getElementById('novoClienteSection').style.display = cliente.clienteId ? 'none' : 'block';
+
+            document.getElementById('modalInstagramCadastro').classList.add('ativo');
+        }
+
+        async function salvarInstagram() {
+            const index = parseInt(document.getElementById('cadastroClienteIndex').value);
+            const instagram = document.getElementById('cadastroInstagram').value.trim().replace('@', '');
+            const whatsapp = document.getElementById('cadastroWhatsapp').value.trim();
+            
+            if (!instagram) {
+                alert('⚠️ Digite o Instagram!');
+                return;
+            }
+
+            const cliente = clientesAgrupados[index];
+            if (!cliente) return;
+
+            try {
+                if (cliente.clienteId) {
+                    await supabaseClient
+                        .from('clientes_pg')
+                        .update({ 
+                            instagram: instagram,
+                            whatsapp: whatsapp || cliente.whatsapp,
+                            atualizado_em: new Date().toISOString()
+                        })
+                        .eq('id', cliente.clienteId);
+                } else {
+                    const { data } = await supabaseClient
+                        .from('clientes_pg')
+                        .insert([{
+                            nome: cliente.nome,
+                            instagram: instagram,
+                            whatsapp: whatsapp || null,
+                            criado_em: new Date().toISOString(),
+                            atualizado_em: new Date().toISOString()
+                        }])
+                        .select();
+
+                    if (data && data[0]) {
+                        cliente.clienteId = data[0].id;
+                        clientesCache[cliente.nome.toLowerCase()] = data[0];
+                    }
+                }
+
+                cliente.instagram = instagram;
+                renderizarTabela();
+                fecharModal('modalInstagramCadastro');
+                alert('✅ Instagram salvo!');
+
+            } catch (error) {
+                alert('❌ Erro ao salvar: ' + error.message);
+            }
+        }
+
+        // ============================================
+        // UTILITÁRIOS
+        // ============================================
+        function verItens(index) {
+            const cliente = clientesAgrupados[index];
+            if (!cliente) return;
+
+            document.getElementById('subtituloItens').textContent = `${cliente.nome} - ${cliente.itens.length} item(s)`;
+            
+            const tbody = document.getElementById('itensBody');
+            tbody.innerHTML = '';
+            
+            cliente.itens.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding: 12px; border-bottom: 1px solid #E0E0E0;"><strong>${item.codigo || 'N/A'}</strong></td>
+                    <td style="padding: 12px; border-bottom: 1px solid #E0E0E0;">${formatarMoeda(item.valor)}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #E0E0E0;">${item.fila || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            document.getElementById('totalItensCliente').textContent = `Total: ${formatarMoeda(cliente.total)}`;
+            document.getElementById('modalItens').classList.add('ativo');
+        }
+
+        function fecharModal(modalId) {
+            document.getElementById(modalId).classList.remove('ativo');
+        }
+
+        function limparFiltros() {
+            document.getElementById('tabelaContainer').style.display = 'none';
+            document.getElementById('statsContainer').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+            vendasData = [];
+            clientesAgrupados = [];
+            idsSelecionados.clear();
+            clientesExportados.clear();
+            codigoLiveAtual = '';
+            dataLiveAtual = '';
+            document.getElementById('checkboxHeader').checked = false;
+            document.getElementById('selecionarTodos').checked = false;
+            carregarLivesNaData();
+        }
+
+        function fazerLogout() {
+            localStorage.removeItem('pingo_senha_hash');
+            window.location.replace('login.html');
+        }
+
+        // Inicializar
+        window.addEventListener('DOMContentLoaded', inicializar);
+    </script>
+</body>
+</html>
