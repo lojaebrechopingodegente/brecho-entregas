@@ -1,438 +1,3 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Vendas - Live</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
-        .header h1 { font-size: 2rem; margin-bottom: 10px; }
-        .content { padding: 30px; }
-        .table-container { overflow-x: auto; max-height: 70vh; overflow-y: auto; margin-bottom: 30px; border: 1px solid #dee2e6; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: #f8f9fa; color: #495057; font-weight: 600; padding: 12px 8px; text-align: left; border-bottom: 2px solid #dee2e6; position: sticky; top: 0; z-index: 10; }
-        td { padding: 8px; border-bottom: 1px solid #dee2e6; position: relative; }
-        tr:hover { background: #f8f9fa; }
-        input { width: 100%; padding: 6px 8px; border: 1px solid #e9ecef; border-radius: 4px; font-size: 13px; transition: all 0.3s ease; }
-        input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1); }
-        input.saving { border-color: #ffc107; background: #fff3cd; }
-        input.saved { border-color: #28a745; background: #d4edda; }
-        input:disabled, input[readonly] { background: #e9ecef; cursor: not-allowed; opacity: 0.7; }
-        input.obrigatorio-pendente { 
-            border-color: #dc3545 !important; 
-            background: #f8d7da !important; 
-            box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25) !important;
-        }
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
-        .valor-input { text-align: right; font-weight: 600; }
-        .autocomplete-container { position: relative; display: flex; align-items: center; gap: 4px; }
-        .autocomplete-container input { flex: 1; }
-        .mic-btn { background: #6c757d; color: white; border: none; border-radius: 4px; padding: 6px 8px; cursor: pointer; font-size: 14px; transition: all 0.3s ease; min-width: 32px; }
-        .mic-btn:hover { background: #5a6268; }
-        .mic-btn:disabled { background: #adb5bd; cursor: not-allowed; }
-        .mic-btn.recording { background: #dc3545; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        .mic-btn.recording::before { content: "🔴"; }
-        .suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #dee2e6; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 200px; overflow-y: auto; z-index: 1000; display: none; }
-        .suggestions.active { display: block; }
-        .suggestion-item { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #f1f3f4; transition: background 0.2s; font-size: 13px; }
-        .suggestion-item:hover, .suggestion-item.selected { background: #667eea; color: white; }
-        .suggestion-item.selected .suggestion-secondary { color: rgba(255,255,255,0.8); }
-        .suggestion-item .suggestion-main { font-weight: 600; color: #333; }
-        .suggestion-item:hover .suggestion-main, .suggestion-item.selected .suggestion-main { color: white; }
-        .suggestion-item .suggestion-secondary { font-size: 11px; color: #666; margin-top: 2px; }
-        .suggestion-item.sugestao-usada-na-live {
-            background: #fff3cd;
-            border-left: 3px solid #ffc107;
-        }
-        .suggestion-item.sugestao-usada-na-live:hover {
-            background: #667eea;
-            color: white;
-        }
-        .suggestion-item.sugestao-usada-na-live .suggestion-main {
-            font-weight: bold;
-        }
-        .badge-usada {
-            font-size: 10px;
-            color: #856404;
-            background: #ffc107;
-            padding: 2px 6px;
-            border-radius: 3px;
-            margin-left: 8px;
-        }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease; margin-right: 10px; }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .btn-success { background: #28a745; color: white; }
-        .btn-warning { background: #ffc107; color: #212529; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-danger:hover { background: #c82333; }
-        .btn-info { background: #17a2b8; color: white; }
-        .btn-purple { background: #6f42c1; color: white; }
-        .btn-purple:hover { background: #5a32a3; }
-        .btn-orange { background: #fd7e14; color: white; }
-        .btn-orange:hover { background: #e56b0a; }
-        .btn-dark { background: #343a40; color: white; }
-        .btn-dark:hover { background: #23272b; }
-        .btn-secondary { background: #6c757d; color: white; }
-        .btn:disabled { background: #adb5bd; cursor: not-allowed; opacity: 0.7; }
-        .actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .config-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .config-section h3 { margin-bottom: 15px; color: #495057; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #495057; }
-        .form-group input { width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 6px; font-size: 14px; }
-        .form-group input:focus { border-color: #667eea; outline: none; }
-        .status-message { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; font-weight: 600; display: none; animation: slideUp 0.3s ease; z-index: 3000; }
-        @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .status-message.success { background: #28a745; display: block; }
-        .status-message.error { background: #dc3545; display: block; }
-        .status-message.info { background: #17a2b8; display: block; }
-        .item-number { font-weight: bold; color: #667eea; }
-        .delete-btn { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 10px; }
-        .delete-btn:disabled { background: #adb5bd; cursor: not-allowed; }
-        .btn-save { 
-            background: #dc3545;
-            color: white; 
-            border: none; 
-            border-radius: 4px; 
-            padding: 3px 6px; 
-            cursor: pointer; 
-            font-size: 10px; 
-            font-weight: 600;
-            margin-right: 4px; 
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .btn-save:hover { 
-            transform: scale(1.05); 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-        .btn-save:active {
-            transform: scale(0.95);
-        }
-        .btn-save:disabled { 
-            background: #adb5bd; 
-            cursor: not-allowed; 
-            transform: none;
-            box-shadow: none;
-        }
-        .btn-save.saving {
-            background: #ffc107;
-            color: #212529;
-        }
-        .btn-save.saved {
-            background: #28a745;
-            animation: pulseSave 0.5s ease;
-        }
-        @keyframes pulseSave {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-        .info-text { color: #6c757d; font-size: 12px; margin-top: 5px; }
-        .sql-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 15px; margin-top: 10px; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
-        .live-info { background: #d4edda; border: 1px solid #28a745; border-radius: 6px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        .live-info.bloqueada { background: #fff3cd; border-color: #ffc107; }
-        .live-info.bloqueada h4, .live-info.bloqueada p { color: #856404; }
-        .live-info h4 { color: #155724; margin: 0; }
-        .live-info p { color: #155724; margin: 5px 0 0 0; font-size: 14px; }
-        .change-date-btn { background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-        .change-date-btn:hover { background: #5a6268; }
-        .voice-hint { font-size: 11px; color: #6c757d; margin-left: 5px; }
-        .confirm-dialog { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 4000; }
-        .confirm-dialog.active { display: flex; }
-        .confirm-box { background: white; padding: 30px; border-radius: 12px; max-width: 500px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .confirm-box h3 { color: #dc3545; margin-bottom: 15px; }
-        .confirm-box p { margin-bottom: 25px; color: #495057; line-height: 1.5; }
-        .confirm-box .btn { margin: 0 10px; }
-        .venda-dialog, .cliente-dialog { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 4000; }
-        .venda-dialog.active, .cliente-dialog.active { display: flex; }
-        .venda-box, .cliente-box { background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .venda-box h3, .cliente-box h3 { margin-bottom: 20px; color: #495057; text-align: center; }
-        .venda-info { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .venda-info p { margin: 5px 0; color: #495057; }
-        .venda-info strong { color: #667eea; }
-        .form-row { display: flex; gap: 15px; }
-        .form-row .form-group { flex: 1; }
-        .sugestao-cadastro { background: #e7f3ff; border: 1px solid #667eea; border-radius: 6px; padding: 10px; margin-top: 10px; cursor: pointer; text-align: center; color: #667eea; font-weight: 600; }
-        .sugestao-cadastro:hover { background: #667eea; color: white; }
-        .campo-opcional { color: #6c757d; font-size: 12px; font-weight: normal; }
-
-        .date-selector-compact {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 15px 20px;
-            border-radius: 8px;
-            border: 2px solid #667eea;
-            max-width: 600px;
-        }
-
-        .date-selector-compact h3 {
-            margin-bottom: 12px;
-            font-size: 16px;
-            color: #495057;
-        }
-
-        .date-input-compact {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .date-input-compact input[type="date"] {
-            padding: 8px 12px;
-            font-size: 14px;
-            border: 2px solid #667eea;
-            border-radius: 6px;
-            min-width: 150px;
-            width: auto;
-            height: 38px;
-        }
-
-        .date-input-compact .btn {
-            padding: 8px 16px;
-            font-size: 13px;
-            height: 38px;
-            margin: 0;
-        }
-
-        .info-text-small {
-            font-size: 11px;
-            color: #6c757d;
-            margin-top: 8px;
-        }
-
-        .live-selection-compact {
-            margin-top: 10px;
-            padding: 10px;
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 6px;
-        }
-
-        .live-selection-compact h4 {
-            margin-bottom: 6px;
-            font-size: 12px;
-            color: #856404;
-        }
-
-        .live-option-compact {
-            display: flex;
-            align-items: center;
-            padding: 6px 8px;
-            margin: 3px 0;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 12px;
-        }
-
-        .live-option-compact:hover {
-            border-color: #667eea;
-            background: #f8f9fa;
-        }
-
-        .live-option-compact.selected {
-            border-color: #28a745;
-            background: #d4edda;
-        }
-
-        .live-option-compact input[type="radio"] {
-            margin-right: 8px;
-            width: 14px;
-            height: 14px;
-        }
-
-        .live-option-info-compact {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .live-option-code-compact {
-            font-weight: bold;
-            color: #667eea;
-            font-size: 13px;
-            min-width: 70px;
-        }
-
-        .live-option-date-compact {
-            color: #6c757d;
-            font-size: 10px;
-        }
-
-        .live-option-status-compact {
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 9px;
-            font-weight: 600;
-            margin-right: 8px;
-        }
-
-        .live-option-status-compact.ativa {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .live-option-status-compact.finalizada {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .btn-excluir-live {
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            padding: 3px 6px;
-            cursor: pointer;
-            font-size: 10px;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .live-option-compact:hover .btn-excluir-live {
-            opacity: 1;
-        }
-
-        .btn-excluir-live:hover {
-            background: #c82333;
-        }
-
-        .nova-live-btn-compact {
-            margin-top: 6px;
-            padding: 6px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: 600;
-            font-size: 12px;
-        }
-
-        .nova-live-btn-compact:hover {
-            background: #218838;
-        }
-
-        .confirm-excluir-live {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 5000;
-        }
-
-        .confirm-excluir-live.active {
-            display: flex;
-        }
-
-        .confirm-box-compact {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            max-width: 350px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        .confirm-box-compact h3 {
-            color: #dc3545;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .confirm-box-compact p {
-            margin-bottom: 15px;
-            color: #495057;
-            font-size: 13px;
-        }
-
-        .confirm-box-compact .btn {
-            padding: 6px 12px;
-            font-size: 12px;
-            margin: 0 5px;
-        }
-
-        .total-vendido-header {
-            background: #28a745;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 150px;
-        }
-
-        .total-vendido-header span {
-            font-size: 12px;
-            font-weight: normal;
-            opacity: 0.9;
-        }
-
-        .total-vendido-header strong {
-            font-size: 18px;
-        }
-
-        .btn-voltar {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .btn-voltar:hover {
-            background: #5a6268;
-        }
-
-        /* Loading overlay */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(102, 126, 234, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-        }
-    </style>
-</head>
 <body>
     <div class="loading-overlay" id="loadingOverlay">
         <div>🔄 Conectando ao Supabase...</div>
@@ -532,7 +97,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     <button class="btn btn-purple" id="btnRegistrar" onclick="registrarVenda()">💰 Registrar Venda</button>
                     <button class="btn btn-orange" id="btnFinalizar" onclick="verificarESalvarAntesDeFinalizar()">🔒 Finalizar Live</button>
                     <button class="btn btn-dark" id="btnAlterar" onclick="alterarLive()" style="display: none;">✏️ Alterar Live</button>
-                    <button class="btn btn-danger" id="btnResetar" onclick="confirmarResetarLive()">🗑️ Resetar Live</button>
                 </div>
                 <p class="info-text">* Pressione ENTER para navegar. Use ↑↓ para sugestões. 🎤 para voz.</p>
                 <div class="table-container">
@@ -547,16 +111,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
         </div>
     </div>
     <div class="status-message" id="statusMessage"></div>
-    <div class="confirm-dialog" id="confirmResetDialog">
-        <div class="confirm-box">
-            <h3>⚠️ Atenção!</h3>
-            <p id="confirmResetText">Tem certeza?</p>
-            <div>
-                <button class="btn btn-secondary" onclick="fecharConfirmReset()">Cancelar</button>
-                <button class="btn btn-danger" onclick="executarResetarLive()">Sim, Resetar</button>
-            </div>
-        </div>
-    </div>
     <div class="confirm-excluir-live" id="confirmExcluirLiveDialog">
         <div class="confirm-box-compact">
             <h3>⚠️ Excluir Live</h3>
@@ -594,6 +148,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             </div>
         </div>
     </div>
+
     <script>
 
         // CONFIGURAÇÃO EMBUTIDA - SUBSTITUA ESTA CHAVE PELA SUA CHAVE ANÔNIMA REAL
@@ -1252,7 +807,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             finalizarLive();
         }
 
-        async function salvarVenda(linhaId) {
+               async function salvarVenda(linhaId) {
             if (liveBloqueada) return;
 
             const btnSalvar = document.getElementById(`btn-save-${linhaId}`);
@@ -1387,7 +942,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 </td>
                 <td>
                     <button class="${btnClass}" id="btn-save-${venda.linha_id}" onclick="salvarVenda(${venda.linha_id})" style="${btnStyle}" ${liveBloqueada ? 'disabled' : ''}>💾</button>
-                    <button class="delete-btn" onclick="excluirLinha(${venda.linha_id})" ${liveBloqueada ? 'disabled' : ''}>🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -1427,7 +981,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 </td>
                 <td>
                     <button class="btn-save" id="btn-save-${linhaCount}" onclick="salvarVenda(${linhaCount})" style="background: #dc3545;">💾</button>
-                    <button class="delete-btn" onclick="excluirLinha(${linhaCount})">🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -1706,124 +1259,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             }
         }
 
-        async function excluirLinha(linhaId) {
-            if (liveBloqueada) {
-                showStatus('Live finalizada.', 'error');
-                return;
-            }
-            if (!confirm('Deseja excluir este item?')) return;
-
-            try {
-                showStatus('Excluindo...', 'info');
-
-                const compradorExcluido = vendas.find(v => v.linha_id === linhaId)?.comprador?.trim().toLowerCase();
-                if (compradorExcluido) {
-                    compradoresNaLive.delete(compradorExcluido);
-                }
-
-                await supabaseClient.from('vendas_live').delete().eq('linha_id', linhaId).eq('data_live', dataLiveAtual);
-                vendas = vendas.filter(v => v.linha_id !== linhaId);
-                linhasNaoSalvas.delete(parseInt(linhaId));
-
-                const linhasParaRenumerar = vendas.filter(v => v.linha_id > linhaId).sort((a,b) => a.linha_id - b.linha_id);
-                for (const venda of linhasParaRenumerar) {
-                    const novoId = venda.linha_id - 1;
-                    const novaVenda = { ...venda, linha_id: novoId, item: novoId, updated_at: new Date().toISOString() };
-                    await supabaseClient.from('vendas_live').delete().eq('id', venda.id);
-                    const { data } = await supabaseClient.from('vendas_live').insert([novaVenda]).select();
-                    if (data?.[0]) {
-                        venda.id = data[0].id;
-                        venda.linha_id = novoId;
-                        venda.item = novoId;
-                    }
-                }
-
-                const tbody = document.getElementById('vendasBody');
-                const trExcluir = document.getElementById(`linha-${linhaId}`);
-                if (trExcluir) trExcluir.remove();
-
-                const todasLinhas = Array.from(tbody.querySelectorAll('tr'));
-                todasLinhas.forEach((tr, index) => {
-                    const novoLinhaId = index + 1;
-                    const antigoLinhaId = parseInt(tr.dataset.linhaId);
-                    if (antigoLinhaId !== novoLinhaId) {
-                        tr.id = `linha-${novoLinhaId}`;
-                        tr.dataset.linhaId = novoLinhaId;
-                        const numeroSpan = tr.querySelector('.item-number');
-                        if (numeroSpan) {
-                            numeroSpan.id = `numero-${novoLinhaId}`;
-                            numeroSpan.textContent = novoLinhaId;
-                        }
-                        const inputs = tr.querySelectorAll('input, button, div.suggestions');
-                        inputs.forEach(el => {
-                            if (el.id && el.id.includes(`-${antigoLinhaId}`)) {
-                                const novoId = el.id.replace(`-${antigoLinhaId}`, `-${novoLinhaId}`);
-                                el.id = novoId;
-                                if (el.onclick) {
-                                    const onclickStr = el.getAttribute('onclick');
-                                    if (onclickStr) {
-                                        const novoOnclick = onclickStr.replace(new RegExp(antigoLinhaId, 'g'), novoLinhaId);
-                                        el.setAttribute('onclick', novoOnclick);
-                                    }
-                                }
-                                if (el.onkeydown) {
-                                    const onkeydownStr = el.getAttribute('onkeydown');
-                                    if (onkeydownStr) {
-                                        const novoOnkeydown = onkeydownStr.replace(new RegExp(antigoLinhaId, 'g'), novoLinhaId);
-                                        el.setAttribute('onkeydown', novoOnkeydown);
-                                    }
-                                }
-                                if (el.oninput) {
-                                    const oninputStr = el.getAttribute('oninput');
-                                    if (oninputStr && oninputStr.includes('marcarLinhaComoNaoSalva')) {
-                                    } else if (oninputStr) {
-                                        const tipoCampo = el.id.split('-')[0];
-                                        if (tipoCampo === 'valor') {
-                                            el.setAttribute('oninput', `formatarValorInput(this); marcarLinhaComoNaoSalva(this)`);
-                                        } else {
-                                            el.setAttribute('oninput', `filtrarSugestoes(this, '${tipoCampo}'); marcarLinhaComoNaoSalva(this)`);
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
-                });
-
-                linhaCount = todasLinhas.length;
-                await recarregarVendasArray();
-                atualizarContagemItens();
-                atualizarTotalVendidoHeader();
-                showStatus(`Item ${linhaId} excluído!`, 'success');
-            } catch (error) {
-                showStatus('Erro ao excluir: ' + error.message, 'error');
-            }
-        }
-
-        async function recarregarVendasArray() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('vendas_live')
-                    .select('*')
-                    .eq('data_live', dataLiveAtual)
-                    .order('linha_id', { ascending: true });
-                if (error) {
-                    console.error('Erro ao recarregar:', error);
-                    return;
-                }
-                vendas = data || [];
-
-                compradoresNaLive.clear();
-                vendas.forEach(v => {
-                    if (v.comprador?.trim()) {
-                        compradoresNaLive.add(v.comprador.trim().toLowerCase());
-                    }
-                });
-            } catch (error) {
-                console.error('Erro:', error);
-            }
-        }
-
         async function finalizarLive() {
             if (confirm(`Deseja finalizar a live ${codigoLiveAtual}?`)) {
                 try {
@@ -1864,62 +1299,21 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
         function bloquearCampos() {
             document.querySelectorAll('#vendasBody input').forEach(input => input.disabled = true);
             document.querySelectorAll('.mic-btn').forEach(btn => btn.disabled = true);
-            document.querySelectorAll('.delete-btn').forEach(btn => btn.disabled = true);
             document.getElementById('liveInfoBanner').classList.add('bloqueada');
             document.getElementById('statusLive').textContent = '🔒 LIVE FINALIZADA';
             document.getElementById('btnAdicionar').style.display = 'none';
             document.getElementById('btnFinalizar').style.display = 'none';
-            document.getElementById('btnResetar').style.display = 'none';
             document.getElementById('btnAlterar').style.display = 'inline-block';
         }
 
         function liberarCampos() {
             document.querySelectorAll('#vendasBody input').forEach(input => input.disabled = false);
             document.querySelectorAll('.mic-btn').forEach(btn => btn.disabled = false);
-            document.querySelectorAll('.delete-btn').forEach(btn => btn.disabled = false);
             document.getElementById('liveInfoBanner').classList.remove('bloqueada');
             document.getElementById('statusLive').textContent = '';
             document.getElementById('btnAdicionar').style.display = 'inline-block';
             document.getElementById('btnFinalizar').style.display = 'inline-block';
-            document.getElementById('btnResetar').style.display = 'inline-block';
             document.getElementById('btnAlterar').style.display = 'none';
-        }
-
-        function confirmarResetarLive() {
-            if (liveBloqueada) {
-                showStatus('Live finalizada.', 'error');
-                return;
-            }
-            document.getElementById('confirmResetText').innerHTML = `Tem certeza?<br>Todos os <strong>${vendas.length} itens</strong> serão apagados.`;
-            document.getElementById('confirmResetDialog').classList.add('active');
-        }
-
-        function fecharConfirmReset() {
-            document.getElementById('confirmResetDialog').classList.remove('active');
-        }
-
-        async function executarResetarLive() {
-            fecharConfirmReset();
-            try {
-                showStatus('Apagando...', 'info');
-                await supabaseClient
-    .from('vendas_live')
-    .delete()
-    .eq('codigo_live', codigoLiveAtual);
-                vendas = [];
-                document.getElementById('vendasBody').innerHTML = '';
-                linhaCount = 0;
-                liveBloqueada = false;
-                linhasNaoSalvas.clear();
-                compradoresNaLive.clear();
-                for (let i = 0; i < 150; i++) adicionarLinha();
-                liberarCampos();
-                atualizarContagemItens();
-                atualizarTotalVendidoHeader();
-                showStatus('Live resetada!', 'success');
-            } catch (error) {
-                showStatus('Erro: ' + error.message, 'error');
-            }
         }
 
         function registrarVenda() {
