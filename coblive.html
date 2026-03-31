@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cobrança Live - Pingo de Gente</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #FFF5F7 0%, #F0FFF4 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(255, 139, 167, 0.15);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-voltar {
+            background: linear-gradient(135deg, #A8E6CF, #7FCDCD);
+            color: #2D3436;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-voltar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(168, 230, 207, 0.4);
+        }
+
+        .header h1 { color: #FF6B8A; font-size: 1.8rem; margin-bottom: 5px; }
+        .header p { color: #636E72; font-size: 0.9rem; }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #FF6B6B, #EE5A6F);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(238, 90, 111, 0.4);
+        }
+
+        .filtros-container { background: white; padding: 25px; border-radius: 20px; margin-bottom: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
+        .filtros-titulo { color: #2D3436; font-size: 1.3rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .filtros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .campo-filtro { display: flex; flex-direction: column; gap: 8px; }
+        .campo-filtro label { font-weight: 600; color: #2D3436; font-size: 0.9rem; }
+        .campo-filtro input, .campo-filtro select { padding: 12px 15px; border: 2px solid #E0E0E0; border-radius: 12px; font-size: 1rem; transition: all 0.3s; }
+        .campo-filtro input:focus, .campo-filtro select:focus { outline: none; border-color: #FF8BA7; box-shadow: 0 0 0 4px rgba(255, 139, 167, 0.1); }
+        .botoes-filtro { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; }
+        .btn { padding: 14px 28px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 107, 138, 0.4); }
+        .btn-secondary { background: linear-gradient(135deg, #A8E6CF, #7FCDCD); color: #2D3436; }
+        .btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(168, 230, 207, 0.4); }
+        .btn-instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; }
+        .btn-instagram:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(220, 39, 67, 0.4); }
+        .btn-instagram:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; }
+            .header-left { flex-direction: column; }
+        }
+
+        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 3px 15px rgba(0,0,0,0.08); border-left: 4px solid #FF6B8A; }
+        .stat-card h3 { color: #636E72; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .stat-card .valor { color: #FF6B8A; font-size: 2rem; font-weight: bold; }
+        .tabela-container { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
+        .tabela-header { padding: 20px 25px; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .tabela-header h2 { font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        thead { background: #F8F9FA; }
+        th { padding: 15px; text-align: left; font-weight: 600; color: #2D3436; border-bottom: 2px solid #E0E0E0; white-space: nowrap; position: sticky; top: 0; background: #F8F9FA; z-index: 10; }
+        td { padding: 15px; border-bottom: 1px solid #E0E0E0; color: #636E72; }
+        tr:hover { background: #FFF5F7; }
+        tr.selecionado { background: #E8F5E9 !important; border-left: 4px solid #4CAF50; }
+        .checkbox-selecao { width: 20px; height: 20px; cursor: pointer; accent-color: #FF6B8A; }
+        
+        .acoes-container { display: flex; gap: 5px; flex-wrap: nowrap; }
+        .btn-acao { padding: 6px 10px; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-acao:hover { transform: scale(1.05); }
+        .btn-ver-itens { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-cobrar { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; }
+        .btn-cobrar:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        
+        .valor-total { font-weight: bold; color: #FF6B8A; font-size: 1.1rem; }
+        .qtd-itens { background: #FF8BA7; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; font-weight: 600; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; overflow-y: auto; }
+        .modal-overlay.ativo { display: flex; }
+        .modal { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 600px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; margin: 20px auto; }
+        .modal-itens { background: white; padding: 0; border-radius: 20px; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; margin: 20px auto; }
+        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .modal-header h3 { color: #FF6B8A; font-size: 1.3rem; display: flex; align-items: center; gap: 10px; }
+        .btn-fechar { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #636E72; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #2D3436; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 15px; border: 2px solid #E0E0E0; border-radius: 10px; font-size: 1rem; font-family: inherit; transition: all 0.3s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #FF8BA7; box-shadow: 0 0 0 4px rgba(255, 139, 167, 0.1); }
+        .form-group textarea { resize: vertical; min-height: 120px; }
+        
+        .btn-salvar { width: 100%; background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s; }
+        .btn-salvar:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 107, 138, 0.4); }
+        .btn-cancelar { background: #E0E0E0; color: #2D3436; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-cancelar:hover { background: #D0D0D0; }
+        
+        .preview-instagram { background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 15px; padding: 20px; margin-top: 20px; border: 2px dashed #FF8BA7; }
+        .preview-instagram h4 { color: #FF6B8A; margin-bottom: 10px; font-size: 0.9rem; text-transform: uppercase; }
+        .preview-texto { background: white; padding: 15px; border-radius: 10px; font-size: 0.95rem; line-height: 1.6; color: #2D3436; white-space: pre-wrap; font-family: monospace; }
+        
+        .btn-abrir-instagram { width: 100%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-abrir-instagram:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(220, 39, 67, 0.4); }
+        
+        .instagram-info { background: #FFF3E0; border: 2px solid #FF9800; border-radius: 8px; padding: 12px 15px; margin-bottom: 20px; font-size: 0.9rem; color: #E65100; }
+        .instagram-info strong { display: block; margin-bottom: 5px; }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: #636E72; }
+        .empty-state-icon { font-size: 4rem; margin-bottom: 20px; }
+        .loading { text-align: center; padding: 40px; color: #FF6B8A; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #FF6B8A; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .selecao-massa { display: flex; align-items: center; gap: 15px; padding: 15px 25px; background: #F8F9FA; border-bottom: 1px solid #E0E0E0; }
+        .selecao-massa label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #2D3436; }
+        
+        .itens-header { background: linear-gradient(135deg, #FF8BA7, #FF6B8A); color: white; padding: 25px 30px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .itens-header h3 { font-size: 1.4rem; display: flex; align-items: center; gap: 10px; }
+        .itens-header .subtitulo { font-size: 0.9rem; opacity: 0.9; margin-top: 5px; }
+        .itens-body { padding: 30px; }
+        .itens-tabela { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .itens-tabela th { background: #F8F9FA; padding: 12px; text-align: left; font-weight: 600; color: #2D3436; border-bottom: 2px solid #E0E0E0; }
+        .itens-tabela td { padding: 12px; border-bottom: 1px solid #E0E0E0; color: #636E72; }
+        .itens-tabela tr:hover { background: #FFF5F7; }
+        .itens-total { background: #E8F5E9; padding: 15px; border-radius: 10px; text-align: right; font-size: 1.2rem; font-weight: bold; color: #2E7D32; }
+        
+        .itens-footer { padding: 20px 30px; background: #F8F9FA; border-radius: 0 0 20px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .itens-info { color: #636E72; font-size: 0.9rem; }
+        .btn-fechar-itens { background: linear-gradient(135deg, #FF6B6B, #EE5A6F); color: white; border: none; padding: 12px 30px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-fechar-itens:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(238, 90, 111, 0.4); }
+        
+        .info-pagamento { background: #E3F2FD; border: 2px solid #2196F3; border-radius: 10px; padding: 15px; margin-top: 20px; }
+        .info-pagamento h4 { color: #1976D2; margin-bottom: 10px; font-size: 0.9rem; }
+        .info-pagamento p { margin: 5px 0; color: #424242; font-size: 0.9rem; }
+        .pix-destaque { background: white; padding: 10px; border-radius: 8px; margin-top: 10px; border: 2px dashed #2196F3; }
+        .pix-destaque strong { color: #1976D2; font-size: 1.1rem; display: block; margin-bottom: 5px; }
+        
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.5rem; }
+            .filtros-grid { grid-template-columns: 1fr; }
+            th, td { padding: 10px; font-size: 0.85rem; }
+            .botoes-filtro { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+        }
+        
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .status-pago { background: #C8E6C9; color: #2E7D32; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .status-pendente { background: #FFCCBC; color: #D84315; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <a href="dashboard.html" class="btn-voltar">← Voltar ao Dashboard</a>
+                <div>
+                    <h1>💰 Cobrança de Live</h1>
+                    <p>Envie cobranças para os clientes via Instagram</p>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
+        </div>
+
+        <div class="filtros-container" id="filtrosContainer" style="opacity: 0.5; pointer-events: none;">
+            <h2 class="filtros-titulo">📅 Selecionar Live</h2>
+            
+            <div class="filtros-grid">
+                <div class="campo-filtro">
+                    <label>Data da Live</label>
+                    <input type="date" id="dataLive" onchange="carregarLivesNaData()">
+                </div>
+                <div class="campo-filtro">
+                    <label>Código da Live</label>
+                    <select id="selectLive" onchange="selecionarLive()">
+                        <option value="">Selecione uma data primeiro</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="botoes-filtro">
+                <button class="btn btn-primary" onclick="carregarVendas()">🔍 Carregar Clientes</button>
+                <button class="btn btn-secondary" onclick="limparFiltros()">🧹 Limpar</button>
+                <button class="btn btn-instagram" id="btnCobrarSelecionados" onclick="cobrarSelecionados()" disabled>📱 Cobrar Selecionados</button>
+            </div>
+        </div>
+
+        <div class="stats-container" id="statsContainer" style="display: none;">
+            <div class="stat-card"><h3>Total de Clientes</h3><div class="valor" id="statTotalClientes">-</div></div>
+            <div class="stat-card"><h3>Valor Total</h3><div class="valor" id="statValorTotal">-</div></div>
+            <div class="stat-card"><h3>Selecionados</h3><div class="valor" id="statSelecionados">-</div></div>
+        </div>
+
+        <div class="tabela-container" id="tabelaContainer" style="display: none;">
+            <div class="tabela-header">
+                <h2>👥 Clientes da Live</h2>
+                <span id="infoLive"></span>
+            </div>
+            <div class="selecao-massa">
+                <label><input type="checkbox" id="selecionarTodos" onchange="toggleSelecionarTodos()"> Selecionar todos</label>
+                <span id="infoSelecao" style="color: #636E72; font-size: 0.9rem;"></span>
+            </div>
+            <div class="table-responsive">
+                <table id="tabelaClientes">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="checkboxHeader" onchange="toggleSelecionarTodos()"></th>
+                            <th>Cliente</th>
+                            <th>Instagram</th>
+                            <th>Qtd Itens</th>
+                            <th>Valor Total</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon">📅</div>
+            <h3>Selecione uma data e live</h3>
+            <p>Escolha a data e o código da live para carregar os clientes</p>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Carregando...</p>
+        </div>
+    </div>
+
+    <!-- Modal Ver Itens -->
+    <div class="modal-overlay" id="modalItens">
+        <div class="modal-itens">
+            <div class="itens-header">
+                <div>
+                    <h3>🛍️ Itens do Cliente</h3>
+                    <div class="subtitulo" id="subtituloItens"></div>
+                </div>
+                <button class="btn-fechar" onclick="fecharModalItens()" style="color: white; font-size: 1.8rem;">×</button>
+            </div>
+            
+            <div class="itens-body">
+                <table class="itens-tabela">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Valor</th>
+                            <th>Fila</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itensBody"></tbody>
+                </table>
+                <div class="itens-total" id="totalItensCliente">Total: R$ 0,00</div>
+            </div>
+            
+            <div class="itens-footer">
+                <div class="itens-info">💡 Verifique os itens antes de enviar a cobrança</div>
+                <button class="btn-fechar-itens" onclick="fecharModalItens()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Instagram -->
+    <div class="modal-overlay" id="modalInstagram">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>📱 Enviar Cobrança no Instagram</h3>
+                <button class="btn-fechar" onclick="fecharModal('modalInstagram')">×</button>
+            </div>
+            
+            <div class="form-group">
+                <label>Cliente</label>
+                <input type="text" id="igClienteNome" readonly>
+            </div>
+
+            <div id="instagramClienteSection">
+                <div class="instagram-info">
+                    <strong>💡 Como enviar:</strong>
+                    Clique no botão abaixo para abrir o perfil do cliente no Instagram. Depois, inicie uma conversa no Direct e cole a mensagem.
+                </div>
+                <button class="btn-abrir-instagram" onclick="abrirInstagramCliente()">📱 Abrir Instagram do Cliente</button>
+            </div>
+
+            <div class="form-group">
+                <label for="igMensagem">Mensagem (copie e cole no Instagram)</label>
+                <textarea id="igMensagem" readonly></textarea>
+            </div>
+
+            <div class="preview-instagram">
+                <h4>👁️ Pré-visualização</h4>
+                <div class="preview-texto" id="igPreview"></div>
+            </div>
+
+            <div class="info-pagamento">
+                <h4>💳 Informações de Pagamento</h4>
+                <div class="pix-destaque">
+                    <strong>Pix CNPJ: 50.403.919/0001-02</strong>
+                    <p>Amanda Marcelino</p>
+                </div>
+            </div>
+
+            <button class="btn-salvar" onclick="copiarParaInstagram()" style="margin-top: 20px;">📋 Copiar Mensagem</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // PROTEÇÃO DE ACESSO
+        // ============================================
+        (function() {
+            const STORAGE_SENHA = 'pingo_senha_hash';
+            const SENHA_CORRETA = '770057';
+
+            function criarHash(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString(16);
+            }
+
+            const senhaSalva = localStorage.getItem(STORAGE_SENHA);
+            const temAcesso = senhaSalva && criarHash(SENHA_CORRETA) === senhaSalva;
+
+            if (!temAcesso) {
+                window.location.replace('login.html');
+                throw new Error('Acesso não autorizado');
+            }
+        })();
+
+        // ============================================
+        // CONFIGURAÇÃO
+        // ============================================
+        const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
+
+        let supabaseClient = null;
+        let vendasData = [];
+        let clientesAgrupados = [];
+        let instagramAtual = '';
+        let idsSelecionados = new Set();
+        let codigoLiveAtual = '';
+        let dataLiveAtual = '';
+
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        function inicializarSupabase() {
+            try {
+                if (typeof supabase !== 'undefined') {
+                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    
+                    const hoje = new Date();
+                    document.getElementById('dataLive').value = hoje.toISOString().split('T')[0];
+                    
+                    testarConexao();
+                }
+            } catch (e) {
+                console.error('Erro ao conectar Supabase:', e);
+                mostrarErro('Erro ao conectar com o banco de dados');
+            }
+        }
+
+        async function testarConexao() {
+            try {
+                const { data, error } = await supabaseClient.from('lives_pg').select('count').limit(1);
+                if (error) throw error;
+                document.getElementById('filtrosContainer').style.opacity = '1';
+                document.getElementById('filtrosContainer').style.pointerEvents = 'auto';
+                document.getElementById('emptyState').innerHTML = '<div class="empty-state-icon">📅</div><h3>Selecione uma data e live</h3><p>Escolha a data para ver as lives disponíveis</p>';
+                carregarLivesNaData();
+            } catch (erro) {
+                alert('❌ Erro ao conectar');
+                supabaseClient = null;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            inicializarSupabase();
+            
+            document.getElementById('modalItens').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalItens(); });
+            document.getElementById('modalInstagram').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalInstagram'); });
+        });
+
+        // ============================================
+        // FUNÇÕES DE FORMATAÇÃO
+        // ============================================
+        function formatarDataBr(data) { 
+            if (!data) return '-'; 
+            const d = new Date(data); 
+            return isNaN(d.getTime()) ? data : d.toLocaleDateString('pt-BR'); 
+        }
+        
+        function formatarMoeda(valor) {
+            return 'R$ ' + parseFloat(valor || 0).toFixed(2).replace('.', ',');
+        }
+
+        // ============================================
+        // CARREGAR LIVES
+        // ============================================
+        async function carregarLivesNaData() {
+            const data = document.getElementById('dataLive').value;
+            if (!data) return;
+
+            const select = document.getElementById('selectLive');
+            select.innerHTML = '<option value="">Carregando...</option>';
+
+            try {
+                const { data: lives, error } = await supabaseClient
+                    .from('lives_pg')
+                    .select('*')
+                    .eq('data_live', data)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!lives || lives.length === 0) {
+                    select.innerHTML = '<option value="">Nenhuma live nesta data</option>';
+                    return;
+                }
+
+                let html = '<option value="">Selecione a live</option>';
+                lives.forEach(live => {
+                    const status = live.status === 'ativa' ? '🟢' : '🔒';
+                    html += `<option value="${live.codigo}" data-data="${live.data_live}">${status} ${live.codigo}</option>`;
+                });
+                select.innerHTML = html;
+
+            } catch (e) {
+                console.error('Erro ao carregar lives:', e);
+                select.innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }
+
+        function selecionarLive() {
+            const select = document.getElementById('selectLive');
+            const option = select.options[select.selectedIndex];
+            codigoLiveAtual = select.value;
+            dataLiveAtual = option.dataset.data;
+        }
+
+        // ============================================
+        // CARREGAR VENDAS
+        // ============================================
+        async function carregarVendas() {
+            if (!codigoLiveAtual) {
+                alert('⚠️ Selecione uma live primeiro!');
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('tabelaContainer').style.display = 'none';
+            document.getElementById('statsContainer').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('vendas_live')
+                    .select(`*, clientes_pg (id, nome, instagram, whatsapp)`)
+                    .eq('codigo_live', codigoLiveAtual)
+                    .order('linha_id', { ascending: true });
+
+                if (error) throw error;
+
+                vendasData = (data || []).filter(v => v.valor > 0 && v.comprador?.trim());
+
+                // Agrupar por cliente
+                const agrupados = {};
+                vendasData.forEach(v => {
+                    const nome = v.comprador.trim();
+                    if (!agrupados[nome]) {
+                        agrupados[nome] = {
+                            nome: nome,
+                            instagram: v.clientes_pg?.instagram || '',
+                            whatsapp: v.clientes_pg?.whatsapp || '',
+                            itens: [],
+                            total: 0
+                        };
+                    }
+                    agrupados[nome].itens.push(v);
+                    agrupados[nome].total += parseFloat(v.valor) || 0;
+                });
+
+                clientesAgrupados = Object.values(agrupados).sort((a, b) => a.nome.localeCompare(b.nome));
+
+                document.getElementById('infoLive').textContent = `${codigoLiveAtual} - ${formatarDataBr(dataLiveAtual)}`;
+                
+                idsSelecionados.clear();
+                atualizarStats();
+                renderizarTabela();
+                
+            } catch (e) {
+                console.error('Erro ao carregar vendas:', e);
+                mostrarErro('Erro ao carregar vendas: ' + e.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function atualizarStats() {
+            const total = clientesAgrupados.length;
+            const valorTotal = clientesAgrupados.reduce((sum, c) => sum + c.total, 0);
+            const selecionados = idsSelecionados.size;
+
+            document.getElementById('statTotalClientes').textContent = total;
+            document.getElementById('statValorTotal').textContent = formatarMoeda(valorTotal);
+            document.getElementById('statSelecionados').textContent = selecionados;
+            document.getElementById('statsContainer').style.display = 'grid';
+        }
+
+        // ============================================
+        // RENDERIZAR TABELA
+        // ============================================
+        function renderizarTabela() {
+            const tbody = document.getElementById('tabelaBody');
+            tbody.innerHTML = '';
+            
+            if (clientesAgrupados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Nenhum cliente encontrado nesta live</td></tr>';
+                document.getElementById('tabelaContainer').style.display = 'block';
+                document.getElementById('tabelaContainer').classList.add('fade-in');
+                return;
+            }
+
+            clientesAgrupados.forEach((cliente, index) => {
+                const tr = document.createElement('tr');
+                tr.dataset.index = index;
+                
+                const temInstagram = cliente.instagram && cliente.instagram.trim() !== '';
+                
+                tr.innerHTML = `
+                    <td><input type="checkbox" class="checkbox-selecao" onchange="toggleSelecao(${index})" ${idsSelecionados.has(index) ? 'checked' : ''}></td>
+                    <td><strong>${cliente.nome}</strong></td>
+                    <td>
+                        ${temInstagram 
+                            ? `<span style="color:#E1306C">@${cliente.instagram}</span>` 
+                            : '<span style="color:#9E9E9E; font-style:italic;">Sem Instagram</span>'}
+                    </td>
+                    <td><span class="qtd-itens">${cliente.itens.length}</span></td>
+                    <td><span class="valor-total">${formatarMoeda(cliente.total)}</span></td>
+                    <td>
+                        <div class="acoes-container">
+                            <button class="btn-acao btn-ver-itens" onclick="verItens(${index})">
+                                👁️ Ver Itens
+                            </button>
+                            <button class="btn-acao btn-cobrar" onclick="cobrarCliente(${index})" 
+                                ${!temInstagram ? 'disabled title="Cliente sem Instagram"' : ''}>
+                                📱 Cobrar
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                if (idsSelecionados.has(index)) tr.classList.add('selecionado');
+                tbody.appendChild(tr);
+            });
+            
+            document.getElementById('tabelaContainer').style.display = 'block';
+            document.getElementById('tabelaContainer').classList.add('fade-in');
+            atualizarContadores();
+            atualizarBotoes();
+        }
+
+        // ============================================
+        // SELEÇÃO EM MASSA
+        // ============================================
+        function toggleSelecao(index) {
+            if (idsSelecionados.has(index)) idsSelecionados.delete(index);
+            else idsSelecionados.add(index);
+            
+            const tr = document.querySelector(`tr[data-index="${index}"]`);
+            if (tr) tr.classList.toggle('selecionado', idsSelecionados.has(index));
+            
+            atualizarContadores();
+            atualizarBotoes();
+        }
+
+        function toggleSelecionarTodos() {
+            const checkboxHeader = document.getElementById('checkboxHeader');
+            const checkboxMassa = document.getElementById('selecionarTodos');
+            const checked = checkboxHeader.checked;
+            checkboxMassa.checked = checked;
+            
+            idsSelecionados.clear();
+            if (checked) {
+                clientesAgrupados.forEach((c, i) => {
+                    if (c.instagram && c.instagram.trim()) idsSelecionados.add(i);
+                });
+            }
+            
+            const todasLinhas = document.querySelectorAll('#tabelaBody tr[data-index]');
+            todasLinhas.forEach(tr => {
+                const index = parseInt(tr.dataset.index);
+                const checkbox = tr.querySelector('.checkbox-selecao');
+                const temInstagram = clientesAgrupados[index]?.instagram;
+                
+                if (checkbox) checkbox.checked = idsSelecionados.has(index);
+                if (idsSelecionados.has(index)) tr.classList.add('selecionado');
+                else tr.classList.remove('selecionado');
+            });
+            
+            atualizarContadores();
+            atualizarBotoes();
+        }
+
+        function atualizarContadores() {
+            document.getElementById('infoSelecao').textContent = idsSelecionados.size > 0 ? `${idsSelecionados.size} selecionados` : '';
+            document.getElementById('statSelecionados').textContent = idsSelecionados.size;
+        }
+
+        function atualizarBotoes() {
+            const habilitado = idsSelecionados.size > 0;
+            document.getElementById('btnCobrarSelecionados').disabled = !habilitado;
+        }
+
+        // ============================================
+        // VER ITENS
+        // ============================================
+        function verItens(index) {
+            const cliente = clientesAgrupados[index];
+            if (!cliente) return;
+
+            document.getElementById('subtituloItens').textContent = `${cliente.nome} - ${cliente.itens.length} item(s)`;
+            
+            const tbody = document.getElementById('itensBody');
+            tbody.innerHTML = '';
+            
+            cliente.itens.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.codigo || 'N/A'}</strong></td>
+                    <td>${formatarMoeda(item.valor)}</td>
+                    <td>${item.fila || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            document.getElementById('totalItensCliente').textContent = `Total: ${formatarMoeda(cliente.total)}`;
+            document.getElementById('modalItens').classList.add('ativo');
+        }
+
+        function fecharModalItens() {
+            document.getElementById('modalItens').classList.remove('ativo');
+        }
+
+        // ============================================
+        // COBRANÇA INSTAGRAM
+        // ============================================
+        function cobrarCliente(index) {
+            const cliente = clientesAgrupados[index];
+            if (!cliente || !cliente.instagram) {
+                alert('Cliente não possui Instagram cadastrado');
+                return;
+            }
+
+            instagramAtual = cliente.instagram.replace('@', '').trim();
+            document.getElementById('igClienteNome').value = `${cliente.nome} (@${instagramAtual})`;
+
+            const mensagem = gerarMensagemCobranca(cliente);
+            document.getElementById('igMensagem').value = mensagem;
+            document.getElementById('igPreview').textContent = mensagem;
+
+            document.getElementById('modalInstagram').classList.add('ativo');
+        }
+
+        function cobrarSelecionados() {
+            if (idsSelecionados.size === 0) return;
+            
+            const indices = Array.from(idsSelecionados);
+            let mensagemCompleta = '';
+            
+            indices.forEach((index, i) => {
+                const cliente = clientesAgrupados[index];
+                if (!cliente?.instagram) return;
+                
+                mensagemCompleta += gerarMensagemCobranca(cliente);
+                if (i < indices.length - 1) mensagemCompleta += '\n\n---\n\n';
+            });
+
+            instagramAtual = '';
+            document.getElementById('igClienteNome').value = `${idsSelecionados.size} clientes selecionados`;
+            document.getElementById('igMensagem').value = mensagemCompleta;
+            document.getElementById('igPreview').textContent = mensagemCompleta;
+
+            document.getElementById('modalInstagram').classList.add('ativo');
+        }
+
+        function gerarMensagemCobranca(cliente) {
+            const primeiroNome = cliente.nome.split(' ')[0];
+            const dataAmanha = new Date();
+            dataAmanha.setDate(dataAmanha.getDate() + 1);
+            const dataLimite = dataAmanha.toLocaleDateString('pt-BR');
+
+            let mensagem = `Olá, ${primeiroNome} gratidão por acompanhar a nossa live!!\n\n`;
+            mensagem += `Segue o valor da sua compra ${formatarMoeda(cliente.total)}\n\n`;
+            mensagem += `Itens:\n\n`;
+            mensagem += `Código do Item      Valor\n`;
+
+            cliente.itens.forEach(item => {
+                const codigo = (item.codigo || 'N/A').toString().padEnd(20, ' ');
+                const valor = formatarMoeda(item.valor).padStart(10, ' ');
+                mensagem += `  ${codigo}${valor}\n`;
+            });
+
+            mensagem += `\n\nEste é o valor total das compras caso já tenha pago alguma peça durante a live só fazer o pix da diferença.\n\n`;
+            mensagem += `Aguardaremos o pagamento até às 12:00 de amanhã (${dataLimite}) ou seguiremos a fila de espera como de costume!\n\n`;
+            mensagem += `Enviar comprovante de pagamento aqui no direct.\n\n`;
+            mensagem += `Caso tenha crédito ou consignados conosco nos avise para descontarmos. 💳\n\n`;
+            mensagem += `Obrigada ❣️\n\n`;
+            mensagem += `Pix para pagamento:\n\n`;
+            mensagem += `CNPJ\n`;
+            mensagem += `50403919000102\n\n`;
+            mensagem += `Amanda Marcelino`;
+
+            return mensagem;
+        }
+
+        function abrirInstagramCliente() {
+            if (!instagramAtual) {
+                alert('Não foi possível encontrar o Instagram do cliente');
+                return;
+            }
+            const instagramUrl = `https://ig.me/m/${instagramAtual}`;
+            const instagramAppUrl = `instagram://user?username=${instagramAtual}`;
+            window.location.href = instagramAppUrl;
+            setTimeout(() => window.open(instagramUrl, '_blank'), 1000);
+        }
+
+        function copiarParaInstagram() {
+            const mensagem = document.getElementById('igMensagem').value;
+            navigator.clipboard.writeText(mensagem).then(() => {
+                alert('✅ Mensagem copiada! Agora abra o Instagram do cliente e cole no Direct.');
+                if (instagramAtual && confirm('Deseja abrir o perfil do cliente no Instagram agora?')) {
+                    abrirInstagramCliente();
+                }
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = mensagem;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ Mensagem copiada!');
+            });
+        }
+
+        // ============================================
+        // UTILITÁRIOS
+        // ============================================
+        function fecharModal(modalId) {
+            document.getElementById(modalId).classList.remove('ativo');
+        }
+
+        function limparFiltros() {
+            const hoje = new Date();
+            document.getElementById('dataLive').value = hoje.toISOString().split('T')[0];
+            document.getElementById('selectLive').innerHTML = '<option value="">Selecione uma data primeiro</option>';
+            document.getElementById('tabelaContainer').style.display = 'none';
+            document.getElementById('statsContainer').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+            vendasData = [];
+            clientesAgrupados = [];
+            idsSelecionados.clear();
+            codigoLiveAtual = '';
+            dataLiveAtual = '';
+            document.getElementById('checkboxHeader').checked = false;
+            document.getElementById('selecionarTodos').checked = false;
+            carregarLivesNaData();
+        }
+
+        function mostrarErro(mensagem) {
+            document.getElementById('tabelaContainer').style.display = 'none';
+            document.getElementById('emptyState').innerHTML = `
+                <div class="empty-state-icon">⚠️</div>
+                <h3>Erro ao carregar dados</h3>
+                <p>${mensagem}</p>
+            `;
+            document.getElementById('emptyState').style.display = 'block';
+        }
+
+        function fazerLogout() {
+            localStorage.removeItem('pingo_senha_hash');
+            window.location.replace('login.html');
+        }
+    </script>
+</body>
+</html>
