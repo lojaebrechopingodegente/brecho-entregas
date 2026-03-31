@@ -428,33 +428,34 @@
         }
 
         async function testarConexaoSheets() {
-            if (!SHEETS_WEBHOOK_URL) {
-                alert('⚠️ Configure a URL primeiro!');
-                return;
-            }
-            
-            try {
-                const response = await fetch(SHEETS_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        instagram_username: 'teste',
-                        nome: 'Teste',
-                        valor_total: '1.00',
-                        teste: true
-                    })
-                });
-                
-                if (response.ok) {
-                    alert('✅ Conexão OK! O Apps Script está respondendo.');
-                } else {
-                    alert('❌ Erro na conexão. Verifique a URL.');
-                }
-            } catch (error) {
-                alert('❌ Erro: ' + error.message);
-            }
-        }
-
+    if (!SHEETS_WEBHOOK_URL) {
+        alert('⚠️ Configure a URL primeiro!');
+        return;
+    }
+    
+    // Teste usando modo no-cors (não mostra resposta, mas envia)
+    try {
+        await fetch(SHEETS_WEBHOOK_URL, {
+            method: 'POST',
+            mode: 'no-cors', // IMPORTANTE: ignora CORS
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                instagram_username: 'teste',
+                nome: 'Teste',
+                valor_total: '1.00',
+                teste: true
+            })
+        });
+        
+        // Como no-cors não retorna resposta, assumimos sucesso se não deu erro
+        alert('✅ Conexão enviada! Verifique a planilha para confirmar.');
+        
+    } catch (error) {
+        alert('❌ Erro: ' + error.message);
+    }
+}
         // ============================================
         // FUNÇÕES DE FORMATAÇÃO
         // ============================================
@@ -656,69 +657,82 @@
         // EXPORTAR PARA GOOGLE SHEETS
         // ============================================
         async function exportarParaSheets() {
-            if (idsSelecionados.size === 0) {
-                alert('⚠️ Selecione pelo menos um cliente!');
-                return;
-            }
+    if (idsSelecionados.size === 0) {
+        alert('⚠️ Selecione pelo menos um cliente!');
+        return;
+    }
 
-            if (!SHEETS_WEBHOOK_URL) {
-                alert('⚠️ Configure a URL do Google Apps Script primeiro!');
-                return;
-            }
+    if (!SHEETS_WEBHOOK_URL) {
+        alert('⚠️ Configure a URL do Google Apps Script primeiro!');
+        return;
+    }
 
-            const indices = Array.from(idsSelecionados);
-            const clientesParaExportar = indices.map(index => ({
-                index,
-                ...clientesAgrupados[index]
-            })).filter(c => c.instagram && !clientesExportados.has(c.index));
+    const indices = Array.from(idsSelecionados);
+    const clientesParaExportar = indices.map(index => ({
+        index,
+        ...clientesAgrupados[index]
+    })).filter(c => c.instagram && !clientesExportados.has(c.index));
 
-            if (clientesParaExportar.length === 0) {
-                alert('Nenhum cliente válido para exportar (verifique Instagram e status)');
-                return;
-            }
+    if (clientesParaExportar.length === 0) {
+        alert('Nenhum cliente válido para exportar');
+        return;
+    }
 
-            // Mostrar progresso
-            document.getElementById('progressoContainer').style.display = 'block';
-            const total = clientesParaExportar.length;
-            let sucessos = 0;
-            let erros = 0;
+    // Mostrar progresso
+    document.getElementById('progressoContainer').style.display = 'block';
+    const total = clientesParaExportar.length;
+    let sucessos = 0;
 
-            for (let i = 0; i < clientesParaExportar.length; i++) {
-                const cliente = clientesParaExportar[i];
-                
-                try {
-                    const dadosExportacao = {
-                        instagram_username: cliente.instagram.replace('@', ''),
-                        nome: cliente.nome,
-                        valor_total: cliente.total.toFixed(2),
-                        itens: cliente.itens.map(item => item.codigo).join(', '),
-                        quantidade_itens: cliente.itens.length.toString(),
-                        live_id: codigoLiveAtual,
-                        data_live: dataLiveAtual
-                    };
+    for (let i = 0; i < clientesParaExportar.length; i++) {
+        const cliente = clientesParaExportar[i];
+        
+        try {
+            const dadosExportacao = {
+                instagram_username: cliente.instagram.replace('@', ''),
+                nome: cliente.nome,
+                valor_total: cliente.total.toFixed(2),
+                itens: cliente.itens.map(item => item.codigo).join(', '),
+                quantidade_itens: cliente.itens.length.toString(),
+                live_id: codigoLiveAtual,
+                data_live: dataLiveAtual
+            };
 
-                    const response = await fetch(SHEETS_WEBHOOK_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(dadosExportacao)
-                    });
+            // USAR mode: 'no-cors' para ignorar restrições CORS
+            await fetch(SHEETS_WEBHOOK_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dadosExportacao)
+            });
 
-                    if (response.ok) {
-                        const resultado = await response.json();
-                        if (resultado.success) {
-                            clientesExportados.add(cliente.index);
-                            sucessos++;
-                        } else {
-                            throw new Error(resultado.message || 'Erro no Apps Script');
-                        }
-                    } else {
-                        throw new Error('Erro HTTP: ' + response.status);
-                    }
-                } catch (error) {
-                    console.error(`Erro ao exportar ${cliente.nome}:`, error);
-                    erros++;
-                }
+            // Como no-cors não retorna resposta, marcamos como exportado
+            clientesExportados.add(cliente.index);
+            sucessos++;
 
+        } catch (error) {
+            console.error(`Erro ao exportar ${cliente.nome}:`, error);
+        }
+
+        // Atualizar progresso
+        const percentual = ((i + 1) / total) * 100;
+        document.getElementById('progressoBarra').style.width = `${percentual}%`;
+        document.getElementById('progressoTexto').textContent = `${i + 1} de ${total} exportados`;
+        
+        // Delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    renderizarTabela();
+    atualizarStats();
+    
+    setTimeout(() => {
+        document.getElementById('progressoContainer').style.display = 'none';
+    }, 3000);
+
+    alert(`✅ ${sucessos} clientes exportados!\\n\\nVerifique a planilha do Google Sheets para confirmar.`);
+}
                 // Atualizar progresso
                 const percentual = ((i + 1) / total) * 100;
                 document.getElementById('progressoBarra').style.width = `${percentual}%`;
