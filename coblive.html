@@ -264,7 +264,7 @@
         <div class="empty-state" id="emptyState">
             <div class="empty-state-icon">📅</div>
             <h3>Selecione uma data e live</h3>
-            <p>Escolha a data e o código da live para carregar os clientes</p>
+            <p>Escolha a data para ver as lives disponíveis</p>
         </div>
 
         <div class="loading" id="loading" style="display: none;">
@@ -384,6 +384,7 @@
         let supabaseClient = null;
         let vendasData = [];
         let clientesAgrupados = [];
+        let clientesCache = {}; // Cache de clientes por nome
         let instagramAtual = '';
         let idsSelecionados = new Set();
         let codigoLiveAtual = '';
@@ -487,6 +488,39 @@
         }
 
         // ============================================
+        // CARREGAR CLIENTES DO SUPABASE
+        // ============================================
+        async function carregarTodosClientes() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('clientes_pg')
+                    .select('nome, instagram, whatsapp');
+                
+                if (error) throw error;
+                
+                // Criar índice por nome (case insensitive)
+                clientesCache = {};
+                (data || []).forEach(cliente => {
+                    if (cliente.nome) {
+                        const nomeKey = cliente.nome.trim().toLowerCase();
+                        clientesCache[nomeKey] = cliente;
+                    }
+                });
+                
+                console.log(`Carregados ${Object.keys(clientesCache).length} clientes`);
+            } catch (e) {
+                console.error('Erro ao carregar clientes:', e);
+                clientesCache = {};
+            }
+        }
+
+        function buscarClientePorNome(nome) {
+            if (!nome) return null;
+            const nomeKey = nome.trim().toLowerCase();
+            return clientesCache[nomeKey] || null;
+        }
+
+        // ============================================
         // CARREGAR VENDAS
         // ============================================
         async function carregarVendas() {
@@ -501,9 +535,13 @@
             document.getElementById('loading').style.display = 'block';
 
             try {
+                // Primeiro carregar todos os clientes
+                await carregarTodosClientes();
+
+                // Depois carregar as vendas (sem join)
                 const { data, error } = await supabaseClient
                     .from('vendas_live')
-                    .select(`*, clientes_pg (id, nome, instagram, whatsapp)`)
+                    .select('*')
                     .eq('codigo_live', codigoLiveAtual)
                     .order('linha_id', { ascending: true });
 
@@ -511,15 +549,19 @@
 
                 vendasData = (data || []).filter(v => v.valor > 0 && v.comprador?.trim());
 
-                // Agrupar por cliente
+                // Agrupar por cliente e buscar dados do cliente no cache
                 const agrupados = {};
                 vendasData.forEach(v => {
                     const nome = v.comprador.trim();
+                    
+                    // Buscar dados do cliente no cache
+                    const clienteInfo = buscarClientePorNome(nome);
+                    
                     if (!agrupados[nome]) {
                         agrupados[nome] = {
                             nome: nome,
-                            instagram: v.clientes_pg?.instagram || '',
-                            whatsapp: v.clientes_pg?.whatsapp || '',
+                            instagram: clienteInfo?.instagram || '',
+                            whatsapp: clienteInfo?.whatsapp || '',
                             itens: [],
                             total: 0
                         };
@@ -641,7 +683,7 @@
                 const checkbox = tr.querySelector('.checkbox-selecao');
                 const temInstagram = clientesAgrupados[index]?.instagram;
                 
-                if (checkbox) checkbox.checked = idsSelecionados.has(index);
+                if (checkbox && temInstagram) checkbox.checked = idsSelecionados.has(index);
                 if (idsSelecionados.has(index)) tr.classList.add('selecionado');
                 else tr.classList.remove('selecionado');
             });
@@ -807,6 +849,7 @@
             document.getElementById('emptyState').style.display = 'block';
             vendasData = [];
             clientesAgrupados = [];
+            clientesCache = {};
             idsSelecionados.clear();
             codigoLiveAtual = '';
             dataLiveAtual = '';
