@@ -32,6 +32,29 @@
             border-color: rgba(255,255,255,0.5);
             transform: translateY(-50%) scale(1.05);
         }
+        .header-link-voltar {
+            position: absolute;
+            top: 50%;
+            left: 30px;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-link-voltar:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-50%) scale(1.05);
+        }
         .content { padding: 30px; }
         .table-container { overflow-x: auto; max-height: 70vh; overflow-y: auto; margin-bottom: 30px; border: 1px solid #dee2e6; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -459,6 +482,7 @@
 
     <div class="container">
         <div class="header">
+            <a href="dashboard.html" class="header-link-voltar">← Voltar</a>
             <h1>🛍️ Registro de Vendas - Live</h1>
             <p>Gerencie suas vendas em tempo real por data</p>
             <a href="coblive.html" class="header-link-coblive">📊 Cobranças Live</a>
@@ -542,7 +566,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                             <span>Total Vendido</span>
                             <strong id="totalVendidoHeader">R$ 0,00</strong>
                         </div>
-                        <a href="dashboard.html" class="btn-voltar">← Voltar</a>
                         <button class="change-date-btn" onclick="trocarData()">🔄 Trocar Data</button>
                     </div>
                 </div>
