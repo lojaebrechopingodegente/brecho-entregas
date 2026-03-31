@@ -99,8 +99,6 @@
         .status-message.error { background: #dc3545; display: block; }
         .status-message.info { background: #17a2b8; display: block; }
         .item-number { font-weight: bold; color: #667eea; }
-        .delete-btn { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 10px; }
-        .delete-btn:disabled { background: #adb5bd; cursor: not-allowed; }
         .btn-save { 
             background: #dc3545;
             color: white; 
@@ -538,7 +536,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 <div class="table-container">
                     <table id="vendasTable">
                         <thead>
-                            <tr><th style="width: 50px;">Item</th><th style="width: 100px;">Valor *</th><th style="width: 100px;">Código *</th><th>Comprador <span class="voice-hint">🎤</span></th><th>Fila <span class="voice-hint">🎤</span></th><th style="width: 80px;">Ações</th></tr>
+                            <tr><th style="width: 50px;">Item</th><th style="width: 100px;">Valor *</th><th style="width: 100px;">Código *</th><th>Comprador <span class="voice-hint">🎤</span></th><th>Fila <span class="voice-hint">🎤</span></th><th style="width: 60px;">Ações</th></tr>
                         </thead>
                         <tbody id="vendasBody"></tbody>
                     </table>
@@ -1387,7 +1385,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 </td>
                 <td>
                     <button class="${btnClass}" id="btn-save-${venda.linha_id}" onclick="salvarVenda(${venda.linha_id})" style="${btnStyle}" ${liveBloqueada ? 'disabled' : ''}>💾</button>
-                    <button class="delete-btn" onclick="excluirLinha(${venda.linha_id})" ${liveBloqueada ? 'disabled' : ''}>🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -1427,7 +1424,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 </td>
                 <td>
                     <button class="btn-save" id="btn-save-${linhaCount}" onclick="salvarVenda(${linhaCount})" style="background: #dc3545;">💾</button>
-                    <button class="delete-btn" onclick="excluirLinha(${linhaCount})">🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -1706,124 +1702,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             }
         }
 
-        async function excluirLinha(linhaId) {
-            if (liveBloqueada) {
-                showStatus('Live finalizada.', 'error');
-                return;
-            }
-            if (!confirm('Deseja excluir este item?')) return;
-
-            try {
-                showStatus('Excluindo...', 'info');
-
-                const compradorExcluido = vendas.find(v => v.linha_id === linhaId)?.comprador?.trim().toLowerCase();
-                if (compradorExcluido) {
-                    compradoresNaLive.delete(compradorExcluido);
-                }
-
-                await supabaseClient.from('vendas_live').delete().eq('linha_id', linhaId).eq('data_live', dataLiveAtual);
-                vendas = vendas.filter(v => v.linha_id !== linhaId);
-                linhasNaoSalvas.delete(parseInt(linhaId));
-
-                const linhasParaRenumerar = vendas.filter(v => v.linha_id > linhaId).sort((a,b) => a.linha_id - b.linha_id);
-                for (const venda of linhasParaRenumerar) {
-                    const novoId = venda.linha_id - 1;
-                    const novaVenda = { ...venda, linha_id: novoId, item: novoId, updated_at: new Date().toISOString() };
-                    await supabaseClient.from('vendas_live').delete().eq('id', venda.id);
-                    const { data } = await supabaseClient.from('vendas_live').insert([novaVenda]).select();
-                    if (data?.[0]) {
-                        venda.id = data[0].id;
-                        venda.linha_id = novoId;
-                        venda.item = novoId;
-                    }
-                }
-
-                const tbody = document.getElementById('vendasBody');
-                const trExcluir = document.getElementById(`linha-${linhaId}`);
-                if (trExcluir) trExcluir.remove();
-
-                const todasLinhas = Array.from(tbody.querySelectorAll('tr'));
-                todasLinhas.forEach((tr, index) => {
-                    const novoLinhaId = index + 1;
-                    const antigoLinhaId = parseInt(tr.dataset.linhaId);
-                    if (antigoLinhaId !== novoLinhaId) {
-                        tr.id = `linha-${novoLinhaId}`;
-                        tr.dataset.linhaId = novoLinhaId;
-                        const numeroSpan = tr.querySelector('.item-number');
-                        if (numeroSpan) {
-                            numeroSpan.id = `numero-${novoLinhaId}`;
-                            numeroSpan.textContent = novoLinhaId;
-                        }
-                        const inputs = tr.querySelectorAll('input, button, div.suggestions');
-                        inputs.forEach(el => {
-                            if (el.id && el.id.includes(`-${antigoLinhaId}`)) {
-                                const novoId = el.id.replace(`-${antigoLinhaId}`, `-${novoLinhaId}`);
-                                el.id = novoId;
-                                if (el.onclick) {
-                                    const onclickStr = el.getAttribute('onclick');
-                                    if (onclickStr) {
-                                        const novoOnclick = onclickStr.replace(new RegExp(antigoLinhaId, 'g'), novoLinhaId);
-                                        el.setAttribute('onclick', novoOnclick);
-                                    }
-                                }
-                                if (el.onkeydown) {
-                                    const onkeydownStr = el.getAttribute('onkeydown');
-                                    if (onkeydownStr) {
-                                        const novoOnkeydown = onkeydownStr.replace(new RegExp(antigoLinhaId, 'g'), novoLinhaId);
-                                        el.setAttribute('onkeydown', novoOnkeydown);
-                                    }
-                                }
-                                if (el.oninput) {
-                                    const oninputStr = el.getAttribute('oninput');
-                                    if (oninputStr && oninputStr.includes('marcarLinhaComoNaoSalva')) {
-                                    } else if (oninputStr) {
-                                        const tipoCampo = el.id.split('-')[0];
-                                        if (tipoCampo === 'valor') {
-                                            el.setAttribute('oninput', `formatarValorInput(this); marcarLinhaComoNaoSalva(this)`);
-                                        } else {
-                                            el.setAttribute('oninput', `filtrarSugestoes(this, '${tipoCampo}'); marcarLinhaComoNaoSalva(this)`);
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
-                });
-
-                linhaCount = todasLinhas.length;
-                await recarregarVendasArray();
-                atualizarContagemItens();
-                atualizarTotalVendidoHeader();
-                showStatus(`Item ${linhaId} excluído!`, 'success');
-            } catch (error) {
-                showStatus('Erro ao excluir: ' + error.message, 'error');
-            }
-        }
-
-        async function recarregarVendasArray() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('vendas_live')
-                    .select('*')
-                    .eq('data_live', dataLiveAtual)
-                    .order('linha_id', { ascending: true });
-                if (error) {
-                    console.error('Erro ao recarregar:', error);
-                    return;
-                }
-                vendas = data || [];
-
-                compradoresNaLive.clear();
-                vendas.forEach(v => {
-                    if (v.comprador?.trim()) {
-                        compradoresNaLive.add(v.comprador.trim().toLowerCase());
-                    }
-                });
-            } catch (error) {
-                console.error('Erro:', error);
-            }
-        }
-
         async function finalizarLive() {
             if (confirm(`Deseja finalizar a live ${codigoLiveAtual}?`)) {
                 try {
@@ -1864,7 +1742,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
         function bloquearCampos() {
             document.querySelectorAll('#vendasBody input').forEach(input => input.disabled = true);
             document.querySelectorAll('.mic-btn').forEach(btn => btn.disabled = true);
-            document.querySelectorAll('.delete-btn').forEach(btn => btn.disabled = true);
             document.getElementById('liveInfoBanner').classList.add('bloqueada');
             document.getElementById('statusLive').textContent = '🔒 LIVE FINALIZADA';
             document.getElementById('btnAdicionar').style.display = 'none';
@@ -1876,7 +1753,6 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
         function liberarCampos() {
             document.querySelectorAll('#vendasBody input').forEach(input => input.disabled = false);
             document.querySelectorAll('.mic-btn').forEach(btn => btn.disabled = false);
-            document.querySelectorAll('.delete-btn').forEach(btn => btn.disabled = false);
             document.getElementById('liveInfoBanner').classList.remove('bloqueada');
             document.getElementById('statusLive').textContent = '';
             document.getElementById('btnAdicionar').style.display = 'inline-block';
