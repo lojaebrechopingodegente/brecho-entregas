@@ -109,7 +109,8 @@
         const SUPABASE_URL = 'https://ytnfjzngalfapfnbobfm.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
         
-        let supabase = supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // CORREÇÃO: Usar apenas uma variável para o cliente Supabase
+        let supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let SHEETS_URL = localStorage.getItem('sheets_url') || '';
         let clientes = [];
         let selecionados = new Set();
@@ -134,6 +135,7 @@
             alert('✅ URL salva!');
         }
 
+        // CORREÇÃO: Definir a função testarConexao antes de ser usada no HTML
         async function testarConexao() {
             if (!SHEETS_URL) { alert('Configure a URL primeiro!'); return; }
             try {
@@ -155,7 +157,7 @@
             const select = document.getElementById('selectLive');
             select.innerHTML = '<option>Carregando...</option>';
             try {
-                const { data: lives } = await supabase.from('lives_pg').select('*').eq('data_live', data);
+                const { data: lives } = await supabaseClient.from('lives_pg').select('*').eq('data_live', data);
                 if (!lives || lives.length === 0) {
                     select.innerHTML = '<option>Nenhuma live</option>';
                     return;
@@ -174,8 +176,8 @@
         async function carregarVendas() {
             if (!codigoLive) { alert('Selecione uma live!'); return; }
             try {
-                const { data: vendas } = await supabase.from('vendas_live').select('*').eq('codigo_live', codigoLive);
-                const { data: clientesDB } = await supabase.from('clientes_pg').select('*');
+                const { data: vendas } = await supabaseClient.from('vendas_live').select('*').eq('codigo_live', codigoLive);
+                const { data: clientesDB } = await supabaseClient.from('clientes_pg').select('*');
                 
                 const cache = {};
                 clientesDB.forEach(c => cache[c.nome.toLowerCase()] = c);
