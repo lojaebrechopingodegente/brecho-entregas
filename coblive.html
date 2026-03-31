@@ -114,6 +114,8 @@
         .btn-ver-itens { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
         .btn-cobrar { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; }
         .btn-cobrar:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .btn-add-instagram { background: linear-gradient(135deg, #FF6B6B, #EE5A6F); color: white; }
+        .btn-add-instagram:hover { transform: scale(1.05); box-shadow: 0 3px 10px rgba(238, 90, 111, 0.3); }
         
         .valor-total { font-weight: bold; color: #FF6B8A; font-size: 1.1rem; }
         .qtd-itens { background: #FF8BA7; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; font-weight: 600; }
@@ -191,6 +193,9 @@
         
         .status-pago { background: #C8E6C9; color: #2E7D32; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
         .status-pendente { background: #FFCCBC; color: #D84315; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        
+        .sem-instagram { color: #dc3545; font-style: italic; font-size: 0.85rem; }
+        .com-instagram { color: #E1306C; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -348,6 +353,43 @@
         </div>
     </div>
 
+    <!-- Modal Cadastrar/Editar Instagram -->
+    <div class="modal-overlay" id="modalInstagramCadastro">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>📱 Cadastrar/Editar Instagram</h3>
+                <button class="btn-fechar" onclick="fecharModal('modalInstagramCadastro')">×</button>
+            </div>
+            
+            <div class="form-group">
+                <label>Cliente</label>
+                <input type="text" id="cadastroClienteNome" readonly>
+                <input type="hidden" id="cadastroClienteIndex">
+            </div>
+
+            <div class="form-group">
+                <label for="cadastroInstagram">Instagram <span style="font-weight: normal; color: #666;">(sem @)</span></label>
+                <input type="text" id="cadastroInstagram" placeholder="Digite o nome do Instagram...">
+            </div>
+
+            <div class="form-group" id="novoClienteSection" style="display: none;">
+                <div style="background: #FFF3E0; border: 2px solid #FF9800; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                    <strong>⚠️ Cliente não cadastrado</strong>
+                    <p style="margin-top: 5px; font-size: 0.9rem; color: #E65100;">
+                        Este comprador não está na base de clientes. Deseja cadastrá-lo agora?
+                    </p>
+                </div>
+                <label for="cadastroWhatsapp">WhatsApp <span style="font-weight: normal; color: #666;">(opcional)</span></label>
+                <input type="text" id="cadastroWhatsapp" placeholder="(00) 00000-0000">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-cancelar" onclick="fecharModal('modalInstagramCadastro')" style="flex: 1;">Cancelar</button>
+                <button class="btn-salvar" onclick="salvarInstagram()" style="flex: 2;">💾 Salvar Instagram</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================
         // PROTEÇÃO DE ACESSO
@@ -389,6 +431,7 @@
         let idsSelecionados = new Set();
         let codigoLiveAtual = '';
         let dataLiveAtual = '';
+        let clienteIndexAtual = null;
 
         // ============================================
         // INICIALIZAÇÃO
@@ -428,6 +471,7 @@
             
             document.getElementById('modalItens').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalItens(); });
             document.getElementById('modalInstagram').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalInstagram'); });
+            document.getElementById('modalInstagramCadastro').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalInstagramCadastro'); });
         });
 
         // ============================================
@@ -494,7 +538,7 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('clientes_pg')
-                    .select('nome, instagram, whatsapp');
+                    .select('id, nome, instagram, whatsapp');
                 
                 if (error) throw error;
                 
@@ -562,6 +606,7 @@
                             nome: nome,
                             instagram: clienteInfo?.instagram || '',
                             whatsapp: clienteInfo?.whatsapp || '',
+                            clienteId: clienteInfo?.id || null,
                             itens: [],
                             total: 0
                         };
@@ -622,8 +667,8 @@
                     <td><strong>${cliente.nome}</strong></td>
                     <td>
                         ${temInstagram 
-                            ? `<span style="color:#E1306C">@${cliente.instagram}</span>` 
-                            : '<span style="color:#9E9E9E; font-style:italic;">Sem Instagram</span>'}
+                            ? `<span class="com-instagram">@${cliente.instagram}</span>` 
+                            : `<span class="sem-instagram">❌ Sem Instagram</span>`}
                     </td>
                     <td><span class="qtd-itens">${cliente.itens.length}</span></td>
                     <td><span class="valor-total">${formatarMoeda(cliente.total)}</span></td>
@@ -632,8 +677,11 @@
                             <button class="btn-acao btn-ver-itens" onclick="verItens(${index})">
                                 👁️ Ver Itens
                             </button>
+                            <button class="btn-acao btn-add-instagram" onclick="abrirCadastroInstagram(${index})">
+                                ${temInstagram ? '✏️ Editar IG' : '➕ Add Instagram'}
+                            </button>
                             <button class="btn-acao btn-cobrar" onclick="cobrarCliente(${index})" 
-                                ${!temInstagram ? 'disabled title="Cliente sem Instagram"' : ''}>
+                                ${!temInstagram ? 'disabled title="Cadastre o Instagram primeiro"' : ''}>
                                 📱 Cobrar
                             </button>
                         </div>
@@ -648,6 +696,106 @@
             document.getElementById('tabelaContainer').classList.add('fade-in');
             atualizarContadores();
             atualizarBotoes();
+        }
+
+        // ============================================
+        // CADASTRAR/EDITAR INSTAGRAM
+        // ============================================
+        function abrirCadastroInstagram(index) {
+            const cliente = clientesAgrupados[index];
+            if (!cliente) return;
+
+            clienteIndexAtual = index;
+            document.getElementById('cadastroClienteIndex').value = index;
+            document.getElementById('cadastroClienteNome').value = cliente.nome;
+            document.getElementById('cadastroInstagram').value = cliente.instagram || '';
+            document.getElementById('cadastroWhatsapp').value = cliente.whatsapp || '';
+
+            // Mostrar seção de novo cliente se não tiver ID
+            const ehNovoCliente = !cliente.clienteId;
+            document.getElementById('novoClienteSection').style.display = ehNovoCliente ? 'block' : 'none';
+
+            document.getElementById('modalInstagramCadastro').classList.add('ativo');
+            document.getElementById('cadastroInstagram').focus();
+        }
+
+        async function salvarInstagram() {
+            const index = parseInt(document.getElementById('cadastroClienteIndex').value);
+            const instagram = document.getElementById('cadastroInstagram').value.trim().replace('@', '');
+            const whatsapp = document.getElementById('cadastroWhatsapp').value.trim();
+            
+            if (!instagram) {
+                alert('⚠️ Digite o Instagram do cliente!');
+                return;
+            }
+
+            const cliente = clientesAgrupados[index];
+            if (!cliente) return;
+
+            try {
+                showStatus('Salvando...', 'info');
+
+                if (cliente.clienteId) {
+                    // Atualizar cliente existente
+                    const { error } = await supabaseClient
+                        .from('clientes_pg')
+                        .update({ 
+                            instagram: instagram,
+                            whatsapp: whatsapp || cliente.whatsapp,
+                            atualizado_em: new Date().toISOString()
+                        })
+                        .eq('id', cliente.clienteId);
+
+                    if (error) throw error;
+
+                    // Atualizar cache local
+                    const nomeKey = cliente.nome.toLowerCase();
+                    if (clientesCache[nomeKey]) {
+                        clientesCache[nomeKey].instagram = instagram;
+                    }
+
+                } else {
+                    // Criar novo cliente
+                    const { data, error } = await supabaseClient
+                        .from('clientes_pg')
+                        .insert([{
+                            nome: cliente.nome,
+                            instagram: instagram,
+                            whatsapp: whatsapp || null,
+                            criado_em: new Date().toISOString(),
+                            atualizado_em: new Date().toISOString()
+                        }])
+                        .select();
+
+                    if (error) throw error;
+
+                    // Adicionar ao cache
+                    if (data && data[0]) {
+                        const nomeKey = cliente.nome.toLowerCase();
+                        clientesCache[nomeKey] = data[0];
+                        cliente.clienteId = data[0].id;
+                    }
+                }
+
+                // Atualizar dados locais
+                cliente.instagram = instagram;
+                if (whatsapp) cliente.whatsapp = whatsapp;
+
+                // Atualizar tabela
+                renderizarTabela();
+
+                fecharModal('modalInstagramCadastro');
+                showStatus('✅ Instagram salvo com sucesso!', 'success');
+
+                // Perguntar se quer enviar cobrança agora
+                if (confirm('Instagram cadastrado! Deseja enviar a cobrança agora?')) {
+                    cobrarCliente(index);
+                }
+
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+                alert('❌ Erro ao salvar: ' + error.message);
+            }
         }
 
         // ============================================
@@ -738,7 +886,7 @@
         function cobrarCliente(index) {
             const cliente = clientesAgrupados[index];
             if (!cliente || !cliente.instagram) {
-                alert('Cliente não possui Instagram cadastrado');
+                alert('Cliente não possui Instagram cadastrado. Clique em "Add Instagram" para cadastrar.');
                 return;
             }
 
@@ -853,6 +1001,7 @@
             idsSelecionados.clear();
             codigoLiveAtual = '';
             dataLiveAtual = '';
+            clienteIndexAtual = null;
             document.getElementById('checkboxHeader').checked = false;
             document.getElementById('selecionarTodos').checked = false;
             carregarLivesNaData();
@@ -866,6 +1015,33 @@
                 <p>${mensagem}</p>
             `;
             document.getElementById('emptyState').style.display = 'block';
+        }
+
+        function showStatus(mensagem, tipo) {
+            // Criar elemento de status temporário
+            const div = document.createElement('div');
+            div.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 600;
+                z-index: 3000;
+                animation: slideUp 0.3s ease;
+            `;
+            
+            if (tipo === 'success') div.style.background = '#28a745';
+            else if (tipo === 'error') div.style.background = '#dc3545';
+            else div.style.background = '#17a2b8';
+            
+            div.textContent = mensagem;
+            document.body.appendChild(div);
+            
+            setTimeout(() => {
+                div.remove();
+            }, 3000);
         }
 
         function fazerLogout() {
