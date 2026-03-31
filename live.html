@@ -9,8 +9,29 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
         .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; position: relative; }
         .header h1 { font-size: 2rem; margin-bottom: 10px; }
+        .header p { opacity: 0.9; }
+        .header-link-coblive {
+            position: absolute;
+            top: 50%;
+            right: 30px;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .header-link-coblive:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-50%) scale(1.05);
+        }
         .content { padding: 30px; }
         .table-container { overflow-x: auto; max-height: 70vh; overflow-y: auto; margin-bottom: 30px; border: 1px solid #dee2e6; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -440,6 +461,7 @@
         <div class="header">
             <h1>🛍️ Registro de Vendas - Live</h1>
             <p>Gerencie suas vendas em tempo real por data</p>
+            <a href="coblive.html" class="header-link-coblive">📊 Cobranças Live</a>
         </div>
         <div class="content">
             <!-- Tela de configuração oculta por padrão -->
