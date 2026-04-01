@@ -196,6 +196,102 @@
         
         .sem-instagram { color: #dc3545; font-style: italic; font-size: 0.85rem; }
         .com-instagram { color: #E1306C; font-weight: 600; }
+        
+        /* Modal de instruções desktop */
+        .modal-instrucoes-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 4000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-instrucoes-overlay.ativo {
+            display: flex;
+        }
+        
+        .modal-instrucoes {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+        
+        .modal-instrucoes h3 {
+            color: #FF6B8A;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .instrucoes-box {
+            background: #FFF5F7;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .instrucoes-box p {
+            margin-bottom: 15px;
+            color: #2D3436;
+            line-height: 1.6;
+        }
+        
+        .instrucoes-box p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .instrucoes-box strong {
+            color: #FF6B8A;
+        }
+        
+        .botoes-instrucoes {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-fechar-modal {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: #E0E0E0;
+            color: #2D3436;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-fechar-modal:hover {
+            background: #D0D0D0;
+        }
+        
+        .btn-copiar-abrir {
+            flex: 2;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #FF8BA7, #FF6B8A);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-copiar-abrir:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 138, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -390,6 +486,34 @@
         </div>
     </div>
 
+    <!-- Modal de Instruções Desktop -->
+    <div class="modal-instrucoes-overlay" id="modalInstrucoesDesktop">
+        <div class="modal-instrucoes">
+            <h3>📱 Como cobrar <span id="instrucoesUsername"></span></h3>
+            
+            <div class="instrucoes-box">
+                <p>
+                    <strong>Opção 1 - Instagram Web:</strong><br>
+                    1. O perfil foi aberto em uma nova aba<br>
+                    2. Clique no botão <strong>"Mensagem"</strong> no perfil<br>
+                    3. Cole a mensagem copiada
+                </p>
+                
+                <p>
+                    <strong>Opção 2 - App do Instagram:</strong><br>
+                    1. Abra o app no seu celular<br>
+                    2. Busque por <strong id="instrucoesUsername2"></strong><br>
+                    3. Envie a mensagem no Direct
+                </p>
+            </div>
+            
+            <div class="botoes-instrucoes">
+                <button class="btn-fechar-modal" onclick="fecharModalInstrucoes()">Fechar</button>
+                <button class="btn-copiar-abrir" onclick="copiarEAbrirDirect()">📋 Copiar e Abrir Direct</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================
         // PROTEÇÃO DE ACESSO
@@ -426,7 +550,7 @@
         let supabaseClient = null;
         let vendasData = [];
         let clientesAgrupados = [];
-        let clientesCache = {}; // Cache de clientes por nome
+        let clientesCache = {};
         let instagramAtual = '';
         let idsSelecionados = new Set();
         let codigoLiveAtual = '';
@@ -472,6 +596,7 @@
             document.getElementById('modalItens').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalItens(); });
             document.getElementById('modalInstagram').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalInstagram'); });
             document.getElementById('modalInstagramCadastro').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalInstagramCadastro'); });
+            document.getElementById('modalInstrucoesDesktop').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalInstrucoes(); });
         });
 
         // ============================================
@@ -542,7 +667,6 @@
                 
                 if (error) throw error;
                 
-                // Criar índice por nome (case insensitive)
                 clientesCache = {};
                 (data || []).forEach(cliente => {
                     if (cliente.nome) {
@@ -579,10 +703,8 @@
             document.getElementById('loading').style.display = 'block';
 
             try {
-                // Primeiro carregar todos os clientes
                 await carregarTodosClientes();
 
-                // Depois carregar as vendas (sem join)
                 const { data, error } = await supabaseClient
                     .from('vendas_live')
                     .select('*')
@@ -593,12 +715,9 @@
 
                 vendasData = (data || []).filter(v => v.valor > 0 && v.comprador?.trim());
 
-                // Agrupar por cliente e buscar dados do cliente no cache
                 const agrupados = {};
                 vendasData.forEach(v => {
                     const nome = v.comprador.trim();
-                    
-                    // Buscar dados do cliente no cache
                     const clienteInfo = buscarClientePorNome(nome);
                     
                     if (!agrupados[nome]) {
@@ -711,7 +830,6 @@
             document.getElementById('cadastroInstagram').value = cliente.instagram || '';
             document.getElementById('cadastroWhatsapp').value = cliente.whatsapp || '';
 
-            // Mostrar seção de novo cliente se não tiver ID
             const ehNovoCliente = !cliente.clienteId;
             document.getElementById('novoClienteSection').style.display = ehNovoCliente ? 'block' : 'none';
 
@@ -736,7 +854,6 @@
                 showStatus('Salvando...', 'info');
 
                 if (cliente.clienteId) {
-                    // Atualizar cliente existente
                     const { error } = await supabaseClient
                         .from('clientes_pg')
                         .update({ 
@@ -748,14 +865,12 @@
 
                     if (error) throw error;
 
-                    // Atualizar cache local
                     const nomeKey = cliente.nome.toLowerCase();
                     if (clientesCache[nomeKey]) {
                         clientesCache[nomeKey].instagram = instagram;
                     }
 
                 } else {
-                    // Criar novo cliente
                     const { data, error } = await supabaseClient
                         .from('clientes_pg')
                         .insert([{
@@ -769,7 +884,6 @@
 
                     if (error) throw error;
 
-                    // Adicionar ao cache
                     if (data && data[0]) {
                         const nomeKey = cliente.nome.toLowerCase();
                         clientesCache[nomeKey] = data[0];
@@ -777,17 +891,14 @@
                     }
                 }
 
-                // Atualizar dados locais
                 cliente.instagram = instagram;
                 if (whatsapp) cliente.whatsapp = whatsapp;
 
-                // Atualizar tabela
                 renderizarTabela();
 
                 fecharModal('modalInstagramCadastro');
                 showStatus('✅ Instagram salvo com sucesso!', 'success');
 
-                // Perguntar se quer enviar cobrança agora
                 if (confirm('Instagram cadastrado! Deseja enviar a cobrança agora?')) {
                     cobrarCliente(index);
                 }
@@ -881,7 +992,7 @@
         }
 
         // ============================================
-        // COBRANÇA INSTAGRAM
+        // COBRANÇA INSTAGRAM - VERSÃO MULTI-PLATAFORMA
         // ============================================
         function cobrarCliente(index) {
             const cliente = clientesAgrupados[index];
@@ -952,15 +1063,139 @@
             return mensagem;
         }
 
+        // ============================================
+        // ABRIR INSTAGRAM - DETECÇÃO DE SISTEMA
+        // ============================================
         function abrirInstagramCliente() {
             if (!instagramAtual) {
                 alert('Não foi possível encontrar o Instagram do cliente');
                 return;
             }
-            const instagramUrl = `https://ig.me/m/${instagramAtual}`;
-            const instagramAppUrl = `instagram://user?username=${instagramAtual}`;
-            window.location.href = instagramAppUrl;
-            setTimeout(() => window.open(instagramUrl, '_blank'), 1000);
+            
+            const username = instagramAtual.replace('@', '').trim();
+            
+            // Detectar sistema operacional
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isAndroid = /android/.test(userAgent);
+            const isIOS = /iphone|ipad|ipod/.test(userAgent);
+            const isMobile = isAndroid || isIOS;
+            const isWindows = /windows/.test(userAgent);
+            const isMac = /macintosh|mac os x/.test(userAgent);
+            const isLinux = /linux/.test(userAgent);
+            
+            if (isMobile) {
+                // ===== MOBILE: Tentar abrir o app nativo =====
+                if (isAndroid) {
+                    abrirInstagramAndroid(username);
+                } else if (isIOS) {
+                    abrirInstagramIOS(username);
+                }
+                showStatus(`Abrindo Instagram de @${username}...`, 'info');
+                
+            } else {
+                // ===== DESKTOP: Windows, Mac ou Linux =====
+                abrirInstagramDesktop(username, isWindows, isMac, isLinux);
+            }
+        }
+
+        function abrirInstagramAndroid(username) {
+            // Android - Intent para abrir Direct ou Perfil
+            const intentUrl = `intent://instagram.com/_u/${username}#Intent;package=com.instagram.android;scheme=https;end`;
+            const appUrl = `instagram://user?username=${username}`;
+            const webUrl = `https://www.instagram.com/${username}`;
+            const directUrl = `https://www.instagram.com/direct/t/${username}`;
+            
+            // Tentar app primeiro
+            window.location.href = appUrl;
+            
+            setTimeout(() => {
+                if (document.hidden) return; // App abriu com sucesso
+                
+                // Tentar Intent
+                window.location.href = intentUrl;
+                
+                setTimeout(() => {
+                    if (document.hidden) return;
+                    
+                    // Fallback para web
+                    window.open(webUrl, '_blank');
+                    mostrarInstrucoesDesktop(username);
+                }, 800);
+            }, 600);
+        }
+
+        function abrirInstagramIOS(username) {
+            // iOS - URL Scheme
+            const appUrl = `instagram://user?username=${username}`;
+            const webUrl = `https://www.instagram.com/${username}`;
+            
+            // Tentar abrir app
+            window.location.href = appUrl;
+            
+            setTimeout(() => {
+                if (document.hidden) return;
+                
+                // Fallback para web
+                window.open(webUrl, '_blank');
+                mostrarInstrucoesDesktop(username);
+            }, 800);
+        }
+
+        function abrirInstagramDesktop(username, isWindows, isMac, isLinux) {
+            const webUrl = `https://www.instagram.com/${username}`;
+            const directUrl = `https://www.instagram.com/direct/inbox/`;
+            const appUrl = `instagram://user?username=${username}`;
+            
+            // Tentar protocolo do app desktop (se instalado)
+            let appOpened = false;
+            
+            // Criar iframe invisível para tentar abrir app
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = appUrl;
+            document.body.appendChild(iframe);
+            
+            // Monitorar se app abriu (perda de foco)
+            const blurHandler = () => {
+                appOpened = true;
+            };
+            window.addEventListener('blur', blurHandler, { once: true });
+            
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                window.removeEventListener('blur', blurHandler);
+                
+                if (!appOpened) {
+                    // App não abriu, usar web
+                    window.open(webUrl, '_blank');
+                    mostrarInstrucoesDesktop(username);
+                } else {
+                    showStatus(`Abrindo app do Instagram...`, 'success');
+                }
+            }, 1200);
+        }
+
+        function mostrarInstrucoesDesktop(username) {
+            document.getElementById('instrucoesUsername').textContent = '@' + username;
+            document.getElementById('instrucoesUsername2').textContent = '@' + username;
+            document.getElementById('modalInstrucoesDesktop').classList.add('ativo');
+        }
+
+        function fecharModalInstrucoes() {
+            document.getElementById('modalInstrucoesDesktop').classList.remove('ativo');
+        }
+
+        function copiarEAbrirDirect() {
+            // Copiar mensagem atual
+            const mensagem = document.getElementById('igMensagem').value;
+            navigator.clipboard.writeText(mensagem).then(() => {
+                // Abrir Direct do Instagram Web
+                window.open('https://www.instagram.com/direct/inbox/', '_blank');
+                fecharModalInstrucoes();
+                showStatus('✅ Mensagem copiada! Cole no Direct do Instagram', 'success');
+            }).catch(() => {
+                alert('Erro ao copiar mensagem. Copie manualmente.');
+            });
         }
 
         function copiarParaInstagram() {
@@ -1018,7 +1253,6 @@
         }
 
         function showStatus(mensagem, tipo) {
-            // Criar elemento de status temporário
             const div = document.createElement('div');
             div.style.cssText = `
                 position: fixed;
