@@ -1052,7 +1052,7 @@
             let mensagem = `Olá, ${primeiroNome} gratidão por acompanhar a nossa live!!\n\n`;
             mensagem += `Segue o valor da sua compra ${formatarMoeda(cliente.total)}\n\n`;
             mensagem += `Itens:\n\n`;
-            mensagem += `Código               Valor\n`;
+            mensagem += `Código                    Valor\n`;
 
             cliente.itens.forEach(item => {
                 const codigo = (item.codigo || 'N/A').toString().padEnd(20, ' ');
