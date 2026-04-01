@@ -224,67 +224,176 @@
         
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Modal de instruções desktop */
+        .modal-instrucoes-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 4000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-instrucoes-overlay.ativo {
+            display: flex;
+        }
+        
+        .modal-instrucoes {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+        
+        .modal-instrucoes h3 {
+            color: #FF6B8A;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .instrucoes-box {
+            background: #FFF5F7;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .instrucoes-box p {
+            margin-bottom: 15px;
+            color: #2D3436;
+            line-height: 1.6;
+        }
+        
+        .instrucoes-box p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .instrucoes-box strong {
+            color: #FF6B8A;
+        }
+        
+        .botoes-instrucoes {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-fechar-modal {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: #E0E0E0;
+            color: #2D3436;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-fechar-modal:hover {
+            background: #D0D0D0;
+        }
+        
+        .btn-copiar-abrir {
+            flex: 2;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #FF8BA7, #FF6B8A);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-copiar-abrir:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 138, 0.4);
+        }
+        
+        .link-perfil {
+            display: inline-block;
+            margin-top: 10px;
+            color: #1976D2;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .link-perfil:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
-<div class="container">
-    <div class="header">
-        <div class="header-left">
-            <a href="dashboard.html" class="btn-voltar">← Voltar ao Dashboard</a>
-            <div>
-                <h1>🚚 Rastreamento de Entregas</h1>
-                <p>Gerencie códigos de rastreio e envie atualizações aos clientes</p>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <a href="dashboard.html" class="btn-voltar">← Voltar ao Dashboard</a>
+                <div>
+                    <h1>🚚 Rastreamento de Entregas</h1>
+                    <p>Gerencie códigos de rastreio e envie atualizações aos clientes</p>
+                </div>
             </div>
+            <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
         </div>
-        <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
-    </div>
 
-    <div class="filtros-container" id="filtrosContainer" style="opacity: 0.5; pointer-events: none;">
-        <h2 class="filtros-titulo">📅 Filtros por Período</h2>
-        
-        <div class="filtros-grid">
-            <div class="campo-filtro">
-                <label>Data Inicial</label>
-                <input type="date" id="dataInicial">
+        <div class="filtros-container" id="filtrosContainer" style="opacity: 0.5; pointer-events: none;">
+            <h2 class="filtros-titulo">📅 Filtros por Período</h2>
+            
+            <div class="filtros-grid">
+                <div class="campo-filtro">
+                    <label>Data Inicial</label>
+                    <input type="date" id="dataInicial">
+                </div>
+                <div class="campo-filtro">
+                    <label>Horário Inicial</label>
+                    <input type="time" id="horaInicial" value="00:00">
+                </div>
+                <div class="campo-filtro">
+                    <label>Data Final</label>
+                    <input type="date" id="dataFinal">
+                </div>
+                <div class="campo-filtro">
+                    <label>Horário Final</label>
+                    <input type="time" id="horaFinal" value="23:59">
+                </div>
+                <div class="campo-filtro">
+                    <label>Status</label>
+                    <select id="filtroStatus" onchange="aplicarFiltrosLocal()">
+                        <option value="">Todos</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="enviado">Enviado</option>
+                        <option value="entregue">Entregue</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="campo-filtro">
+                    <label>Buscar (Nº ou Cliente)</label>
+                    <input type="text" id="filtroBusca" oninput="aplicarFiltrosLocal()" placeholder="Digite para buscar...">
+                </div>
             </div>
-            <div class="campo-filtro">
-                <label>Horário Inicial</label>
-                <input type="time" id="horaInicial" value="00:00">
-            </div>
-            <div class="campo-filtro">
-                <label>Data Final</label>
-                <input type="date" id="dataFinal">
-            </div>
-            <div class="campo-filtro">
-                <label>Horário Final</label>
-                <input type="time" id="horaFinal" value="23:59">
-            </div>
-            <div class="campo-filtro">
-                <label>Status</label>
-                <select id="filtroStatus" onchange="aplicarFiltrosLocal()">
-                    <option value="">Todos</option>
-                    <option value="pendente">Pendente</option>
-                    <option value="enviado">Enviado</option>
-                    <option value="entregue">Entregue</option>
-                    <option value="cancelado">Cancelado</option>
-                </select>
-            </div>
-            <div class="campo-filtro">
-                <label>Buscar (Nº ou Cliente)</label>
-                <input type="text" id="filtroBusca" oninput="aplicarFiltrosLocal()" placeholder="Digite para buscar...">
+            
+            <div class="botoes-filtro">
+                <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Buscar Solicitações</button>
+                <button class="btn btn-secondary" onclick="limparFiltros()">🧹 Limpar Filtros</button>
+                <button class="btn btn-pdf" id="btnGerarPDF" onclick="gerarPDF()" disabled>📄 Gerar PDF</button>
+                <button class="btn btn-emitir" id="btnEmitirEtiquetas" onclick="abrirModalEtiquetas()" disabled>📋 Emitir Etiquetas</button>
+                <!-- Link para página de integração -->
+                <a href="integracao_superfrete_melhorenvio.html" class="btn btn-emitir" style="text-decoration: none; background: linear-gradient(135deg, #667eea, #764ba2);">
+                    🔗 Integração Super Frete/Melhor Envio
+                </a>
             </div>
         </div>
-        
-        <div class="botoes-filtro">
-            <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Buscar Solicitações</button>
-            <button class="btn btn-secondary" onclick="limparFiltros()">🧹 Limpar Filtros</button>
-            <button class="btn btn-pdf" id="btnGerarPDF" onclick="gerarPDF()" disabled>📄 Gerar PDF</button>
-            <button class="btn btn-emitir" id="btnEmitirEtiquetas" onclick="abrirModalEtiquetas()" disabled>📋 Emitir Etiquetas</button>
-            <!-- Link para página de integração -->
-            <a href="integracao_superfrete_melhorenvio.html" class="btn btn-emitir" style="text-decoration: none; background: linear-gradient(135deg, #667eea, #764ba2);">
-                🔗 Integração Super Frete/Melhor Envio
-            </a>
-        </div>
-    </div>
 
         <div class="stats-container" id="statsContainer" style="display: none;">
             <div class="stat-card"><h3>Total de Solicitações</h3><div class="valor" id="statTotal">-</div></div>
@@ -449,6 +558,32 @@
         </div>
     </div>
 
+    <!-- Modal de Instruções Desktop -->
+    <div class="modal-instrucoes-overlay" id="modalInstrucoesDesktop">
+        <div class="modal-instrucoes">
+            <h3>📱 Como enviar para <span id="instrucoesUsername"></span></h3>
+            
+            <div class="instrucoes-box">
+                <p>
+                    <strong>Passo a passo:</strong>
+                </p>
+                <p>
+                    1. O perfil do cliente foi aberto em uma nova aba<br>
+                    2. Clique no botão <strong>"Mensagem"</strong> no perfil<br>
+                    3. Cole a mensagem já copiada no Direct
+                </p>
+                <p style="margin-top: 15px;">
+                    <a href="#" id="linkPerfilWeb" target="_blank" class="link-perfil">🔗 Abrir perfil novamente</a>
+                </p>
+            </div>
+            
+            <div class="botoes-instrucoes">
+                <button class="btn-fechar-modal" onclick="fecharModalInstrucoes()">Fechar</button>
+                <button class="btn-copiar-abrir" onclick="copiarEAbrirDirect()">📋 Copiar e Abrir Direct</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================
         // PROTEÇÃO DE ACESSO
@@ -549,6 +684,7 @@
             document.getElementById('modalRastreio').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalRastreio'); });
             document.getElementById('modalInstagram').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalInstagram'); });
             document.getElementById('modalEtiquetas').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalEtiquetas(); });
+            document.getElementById('modalInstrucoesDesktop').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalInstrucoes(); });
         });
 
         // ============================================
@@ -1052,7 +1188,7 @@
         }
 
         // ============================================
-        // MODAL INSTAGRAM
+        // MODAL INSTAGRAM - VERSÃO MULTI-PLATAFORMA
         // ============================================
         function abrirModalInstagram(solicitacaoId) {
             const sol = solicitacoesData.find(s => s.id === solicitacaoId);
@@ -1078,15 +1214,110 @@
             document.getElementById('modalInstagram').classList.add('ativo');
         }
 
+        // ============================================
+        // ABRIR INSTAGRAM - DETECÇÃO DE SISTEMA CORRIGIDA
+        // ============================================
         function abrirInstagramCliente() {
             if (!instagramAtual) {
                 alert('Não foi possível encontrar o Instagram do cliente');
                 return;
             }
-            const instagramUrl = `https://ig.me/m/${instagramAtual}`;
-            const instagramAppUrl = `instagram://user?username=${instagramAtual}`;
-            window.location.href = instagramAppUrl;
-            setTimeout(() => window.open(instagramUrl, '_blank'), 1000);
+            
+            const username = instagramAtual.replace('@', '').trim();
+            
+            // Detectar sistema operacional
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isAndroid = /android/.test(userAgent);
+            const isIOS = /iphone|ipad|ipod/.test(userAgent);
+            const isMobile = isAndroid || isIOS;
+            
+            if (isMobile) {
+                // ===== MOBILE: Tentar abrir o app nativo =====
+                abrirInstagramMobile(username, isAndroid, isIOS);
+            } else {
+                // ===== DESKTOP: Ir direto para web com instruções =====
+                abrirInstagramDesktop(username);
+            }
+        }
+
+        function abrirInstagramMobile(username, isAndroid, isIOS) {
+            const webUrl = `https://www.instagram.com/${username}`;
+            
+            if (isAndroid) {
+                // Android - Tentar app primeiro
+                const appUrl = `instagram://user?username=${username}`;
+                const intentUrl = `intent://instagram.com/_u/${username}#Intent;package=com.instagram.android;scheme=https;end`;
+                
+                // Tentar protocolo do app
+                window.location.href = appUrl;
+                
+                setTimeout(() => {
+                    if (document.hidden) return; // App abriu com sucesso
+                    
+                    // Tentar Intent
+                    window.location.href = intentUrl;
+                    
+                    setTimeout(() => {
+                        if (document.hidden) return;
+                        
+                        // Fallback para web
+                        window.open(webUrl, '_blank');
+                        mostrarInstrucoesDesktop(username, webUrl);
+                    }, 800);
+                }, 600);
+                
+            } else if (isIOS) {
+                // iOS
+                const appUrl = `instagram://user?username=${username}`;
+                
+                window.location.href = appUrl;
+                
+                setTimeout(() => {
+                    if (document.hidden) return;
+                    
+                    // Fallback para web
+                    window.open(webUrl, '_blank');
+                    mostrarInstrucoesDesktop(username, webUrl);
+                }, 800);
+            }
+        }
+
+        function abrirInstagramDesktop(username) {
+            // No desktop, NÃO tentar o protocolo instagram:// pois não está registrado
+            // Ir direto para a versão web com instruções
+            
+            const webUrl = `https://www.instagram.com/${username}`;
+            
+            // Abrir perfil em nova aba
+            window.open(webUrl, '_blank');
+            
+            // Mostrar modal com instruções
+            setTimeout(() => {
+                mostrarInstrucoesDesktop(username, webUrl);
+            }, 500);
+        }
+
+        function mostrarInstrucoesDesktop(username, perfilUrl) {
+            document.getElementById('instrucoesUsername').textContent = '@' + username;
+            document.getElementById('linkPerfilWeb').href = perfilUrl;
+            document.getElementById('modalInstrucoesDesktop').classList.add('ativo');
+        }
+
+        function fecharModalInstrucoes() {
+            document.getElementById('modalInstrucoesDesktop').classList.remove('ativo');
+        }
+
+        function copiarEAbrirDirect() {
+            // Copiar mensagem atual
+            const mensagem = document.getElementById('igMensagem').value;
+            navigator.clipboard.writeText(mensagem).then(() => {
+                // Abrir Direct do Instagram Web
+                window.open('https://www.instagram.com/direct/inbox/', '_blank');
+                fecharModalInstrucoes();
+                showStatus('✅ Mensagem copiada! Cole no Direct do Instagram', 'success');
+            }).catch(() => {
+                alert('Erro ao copiar mensagem. Copie manualmente.');
+            });
         }
 
         function gerarUrlRastreamento(sol) {
@@ -1124,11 +1355,18 @@
         function copiarParaInstagram() {
             const mensagem = document.getElementById('igMensagem').value;
             navigator.clipboard.writeText(mensagem).then(() => {
-                alert('✅ Mensagem copiada! Agora abra o Instagram do cliente e cole no Direct.');
-                if (confirm('Deseja abrir o perfil do cliente no Instagram agora?')) {
-                    abrirInstagramCliente();
+                showStatus('✅ Mensagem copiada!', 'success');
+                
+                // Se estiver no modal de instruções, não perguntar de novo
+                const modalInstrucoes = document.getElementById('modalInstrucoesDesktop');
+                if (!modalInstrucoes.classList.contains('ativo')) {
+                    // Perguntar se quer abrir
+                    if (instagramAtual && confirm('Mensagem copiada! Deseja abrir o Instagram agora?')) {
+                        abrirInstagramCliente();
+                    }
                 }
             }).catch(() => {
+                // Fallback para navegadores antigos
                 const textarea = document.createElement('textarea');
                 textarea.value = mensagem;
                 document.body.appendChild(textarea);
@@ -1137,6 +1375,32 @@
                 document.body.removeChild(textarea);
                 alert('✅ Mensagem copiada!');
             });
+        }
+
+        function showStatus(mensagem, tipo) {
+            const div = document.createElement('div');
+            div.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 600;
+                z-index: 3000;
+                animation: slideUp 0.3s ease;
+            `;
+            
+            if (tipo === 'success') div.style.background = '#28a745';
+            else if (tipo === 'error') div.style.background = '#dc3545';
+            else div.style.background = '#17a2b8';
+            
+            div.textContent = mensagem;
+            document.body.appendChild(div);
+            
+            setTimeout(() => {
+                div.remove();
+            }, 3000);
         }
 
         // ============================================
