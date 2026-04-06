@@ -473,6 +473,31 @@
             font-size: 24px;
             font-weight: bold;
         }
+
+        /* Checkbox para marcar venda como registrada */
+        .checkbox-registrada {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #28a745;
+        }
+
+        .linha-registrada {
+            background: #d4edda !important;
+        }
+
+        .linha-registrada input {
+            background: #d4edda;
+        }
+
+        .badge-registrada {
+            background: #28a745;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
@@ -523,14 +548,15 @@ create table if not exists vendas_live (
     total decimal(10,2) default 0,
     created_at timestamp with time zone default timezone('utc'::text, now()),
     updated_at timestamp with time zone default timezone('utc'::text, now()),
-    bloqueada boolean default false
+    bloqueada boolean default false,
+    venda_registrada boolean default false,  -- NOVO: indica se já foi gravada em vendas_pg
+    venda_pg_id uuid  -- NOVO: referência à venda em vendas_pg
 );
 
 -- Índices para performance
 create index if not exists idx_vendas_live_codigo_live on vendas_live(codigo_live);
 create index if not exists idx_vendas_live_linha on vendas_live(linha_id);
-create index if not exists idx_vendas_live_data on vendas_live(data_live);
-create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
+create index if not exists idx_vendas_live_data on vendas_live(data_live);</div>
                 </div>
             </div>
 
@@ -558,7 +584,8 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                     <div>
                         <h4>📅 Live do dia: <span id="dataLiveDisplay"></span></h4>
                         <h3 style="color: #667eea; margin: 5px 0;">🎬 Código: <span id="codigoLiveDisplay"></span></h3>
-                        <p>Total de itens cadastrados: <span id="totalItens">0</span></p>
+                        <p>Total de itens cadastrados: <span id="totalItens">0</span> | 
+                           Itens registrados: <span id="totalRegistrados">0</span></p>
                         <p id="statusLive" style="font-weight: bold; color: #28a745;"></p>
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center;">
@@ -572,16 +599,24 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 <div class="actions">
                     <button class="btn btn-primary" id="btnAdicionar" onclick="adicionarLinha()">+ Adicionar Item</button>
                     <button class="btn btn-success" onclick="verificarESalvarAntesDeVerRelatorio()">📄 Ver Relatório</button>
-                    <button class="btn btn-purple" id="btnRegistrar" onclick="registrarVenda()">💰 Registrar Venda</button>
+                    <button class="btn btn-purple" id="btnRegistrar" onclick="registrarVendasIndividuais()">💰 Registrar Vendas Individuais</button>
                     <button class="btn btn-orange" id="btnFinalizar" onclick="verificarESalvarAntesDeFinalizar()">🔒 Finalizar Live</button>
                     <button class="btn btn-dark" id="btnAlterar" onclick="alterarLive()" style="display: none;">✏️ Alterar Live</button>
                     <button class="btn btn-danger" id="btnResetar" onclick="confirmarResetarLive()">🗑️ Resetar Live</button>
                 </div>
-                <p class="info-text">* Pressione ENTER para navegar. Use ↑↓ para sugestões. 🎤 para voz.</p>
+                <p class="info-text">* Pressione ENTER para navegar. Use ↑↓ para sugestões. 🎤 para voz. ✅ = Venda já registrada em vendas_pg</p>
                 <div class="table-container">
                     <table id="vendasTable">
                         <thead>
-                            <tr><th style="width: 50px;">Item</th><th style="width: 100px;">Valor *</th><th style="width: 100px;">Código *</th><th>Comprador <span class="voice-hint">🎤</span></th><th>Fila <span class="voice-hint">🎤</span></th><th style="width: 60px;">Ações</th></tr>
+                            <tr>
+                                <th style="width: 40px;">✓</th>
+                                <th style="width: 50px;">Item</th>
+                                <th style="width: 100px;">Valor *</th>
+                                <th style="width: 100px;">Código *</th>
+                                <th>Comprador <span class="voice-hint">🎤</span></th>
+                                <th>Fila <span class="voice-hint">🎤</span></th>
+                                <th style="width: 60px;">Ações</th>
+                            </tr>
                         </thead>
                         <tbody id="vendasBody"></tbody>
                     </table>
@@ -612,11 +647,11 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
     </div>
     <div class="venda-dialog" id="vendaDialog">
         <div class="venda-box">
-            <h3>💰 Confirmar Registro</h3>
+            <h3>💰 Confirmar Registro de Vendas</h3>
             <div class="venda-info" id="vendaInfo"></div>
             <div style="text-align: center;">
                 <button class="btn btn-secondary" onclick="fecharVendaDialog()">Cancelar</button>
-                <button class="btn btn-success" onclick="executarRegistrarVenda()">Confirmar</button>
+                <button class="btn btn-success" onclick="executarRegistrarVendasIndividuais()">Confirmar</button>
             </div>
         </div>
     </div>
@@ -1041,7 +1076,9 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
 
         function atualizarContagemItens() {
             const linhasCompletas = vendas.filter(v => v.valor > 0 && v.codigo?.trim() && v.comprador?.trim() && v.fila?.trim());
+            const registradas = vendas.filter(v => v.venda_registrada).length;
             document.getElementById('totalItens').textContent = linhasCompletas.length;
+            document.getElementById('totalRegistrados').textContent = registradas;
         }
 
         function atualizarTotalVendidoHeader() {
@@ -1405,31 +1442,44 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             const tr = document.createElement('tr');
             tr.id = `linha-${venda.linha_id}`;
             tr.dataset.linhaId = venda.linha_id;
+            
+            // Adicionar classe se venda já registrada
+            if (venda.venda_registrada) {
+                tr.classList.add('linha-registrada');
+            }
 
             const jaSalvo = venda.id ? true : false;
             const btnClass = jaSalvo ? 'btn-save saved' : 'btn-save';
             const btnStyle = jaSalvo ? '' : 'background: #dc3545;';
+            
+            // Checkbox marcado se já registrada
+            const checkboxChecked = venda.venda_registrada ? 'checked disabled' : '';
+            const badgeRegistrada = venda.venda_registrada ? '<span class="badge-registrada">REGISTRADA</span>' : '';
 
             tr.innerHTML = `
-                <td><span class="item-number" id="numero-${venda.linha_id}">${venda.linha_id}</span></td>
-                <td><input type="text" class="valor-input" id="valor-${venda.linha_id}" value="${venda.valor ? venda.valor.toFixed(2).replace('.', ',') : ''}" placeholder="0,00" onkeydown="navegarCampos(event, ${venda.linha_id}, 'valor')" oninput="formatarValorInput(this); marcarLinhaComoNaoSalva(this)" ${liveBloqueada ? 'disabled' : ''}></td>
-                <td><input type="text" id="codigo-${venda.linha_id}" value="${venda.codigo || ''}" onkeydown="navegarCampos(event, ${venda.linha_id}, 'codigo')" oninput="marcarLinhaComoNaoSalva(this)" ${liveBloqueada ? 'disabled' : ''}></td>
+                <td style="text-align: center;">
+                    <input type="checkbox" class="checkbox-registrada" id="registrada-${venda.linha_id}" 
+                           ${checkboxChecked} title="Venda registrada em vendas_pg">
+                </td>
+                <td><span class="item-number" id="numero-${venda.linha_id}">${venda.linha_id}</span>${badgeRegistrada}</td>
+                <td><input type="text" class="valor-input" id="valor-${venda.linha_id}" value="${venda.valor ? venda.valor.toFixed(2).replace('.', ',') : ''}" placeholder="0,00" onkeydown="navegarCampos(event, ${venda.linha_id}, 'valor')" oninput="formatarValorInput(this); marcarLinhaComoNaoSalva(this)" ${liveBloqueada || venda.venda_registrada ? 'disabled' : ''}></td>
+                <td><input type="text" id="codigo-${venda.linha_id}" value="${venda.codigo || ''}" onkeydown="navegarCampos(event, ${venda.linha_id}, 'codigo')" oninput="marcarLinhaComoNaoSalva(this)" ${liveBloqueada || venda.venda_registrada ? 'disabled' : ''}></td>
                 <td>
                     <div class="autocomplete-container">
-                        <input type="text" id="comprador-${venda.linha_id}" value="${venda.comprador || ''}" oninput="filtrarSugestoes(this, 'comprador'); marcarLinhaComoNaoSalva(this)" onkeydown="navegarCamposComSugestoes(event, ${venda.linha_id}, 'comprador')" autocomplete="off" placeholder="Nome ou Instagram" ${liveBloqueada ? 'disabled' : ''}>
-                        <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('comprador-${venda.linha_id}'), this)" ${liveBloqueada ? 'disabled' : ''}>🎤</button>
+                        <input type="text" id="comprador-${venda.linha_id}" value="${venda.comprador || ''}" oninput="filtrarSugestoes(this, 'comprador'); marcarLinhaComoNaoSalva(this)" onkeydown="navegarCamposComSugestoes(event, ${venda.linha_id}, 'comprador')" autocomplete="off" placeholder="Nome ou Instagram" ${liveBloqueada || venda.venda_registrada ? 'disabled' : ''}>
+                        <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('comprador-${venda.linha_id}'), this)" ${liveBloqueada || venda.venda_registrada ? 'disabled' : ''}>🎤</button>
                         <div class="suggestions" id="sugestoes-comprador-${venda.linha_id}"></div>
                     </div>
                 </td>
                 <td>
                     <div class="autocomplete-container">
-                        <input type="text" id="fila-${venda.linha_id}" value="${venda.fila || ''}" oninput="filtrarSugestoes(this, 'fila'); marcarLinhaComoNaoSalva(this)" onkeydown="navegarCamposComSugestoes(event, ${venda.linha_id}, 'fila')" autocomplete="off" placeholder="Nome ou Instagram" ${liveBloqueada ? 'disabled' : ''}>
-                        <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('fila-${venda.linha_id}'), this)" ${liveBloqueada ? 'disabled' : ''}>🎤</button>
+                        <input type="text" id="fila-${venda.linha_id}" value="${venda.fila || ''}" oninput="filtrarSugestoes(this, 'fila'); marcarLinhaComoNaoSalva(this)" onkeydown="navegarCamposComSugestoes(event, ${venda.linha_id}, 'fila')" autocomplete="off" placeholder="Nome ou Instagram" ${liveBloqueada || venda.venda_registrada ? 'disabled' : ''}>
+                        <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('fila-${venda.linha_id}'), this)" ${liveBloqueada || venda.venda_registrada ? 'disabled' : ''}>🎤</button>
                         <div class="suggestions" id="sugestoes-fila-${venda.linha_id}"></div>
                     </div>
                 </td>
                 <td>
-                    <button class="${btnClass}" id="btn-save-${venda.linha_id}" onclick="salvarVenda(${venda.linha_id})" style="${btnStyle}" ${liveBloqueada ? 'disabled' : ''}>💾</button>
+                    <button class="${btnClass}" id="btn-save-${venda.linha_id}" onclick="salvarVenda(${venda.linha_id})" style="${btnStyle}" ${liveBloqueada || venda.venda_registrada ? 'disabled' : ''}>💾</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -1450,6 +1500,9 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             tr.id = `linha-${linhaCount}`;
             tr.dataset.linhaId = linhaCount;
             tr.innerHTML = `
+                <td style="text-align: center;">
+                    <input type="checkbox" class="checkbox-registrada" id="registrada-${linhaCount}" disabled title="Venda registrada em vendas_pg">
+                </td>
                 <td><span class="item-number">${linhaCount}</span></td>
                 <td><input type="text" class="valor-input" id="valor-${linhaCount}" placeholder="0,00" onkeydown="navegarCampos(event, ${linhaCount}, 'valor')" oninput="formatarValorInput(this); marcarLinhaComoNaoSalva(this)"></td>
                 <td><input type="text" id="codigo-${linhaCount}" onkeydown="navegarCampos(event, ${linhaCount}, 'codigo')" oninput="marcarLinhaComoNaoSalva(this)"></td>
@@ -1843,54 +1896,137 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
             }
         }
 
-        function registrarVenda() {
-            const vendasValidas = vendas.filter(v => v.valor > 0 && v.comprador?.trim());
-            totalLiveAtual = vendasValidas.reduce((sum, v) => sum + (parseFloat(v.valor) || 0), 0);
-            const quantidadeItens = vendasValidas.length;
+        // NOVA FUNÇÃO: Registrar vendas individuais em vendas_pg
+        function registrarVendasIndividuais() {
+            // Filtrar apenas vendas válidas e não registradas
+            const vendasParaRegistrar = vendas.filter(v => 
+                v.valor > 0 && 
+                v.comprador?.trim() && 
+                !v.venda_registrada
+            );
 
-            if (quantidadeItens === 0) {
-                showStatus('Não há vendas válidas!', 'error');
+            if (vendasParaRegistrar.length === 0) {
+                showStatus('Não há vendas pendentes para registrar!', 'error');
                 return;
             }
 
+            const total = vendasParaRegistrar.reduce((sum, v) => sum + (parseFloat(v.valor) || 0), 0);
             const dataFormatada = formatarData(dataLiveAtual);
+
             document.getElementById('vendaInfo').innerHTML = `
                 <p><strong>Data:</strong> ${dataFormatada}</p>
-                <p><strong>Itens:</strong> ${quantidadeItens}</p>
-                <p><strong>Total:</strong> ${formatarMoeda(totalLiveAtual)}</p>
+                <p><strong>Itens a registrar:</strong> ${vendasParaRegistrar.length}</p>
+                <p><strong>Total:</strong> ${formatarMoeda(total)}</p>
+                <hr style="margin: 15px 0;">
+                <p style="font-size: 12px; color: #6c757d;">
+                    Cada item será registrado como uma venda individual na tabela vendas_pg.<br>
+                    Os itens já registrados (✓) serão ignorados.
+                </p>
             `;
             document.getElementById('vendaDialog').classList.add('active');
         }
 
-        function fecharVendaDialog() {
-            document.getElementById('vendaDialog').classList.remove('active');
+        // NOVA FUNÇÃO: Executar registro individual de vendas
+        async function executarRegistrarVendasIndividuais() {
+            fecharVendaDialog();
+            
+            // Filtrar vendas válidas e não registradas
+            const vendasParaRegistrar = vendas.filter(v => 
+                v.valor > 0 && 
+                v.comprador?.trim() && 
+                !v.venda_registrada
+            );
+
+            if (vendasParaRegistrar.length === 0) {
+                showStatus('Não há vendas para registrar!', 'error');
+                return;
+            }
+
+            showStatus(`Registrando ${vendasParaRegistrar.length} vendas individuais...`, 'info');
+
+            let sucessos = 0;
+            let falhas = 0;
+
+            for (const venda of vendasParaRegistrar) {
+                try {
+                    // Buscar CPF do cliente se existir
+                    const cliente = clientes.find(c => 
+                        c.nome?.toLowerCase() === venda.comprador?.toLowerCase()
+                    );
+                    const cpf = cliente?.cpf || null;
+
+                    // Criar objeto da venda individual
+                    const vendaIndividual = {
+                        data_venda: new Date(dataLiveAtual + 'T12:00:00').toISOString(),
+                        cliente_nome: venda.comprador,
+                        cliente_cpf: cpf,
+                        canal_venda: 'Live',
+                        forma_pagamento: 'Dinheiro',
+                        status_pagamento: 'pago',
+                        total: venda.valor,
+                        itens: JSON.stringify([{
+                            codigo: venda.codigo,
+                            comprador: venda.comprador,
+                            fila: venda.fila,
+                            valor: venda.valor,
+                            live: codigoLiveAtual,
+                            item: venda.linha_id
+                        }]),
+                        observacoes: `Live ${codigoLiveAtual} - Item ${venda.linha_id}${venda.fila ? ' - Fila: ' + venda.fila : ''}`
+                    };
+
+                    // Inserir em vendas_pg
+                    const { data: vendaInserida, error } = await supabaseClient
+                        .from('vendas_pg')
+                        .insert([vendaIndividual])
+                        .select();
+
+                    if (error) throw error;
+
+                    // Atualizar vendas_live marcando como registrada
+                    await supabaseClient
+                        .from('vendas_live')
+                        .update({ 
+                            venda_registrada: true, 
+                            venda_pg_id: vendaInserida[0].id 
+                        })
+                        .eq('id', venda.id);
+
+                    // Atualizar localmente
+                    venda.venda_registrada = true;
+                    venda.venda_pg_id = vendaInserida[0].id;
+
+                    // Atualizar visualmente a linha
+                    const linha = document.getElementById(`linha-${venda.linha_id}`);
+                    if (linha) {
+                        linha.classList.add('linha-registrada');
+                        const checkbox = document.getElementById(`registrada-${venda.linha_id}`);
+                        if (checkbox) checkbox.checked = true;
+                        
+                        // Desabilitar inputs
+                        linha.querySelectorAll('input:not(.checkbox-registrada)').forEach(input => input.disabled = true);
+                        linha.querySelectorAll('.mic-btn').forEach(btn => btn.disabled = true);
+                        
+                        // Adicionar badge
+                        const numeroCell = linha.querySelector('td:nth-child(2)');
+                        if (numeroCell && !numeroCell.querySelector('.badge-registrada')) {
+                            numeroCell.innerHTML += '<span class="badge-registrada">REGISTRADA</span>';
+                        }
+                    }
+
+                    sucessos++;
+                } catch (error) {
+                    console.error(`Erro ao registrar venda ${venda.linha_id}:`, error);
+                    falhas++;
+                }
+            }
+
+            atualizarContagemItens();
+            showStatus(`${sucessos} vendas registradas com sucesso! ${falhas > 0 ? falhas + ' falhas.' : ''}`, sucessos > 0 ? 'success' : 'error');
         }
 
-        async function executarRegistrarVenda() {
-            fecharVendaDialog();
-            try {
-                showStatus('Registrando...', 'info');
-                const dataFormatada = formatarData(dataLiveAtual);
-                const vendasValidas = vendas.filter(v => v.valor > 0 && v.comprador?.trim());
-                const itensVenda = vendasValidas.map(v => ({
-                    linha_id: v.linha_id, valor: v.valor, codigo: v.codigo,
-                    comprador: v.comprador, fila: v.fila
-                }));
-
-                const vendaData = {
-                    data_venda: new Date(dataLiveAtual + 'T12:00:00').toISOString(),
-                    cliente_nome: null, cliente_cpf: null, canal_venda: 'Live',
-                    forma_pagamento: 'Dinheiro', status_pagamento: 'pago',
-                    total: totalLiveAtual, itens: itensVenda,
-                    observacoes: `Live do Dia ${dataFormatada}`
-                };
-
-                const { data, error } = await supabaseClient.from('vendas_pg').insert([vendaData]).select();
-                if (error) throw error;
-                showStatus(`Venda registrada! ID: ${data[0].id}`, 'success');
-            } catch (error) {
-                showStatus('Erro: ' + error.message, 'error');
-            }
+        function fecharVendaDialog() {
+            document.getElementById('vendaDialog').classList.remove('active');
         }
 
         function formatarMoeda(valor) {
@@ -1926,6 +2062,7 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 .total-comprador{font-weight:bold;background:#fafafa}.total-geral{font-weight:bold;font-size:14px;background:#f0f0f0}
                 .print-btn{position:fixed;top:20px;right:20px;padding:10px 20px;background:#28a745;color:white;border:none;border-radius:4px;cursor:pointer}
                 .instagram-tag{color:#667eea;font-size:11px;margin-left:5px}
+                .registrada-badge{background:#28a745;color:white;padding:2px 6px;border-radius:3px;font-size:9px;margin-left:5px}
                 @media print{.print-btn{display:none}}
             </style></head><body>
             <button class="print-btn" onclick="window.print()">🖨️ Imprimir</button>
@@ -1945,10 +2082,11 @@ create index if not exists idx_lives_pg_codigo on lives_pg(codigo);</div>
                 const instagram = cliente?.instagram ? `<span class="instagram-tag">(@${cliente.instagram})</span>` : '';
 
                 vendasComp.forEach(v => {
+                    const registradaBadge = v.venda_registrada ? '<span class="registrada-badge">✓ REGISTRADA</span>' : '';
                     // ORDEM: Código | Comprador | Fila | Valor
                     html += `<tr>
                         <td class="col-codigo">${v.codigo||'x'}</td>
-                        <td class="col-comprador">${comprador}${instagram}</td>
+                        <td class="col-comprador">${comprador}${instagram}${registradaBadge}</td>
                         <td class="col-fila">${v.fila||'x'}</td>
                         <td class="col-valor">${formatarMoeda(v.valor)}</td>
                     </tr>`;
