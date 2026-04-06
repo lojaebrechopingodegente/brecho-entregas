@@ -1967,162 +1967,172 @@
         // ============================================
         // RELATÓRIO POR CLIENTE - NOVO
         // ============================================
-        async function gerarRelatorioClientes(btn) {
-            if (!supabaseClient) {
-                alert('❌ Erro de conexão com o banco de dados.');
-                return;
-            }
+ // ============================================
+// RELATÓRIO POR CLIENTE - CORRIGIDO
+// ============================================
+async function gerarRelatorioClientes(btn) {
+    if (!supabaseClient) {
+        alert('❌ Erro de conexão com o banco de dados.');
+        return;
+    }
 
-            const mesInicial = document.getElementById('relatorioMesInicial').value;
-            const mesFinal = document.getElementById('relatorioMesFinal').value;
-            const filtroCliente = document.getElementById('relatorioClienteFiltro').value.trim().toLowerCase();
+    const mesInicial = document.getElementById('relatorioMesInicial').value;
+    const mesFinal = document.getElementById('relatorioMesFinal').value;
+    const filtroCliente = document.getElementById('relatorioClienteFiltro').value.trim().toLowerCase();
 
-            if (!mesInicial || !mesFinal) {
-                alert('⚠️ Selecione o período inicial e final.');
-                return;
-            }
+    if (!mesInicial || !mesFinal) {
+        alert('⚠️ Selecione o período inicial e final.');
+        return;
+    }
 
-            if (mesInicial > mesFinal) {
-                alert('⚠️ O mês inicial não pode ser maior que o mês final.');
-                return;
-            }
+    if (mesInicial > mesFinal) {
+        alert('⚠️ O mês inicial não pode ser maior que o mês final.');
+        return;
+    }
 
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '⏳ Gerando...';
-            }
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Gerando...';
+    }
 
-            try {
-                // Buscar vendas do período
-                let query = supabaseClient
-                    .from('vendas_pg')
-                    .select('*')
-                    .gte('data_venda', mesInicial + '-01T00:00:00')
-                    .lte('data_venda', mesFinal + '-31T23:59:59')
-                    .order('data_venda', { ascending: true });
+    try {
+        // ✅ CORREÇÃO: Calcular último dia do mês final corretamente
+        const [anoFinal, mesFinalNum] = mesFinal.split('-').map(Number);
+        const ultimoDia = new Date(anoFinal, mesFinalNum, 0).getDate(); // Dia 0 do próximo mês = último dia do mês atual
+        
+        const dataInicio = mesInicial + '-01T00:00:00';
+        const dataFim = mesFinal + '-' + String(ultimoDia).padStart(2, '0') + 'T23:59:59';
 
-                const { data, error } = await query;
-                if (error) throw error;
+        // Buscar vendas do período
+        let query = supabaseClient
+            .from('vendas_pg')
+            .select('*')
+            .gte('data_venda', dataInicio)
+            .lte('data_venda', dataFim)
+            .order('data_venda', { ascending: true });
 
-                if (!data || data.length === 0) {
-                    document.getElementById('listaClientesRelatorio').innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📊</div>
-                            <p>Nenhuma venda encontrada no período selecionado.</p>
-                        </div>
-                    `;
-                    document.getElementById('resumoRelatorio').style.display = 'none';
-                    return;
-                }
+        const { data, error } = await query;
+        if (error) throw error;
 
-                // Processar dados - agrupar por cliente e mês
-                const relatorio = {};
-                
-                data.forEach(venda => {
-                    const cliente = venda.cliente_nome || 'Cliente não identificado';
-                    
-                    // Filtrar por cliente se especificado
-                    if (filtroCliente && !cliente.toLowerCase().includes(filtroCliente)) {
-                        return;
-                    }
-
-                    const dataVenda = new Date(venda.data_venda);
-                    const mesAno = dataVenda.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-                    const mesAnoKey = dataVenda.getFullYear() + '-' + String(dataVenda.getMonth() + 1).padStart(2, '0');
-
-                    if (!relatorio[cliente]) {
-                        relatorio[cliente] = {};
-                    }
-
-                    if (!relatorio[cliente][mesAnoKey]) {
-                        relatorio[cliente][mesAnoKey] = {
-                            mesAno: mesAno,
-                            total: 0,
-                            quantidade: 0
-                        };
-                    }
-
-                    relatorio[cliente][mesAnoKey].total += venda.total;
-                    relatorio[cliente][mesAnoKey].quantidade += 1;
-                });
-
-                // Armazenar dados para exportação
-                dadosRelatorio = relatorio;
-
-                // Calcular totais
-                let totalGeral = 0;
-                let totalVendas = 0;
-                let totalClientes = Object.keys(relatorio).length;
-                let mesesUnicos = new Set();
-
-                Object.values(relatorio).forEach(cliente => {
-                    Object.values(cliente).forEach(mes => {
-                        totalGeral += mes.total;
-                        totalVendas += mes.quantidade;
-                        mesesUnicos.add(mes.mesAno);
-                    });
-                });
-
-                // Atualizar resumo
-                document.getElementById('totalClientes').textContent = totalClientes;
-                document.getElementById('totalVendasRelatorio').textContent = totalVendas;
-                document.getElementById('totalMeses').textContent = mesesUnicos.size;
-                document.getElementById('totalGeralRelatorio').textContent = 'R$ ' + totalGeral.toFixed(2).replace('.', ',');
-                document.getElementById('resumoRelatorio').style.display = 'block';
-
-                // Renderizar lista de clientes
-                const container = document.getElementById('listaClientesRelatorio');
-                container.innerHTML = '';
-
-                // Ordenar clientes alfabeticamente
-                const clientesOrdenados = Object.keys(relatorio).sort();
-
-                clientesOrdenados.forEach((cliente, index) => {
-                    const meses = relatorio[cliente];
-                    const totalCliente = Object.values(meses).reduce((acc, m) => acc + m.total, 0);
-                    
-                    // Ordenar meses
-                    const mesesOrdenados = Object.entries(meses).sort((a, b) => a[0].localeCompare(b[0]));
-
-                    const clienteDiv = document.createElement('div');
-                    clienteDiv.className = 'cliente-grupo';
-                    clienteDiv.innerHTML = `
-                        <div class="cliente-header" onclick="toggleCliente(this)">
-                            <div class="cliente-nome">
-                                👤 ${cliente}
-                                <span class="expand-icon">▼</span>
-                            </div>
-                            <div class="cliente-total">R$ ${totalCliente.toFixed(2).replace('.', ',')}</div>
-                        </div>
-                        <div class="cliente-meses">
-                            ${mesesOrdenados.map(([key, mes]) => `
-                                <div class="mes-row">
-                                    <div class="mes-nome">${mes.mesAno.charAt(0).toUpperCase() + mes.mesAno.slice(1)}</div>
-                                    <div class="mes-qtd">${mes.quantidade} venda(s)</div>
-                                    <div class="mes-valor">R$ ${mes.total.toFixed(2).replace('.', ',')}</div>
-                                </div>
-                            `).join('')}
-                            <div class="mes-row cliente-total-row">
-                                <div class="mes-nome">TOTAL DO CLIENTE</div>
-                                <div class="mes-qtd">${Object.values(meses).reduce((acc, m) => acc + m.quantidade, 0)} venda(s)</div>
-                                <div class="mes-valor">R$ ${totalCliente.toFixed(2).replace('.', ',')}</div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    container.appendChild(clienteDiv);
-                });
-
-            } catch (error) {
-                console.error('Erro:', error);
-                alert('❌ Erro ao gerar relatório: ' + error.message);
-            } finally {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '📊 Gerar Relatório';
-                }
-            }
+        if (!data || data.length === 0) {
+            document.getElementById('listaClientesRelatorio').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📊</div>
+                    <p>Nenhuma venda encontrada no período selecionado.</p>
+                </div>
+            `;
+            document.getElementById('resumoRelatorio').style.display = 'none';
+            return;
         }
+
+        // Processar dados - agrupar por cliente e mês
+        const relatorio = {};
+        
+        data.forEach(venda => {
+            const cliente = venda.cliente_nome || 'Cliente não identificado';
+            
+            // Filtrar por cliente se especificado
+            if (filtroCliente && !cliente.toLowerCase().includes(filtroCliente)) {
+                return;
+            }
+
+            const dataVenda = new Date(venda.data_venda);
+            const mesAno = dataVenda.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+            const mesAnoKey = dataVenda.getFullYear() + '-' + String(dataVenda.getMonth() + 1).padStart(2, '0');
+
+            if (!relatorio[cliente]) {
+                relatorio[cliente] = {};
+            }
+
+            if (!relatorio[cliente][mesAnoKey]) {
+                relatorio[cliente][mesAnoKey] = {
+                    mesAno: mesAno,
+                    total: 0,
+                    quantidade: 0
+                };
+            }
+
+            relatorio[cliente][mesAnoKey].total += venda.total;
+            relatorio[cliente][mesAnoKey].quantidade += 1;
+        });
+
+        // Armazenar dados para exportação
+        dadosRelatorio = relatorio;
+
+        // Calcular totais
+        let totalGeral = 0;
+        let totalVendas = 0;
+        let totalClientes = Object.keys(relatorio).length;
+        let mesesUnicos = new Set();
+
+        Object.values(relatorio).forEach(cliente => {
+            Object.values(cliente).forEach(mes => {
+                totalGeral += mes.total;
+                totalVendas += mes.quantidade;
+                mesesUnicos.add(mes.mesAno);
+            });
+        });
+
+        // Atualizar resumo
+        document.getElementById('totalClientes').textContent = totalClientes;
+        document.getElementById('totalVendasRelatorio').textContent = totalVendas;
+        document.getElementById('totalMeses').textContent = mesesUnicos.size;
+        document.getElementById('totalGeralRelatorio').textContent = 'R$ ' + totalGeral.toFixed(2).replace('.', ',');
+        document.getElementById('resumoRelatorio').style.display = 'block';
+
+        // Renderizar lista de clientes
+        const container = document.getElementById('listaClientesRelatorio');
+        container.innerHTML = '';
+
+        // Ordenar clientes alfabeticamente
+        const clientesOrdenados = Object.keys(relatorio).sort();
+
+        clientesOrdenados.forEach((cliente, index) => {
+            const meses = relatorio[cliente];
+            const totalCliente = Object.values(meses).reduce((acc, m) => acc + m.total, 0);
+            
+            // Ordenar meses
+            const mesesOrdenados = Object.entries(meses).sort((a, b) => a[0].localeCompare(b[0]));
+
+            const clienteDiv = document.createElement('div');
+            clienteDiv.className = 'cliente-grupo';
+            clienteDiv.innerHTML = `
+                <div class="cliente-header" onclick="toggleCliente(this)">
+                    <div class="cliente-nome">
+                        👤 ${cliente}
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="cliente-total">R$ ${totalCliente.toFixed(2).replace('.', ',')}</div>
+                </div>
+                <div class="cliente-meses">
+                    ${mesesOrdenados.map(([key, mes]) => `
+                        <div class="mes-row">
+                            <div class="mes-nome">${mes.mesAno.charAt(0).toUpperCase() + mes.mesAno.slice(1)}</div>
+                            <div class="mes-qtd">${mes.quantidade} venda(s)</div>
+                            <div class="mes-valor">R$ ${mes.total.toFixed(2).replace('.', ',')}</div>
+                        </div>
+                    `).join('')}
+                    <div class="mes-row cliente-total-row">
+                        <div class="mes-nome">TOTAL DO CLIENTE</div>
+                        <div class="mes-qtd">${Object.values(meses).reduce((acc, m) => acc + m.quantidade, 0)} venda(s)</div>
+                        <div class="mes-valor">R$ ${totalCliente.toFixed(2).replace('.', ',')}</div>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(clienteDiv);
+        });
+
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('❌ Erro ao gerar relatório: ' + error.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '📊 Gerar Relatório';
+        }
+    }
+}
 
         function toggleCliente(header) {
             const grupo = header.parentElement;
