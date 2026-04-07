@@ -834,18 +834,27 @@
         }
         function limparBuscaCliente() { removerFiltroCliente(); }
 
+        // ============================================
+        // CORREÇÃO: Função para formatar data do input sem deslocamento de fuso
+        // ============================================
+        function formatarDataInputParaBr(dataString) {
+            // Converte YYYY-MM-DD para DD/MM/YYYY sem criar objeto Date
+            // Isso evita o deslocamento de fuso horário
+            if (!dataString) return '-';
+            const partes = dataString.split('-');
+            if (partes.length !== 3) return dataString;
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
         async function buscarSolicitacoes() {
             if (!supabaseClient) { alert('⚠️ Conecte-se primeiro!'); return; }
             
-            if (numeroPedidoSelecionado) {
-                await buscarPorIdSolicitacao(numeroPedidoSelecionado);
-                return;
-            }
-            
+            // Pega os valores dos inputs de data e hora
             const dataInicial = document.getElementById('dataInicial').value;
             const horaInicial = document.getElementById('horaInicial').value || '00:00';
             const dataFinal = document.getElementById('dataFinal').value;
             const horaFinal = document.getElementById('horaFinal').value || '23:59';
+            
             if (!dataInicial || !dataFinal) { alert('⚠️ Selecione as datas'); return; }
             if (new Date(dataInicial) > new Date(dataFinal)) { alert('⚠️ Data inicial maior que final'); return; }
 
@@ -868,7 +877,14 @@
                 if (error) throw error;
 
                 processarDadosCarregados(data);
-                document.getElementById('periodoSelecionado').textContent = `Período: ${formatarDataBr(dataInicial)} ${horaInicial} a ${formatarDataBr(dataFinal)} ${horaFinal}`;
+                
+                // ============================================
+                // CORREÇÃO: Usa as strings de data diretamente dos inputs
+                // sem converter para Date object que causa deslocamento de fuso
+                // ============================================
+                const dataInicialFormatada = formatarDataInputParaBr(dataInicial);
+                const dataFinalFormatada = formatarDataInputParaBr(dataFinal);
+                document.getElementById('periodoSelecionado').textContent = `Período: ${dataInicialFormatada} ${horaInicial} a ${dataFinalFormatada} ${horaFinal}`;
             } catch (erro) {
                 alert('❌ Erro: ' + erro.message);
                 document.getElementById('emptyState').style.display = 'block';
@@ -1398,7 +1414,7 @@
 
             doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Período: ${formatarDataBr(dataInicial)} a ${formatarDataBr(dataFinal)}`, 15, 22);
+            doc.text(`Período: ${formatarDataInputParaBr(dataInicial)} a ${formatarDataInputParaBr(dataFinal)}`, 15, 22);
 
             doc.setDrawColor(0, 0, 0);
             doc.setLineWidth(0.5);
