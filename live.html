@@ -82,6 +82,21 @@
         .valor-input { text-align: right; font-weight: 600; }
         .autocomplete-container { position: relative; display: flex; align-items: center; gap: 4px; }
         .autocomplete-container input { flex: 1; }
+        .clipboard-btn { 
+            background: #17a2b8; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            padding: 6px 8px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            transition: all 0.3s ease; 
+            min-width: 32px; 
+        }
+        .clipboard-btn:hover { background: #138496; }
+        .clipboard-btn:disabled { background: #adb5bd; cursor: not-allowed; }
+        .clipboard-btn:active { transform: scale(0.95); }
+        .mic-btn { margin-left: 4px; }
         .mic-btn { background: #6c757d; color: white; border: none; border-radius: 4px; padding: 6px 8px; cursor: pointer; font-size: 14px; transition: all 0.3s ease; min-width: 32px; }
         .mic-btn:hover { background: #5a6268; }
         .mic-btn:disabled { background: #adb5bd; cursor: not-allowed; }
@@ -499,6 +514,7 @@
             margin-left: 5px;
         }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="loading-overlay" id="loadingOverlay">
@@ -744,6 +760,28 @@ create index if not exists idx_vendas_live_data on vendas_live(data_live);</div>
             } catch (e) {
                 console.error('Erro ao iniciar:', e);
                 pararGravacao();
+            }
+        }
+
+        async function colarDoClipboard(input) {
+            if (!navigator.clipboard) {
+                showStatus('Área de transferência não suportada neste navegador', 'error');
+                return;
+            }
+
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    input.value = text;
+                    input.dispatchEvent(new Event('input'));
+                    marcarLinhaComoNaoSalva(input);
+                    showStatus('Texto colado!', 'success');
+                } else {
+                    showStatus('Área de transferência vazia', 'info');
+                }
+            } catch (err) {
+                console.error('Erro ao colar:', err);
+                showStatus('Erro ao acessar área de transferência. Verifique permissões.', 'error');
             }
         }
 
@@ -1467,6 +1505,7 @@ create index if not exists idx_vendas_live_data on vendas_live(data_live);</div>
                 <td>
                     <div class="autocomplete-container">
                         <input type="text" id="comprador-${venda.linha_id}" value="${venda.comprador || ''}" oninput="filtrarSugestoes(this, 'comprador'); marcarLinhaComoNaoSalva(this)" onkeydown="navegarCamposComSugestoes(event, ${venda.linha_id}, 'comprador')" autocomplete="off" placeholder="Nome ou Instagram" ${liveBloqueada || venda.venda_registrada ? 'disabled' : ''}>
+                        <button class="clipboard-btn" onclick="event.preventDefault(); colarDoClipboard(document.getElementById('comprador-${venda.linha_id}'))" ${liveBloqueada || venda.venda_registrada ? 'disabled' : ''} title="Colar da área de transferência">📋</button>
                         <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('comprador-${venda.linha_id}'), this)" ${liveBloqueada || venda.venda_registrada ? 'disabled' : ''}>🎤</button>
                         <div class="suggestions" id="sugestoes-comprador-${venda.linha_id}"></div>
                     </div>
@@ -1474,6 +1513,7 @@ create index if not exists idx_vendas_live_data on vendas_live(data_live);</div>
                 <td>
                     <div class="autocomplete-container">
                         <input type="text" id="fila-${venda.linha_id}" value="${venda.fila || ''}" oninput="filtrarSugestoes(this, 'fila'); marcarLinhaComoNaoSalva(this)" onkeydown="navegarCamposComSugestoes(event, ${venda.linha_id}, 'fila')" autocomplete="off" placeholder="Nome ou Instagram" ${liveBloqueada || venda.venda_registrada ? 'disabled' : ''}>
+                        <button class="clipboard-btn" onclick="event.preventDefault(); colarDoClipboard(document.getElementById('fila-${venda.linha_id}'))" ${liveBloqueada || venda.venda_registrada ? 'disabled' : ''} title="Colar da área de transferência">📋</button>
                         <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('fila-${venda.linha_id}'), this)" ${liveBloqueada || venda.venda_registrada ? 'disabled' : ''}>🎤</button>
                         <div class="suggestions" id="sugestoes-fila-${venda.linha_id}"></div>
                     </div>
@@ -1509,6 +1549,7 @@ create index if not exists idx_vendas_live_data on vendas_live(data_live);</div>
                 <td>
                     <div class="autocomplete-container">
                         <input type="text" id="comprador-${linhaCount}" oninput="filtrarSugestoes(this, 'comprador'); marcarLinhaComoNaoSalva(this)" onkeydown="navegarCamposComSugestoes(event, ${linhaCount}, 'comprador')" autocomplete="off" placeholder="Nome ou Instagram">
+                        <button class="clipboard-btn" onclick="event.preventDefault(); colarDoClipboard(document.getElementById('comprador-${linhaCount}'))" title="Colar da área de transferência">📋</button>
                         <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('comprador-${linhaCount}'), this)">🎤</button>
                         <div class="suggestions" id="sugestoes-comprador-${linhaCount}"></div>
                     </div>
@@ -1516,6 +1557,7 @@ create index if not exists idx_vendas_live_data on vendas_live(data_live);</div>
                 <td>
                     <div class="autocomplete-container">
                         <input type="text" id="fila-${linhaCount}" oninput="filtrarSugestoes(this, 'fila'); marcarLinhaComoNaoSalva(this)" onkeydown="navegarCamposComSugestoes(event, ${linhaCount}, 'fila')" autocomplete="off" placeholder="Nome ou Instagram">
+                        <button class="clipboard-btn" onclick="event.preventDefault(); colarDoClipboard(document.getElementById('fila-${linhaCount}'))" title="Colar da área de transferência">📋</button>
                         <button class="mic-btn" onclick="event.preventDefault(); iniciarGravacao(document.getElementById('fila-${linhaCount}'), this)">🎤</button>
                         <div class="suggestions" id="sugestoes-fila-${linhaCount}"></div>
                     </div>
