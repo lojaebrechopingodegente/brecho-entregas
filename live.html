@@ -523,6 +523,7 @@
 
     <div class="container">
         <div class="header">
+            <a href="dashboard.html" class="header-link-voltar">← Voltar para Dashboard</a>
             <h1>🛍️ Registro de Vendas - Live</h1>
             <p>Gerencie suas vendas em tempo real por data</p>
             <a href="coblive.html" class="header-link-coblive">📊 Cobranças Live</a>
@@ -576,9 +577,6 @@ create index if not exists idx_vendas_live_data on vendas_live(data_live);</div>
             </div>
 
             <div id="dateSelectorSection" style="display: none;">
-                <div style="margin-bottom: 15px;">
-                    <a href="dashboard.html" class="btn-voltar">← Voltar para Dashboard</a>
-                </div>
                 <div class="date-selector-compact">
                     <h3>📅 Selecione a Data da Live</h3>
                     <div class="date-input-compact">
