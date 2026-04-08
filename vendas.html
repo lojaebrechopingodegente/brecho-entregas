@@ -908,6 +908,36 @@
             box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
         }
 
+        .btn-ordenar {
+            background: #E0E0E0;
+            color: #2D3436;
+            border: 2px solid transparent;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+
+        .btn-ordenar:hover {
+            background: #D0D0D0;
+            transform: translateY(-2px);
+        }
+
+        .btn-ordenar.ativo {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .btn-ordenar.ativo:hover {
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -968,6 +998,7 @@
             }
         }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="container">
@@ -1162,9 +1193,18 @@
                 <div class="relatorio-container">
                     <div class="relatorio-header">
                         <h3>📊 Relatório de Vendas por Cliente</h3>
-                        <button class="btn-exportar" onclick="exportarRelatorio()">
-                            📥 Exportar CSV
-                        </button>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="color: #636E72; font-size: 0.9rem;">Ordenar por:</span>
+                            <button class="btn-ordenar" id="btnOrdemNome" onclick="ordenarRelatorio('nome')">
+                                👤 Nome ↕️
+                            </button>
+                            <button class="btn-ordenar" id="btnOrdemValor" onclick="ordenarRelatorio('valor')">
+                                💰 Valor ↕️
+                            </button>
+                            <button class="btn-exportar" onclick="exportarRelatorio()">
+                                📥 Exportar CSV
+                            </button>
+                        </div>
                     </div>
 
                     <div class="filtros-grid" style="margin-bottom: 25px;">
@@ -1364,6 +1404,8 @@
         let itensVenda = [];
         let vendasCarregadas = [];
         let dadosRelatorio = [];
+        let ordemAtual = 'nome'; // 'nome' ou 'valor'
+        let ordemDirecao = 'asc'; // 'asc' ou 'desc' 
 
         // ============================================
         // INICIALIZAÇÃO
@@ -2084,8 +2126,21 @@ async function gerarRelatorioClientes(btn) {
         const container = document.getElementById('listaClientesRelatorio');
         container.innerHTML = '';
 
-        // Ordenar clientes alfabeticamente
-        const clientesOrdenados = Object.keys(relatorio).sort();
+        // Ordenar clientes conforme critério selecionado
+        let clientesOrdenados = Object.keys(relatorio);
+
+        if (ordemAtual === 'nome') {
+            clientesOrdenados.sort((a, b) => {
+                const comparison = a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
+                return ordemDirecao === 'asc' ? comparison : -comparison;
+            });
+        } else if (ordemAtual === 'valor') {
+            clientesOrdenados.sort((a, b) => {
+                const totalA = Object.values(relatorio[a]).reduce((acc, m) => acc + m.total, 0);
+                const totalB = Object.values(relatorio[b]).reduce((acc, m) => acc + m.total, 0);
+                return ordemDirecao === 'asc' ? totalA - totalB : totalB - totalA;
+            });
+        }
 
         clientesOrdenados.forEach((cliente, index) => {
             const meses = relatorio[cliente];
@@ -2134,6 +2189,93 @@ async function gerarRelatorioClientes(btn) {
     }
 }
 
+        function ordenarRelatorio(criterio) {
+            if (ordemAtual === criterio) {
+                // Inverte a direção se clicar no mesmo critério
+                ordemDirecao = ordemDirecao === 'asc' ? 'desc' : 'asc';
+            } else {
+                // Novo critério, começa com asc
+                ordemAtual = criterio;
+                ordemDirecao = 'asc';
+            }
+
+            // Atualizar visual dos botões
+            document.getElementById('btnOrdemNome').classList.toggle('ativo', ordemAtual === 'nome');
+            document.getElementById('btnOrdemValor').classList.toggle('ativo', ordemAtual === 'valor');
+
+            // Atualizar ícones
+            const iconNome = ordemAtual === 'nome' ? (ordemDirecao === 'asc' ? '↑' : '↓') : '↕️';
+            const iconValor = ordemAtual === 'valor' ? (ordemDirecao === 'asc' ? '↑' : '↓') : '↕️';
+
+            document.getElementById('btnOrdemNome').innerHTML = `👤 Nome ${iconNome}`;
+            document.getElementById('btnOrdemValor').innerHTML = `💰 Valor ${iconValor}`;
+
+            // Regenerar o relatório com a nova ordenação
+            if (dadosRelatorio && Object.keys(dadosRelatorio).length > 0) {
+                renderizarRelatorioOrdenado();
+            }
+        }
+
+        function renderizarRelatorioOrdenado() {
+            const relatorio = dadosRelatorio;
+
+            // Ordenar clientes conforme critério selecionado
+            let clientesOrdenados = Object.keys(relatorio);
+
+            if (ordemAtual === 'nome') {
+                clientesOrdenados.sort((a, b) => {
+                    const comparison = a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
+                    return ordemDirecao === 'asc' ? comparison : -comparison;
+                });
+            } else if (ordemAtual === 'valor') {
+                clientesOrdenados.sort((a, b) => {
+                    const totalA = Object.values(relatorio[a]).reduce((acc, m) => acc + m.total, 0);
+                    const totalB = Object.values(relatorio[b]).reduce((acc, m) => acc + m.total, 0);
+                    return ordemDirecao === 'asc' ? totalA - totalB : totalB - totalA;
+                });
+            }
+
+            // Renderizar lista de clientes
+            const container = document.getElementById('listaClientesRelatorio');
+            container.innerHTML = '';
+
+            clientesOrdenados.forEach((cliente, index) => {
+                const meses = relatorio[cliente];
+                const totalCliente = Object.values(meses).reduce((acc, m) => acc + m.total, 0);
+
+                // Ordenar meses
+                const mesesOrdenados = Object.entries(meses).sort((a, b) => a[0].localeCompare(b[0]));
+
+                const clienteDiv = document.createElement('div');
+                clienteDiv.className = 'cliente-grupo';
+                clienteDiv.innerHTML = `
+                    <div class="cliente-header" onclick="toggleCliente(this)">
+                        <div class="cliente-nome">
+                            👤 ${cliente}
+                            <span class="expand-icon">▼</span>
+                        </div>
+                        <div class="cliente-total">R$ ${totalCliente.toFixed(2).replace('.', ',')}</div>
+                    </div>
+                    <div class="cliente-meses">
+                        ${mesesOrdenados.map(([key, mes]) => `
+                            <div class="mes-row">
+                                <div class="mes-nome">${mes.mesAno.charAt(0).toUpperCase() + mes.mesAno.slice(1)}</div>
+                                <div class="mes-qtd">${mes.quantidade} venda(s)</div>
+                                <div class="mes-valor">R$ ${mes.total.toFixed(2).replace('.', ',')}</div>
+                            </div>
+                        `).join('')}
+                        <div class="mes-row cliente-total-row">
+                            <div class="mes-nome">TOTAL DO CLIENTE</div>
+                            <div class="mes-qtd">${Object.values(meses).reduce((acc, m) => acc + m.quantidade, 0)} venda(s)</div>
+                            <div class="mes-valor">R$ ${totalCliente.toFixed(2).replace('.', ',')}</div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(clienteDiv);
+            });
+        }
+
         function toggleCliente(header) {
             const grupo = header.parentElement;
             grupo.classList.toggle('expanded');
@@ -2151,6 +2293,14 @@ async function gerarRelatorioClientes(btn) {
             `;
             document.getElementById('resumoRelatorio').style.display = 'none';
             dadosRelatorio = [];
+
+            // Resetar ordenação
+            ordemAtual = 'nome';
+            ordemDirecao = 'asc';
+            document.getElementById('btnOrdemNome').classList.add('ativo');
+            document.getElementById('btnOrdemValor').classList.remove('ativo');
+            document.getElementById('btnOrdemNome').innerHTML = '👤 Nome ↑';
+            document.getElementById('btnOrdemValor').innerHTML = '💰 Valor ↕️';
         }
 
         function exportarRelatorio() {
