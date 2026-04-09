@@ -1402,7 +1402,7 @@
         // ============================================
         // FUNÇÃO GERAR PDF - MODIFICADA CONFORME SOLICITADO
         // ============================================
-        async function gerarPDF() {
+       async function gerarPDF() {
     if (idsSelecionados.size === 0) {
         alert('⚠️ Selecione pelo menos uma solicitação para gerar o PDF.');
         return;
@@ -1469,14 +1469,15 @@
             fontSize: 11,
             fontStyle: 'bold',
             lineColor: [0, 0, 0],
-            lineWidth: 0.5
+            lineWidth: 0.5,
+            valign: 'middle'  // Cabeçalho continua no meio
         },
         bodyStyles: {
             fontSize: 10,
             textColor: [0, 0, 0],
             fillColor: [255, 255, 255],
-            minCellHeight: 35,  // ✅ ALTURA MÍNIMA DA CÉLULA PARA 3 LINHAS
-            valign: 'middle'    // Alinhamento vertical no meio
+            minCellHeight: 18,  // ✅ METADE DA ALTURA (era 35, agora 18)
+            valign: 'top'       // ✅ DADOS NO INÍCIO/TOPO DA CÉLULA
         },
         alternateRowStyles: {
             fillColor: [255, 255, 255]
@@ -1495,7 +1496,7 @@
         styles: {
             lineColor: [0, 0, 0],
             lineWidth: 0.5,
-            cellPadding: 5  // ✅ ESPAÇAMENTO INTERNO PARA MELHOR ESCRITA
+            cellPadding: 3  // ✅ REDUZIDO PARA MANTER COMPACTO
         }
     });
 
