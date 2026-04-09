@@ -847,52 +847,56 @@
         }
 
         async function buscarSolicitacoes() {
-            if (!supabaseClient) { alert('⚠️ Conecte-se primeiro!'); return; }
-            
-            // Pega os valores dos inputs de data e hora
-            const dataInicial = document.getElementById('dataInicial').value;
-            const horaInicial = document.getElementById('horaInicial').value || '00:00';
-            const dataFinal = document.getElementById('dataFinal').value;
-            const horaFinal = document.getElementById('horaFinal').value || '23:59';
-            
-            if (!dataInicial || !dataFinal) { alert('⚠️ Selecione as datas'); return; }
-            if (new Date(dataInicial) > new Date(dataFinal)) { alert('⚠️ Data inicial maior que final'); return; }
+    if (!supabaseClient) { alert('⚠️ Conecte-se primeiro!'); return; }
+    
+    // ============================================
+    // CORREÇÃO: Se houver um número de pedido selecionado, 
+    // busca diretamente por ele em vez de usar filtros de data
+    // ============================================
+    if (numeroPedidoSelecionado) {
+        await buscarPorIdSolicitacao(numeroPedidoSelecionado);
+        return;
+    }
+    
+    // Pega os valores dos inputs de data e hora
+    const dataInicial = document.getElementById('dataInicial').value;
+    const horaInicial = document.getElementById('horaInicial').value || '00:00';
+    const dataFinal = document.getElementById('dataFinal').value;
+    const horaFinal = document.getElementById('horaFinal').value || '23:59';
+    
+    if (!dataInicial || !dataFinal) { alert('⚠️ Selecione as datas'); return; }
+    if (new Date(dataInicial) > new Date(dataFinal)) { alert('⚠️ Data inicial maior que final'); return; }
 
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('tabelaContainer').style.display = 'none';
-            document.getElementById('statsContainer').style.display = 'none';
-            document.getElementById('loading').style.display = 'block';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('tabelaContainer').style.display = 'none';
+    document.getElementById('statsContainer').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
 
-            try {
-                const dataHoraInicial = new Date(`${dataInicial}T${horaInicial}:00`);
-                const dataHoraFinal = new Date(`${dataFinal}T${horaFinal}:00`);
+    try {
+        const dataHoraInicial = new Date(`${dataInicial}T${horaInicial}:00`);
+        const dataHoraFinal = new Date(`${dataFinal}T${horaFinal}:00`);
 
-                let query = supabaseClient.from('solicitacoes_pg').select(`*, clientes_pg (id, nome, cpf, whatsapp, instagram), enderecos_pg (cep, rua, numero, complemento, bairro, cidade, estado, regiao)`)
-                    .gte('data_solicitacao', dataHoraInicial.toISOString())
-                    .lte('data_solicitacao', dataHoraFinal.toISOString());
-                if (clienteSelecionado) query = query.eq('cliente_id', clienteSelecionado);
-                query = query.order('data_solicitacao', { ascending: false });
+        let query = supabaseClient.from('solicitacoes_pg').select(`*, clientes_pg (id, nome, cpf, whatsapp, instagram), enderecos_pg (cep, rua, numero, complemento, bairro, cidade, estado, regiao)`)
+            .gte('data_solicitacao', dataHoraInicial.toISOString())
+            .lte('data_solicitacao', dataHoraFinal.toISOString());
+        if (clienteSelecionado) query = query.eq('cliente_id', clienteSelecionado);
+        query = query.order('data_solicitacao', { ascending: false });
 
-                const { data, error } = await query;
-                if (error) throw error;
+        const { data, error } = await query;
+        if (error) throw error;
 
-                processarDadosCarregados(data);
-                
-                // ============================================
-                // CORREÇÃO: Usa as strings de data diretamente dos inputs
-                // sem converter para Date object que causa deslocamento de fuso
-                // ============================================
-                const dataInicialFormatada = formatarDataInputParaBr(dataInicial);
-                const dataFinalFormatada = formatarDataInputParaBr(dataFinal);
-                document.getElementById('periodoSelecionado').textContent = `Período: ${dataInicialFormatada} ${horaInicial} a ${dataFinalFormatada} ${horaFinal}`;
-            } catch (erro) {
-                alert('❌ Erro: ' + erro.message);
-                document.getElementById('emptyState').style.display = 'block';
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-            }
-        }
-
+        processarDadosCarregados(data);
+        
+        const dataInicialFormatada = formatarDataInputParaBr(dataInicial);
+        const dataFinalFormatada = formatarDataInputParaBr(dataFinal);
+        document.getElementById('periodoSelecionado').textContent = `Período: ${dataInicialFormatada} ${horaInicial} a ${dataFinalFormatada} ${horaFinal}`;
+    } catch (erro) {
+        alert('❌ Erro: ' + erro.message);
+        document.getElementById('emptyState').style.display = 'block';
+    } finally {
+        document.getElementById('loading').style.display = 'none';
+    }
+}
         async function buscarPorIdSolicitacao(solicitacaoId) {
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('tabelaContainer').style.display = 'none';
@@ -1399,119 +1403,121 @@
         // FUNÇÃO GERAR PDF - MODIFICADA CONFORME SOLICITADO
         // ============================================
         async function gerarPDF() {
-            if (idsSelecionados.size === 0) {
-                alert('⚠️ Selecione pelo menos uma solicitação para gerar o PDF.');
-                return;
-            }
+    if (idsSelecionados.size === 0) {
+        alert('⚠️ Selecione pelo menos uma solicitação para gerar o PDF.');
+        return;
+    }
 
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('landscape');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('landscape');
 
-            const dataInicial = document.getElementById('dataInicial').value;
-            const dataFinal = document.getElementById('dataFinal').value;
+    const dataInicial = document.getElementById('dataInicial').value;
+    const dataFinal = document.getElementById('dataFinal').value;
 
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(18);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Loja e Brechó Pingo de Gente - Solicitações de Entrega', 15, 15);
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Loja e Brechó Pingo de Gente - Solicitações de Entrega', 15, 15);
 
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Período: ${formatarDataInputParaBr(dataInicial)} a ${formatarDataInputParaBr(dataFinal)}`, 15, 22);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Período: ${formatarDataInputParaBr(dataInicial)} a ${formatarDataInputParaBr(dataFinal)}`, 15, 22);
 
-            doc.setDrawColor(0, 0, 0);
-            doc.setLineWidth(0.5);
-            doc.line(10, 25, 287, 25);
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(10, 25, 287, 25);
 
-            // ============================================
-            // ORDENAÇÃO ALFABÉTICA PELA COLUNA NOME
-            // ============================================
-            const dadosSelecionados = Array.from(idsSelecionados).map(index => {
-                return dadosCarregados.find(d => d.index === index);
-            }).filter(Boolean);
+    // ============================================
+    // ORDENAÇÃO ALFABÉTICA PELA COLUNA NOME
+    // ============================================
+    const dadosSelecionados = Array.from(idsSelecionados).map(index => {
+        return dadosCarregados.find(d => d.index === index);
+    }).filter(Boolean);
 
-            // Ordena alfabeticamente pelo nome (case-insensitive)
-            dadosSelecionados.sort((a, b) => {
-                const nomeA = (a.nome || '').toLowerCase();
-                const nomeB = (b.nome || '').toLowerCase();
-                return nomeA.localeCompare(nomeB, 'pt-BR');
-            });
+    // Ordena alfabeticamente pelo nome (case-insensitive)
+    dadosSelecionados.sort((a, b) => {
+        const nomeA = (a.nome || '').toLowerCase();
+        const nomeB = (b.nome || '').toLowerCase();
+        return nomeA.localeCompare(nomeB, 'pt-BR');
+    });
 
-            // ============================================
-            // MONTA OS DADOS SEM A COLUNA Nº PEDIDO
-            // E COM A NOVA COLUNA "DADOS DO PACOTE"
-            // ============================================
-            const dadosTabela = dadosSelecionados.map(item => {
-                return [
-                    formatarDataBr(item.data_solicitacao),
-                    item.nome || '-',
-                    item.instagram || '-',
-                    item.regiao || '-',
-                    formatarCEP(item.cep),
-                    item.cidade || '-',
-                    item.observacoes || '-',
-                    'Peso:     Medidas: '  // Nova coluna pré-preenchida
-                ];
-            });
+    // ============================================
+    // MONTA OS DADOS SEM A COLUNA Nº PEDIDO
+    // E COM A NOVA COLUNA "DADOS DO PACOTE"
+    // ============================================
+    const dadosTabela = dadosSelecionados.map(item => {
+        return [
+            formatarDataBr(item.data_solicitacao),
+            item.nome || '-',
+            item.instagram || '-',
+            item.regiao || '-',
+            formatarCEP(item.cep),
+            item.cidade || '-',
+            item.observacoes || '-',
+            'Peso:     Medidas: '  // Nova coluna pré-preenchida
+        ];
+    });
 
-            doc.autoTable({
-                head: [['Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Observações', 'Dados do pacote']],
-                body: dadosTabela,
-                startY: 30,
-                theme: 'grid',
-                headStyles: {
-                    fillColor: [255, 255, 255],
-                    textColor: [0, 0, 0],
-                    fontSize: 11,
-                    fontStyle: 'bold',
-                    lineColor: [0, 0, 0],
-                    lineWidth: 0.5
-                },
-                bodyStyles: {
-                    fontSize: 10,
-                    textColor: [0, 0, 0],
-                    fillColor: [255, 255, 255]
-                },
-                alternateRowStyles: {
-                    fillColor: [255, 255, 255]
-                },
-                columnStyles: {
-                    0: { cellWidth: 25 },  // Data
-                    1: { cellWidth: 45 },  // Nome
-                    2: { cellWidth: 30 },  // Instagram
-                    3: { cellWidth: 40 },  // Região
-                    4: { cellWidth: 25 },  // CEP
-                    5: { cellWidth: 30 },  // Cidade
-                    6: { cellWidth: 50 },  // Observações
-                    7: { cellWidth: 40 }   // Dados do pacote (nova coluna)
-                },
-                margin: { top: 30, left: 10, right: 10 },
-                styles: {
-                    lineColor: [0, 0, 0],
-                    lineWidth: 0.5
-                }
-            });
-
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(10);
-                doc.setTextColor(0, 0, 0);
-                doc.text(
-                    `Página ${i} de ${pageCount} - Total de ${dadosSelecionados.length} solicitações selecionadas`,
-                    297 / 2,
-                    210 - 10,
-                    { align: 'center' }
-                );
-            }
-
-            const pdfBlobUrl = doc.output('bloburl');
-            const novaAba = window.open(pdfBlobUrl, '_blank');
-            if (!novaAba) {
-                alert('❌ O navegador bloqueou a abertura de nova aba. Por favor, permita popups para este site.');
-            }
+    doc.autoTable({
+        head: [['Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Observações', 'Dados do pacote']],
+        body: dadosTabela,
+        startY: 30,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [255, 255, 255],
+            textColor: [0, 0, 0],
+            fontSize: 11,
+            fontStyle: 'bold',
+            lineColor: [0, 0, 0],
+            lineWidth: 0.5
+        },
+        bodyStyles: {
+            fontSize: 10,
+            textColor: [0, 0, 0],
+            fillColor: [255, 255, 255],
+            minCellHeight: 35,  // ✅ ALTURA MÍNIMA DA CÉLULA PARA 3 LINHAS
+            valign: 'middle'    // Alinhamento vertical no meio
+        },
+        alternateRowStyles: {
+            fillColor: [255, 255, 255]
+        },
+        columnStyles: {
+            0: { cellWidth: 25 },  // Data
+            1: { cellWidth: 45 },  // Nome
+            2: { cellWidth: 30 },  // Instagram
+            3: { cellWidth: 40 },  // Região
+            4: { cellWidth: 25 },  // CEP
+            5: { cellWidth: 30 },  // Cidade
+            6: { cellWidth: 50 },  // Observações
+            7: { cellWidth: 40 }   // Dados do pacote (nova coluna)
+        },
+        margin: { top: 30, left: 10, right: 10 },
+        styles: {
+            lineColor: [0, 0, 0],
+            lineWidth: 0.5,
+            cellPadding: 5  // ✅ ESPAÇAMENTO INTERNO PARA MELHOR ESCRITA
         }
+    });
 
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(
+            `Página ${i} de ${pageCount} - Total de ${dadosSelecionados.length} solicitações selecionadas`,
+            297 / 2,
+            210 - 10,
+            { align: 'center' }
+        );
+    }
+
+    const pdfBlobUrl = doc.output('bloburl');
+    const novaAba = window.open(pdfBlobUrl, '_blank');
+    if (!novaAba) {
+        alert('❌ O navegador bloqueou a abertura de nova aba. Por favor, permita popups para este site.');
+    }
+}
         async function gerarEtiquetas() {
             if (idsSelecionados.size === 0) {
                 alert('⚠️ Selecione pelo menos uma solicitação para gerar as etiquetas.');
