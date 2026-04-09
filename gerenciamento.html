@@ -93,7 +93,6 @@
         .btn-etiqueta:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
         .btn-danger { background: linear-gradient(135deg, #FF6B6B, #EE5A6F); color: white; }
         .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(238, 90, 111, 0.4); }
-        /* NOVO: Botão emitir etiquetas */
         .btn-emitir { background: linear-gradient(135deg, #9C27B0, #E91E63); color: white; }
         .btn-emitir:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(156, 39, 176, 0.4); }
         .btn-emitir:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
@@ -212,9 +211,6 @@
         .filtro-numero-pedido { background: #E3F2FD; border: 2px solid #2196F3; }
         .filtro-numero-pedido h3 { color: #1565C0; }
 
-        /* ============================================
-           NOVOS ESTILOS PARA MODAL DE ETIQUETAS
-           ============================================ */
         .modal-etiquetas {
             background: white;
             padding: 0;
@@ -481,7 +477,6 @@
                 <button class="btn btn-secondary" onclick="limparFiltros()">🧹 Limpar Filtros</button>
                 <button class="btn btn-pdf" id="btnGerarPDF" onclick="gerarPDF()" disabled>📄 Gerar PDF</button>
                 <button class="btn btn-etiqueta" id="btnGerarEtiquetas" onclick="gerarEtiquetas()" disabled>🏷️ Gerar Etiquetas PDF</button>
-                <!-- NOVO BOTÃO -->
                 <button class="btn btn-emitir" id="btnEmitirEtiquetas" onclick="abrirModalEtiquetas()" disabled>📋 Emitir Etiquetas</button>
             </div>
         </div>
@@ -596,9 +591,6 @@
         </div>
     </div>
 
-    <!-- ============================================
-         NOVO MODAL PARA EMISSÃO DE ETIQUETAS
-         ============================================ -->
     <div class="modal-overlay" id="modalEtiquetas">
         <div class="modal-etiquetas">
             <div class="etiquetas-header">
@@ -609,9 +601,7 @@
                 <button class="btn-fechar" onclick="fecharModalEtiquetas()" style="color: white; font-size: 1.8rem;">×</button>
             </div>
             
-            <div class="etiquetas-body" id="etiquetasContainer">
-                <!-- Conteúdo gerado dinamicamente -->
-            </div>
+            <div class="etiquetas-body" id="etiquetasContainer"></div>
             
             <div class="etiquetas-footer">
                 <div class="etiquetas-info">
@@ -664,6 +654,14 @@
             cep: '88104-740'
         };
 
+        // ============================================
+        // FUNÇÃO DE NORMALIZAÇÃO - REMOVE ACENTOS
+        // ============================================
+        function removerAcentos(str) {
+            if (!str) return '';
+            return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        }
+
         function conectarSupabase() {
             const url = 'https://ytnfjzngalfapfnbobfm.supabase.co';
             const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
@@ -714,6 +712,9 @@
         function getTagRegiao(regiao) { const r = (regiao || '').toLowerCase(); if (r.includes('florianópolis') || r.includes('floripa')) return '<span class="tag-regiao tag-floripa">🏠 Grande Florianópolis</span>'; if (r.includes('catarina') || r.includes('sc')) return '<span class="tag-regiao tag-sc">🌲 Santa Catarina</span>'; return '<span class="tag-regiao tag-outros">🇧🇷 Outros Estados</span>'; }
         function getTagStatus(status) { const cores = {'pendente': '#FFA726', 'enviada': '#42A5F5', 'entregue': '#66BB6A', 'cancelado': '#EF5350'}; const cor = cores[status] || '#9E9E9E'; return `<span style="display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: ${cor}20; color: ${cor}; border: 1px solid ${cor};">${status || 'Pendente'}</span>`; }
 
+        // ============================================
+        // BUSCA POR NÚMERO DO PEDIDO - SEM ACENTOS
+        // ============================================
         async function buscarPorNumeroPedido() {
             if (!supabaseClient) return;
             const numeroPedido = document.getElementById('buscaNumeroPedido').value.trim();
@@ -723,18 +724,63 @@
                 return; 
             }
 
-            let query = supabaseClient
-                .from('solicitacoes_pg')
-                .select('*, clientes_pg (id, nome, cpf, whatsapp, instagram)')
-                .ilike('numero_solicitacao', `%${numeroPedido}%`)
-                .limit(10);
+            try {
+                // Busca por número da solicitação (números não têm acentos)
+                let query = supabaseClient
+                    .from('solicitacoes_pg')
+                    .select('*, clientes_pg (id, nome, cpf, whatsapp, instagram)')
+                    .ilike('numero_solicitacao', `%${numeroPedido}%`)
+                    .limit(10);
 
-            const { data, error } = await query;
-            if (error) { 
-                console.error('Erro:', error); 
-                return; 
+                const { data, error } = await query;
+                if (error) { 
+                    console.error('Erro:', error); 
+                    return; 
+                }
+                
+                // Também busca por nome do cliente sem acentos
+                const termoNormalizado = removerAcentos(numeroPedido);
+                let resultadosAdicionais = [];
+                
+                if (termoNormalizado !== numeroPedido.toLowerCase() || !data || data.length === 0) {
+                    // Busca clientes por nome sem acentos
+                    const { data: clientesData, error: clientesError } = await supabaseClient
+                        .from('clientes_pg')
+                        .select('*, solicitacoes_pg (id, numero_solicitacao, data_solicitacao, status)')
+                        .ilike('nome', `%${numeroPedido}%`)
+                        .limit(10);
+                        
+                    if (!clientesError && clientesData) {
+                        // Filtra client-side por nome sem acentos
+                        const clientesFiltrados = clientesData.filter(c => {
+                            const nomeNormalizado = removerAcentos(c.nome);
+                            return nomeNormalizado.includes(termoNormalizado);
+                        });
+                        
+                        // Transforma no formato esperado
+                        resultadosAdicionais = clientesFiltrados.flatMap(c => {
+                            return (c.solicitacoes_pg || []).map(s => ({
+                                ...s,
+                                clientes_pg: {
+                                    id: c.id,
+                                    nome: c.nome,
+                                    cpf: c.cpf,
+                                    whatsapp: c.whatsapp,
+                                    instagram: c.instagram
+                                }
+                            }));
+                        });
+                    }
+                }
+                
+                // Combina resultados e remove duplicados
+                const todosResultados = [...(data || []), ...resultadosAdicionais];
+                const unicos = todosResultados.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+                
+                mostrarResultadosBuscaPedido(unicos);
+            } catch (erro) {
+                console.error('Erro na busca:', erro);
             }
-            mostrarResultadosBuscaPedido(data || []);
         }
 
         function mostrarResultadosBuscaPedido(solicitacoes) {
@@ -786,28 +832,71 @@
             removerFiltroNumeroPedido();
         }
 
+        // ============================================
+        // BUSCA POR NOME DO CLIENTE - SEM ACENTOS
+        // ============================================
         async function buscarClientes() {
             if (!supabaseClient) return;
             const nome = document.getElementById('buscaNome').value.trim();
             const cpf = document.getElementById('buscaCPF').value.trim().replace(/\D/g, '');
             const instagram = document.getElementById('buscaInstagram').value.trim();
             const whatsapp = document.getElementById('buscaWhatsApp').value.trim().replace(/\D/g, '');
-            if (nome.length < 3 && cpf.length < 3 && instagram.length < 3 && whatsapp.length < 3) { document.getElementById('resultadosBusca').style.display = 'none'; return; }
+            
+            if (nome.length < 3 && cpf.length < 3 && instagram.length < 3 && whatsapp.length < 3) { 
+                document.getElementById('resultadosBusca').style.display = 'none'; 
+                return; 
+            }
 
-            let query = supabaseClient.from('clientes_pg').select('*').limit(10);
-            if (nome.length >= 3) query = query.ilike('nome', `%${nome}%`);
-            if (cpf.length >= 3) query = query.ilike('cpf', `%${cpf}%`);
-            if (instagram.length >= 3) query = query.ilike('instagram', `%${instagram}%`);
-            if (whatsapp.length >= 3) query = query.ilike('whatsapp', `%${whatsapp}%`);
+            try {
+                let query = supabaseClient.from('clientes_pg').select('*');
+                
+                // Para CPF, Instagram e WhatsApp - busca exata parcial
+                if (cpf.length >= 3) query = query.ilike('cpf', `%${cpf}%`);
+                if (instagram.length >= 3) query = query.ilike('instagram', `%${instagram}%`);
+                if (whatsapp.length >= 3) query = query.ilike('whatsapp', `%${whatsapp}%`);
+                
+                // Para Nome - busca mais ampla (sem acentos no banco também funciona)
+                if (nome.length >= 3) {
+                    // Busca com o termo original e também sem acentos
+                    const nomeSemAcentos = removerAcentos(nome);
+                    query = query.or(`nome.ilike.%${nome}%,nome.ilike.%${nomeSemAcentos}%`);
+                }
+                
+                const { data, error } = await query.limit(20);
+                if (error) { 
+                    console.error('Erro:', error); 
+                    return; 
+                }
+                
+                // Filtra client-side para garantir match sem acentos
+                const resultadosFiltrados = filtrarPorNomeSemAcentos(data || [], nome);
+                mostrarResultadosBusca(resultadosFiltrados);
+            } catch (erro) {
+                console.error('Erro na busca:', erro);
+            }
+        }
 
-            const { data, error } = await query;
-            if (error) { console.error('Erro:', error); return; }
-            mostrarResultadosBusca(data || []);
+        // ============================================
+        // FILTRO CLIENT-SIDE POR NOME SEM ACENTOS
+        // ============================================
+        function filtrarPorNomeSemAcentos(clientes, termoBusca) {
+            if (!termoBusca || termoBusca.length < 3) return clientes;
+            
+            const termoNormalizado = removerAcentos(termoBusca);
+            
+            return clientes.filter(cliente => {
+                const nomeNormalizado = removerAcentos(cliente.nome);
+                return nomeNormalizado.includes(termoNormalizado);
+            });
         }
 
         function mostrarResultadosBusca(clientes) {
             const container = document.getElementById('resultadosBusca');
-            if (clientes.length === 0) { container.innerHTML = '<div class="item-resultado">Nenhum cliente</div>'; container.style.display = 'block'; return; }
+            if (clientes.length === 0) { 
+                container.innerHTML = '<div class="item-resultado">Nenhum cliente encontrado</div>'; 
+                container.style.display = 'block'; 
+                return; 
+            }
             container.innerHTML = clientes.map(c => `<div class="item-resultado" onclick="selecionarCliente('${c.id}')"><strong>${c.nome || 'Sem nome'}</strong><small>${c.cpf ? `CPF: ${formatarCPF(c.cpf)} | ` : ''}${c.whatsapp || ''}</small></div>`).join('');
             container.style.display = 'block';
         }
@@ -832,14 +921,12 @@
             ['buscaNome', 'buscaCPF', 'buscaInstagram', 'buscaWhatsApp'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('resultadosBusca').style.display = 'none';
         }
-        function limparBuscaCliente() { removerFiltroCliente(); }
+        
+        function limparBuscaCliente() { 
+            removerFiltroCliente(); 
+        }
 
-        // ============================================
-        // CORREÇÃO: Função para formatar data do input sem deslocamento de fuso
-        // ============================================
         function formatarDataInputParaBr(dataString) {
-            // Converte YYYY-MM-DD para DD/MM/YYYY sem criar objeto Date
-            // Isso evita o deslocamento de fuso horário
             if (!dataString) return '-';
             const partes = dataString.split('-');
             if (partes.length !== 3) return dataString;
@@ -847,56 +934,61 @@
         }
 
         async function buscarSolicitacoes() {
-    if (!supabaseClient) { alert('⚠️ Conecte-se primeiro!'); return; }
-    
-    // ============================================
-    // CORREÇÃO: Se houver um número de pedido selecionado, 
-    // busca diretamente por ele em vez de usar filtros de data
-    // ============================================
-    if (numeroPedidoSelecionado) {
-        await buscarPorIdSolicitacao(numeroPedidoSelecionado);
-        return;
-    }
-    
-    // Pega os valores dos inputs de data e hora
-    const dataInicial = document.getElementById('dataInicial').value;
-    const horaInicial = document.getElementById('horaInicial').value || '00:00';
-    const dataFinal = document.getElementById('dataFinal').value;
-    const horaFinal = document.getElementById('horaFinal').value || '23:59';
-    
-    if (!dataInicial || !dataFinal) { alert('⚠️ Selecione as datas'); return; }
-    if (new Date(dataInicial) > new Date(dataFinal)) { alert('⚠️ Data inicial maior que final'); return; }
+            if (!supabaseClient) { 
+                alert('⚠️ Conecte-se primeiro!'); 
+                return; 
+            }
+            
+            if (numeroPedidoSelecionado) {
+                await buscarPorIdSolicitacao(numeroPedidoSelecionado);
+                return;
+            }
+            
+            const dataInicial = document.getElementById('dataInicial').value;
+            const horaInicial = document.getElementById('horaInicial').value || '00:00';
+            const dataFinal = document.getElementById('dataFinal').value;
+            const horaFinal = document.getElementById('horaFinal').value || '23:59';
+            
+            if (!dataInicial || !dataFinal) { 
+                alert('⚠️ Selecione as datas'); 
+                return; 
+            }
+            if (new Date(dataInicial) > new Date(dataFinal)) { 
+                alert('⚠️ Data inicial maior que final'); 
+                return; 
+            }
 
-    document.getElementById('emptyState').style.display = 'none';
-    document.getElementById('tabelaContainer').style.display = 'none';
-    document.getElementById('statsContainer').style.display = 'none';
-    document.getElementById('loading').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('tabelaContainer').style.display = 'none';
+            document.getElementById('statsContainer').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
 
-    try {
-        const dataHoraInicial = new Date(`${dataInicial}T${horaInicial}:00`);
-        const dataHoraFinal = new Date(`${dataFinal}T${horaFinal}:00`);
+            try {
+                const dataHoraInicial = new Date(`${dataInicial}T${horaInicial}:00`);
+                const dataHoraFinal = new Date(`${dataFinal}T${horaFinal}:00`);
 
-        let query = supabaseClient.from('solicitacoes_pg').select(`*, clientes_pg (id, nome, cpf, whatsapp, instagram), enderecos_pg (cep, rua, numero, complemento, bairro, cidade, estado, regiao)`)
-            .gte('data_solicitacao', dataHoraInicial.toISOString())
-            .lte('data_solicitacao', dataHoraFinal.toISOString());
-        if (clienteSelecionado) query = query.eq('cliente_id', clienteSelecionado);
-        query = query.order('data_solicitacao', { ascending: false });
+                let query = supabaseClient.from('solicitacoes_pg').select(`*, clientes_pg (id, nome, cpf, whatsapp, instagram), enderecos_pg (cep, rua, numero, complemento, bairro, cidade, estado, regiao)`)
+                    .gte('data_solicitacao', dataHoraInicial.toISOString())
+                    .lte('data_solicitacao', dataHoraFinal.toISOString());
+                if (clienteSelecionado) query = query.eq('cliente_id', clienteSelecionado);
+                query = query.order('data_solicitacao', { ascending: false });
 
-        const { data, error } = await query;
-        if (error) throw error;
+                const { data, error } = await query;
+                if (error) throw error;
 
-        processarDadosCarregados(data);
-        
-        const dataInicialFormatada = formatarDataInputParaBr(dataInicial);
-        const dataFinalFormatada = formatarDataInputParaBr(dataFinal);
-        document.getElementById('periodoSelecionado').textContent = `Período: ${dataInicialFormatada} ${horaInicial} a ${dataFinalFormatada} ${horaFinal}`;
-    } catch (erro) {
-        alert('❌ Erro: ' + erro.message);
-        document.getElementById('emptyState').style.display = 'block';
-    } finally {
-        document.getElementById('loading').style.display = 'none';
-    }
-}
+                processarDadosCarregados(data);
+                
+                const dataInicialFormatada = formatarDataInputParaBr(dataInicial);
+                const dataFinalFormatada = formatarDataInputParaBr(dataFinal);
+                document.getElementById('periodoSelecionado').textContent = `Período: ${dataInicialFormatada} ${horaInicial} a ${dataFinalFormatada} ${horaFinal}`;
+            } catch (erro) {
+                alert('❌ Erro: ' + erro.message);
+                document.getElementById('emptyState').style.display = 'block';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
         async function buscarPorIdSolicitacao(solicitacaoId) {
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('tabelaContainer').style.display = 'none';
@@ -976,7 +1068,10 @@
                 const btnClass = temMedidas ? 'btn-medidas preenchido' : 'btn-medidas';
                 const btnText = temMedidas ? '✏️ Editar' : '📏 Medidas';
                 let medidasHtml = '-';
-                if (temMedidas) { const dim = [item.altura_cm, item.largura_cm, item.comprimento_cm].filter(Boolean); medidasHtml = `<div class="medidas-resumo">${item.peso_kg ? `⚖️ ${item.peso_kg}kg<br>` : ''}${dim.length > 0 ? `📐 ${dim.join('×')}cm` : ''}</div>`; }
+                if (temMedidas) { 
+                    const dim = [item.altura_cm, item.largura_cm, item.comprimento_cm].filter(Boolean); 
+                    medidasHtml = `<div class="medidas-resumo">${item.peso_kg ? `⚖️ ${item.peso_kg}kg<br>` : ''}${dim.length > 0 ? `📐 ${dim.join('×')}cm` : ''}</div>`; 
+                }
 
                 const numeroPedidoHtml = item.numero_solicitacao 
                     ? `<span class="numero-pedido">${item.numero_solicitacao}</span>` 
@@ -1015,7 +1110,9 @@
             document.getElementById('modalMedidas').classList.add('ativo');
         }
 
-        function fecharModal() { document.getElementById('modalMedidas').classList.remove('ativo'); }
+        function fecharModal() { 
+            document.getElementById('modalMedidas').classList.remove('ativo'); 
+        }
 
         async function salvarMedidas() {
             const solicitacaoId = document.getElementById('medidaSolicitacaoId').value;
@@ -1028,15 +1125,22 @@
             };
 
             const btn = document.querySelector('#modalMedidas .btn-salvar');
-            btn.innerHTML = '⏳...'; btn.disabled = true;
+            btn.innerHTML = '⏳...'; 
+            btn.disabled = true;
             try {
                 const { error } = await supabaseClient.from('solicitacoes_pg').update(medidas).eq('id', solicitacaoId);
                 if (error) throw error;
                 const index = dadosCarregados.findIndex(d => d.id === solicitacaoId);
                 if (index !== -1) dadosCarregados[index] = { ...dadosCarregados[index], ...medidas };
-                renderizarTabela(); fecharModal(); mostrarNotificacao('✅ Medidas salvas!');
-            } catch (erro) { alert('❌ Erro: ' + erro.message); }
-            finally { btn.innerHTML = '💾 Salvar'; btn.disabled = false; }
+                renderizarTabela(); 
+                fecharModal(); 
+                mostrarNotificacao('✅ Medidas salvas!');
+            } catch (erro) { 
+                alert('❌ Erro: ' + erro.message); 
+            } finally { 
+                btn.innerHTML = '💾 Salvar'; 
+                btn.disabled = false; 
+            }
         }
 
         function abrirModalEdicao(solicitacaoId) {
@@ -1057,7 +1161,9 @@
             document.getElementById('modalEdicao').classList.add('ativo');
         }
 
-        function fecharModalEdicao() { document.getElementById('modalEdicao').classList.remove('ativo'); }
+        function fecharModalEdicao() { 
+            document.getElementById('modalEdicao').classList.remove('ativo'); 
+        }
 
         function atualizarStatusAutomatico() {
             const dataEnvio = document.getElementById('editDataEnvio').value;
@@ -1094,37 +1200,57 @@
             };
 
             const btn = document.querySelector('#modalEdicao .btn-salvar');
-            btn.innerHTML = '⏳...'; btn.disabled = true;
+            btn.innerHTML = '⏳...'; 
+            btn.disabled = true;
             try {
                 const { error } = await supabaseClient.from('solicitacoes_pg').update(dadosAtualizacao).eq('id', solicitacaoId);
                 if (error) throw error;
                 const index = dadosCarregados.findIndex(d => d.id === solicitacaoId);
                 if (index !== -1) dadosCarregados[index] = { ...dadosCarregados[index], ...dadosAtualizacao };
-                renderizarTabela(); fecharModalEdicao();
+                renderizarTabela(); 
+                fecharModalEdicao();
                 mostrarNotificacao(dataEnvio ? '✅ Atualizado! Status: Entregue' : '✅ Atualizado!');
-            } catch (erro) { alert('❌ Erro: ' + erro.message); }
-            finally { btn.innerHTML = '💾 Salvar'; btn.disabled = false; }
+            } catch (erro) { 
+                alert('❌ Erro: ' + erro.message); 
+            } finally { 
+                btn.innerHTML = '💾 Salvar'; 
+                btn.disabled = false; 
+            }
         }
 
         function abrirModalExclusao(solicitacaoId) {
             document.getElementById('excluirSolicitacaoId').value = solicitacaoId;
             document.getElementById('modalExclusao').classList.add('ativo');
         }
-        function fecharModalExclusao() { document.getElementById('modalExclusao').classList.remove('ativo'); }
+        
+        function fecharModalExclusao() { 
+            document.getElementById('modalExclusao').classList.remove('ativo'); 
+        }
 
         async function confirmarExclusao() {
             const solicitacaoId = document.getElementById('excluirSolicitacaoId').value;
             const btn = document.querySelector('#modalExclusao .btn-danger');
-            btn.innerHTML = '⏳...'; btn.disabled = true;
+            btn.innerHTML = '⏳...'; 
+            btn.disabled = true;
             try {
                 const { error } = await supabaseClient.from('solicitacoes_pg').delete().eq('id', solicitacaoId);
                 if (error) throw error;
                 const index = dadosCarregados.findIndex(d => d.id === solicitacaoId);
-                if (index !== -1) { dadosCarregados.splice(index, 1); dadosCarregados.forEach((item, i) => item.index = i); }
+                if (index !== -1) { 
+                    dadosCarregados.splice(index, 1); 
+                    dadosCarregados.forEach((item, i) => item.index = i); 
+                }
                 idsSelecionados.delete(index);
-                renderizarTabela(); atualizarEstatisticas(); fecharModalExclusao(); mostrarNotificacao('🗑️ Excluído!');
-            } catch (erro) { alert('❌ Erro: ' + erro.message); }
-            finally { btn.innerHTML = '🗑️ Excluir'; btn.disabled = false; }
+                renderizarTabela(); 
+                atualizarEstatisticas(); 
+                fecharModalExclusao(); 
+                mostrarNotificacao('🗑️ Excluído!');
+            } catch (erro) { 
+                alert('❌ Erro: ' + erro.message); 
+            } finally { 
+                btn.innerHTML = '🗑️ Excluir'; 
+                btn.disabled = false; 
+            }
         }
 
         function mostrarNotificacao(mensagem) {
@@ -1132,51 +1258,53 @@
             notif.style.cssText = 'position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #11998e, #38ef7d); color: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 9999; font-weight: 600; animation: slideInRight 0.3s ease;';
             notif.textContent = mensagem;
             document.body.appendChild(notif);
-            setTimeout(() => { notif.style.animation = 'slideOutRight 0.3s ease'; setTimeout(() => notif.remove(), 300); }, 3000);
+            setTimeout(() => { 
+                notif.style.animation = 'slideOutRight 0.3s ease'; 
+                setTimeout(() => notif.remove(), 300); 
+            }, 3000);
         }
 
         function toggleSelecao(index) {
-            if (idsSelecionados.has(index)) idsSelecionados.delete(index); else idsSelecionados.add(index);
+            if (idsSelecionados.has(index)) idsSelecionados.delete(index); 
+            else idsSelecionados.add(index);
             const tr = document.querySelector(`tr[data-index="${index}"]`);
             if (tr) tr.classList.toggle('selecionado', idsSelecionados.has(index));
-            atualizarContadores(); atualizarBotoes();
+            atualizarContadores(); 
+            atualizarBotoes();
         }
 
-    function toggleSelecionarTodos() {
-    // Pega o estado do checkbox que foi clicado
-    const checkboxHeader = document.getElementById('checkboxHeader');
-    const checkboxMassa = document.getElementById('selecionarTodos');
-    
-    // Sincroniza ambos os checkboxes
-    const checked = checkboxHeader.checked;
-    checkboxMassa.checked = checked;
-    
-    // Limpa ou preenche o Set de seleção
-    idsSelecionados.clear();
-    if (checked) {
-        dadosCarregados.forEach(item => idsSelecionados.add(item.index));
-    }
-    
-    // ✅ CORREÇÃO: Atualiza visualmente todas as linhas SEM recriar a tabela toda
-    const todasLinhas = document.querySelectorAll('#tabelaBody tr[data-index]');
-    todasLinhas.forEach(tr => {
-        const index = parseInt(tr.dataset.index);
-        const checkbox = tr.querySelector('.checkbox-selecao');
-        
-        if (checkbox) {
-            checkbox.checked = checked;
+        function toggleSelecionarTodos() {
+            const checkboxHeader = document.getElementById('checkboxHeader');
+            const checkboxMassa = document.getElementById('selecionarTodos');
+            
+            const checked = checkboxHeader.checked;
+            checkboxMassa.checked = checked;
+            
+            idsSelecionados.clear();
+            if (checked) {
+                dadosCarregados.forEach(item => idsSelecionados.add(item.index));
+            }
+            
+            const todasLinhas = document.querySelectorAll('#tabelaBody tr[data-index]');
+            todasLinhas.forEach(tr => {
+                const index = parseInt(tr.dataset.index);
+                const checkbox = tr.querySelector('.checkbox-selecao');
+                
+                if (checkbox) {
+                    checkbox.checked = checked;
+                }
+                
+                if (checked) {
+                    tr.classList.add('selecionado');
+                } else {
+                    tr.classList.remove('selecionado');
+                }
+            });
+            
+            atualizarContadores();
+            atualizarBotoes();
         }
         
-        if (checked) {
-            tr.classList.add('selecionado');
-        } else {
-            tr.classList.remove('selecionado');
-        }
-    });
-    
-    atualizarContadores();
-    atualizarBotoes();
-}
         function atualizarContadores() {
             document.getElementById('statSelecionadas').textContent = idsSelecionados.size;
             document.getElementById('infoSelecao').textContent = idsSelecionados.size > 0 ? `${idsSelecionados.size} de ${dadosCarregados.length}` : '';
@@ -1184,8 +1312,14 @@
 
         function atualizarEstatisticas() {
             const total = dadosCarregados.length;
-            const floripa = dadosCarregados.filter(d => { const r = (d.regiao || '').toLowerCase(); return r.includes('florianópolis') || r.includes('floripa'); }).length;
-            const sc = dadosCarregados.filter(d => { const r = (d.regiao || '').toLowerCase(); return (r.includes('catarina') || r.includes('sc')) && !r.includes('florianópolis'); }).length;
+            const floripa = dadosCarregados.filter(d => { 
+                const r = (d.regiao || '').toLowerCase(); 
+                return r.includes('florianópolis') || r.includes('floripa'); 
+            }).length;
+            const sc = dadosCarregados.filter(d => { 
+                const r = (d.regiao || '').toLowerCase(); 
+                return (r.includes('catarina') || r.includes('sc')) && !r.includes('florianópolis'); 
+            }).length;
             document.getElementById('statTotal').textContent = total;
             document.getElementById('statFloripa').textContent = floripa;
             document.getElementById('statSC').textContent = sc;
@@ -1207,7 +1341,8 @@
             document.getElementById('tabelaContainer').style.display = 'none';
             document.getElementById('statsContainer').style.display = 'none';
             document.getElementById('emptyState').style.display = 'block';
-            dadosCarregados = []; idsSelecionados.clear();
+            dadosCarregados = []; 
+            idsSelecionados.clear();
             document.getElementById('checkboxHeader').checked = false;
             document.getElementById('selecionarTodos').checked = false;
             removerFiltroCliente();
@@ -1219,14 +1354,6 @@
             document.getElementById('dataInicial').value = formatarDataInput(seteDiasAtras);
         }
 
-               // ============================================
-        // NOVA FUNÇÃO: MODAL DE EMISSÃO DE ETIQUETAS
-        // ============================================
-        
-               // ============================================
-        // NOVA FUNÇÃO: MODAL DE EMISSÃO DE ETIQUETAS
-        // ============================================
-        
         function fecharModalEtiquetas() {
             document.getElementById('modalEtiquetas').classList.remove('ativo');
         }
@@ -1238,15 +1365,12 @@
             const texto = elemento.textContent;
             
             navigator.clipboard.writeText(texto).then(() => {
-                // Feedback visual no botão
                 botao.textContent = '✅ Copiado';
                 botao.classList.add('copiado');
                 
-                // Feedback visual no campo
                 const campoCopiar = botao.closest('.campo-copiar');
                 if (campoCopiar) campoCopiar.classList.add('copiado');
                 
-                // Volta ao normal após 2 segundos
                 setTimeout(() => {
                     botao.textContent = '📋 Copiar';
                     botao.classList.remove('copiado');
@@ -1254,7 +1378,6 @@
                 }, 2000);
             }).catch(err => {
                 console.error('Erro ao copiar:', err);
-                // Fallback para navegadores antigos
                 const range = document.createRange();
                 range.selectNode(elemento);
                 window.getSelection().removeAllRanges();
@@ -1281,7 +1404,6 @@
                 const enderecoCompleto = `${item.rua || ''}, ${item.numero || 'S/N'}${item.complemento ? ' - ' + item.complemento : ''}`;
                 const cidadeUF = `${item.cidade || ''} - ${item.estado || 'SC'}`;
                 
-                // Verifica se há medidas preenchidas
                 const temMedidas = item.peso_kg || item.altura_cm || item.largura_cm || item.comprimento_cm;
                 
                 const medidasHtml = temMedidas ? `
@@ -1399,126 +1521,116 @@
             document.getElementById('modalEtiquetas').classList.add('ativo');
         }
 
-        // ============================================
-        // FUNÇÃO GERAR PDF - MODIFICADA CONFORME SOLICITADO
-        // ============================================
-       async function gerarPDF() {
-    if (idsSelecionados.size === 0) {
-        alert('⚠️ Selecione pelo menos uma solicitação para gerar o PDF.');
-        return;
-    }
+        async function gerarPDF() {
+            if (idsSelecionados.size === 0) {
+                alert('⚠️ Selecione pelo menos uma solicitação para gerar o PDF.');
+                return;
+            }
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('landscape');
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
 
-    const dataInicial = document.getElementById('dataInicial').value;
-    const dataFinal = document.getElementById('dataFinal').value;
+            const dataInicial = document.getElementById('dataInicial').value;
+            const dataFinal = document.getElementById('dataFinal').value;
 
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Loja e Brechó Pingo de Gente - Solicitações de Entrega', 15, 15);
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Loja e Brechó Pingo de Gente - Solicitações de Entrega', 15, 15);
 
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Período: ${formatarDataInputParaBr(dataInicial)} a ${formatarDataInputParaBr(dataFinal)}`, 15, 22);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Período: ${formatarDataInputParaBr(dataInicial)} a ${formatarDataInputParaBr(dataFinal)}`, 15, 22);
 
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.line(10, 25, 287, 25);
+            doc.setDrawColor(0, 0, 0);
+            doc.setLineWidth(0.5);
+            doc.line(10, 25, 287, 25);
 
-    // ============================================
-    // ORDENAÇÃO ALFABÉTICA PELA COLUNA NOME
-    // ============================================
-    const dadosSelecionados = Array.from(idsSelecionados).map(index => {
-        return dadosCarregados.find(d => d.index === index);
-    }).filter(Boolean);
+            const dadosSelecionados = Array.from(idsSelecionados).map(index => {
+                return dadosCarregados.find(d => d.index === index);
+            }).filter(Boolean);
 
-    // Ordena alfabeticamente pelo nome (case-insensitive)
-    dadosSelecionados.sort((a, b) => {
-        const nomeA = (a.nome || '').toLowerCase();
-        const nomeB = (b.nome || '').toLowerCase();
-        return nomeA.localeCompare(nomeB, 'pt-BR');
-    });
+            dadosSelecionados.sort((a, b) => {
+                const nomeA = (a.nome || '').toLowerCase();
+                const nomeB = (b.nome || '').toLowerCase();
+                return nomeA.localeCompare(nomeB, 'pt-BR');
+            });
 
-    // ============================================
-    // MONTA OS DADOS SEM A COLUNA Nº PEDIDO
-    // E COM A NOVA COLUNA "DADOS DO PACOTE"
-    // ============================================
-    const dadosTabela = dadosSelecionados.map(item => {
-        return [
-            formatarDataBr(item.data_solicitacao),
-            item.nome || '-',
-            item.instagram || '-',
-            item.regiao || '-',
-            formatarCEP(item.cep),
-            item.cidade || '-',
-            item.observacoes || '-',
-            'Peso:     Medidas: '  // Nova coluna pré-preenchida
-        ];
-    });
+            const dadosTabela = dadosSelecionados.map(item => {
+                return [
+                    formatarDataBr(item.data_solicitacao),
+                    item.nome || '-',
+                    item.instagram || '-',
+                    item.regiao || '-',
+                    formatarCEP(item.cep),
+                    item.cidade || '-',
+                    item.observacoes || '-',
+                    'Peso:     Medidas: '
+                ];
+            });
 
-    doc.autoTable({
-        head: [['Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Observações', 'Dados do pacote']],
-        body: dadosTabela,
-        startY: 30,
-        theme: 'grid',
-        headStyles: {
-            fillColor: [255, 255, 255],
-            textColor: [0, 0, 0],
-            fontSize: 11,
-            fontStyle: 'bold',
-            lineColor: [0, 0, 0],
-            lineWidth: 0.5,
-            valign: 'middle'  // Cabeçalho continua no meio
-        },
-        bodyStyles: {
-            fontSize: 10,
-            textColor: [0, 0, 0],
-            fillColor: [255, 255, 255],
-            minCellHeight: 18,  // ✅ METADE DA ALTURA (era 35, agora 18)
-            valign: 'top'       // ✅ DADOS NO INÍCIO/TOPO DA CÉLULA
-        },
-        alternateRowStyles: {
-            fillColor: [255, 255, 255]
-        },
-        columnStyles: {
-            0: { cellWidth: 25 },  // Data
-            1: { cellWidth: 45 },  // Nome
-            2: { cellWidth: 30 },  // Instagram
-            3: { cellWidth: 40 },  // Região
-            4: { cellWidth: 25 },  // CEP
-            5: { cellWidth: 30 },  // Cidade
-            6: { cellWidth: 50 },  // Observações
-            7: { cellWidth: 40 }   // Dados do pacote (nova coluna)
-        },
-        margin: { top: 30, left: 10, right: 10 },
-        styles: {
-            lineColor: [0, 0, 0],
-            lineWidth: 0.5,
-            cellPadding: 3  // ✅ REDUZIDO PARA MANTER COMPACTO
+            doc.autoTable({
+                head: [['Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Observações', 'Dados do pacote']],
+                body: dadosTabela,
+                startY: 30,
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [255, 255, 255],
+                    textColor: [0, 0, 0],
+                    fontSize: 11,
+                    fontStyle: 'bold',
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.5,
+                    valign: 'middle'
+                },
+                bodyStyles: {
+                    fontSize: 10,
+                    textColor: [0, 0, 0],
+                    fillColor: [255, 255, 255],
+                    minCellHeight: 18,
+                    valign: 'top'
+                },
+                alternateRowStyles: {
+                    fillColor: [255, 255, 255]
+                },
+                columnStyles: {
+                    0: { cellWidth: 25 },
+                    1: { cellWidth: 45 },
+                    2: { cellWidth: 30 },
+                    3: { cellWidth: 40 },
+                    4: { cellWidth: 25 },
+                    5: { cellWidth: 30 },
+                    6: { cellWidth: 50 },
+                    7: { cellWidth: 40 }
+                },
+                margin: { top: 30, left: 10, right: 10 },
+                styles: {
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.5,
+                    cellPadding: 3
+                }
+            });
+
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                doc.text(
+                    `Página ${i} de ${pageCount} - Total de ${dadosSelecionados.length} solicitações selecionadas`,
+                    297 / 2,
+                    210 - 10,
+                    { align: 'center' }
+                );
+            }
+
+            const pdfBlobUrl = doc.output('bloburl');
+            const novaAba = window.open(pdfBlobUrl, '_blank');
+            if (!novaAba) {
+                alert('❌ O navegador bloqueou a abertura de nova aba. Por favor, permita popups para este site.');
+            }
         }
-    });
 
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
-        doc.text(
-            `Página ${i} de ${pageCount} - Total de ${dadosSelecionados.length} solicitações selecionadas`,
-            297 / 2,
-            210 - 10,
-            { align: 'center' }
-        );
-    }
-
-    const pdfBlobUrl = doc.output('bloburl');
-    const novaAba = window.open(pdfBlobUrl, '_blank');
-    if (!novaAba) {
-        alert('❌ O navegador bloqueou a abertura de nova aba. Por favor, permita popups para este site.');
-    }
-}
         async function gerarEtiquetas() {
             if (idsSelecionados.size === 0) {
                 alert('⚠️ Selecione pelo menos uma solicitação para gerar as etiquetas.');
