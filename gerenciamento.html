@@ -833,7 +833,7 @@
         }
 
         // ============================================
-        // BUSCA POR NOME DO CLIENTE - SEM ACENTOS
+        // BUSCA POR NOME DO CLIENTE - SEM ACENTOS (CORRIGIDO)
         // ============================================
         async function buscarClientes() {
             if (!supabaseClient) return;
@@ -842,7 +842,11 @@
             const instagram = document.getElementById('buscaInstagram').value.trim();
             const whatsapp = document.getElementById('buscaWhatsApp').value.trim().replace(/\D/g, '');
             
-            if (nome.length < 3 && cpf.length < 3 && instagram.length < 3 && whatsapp.length < 3) { 
+            // Verifica se há critérios de busca suficientes
+            const termoBuscaNome = nome.length >= 2; // Reduzido para 2 caracteres
+            const termoBuscaOutros = cpf.length >= 3 || instagram.length >= 3 || whatsapp.length >= 3;
+            
+            if (!termoBuscaNome && !termoBuscaOutros) { 
                 document.getElementById('resultadosBusca').style.display = 'none'; 
                 return; 
             }
@@ -855,21 +859,25 @@
                 if (instagram.length >= 3) query = query.ilike('instagram', `%${instagram}%`);
                 if (whatsapp.length >= 3) query = query.ilike('whatsapp', `%${whatsapp}%`);
                 
-                // Para Nome - busca mais ampla (sem acentos no banco também funciona)
-                if (nome.length >= 3) {
-                    // Busca com o termo original e também sem acentos
-                    const nomeSemAcentos = removerAcentos(nome);
-                    query = query.or(`nome.ilike.%${nome}%,nome.ilike.%${nomeSemAcentos}%`);
+                // Para Nome - busca mais ampla usando ilike (case-insensitive)
+                // Buscamos tanto o termo original quanto variações
+                if (nome.length >= 2) {
+                    // Busca com ilike no banco (case-insensitive)
+                    query = query.ilike('nome', `%${nome}%`);
                 }
                 
-                const { data, error } = await query.limit(20);
+                const { data, error } = await query.limit(50); // Aumentado o limite para pegar mais resultados
                 if (error) { 
                     console.error('Erro:', error); 
                     return; 
                 }
                 
-                // Filtra client-side para garantir match sem acentos
-                const resultadosFiltrados = filtrarPorNomeSemAcentos(data || [], nome);
+                // Se há busca por nome, aplica filtro client-side sem acentos
+                let resultadosFiltrados = data || [];
+                if (nome.length >= 2) {
+                    resultadosFiltrados = filtrarPorNomeSemAcentos(resultadosFiltrados, nome);
+                }
+                
                 mostrarResultadosBusca(resultadosFiltrados);
             } catch (erro) {
                 console.error('Erro na busca:', erro);
@@ -877,15 +885,16 @@
         }
 
         // ============================================
-        // FILTRO CLIENT-SIDE POR NOME SEM ACENTOS
+        // FILTRO CLIENT-SIDE POR NOME SEM ACENTOS (CORRIGIDO)
         // ============================================
         function filtrarPorNomeSemAcentos(clientes, termoBusca) {
-            if (!termoBusca || termoBusca.length < 3) return clientes;
+            if (!termoBusca || termoBusca.length < 2) return clientes;
             
             const termoNormalizado = removerAcentos(termoBusca);
             
             return clientes.filter(cliente => {
                 const nomeNormalizado = removerAcentos(cliente.nome);
+                // Verifica se o nome normalizado contém o termo normalizado
                 return nomeNormalizado.includes(termoNormalizado);
             });
         }
