@@ -93,6 +93,7 @@
         .btn-etiqueta:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
         .btn-danger { background: linear-gradient(135deg, #FF6B6B, #EE5A6F); color: white; }
         .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(238, 90, 111, 0.4); }
+        /* NOVO: Botão emitir etiquetas */
         .btn-emitir { background: linear-gradient(135deg, #9C27B0, #E91E63); color: white; }
         .btn-emitir:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(156, 39, 176, 0.4); }
         .btn-emitir:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
@@ -211,6 +212,9 @@
         .filtro-numero-pedido { background: #E3F2FD; border: 2px solid #2196F3; }
         .filtro-numero-pedido h3 { color: #1565C0; }
 
+        /* ============================================
+           NOVOS ESTILOS PARA MODAL DE ETIQUETAS
+           ============================================ */
         .modal-etiquetas {
             background: white;
             padding: 0;
@@ -423,7 +427,6 @@
             color: #9C27B0;
         }
     </style>
-<base target="_blank">
 </head>
 <body>
     <div class="container">
@@ -478,6 +481,7 @@
                 <button class="btn btn-secondary" onclick="limparFiltros()">🧹 Limpar Filtros</button>
                 <button class="btn btn-pdf" id="btnGerarPDF" onclick="gerarPDF()" disabled>📄 Gerar PDF</button>
                 <button class="btn btn-etiqueta" id="btnGerarEtiquetas" onclick="gerarEtiquetas()" disabled>🏷️ Gerar Etiquetas PDF</button>
+                <!-- NOVO BOTÃO -->
                 <button class="btn btn-emitir" id="btnEmitirEtiquetas" onclick="abrirModalEtiquetas()" disabled>📋 Emitir Etiquetas</button>
             </div>
         </div>
@@ -592,6 +596,9 @@
         </div>
     </div>
 
+    <!-- ============================================
+         NOVO MODAL PARA EMISSÃO DE ETIQUETAS
+         ============================================ -->
     <div class="modal-overlay" id="modalEtiquetas">
         <div class="modal-etiquetas">
             <div class="etiquetas-header">
@@ -602,7 +609,9 @@
                 <button class="btn-fechar" onclick="fecharModalEtiquetas()" style="color: white; font-size: 1.8rem;">×</button>
             </div>
             
-            <div class="etiquetas-body" id="etiquetasContainer"></div>
+            <div class="etiquetas-body" id="etiquetasContainer">
+                <!-- Conteúdo gerado dinamicamente -->
+            </div>
             
             <div class="etiquetas-footer">
                 <div class="etiquetas-info">
@@ -655,14 +664,6 @@
             cep: '88104-740'
         };
 
-        // ============================================
-        // FUNÇÃO DE NORMALIZAÇÃO - REMOVE ACENTOS
-        // ============================================
-        function removerAcentos(str) {
-            if (!str) return '';
-            return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-        }
-
         function conectarSupabase() {
             const url = 'https://ytnfjzngalfapfnbobfm.supabase.co';
             const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bmZqem5nYWxmYXBmbmJvYmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDk4MjksImV4cCI6MjA4OTA4NTgyOX0.1-qPr2JIFzN5bL2F7GbcLN1Pm0rAQaP6-PQ9fxLkdls';
@@ -713,9 +714,6 @@
         function getTagRegiao(regiao) { const r = (regiao || '').toLowerCase(); if (r.includes('florianópolis') || r.includes('floripa')) return '<span class="tag-regiao tag-floripa">🏠 Grande Florianópolis</span>'; if (r.includes('catarina') || r.includes('sc')) return '<span class="tag-regiao tag-sc">🌲 Santa Catarina</span>'; return '<span class="tag-regiao tag-outros">🇧🇷 Outros Estados</span>'; }
         function getTagStatus(status) { const cores = {'pendente': '#FFA726', 'enviada': '#42A5F5', 'entregue': '#66BB6A', 'cancelado': '#EF5350'}; const cor = cores[status] || '#9E9E9E'; return `<span style="display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: ${cor}20; color: ${cor}; border: 1px solid ${cor};">${status || 'Pendente'}</span>`; }
 
-        // ============================================
-        // BUSCA POR NÚMERO DO PEDIDO - SEM ACENTOS (CORRIGIDO)
-        // ============================================
         async function buscarPorNumeroPedido() {
             if (!supabaseClient) return;
             const numeroPedido = document.getElementById('buscaNumeroPedido').value.trim();
@@ -725,61 +723,18 @@
                 return; 
             }
 
-            try {
-                // Busca por número da solicitação (números não têm acentos)
-                let query = supabaseClient
-                    .from('solicitacoes_pg')
-                    .select('*, clientes_pg (id, nome, cpf, whatsapp, instagram)')
-                    .ilike('numero_solicitacao', `%${numeroPedido}%`)
-                    .limit(10);
+            let query = supabaseClient
+                .from('solicitacoes_pg')
+                .select('*, clientes_pg (id, nome, cpf, whatsapp, instagram)')
+                .ilike('numero_solicitacao', `%${numeroPedido}%`)
+                .limit(10);
 
-                const { data, error } = await query;
-                if (error) { 
-                    console.error('Erro:', error); 
-                    return; 
-                }
-                
-                // Também busca por nome do cliente (busca ampla e filtra client-side)
-                const termoNormalizado = removerAcentos(numeroPedido);
-                
-                // Busca todos os clientes e filtra client-side
-                const { data: todosClientes, error: clientesError } = await supabaseClient
-                    .from('clientes_pg')
-                    .select('*, solicitacoes_pg (id, numero_solicitacao, data_solicitacao, status)')
-                    .limit(200);
-                    
-                let resultadosPorNome = [];
-                
-                if (!clientesError && todosClientes) {
-                    // Filtra client-side por nome sem acentos
-                    const clientesFiltrados = todosClientes.filter(c => {
-                        const nomeNormalizado = removerAcentos(c.nome);
-                        return nomeNormalizado.includes(termoNormalizado);
-                    });
-                    
-                    // Transforma no formato esperado
-                    resultadosPorNome = clientesFiltrados.flatMap(c => {
-                        return (c.solicitacoes_pg || []).map(s => ({
-                            ...s,
-                            clientes_pg: {
-                                id: c.id,
-                                nome: c.nome,
-                                cpf: c.cpf,
-                                whatsapp: c.whatsapp,
-                                instagram: c.instagram
-                            }
-                        }));
-                    });
-                }
-                
-                // Combina resultados e remove duplicados
-                const todosResultados = [...(data || []), ...resultadosPorNome];
-                const unicos = todosResultados.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
-                
-                mostrarResultadosBuscaPedido(unicos);
-            } catch (erro) {
-                console.error('Erro na busca:', erro);
+            const { data, error } = await query;
+            if (error) { 
+                console.error('Erro:', error); 
+                return; 
             }
+            mostrarResultadosBuscaPedido(data || []);
         }
 
         function mostrarResultadosBuscaPedido(solicitacoes) {
@@ -831,100 +786,28 @@
             removerFiltroNumeroPedido();
         }
 
-        // ============================================
-        // BUSCA POR NOME DO CLIENTE - SEM ACENTOS (CORRIGIDO)
-        // ============================================
         async function buscarClientes() {
             if (!supabaseClient) return;
             const nome = document.getElementById('buscaNome').value.trim();
             const cpf = document.getElementById('buscaCPF').value.trim().replace(/\D/g, '');
             const instagram = document.getElementById('buscaInstagram').value.trim();
             const whatsapp = document.getElementById('buscaWhatsApp').value.trim().replace(/\D/g, '');
-            
-            if (nome.length < 3 && cpf.length < 3 && instagram.length < 3 && whatsapp.length < 3) { 
-                document.getElementById('resultadosBusca').style.display = 'none'; 
-                return; 
-            }
+            if (nome.length < 3 && cpf.length < 3 && instagram.length < 3 && whatsapp.length < 3) { document.getElementById('resultadosBusca').style.display = 'none'; return; }
 
-            try {
-                let query = supabaseClient.from('clientes_pg').select('*');
-                
-                // Para CPF, Instagram e WhatsApp - busca normal no banco
-                if (cpf.length >= 3) query = query.ilike('cpf', `%${cpf}%`);
-                if (instagram.length >= 3) query = query.ilike('instagram', `%${instagram}%`);
-                if (whatsapp.length >= 3) query = query.ilike('whatsapp', `%${whatsapp}%`);
-                
-                // Para Nome - busca ampla no banco (sem filtro) e filtra client-side
-                // Isso garante que "joao" encontre "João"
-                if (nome.length >= 3) {
-                    // Não filtra por nome no Supabase - busca todos e filtra depois
-                    query = query.limit(100); // Busca mais registros
-                } else {
-                    query = query.limit(20);
-                }
-                
-                const { data, error } = await query;
-                if (error) { 
-                    console.error('Erro:', error); 
-                    return; 
-                }
-                
-                // Filtra client-side para garantir match sem acentos
-                const resultadosFiltrados = filtrarClientesCompleto(data || [], {
-                    nome: nome,
-                    cpf: cpf,
-                    instagram: instagram,
-                    whatsapp: whatsapp
-                });
-                
-                mostrarResultadosBusca(resultadosFiltrados);
-            } catch (erro) {
-                console.error('Erro na busca:', erro);
-            }
-        }
+            let query = supabaseClient.from('clientes_pg').select('*').limit(10);
+            if (nome.length >= 3) query = query.ilike('nome', `%${nome}%`);
+            if (cpf.length >= 3) query = query.ilike('cpf', `%${cpf}%`);
+            if (instagram.length >= 3) query = query.ilike('instagram', `%${instagram}%`);
+            if (whatsapp.length >= 3) query = query.ilike('whatsapp', `%${whatsapp}%`);
 
-        // ============================================
-        // FILTRO CLIENT-SIDE COMPLETO - SEM ACENTOS
-        // ============================================
-        function filtrarClientesCompleto(clientes, filtros) {
-            return clientes.filter(cliente => {
-                // Filtro por Nome (sem acentos)
-                if (filtros.nome && filtros.nome.length >= 3) {
-                    const termoBusca = removerAcentos(filtros.nome);
-                    const nomeCliente = removerAcentos(cliente.nome);
-                    if (!nomeCliente.includes(termoBusca)) return false;
-                }
-                
-                // Filtro por CPF
-                if (filtros.cpf && filtros.cpf.length >= 3) {
-                    const cpfCliente = (cliente.cpf || '').replace(/\D/g, '');
-                    if (!cpfCliente.includes(filtros.cpf)) return false;
-                }
-                
-                // Filtro por Instagram
-                if (filtros.instagram && filtros.instagram.length >= 3) {
-                    const termoBusca = removerAcentos(filtros.instagram);
-                    const instagramCliente = removerAcentos(cliente.instagram);
-                    if (!instagramCliente.includes(termoBusca)) return false;
-                }
-                
-                // Filtro por WhatsApp
-                if (filtros.whatsapp && filtros.whatsapp.length >= 3) {
-                    const whatsappCliente = (cliente.whatsapp || '').replace(/\D/g, '');
-                    if (!whatsappCliente.includes(filtros.whatsapp)) return false;
-                }
-                
-                return true;
-            });
+            const { data, error } = await query;
+            if (error) { console.error('Erro:', error); return; }
+            mostrarResultadosBusca(data || []);
         }
 
         function mostrarResultadosBusca(clientes) {
             const container = document.getElementById('resultadosBusca');
-            if (clientes.length === 0) { 
-                container.innerHTML = '<div class="item-resultado">Nenhum cliente encontrado</div>'; 
-                container.style.display = 'block'; 
-                return; 
-            }
+            if (clientes.length === 0) { container.innerHTML = '<div class="item-resultado">Nenhum cliente</div>'; container.style.display = 'block'; return; }
             container.innerHTML = clientes.map(c => `<div class="item-resultado" onclick="selecionarCliente('${c.id}')"><strong>${c.nome || 'Sem nome'}</strong><small>${c.cpf ? `CPF: ${formatarCPF(c.cpf)} | ` : ''}${c.whatsapp || ''}</small></div>`).join('');
             container.style.display = 'block';
         }
@@ -949,12 +832,14 @@
             ['buscaNome', 'buscaCPF', 'buscaInstagram', 'buscaWhatsApp'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('resultadosBusca').style.display = 'none';
         }
-        
-        function limparBuscaCliente() { 
-            removerFiltroCliente(); 
-        }
+        function limparBuscaCliente() { removerFiltroCliente(); }
 
+        // ============================================
+        // CORREÇÃO: Função para formatar data do input sem deslocamento de fuso
+        // ============================================
         function formatarDataInputParaBr(dataString) {
+            // Converte YYYY-MM-DD para DD/MM/YYYY sem criar objeto Date
+            // Isso evita o deslocamento de fuso horário
             if (!dataString) return '-';
             const partes = dataString.split('-');
             if (partes.length !== 3) return dataString;
@@ -962,61 +847,56 @@
         }
 
         async function buscarSolicitacoes() {
-            if (!supabaseClient) { 
-                alert('⚠️ Conecte-se primeiro!'); 
-                return; 
-            }
-            
-            if (numeroPedidoSelecionado) {
-                await buscarPorIdSolicitacao(numeroPedidoSelecionado);
-                return;
-            }
-            
-            const dataInicial = document.getElementById('dataInicial').value;
-            const horaInicial = document.getElementById('horaInicial').value || '00:00';
-            const dataFinal = document.getElementById('dataFinal').value;
-            const horaFinal = document.getElementById('horaFinal').value || '23:59';
-            
-            if (!dataInicial || !dataFinal) { 
-                alert('⚠️ Selecione as datas'); 
-                return; 
-            }
-            if (new Date(dataInicial) > new Date(dataFinal)) { 
-                alert('⚠️ Data inicial maior que final'); 
-                return; 
-            }
+    if (!supabaseClient) { alert('⚠️ Conecte-se primeiro!'); return; }
+    
+    // ============================================
+    // CORREÇÃO: Se houver um número de pedido selecionado, 
+    // busca diretamente por ele em vez de usar filtros de data
+    // ============================================
+    if (numeroPedidoSelecionado) {
+        await buscarPorIdSolicitacao(numeroPedidoSelecionado);
+        return;
+    }
+    
+    // Pega os valores dos inputs de data e hora
+    const dataInicial = document.getElementById('dataInicial').value;
+    const horaInicial = document.getElementById('horaInicial').value || '00:00';
+    const dataFinal = document.getElementById('dataFinal').value;
+    const horaFinal = document.getElementById('horaFinal').value || '23:59';
+    
+    if (!dataInicial || !dataFinal) { alert('⚠️ Selecione as datas'); return; }
+    if (new Date(dataInicial) > new Date(dataFinal)) { alert('⚠️ Data inicial maior que final'); return; }
 
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('tabelaContainer').style.display = 'none';
-            document.getElementById('statsContainer').style.display = 'none';
-            document.getElementById('loading').style.display = 'block';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('tabelaContainer').style.display = 'none';
+    document.getElementById('statsContainer').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
 
-            try {
-                const dataHoraInicial = new Date(`${dataInicial}T${horaInicial}:00`);
-                const dataHoraFinal = new Date(`${dataFinal}T${horaFinal}:00`);
+    try {
+        const dataHoraInicial = new Date(`${dataInicial}T${horaInicial}:00`);
+        const dataHoraFinal = new Date(`${dataFinal}T${horaFinal}:00`);
 
-                let query = supabaseClient.from('solicitacoes_pg').select(`*, clientes_pg (id, nome, cpf, whatsapp, instagram), enderecos_pg (cep, rua, numero, complemento, bairro, cidade, estado, regiao)`)
-                    .gte('data_solicitacao', dataHoraInicial.toISOString())
-                    .lte('data_solicitacao', dataHoraFinal.toISOString());
-                if (clienteSelecionado) query = query.eq('cliente_id', clienteSelecionado);
-                query = query.order('data_solicitacao', { ascending: false });
+        let query = supabaseClient.from('solicitacoes_pg').select(`*, clientes_pg (id, nome, cpf, whatsapp, instagram), enderecos_pg (cep, rua, numero, complemento, bairro, cidade, estado, regiao)`)
+            .gte('data_solicitacao', dataHoraInicial.toISOString())
+            .lte('data_solicitacao', dataHoraFinal.toISOString());
+        if (clienteSelecionado) query = query.eq('cliente_id', clienteSelecionado);
+        query = query.order('data_solicitacao', { ascending: false });
 
-                const { data, error } = await query;
-                if (error) throw error;
+        const { data, error } = await query;
+        if (error) throw error;
 
-                processarDadosCarregados(data);
-                
-                const dataInicialFormatada = formatarDataInputParaBr(dataInicial);
-                const dataFinalFormatada = formatarDataInputParaBr(dataFinal);
-                document.getElementById('periodoSelecionado').textContent = `Período: ${dataInicialFormatada} ${horaInicial} a ${dataFinalFormatada} ${horaFinal}`;
-            } catch (erro) {
-                alert('❌ Erro: ' + erro.message);
-                document.getElementById('emptyState').style.display = 'block';
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-            }
-        }
-
+        processarDadosCarregados(data);
+        
+        const dataInicialFormatada = formatarDataInputParaBr(dataInicial);
+        const dataFinalFormatada = formatarDataInputParaBr(dataFinal);
+        document.getElementById('periodoSelecionado').textContent = `Período: ${dataInicialFormatada} ${horaInicial} a ${dataFinalFormatada} ${horaFinal}`;
+    } catch (erro) {
+        alert('❌ Erro: ' + erro.message);
+        document.getElementById('emptyState').style.display = 'block';
+    } finally {
+        document.getElementById('loading').style.display = 'none';
+    }
+}
         async function buscarPorIdSolicitacao(solicitacaoId) {
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('tabelaContainer').style.display = 'none';
@@ -1096,165 +976,77 @@
                 const btnClass = temMedidas ? 'btn-medidas preenchido' : 'btn-medidas';
                 const btnText = temMedidas ? '✏️ Editar' : '📏 Medidas';
                 let medidasHtml = '-';
-                                if (temMedidas) {
-                    medidasHtml = `<div class="medidas-resumo">
-                        ${item.peso_kg ? `<div>⚖️ ${item.peso_kg} kg</div>` : ''}
-                        ${item.altura_cm ? `<div>📐 ${item.altura_cm}×${item.largura_cm}×${item.comprimento_cm} cm</div>` : ''}
-                    </div>`;
-                }
+                if (temMedidas) { const dim = [item.altura_cm, item.largura_cm, item.comprimento_cm].filter(Boolean); medidasHtml = `<div class="medidas-resumo">${item.peso_kg ? `⚖️ ${item.peso_kg}kg<br>` : ''}${dim.length > 0 ? `📐 ${dim.join('×')}cm` : ''}</div>`; }
 
-                tr.innerHTML = `
-                    <td><input type="checkbox" class="checkbox-selecao" data-index="${item.index}" onchange="toggleSelecao(${item.index})"></td>
-                    <td><span class="numero-pedido">${item.numero_solicitacao || '-'}</span></td>
+                const numeroPedidoHtml = item.numero_solicitacao 
+                    ? `<span class="numero-pedido">${item.numero_solicitacao}</span>` 
+                    : '<span style="color: #9E9E9E; font-style: italic;">-</span>';
+
+                tr.innerHTML = `<td><input type="checkbox" class="checkbox-selecao" onchange="toggleSelecao(${item.index})" ${idsSelecionados.has(item.index) ? 'checked' : ''}></td>
+                    <td>${numeroPedidoHtml}</td>
                     <td>${formatarDataHoraBr(item.data_solicitacao)}</td>
-                    <td>${item.nome || '-'}</td>
+                    <td><strong>${item.nome || '-'}</strong></td>
                     <td>${formatarCPF(item.cpf)}</td>
-                    <td>${item.whatsapp ? `<a href="https://wa.me/${formatarWhatsApp(item.whatsapp)}" target="_blank" class="whatsapp-link">${item.whatsapp}</a>` : '-'}</td>
-                    <td>${item.instagram ? `<a href="https://instagram.com/${item.instagram.replace('@', '')}" target="_blank" class="instagram-link">@${item.instagram.replace('@', '')}</a>` : '-'}</td>
+                    <td><a href="https://wa.me/${formatarWhatsApp(item.whatsapp)}" target="_blank" class="whatsapp-link">📱 ${item.whatsapp || '-'}</a></td>
+                    <td>${item.instagram ? `<a href="https://instagram.com/${item.instagram.replace('@', '')}" target="_blank" class="instagram-link">${item.instagram}</a>` : '-'}</td>
                     <td>${getTagRegiao(item.regiao)}</td>
                     <td>${formatarCEP(item.cep)}</td>
-                    <td title="${enderecoCompleto}">${enderecoCompleto.substring(0, 35)}${enderecoCompleto.length > 35 ? '...' : ''}</td>
+                    <td style="max-width: 200px; font-size: 0.85rem;">${enderecoCompleto}</td>
                     <td>${getTagStatus(item.status)}</td>
-                    <td class="col-medidas">
-                        ${medidasHtml}
-                        <button class="${btnClass}" onclick="abrirModalMedidas(${item.index})">${btnText}</button>
-                    </td>
-                    <td>
-                        <div class="acoes-container">
-                            <button class="btn-acao btn-editar" onclick="abrirModalEdicao(${item.index})">✏️ Editar</button>
-                            <button class="btn-acao btn-excluir" onclick="abrirModalExclusao(${item.index})">🗑️ Excluir</button>
-                        </div>
-                    </td>
-                `;
+                    <td class="col-medidas">${medidasHtml}<button class="${btnClass}" onclick="abrirModalMedidas('${item.id}')">${btnText}</button></td>
+                    <td><div class="acoes-container"><button class="btn-acao btn-editar" onclick="abrirModalEdicao('${item.id}')" title="Editar">✏️</button><button class="btn-acao btn-excluir" onclick="abrirModalExclusao('${item.id}')" title="Excluir">🗑️</button></div></td>`;
+                if (idsSelecionados.has(item.index)) tr.classList.add('selecionado');
                 tbody.appendChild(tr);
             });
-
             document.getElementById('tabelaContainer').style.display = 'block';
+            document.getElementById('tabelaContainer').classList.add('fade-in');
             document.getElementById('statsContainer').style.display = 'grid';
-            atualizarBotoesAcao();
+            atualizarBotoes();
         }
 
-        function toggleSelecao(index) {
-            const checkbox = document.querySelector(`input[data-index="${index}"]`);
-            const tr = document.querySelector(`tr[data-index="${index}"]`);
-
-            if (checkbox.checked) {
-                idsSelecionados.add(index);
-                tr.classList.add('selecionado');
-            } else {
-                idsSelecionados.delete(index);
-                tr.classList.remove('selecionado');
-            }
-
-            atualizarEstatisticas();
-            atualizarBotoesAcao();
-        }
-
-        function toggleSelecionarTodos() {
-            const checkboxHeader = document.getElementById('checkboxHeader');
-            const selecionarTodos = document.getElementById('selecionarTodos');
-            const checkboxes = document.querySelectorAll('.checkbox-selecao');
-            const checked = checkboxHeader.checked || selecionarTodos.checked;
-
-            checkboxHeader.checked = checked;
-            selecionarTodos.checked = checked;
-
-            checkboxes.forEach(cb => {
-                cb.checked = checked;
-                const index = parseInt(cb.dataset.index);
-                const tr = document.querySelector(`tr[data-index="${index}"]`);
-
-                if (checked) {
-                    idsSelecionados.add(index);
-                    tr.classList.add('selecionado');
-                } else {
-                    idsSelecionados.delete(index);
-                    tr.classList.remove('selecionado');
-                }
-            });
-
-            atualizarEstatisticas();
-            atualizarBotoesAcao();
-        }
-
-        function atualizarEstatisticas() {
-            const total = dadosCarregados.length;
-            const selecionadas = idsSelecionados.size;
-            const floripa = dadosCarregados.filter(i => (i.regiao || '').toLowerCase().includes('floripa') || (i.regiao || '').toLowerCase().includes('florianópolis')).length;
-            const sc = dadosCarregados.filter(i => (i.regiao || '').toLowerCase().includes('catarina') || (i.regiao || '').toLowerCase().includes('sc')).length;
-            const outros = total - floripa - sc;
-
-            document.getElementById('statTotal').textContent = total;
-            document.getElementById('statSelecionadas').textContent = selecionadas;
-            document.getElementById('statFloripa').textContent = floripa;
-            document.getElementById('statSC').textContent = sc;
-            document.getElementById('statOutros').textContent = outros;
-            document.getElementById('infoSelecao').textContent = selecionadas > 0 ? `${selecionadas} de ${total} selecionadas` : '';
-        }
-
-        function atualizarBotoesAcao() {
-            const temSelecionadas = idsSelecionados.size > 0;
-            document.getElementById('btnGerarPDF').disabled = !temSelecionadas;
-            document.getElementById('btnGerarEtiquetas').disabled = !temSelecionadas;
-            document.getElementById('btnEmitirEtiquetas').disabled = !temSelecionadas;
-        }
-
-        function abrirModalMedidas(index) {
-            const item = dadosCarregados.find(d => d.index === index);
+        function abrirModalMedidas(solicitacaoId) {
+            const item = dadosCarregados.find(d => d.id === solicitacaoId);
             if (!item) return;
-
-            document.getElementById('medidaSolicitacaoId').value = item.id;
+            document.getElementById('medidaSolicitacaoId').value = solicitacaoId;
             document.getElementById('medidaPeso').value = item.peso_kg || '';
             document.getElementById('medidaAltura').value = item.altura_cm || '';
             document.getElementById('medidaLargura').value = item.largura_cm || '';
             document.getElementById('medidaComprimento').value = item.comprimento_cm || '';
-
             document.getElementById('modalMedidas').classList.add('ativo');
         }
 
-        function fecharModal() {
-            document.getElementById('modalMedidas').classList.remove('ativo');
-        }
+        function fecharModal() { document.getElementById('modalMedidas').classList.remove('ativo'); }
 
         async function salvarMedidas() {
-            const id = document.getElementById('medidaSolicitacaoId').value;
-            const peso = parseFloat(document.getElementById('medidaPeso').value) || null;
-            const altura = parseInt(document.getElementById('medidaAltura').value) || null;
-            const largura = parseInt(document.getElementById('medidaLargura').value) || null;
-            const comprimento = parseInt(document.getElementById('medidaComprimento').value) || null;
+            const solicitacaoId = document.getElementById('medidaSolicitacaoId').value;
+            const medidas = {
+                peso_kg: document.getElementById('medidaPeso').value === '' ? null : parseFloat(document.getElementById('medidaPeso').value),
+                altura_cm: document.getElementById('medidaAltura').value === '' ? null : parseInt(document.getElementById('medidaAltura').value),
+                largura_cm: document.getElementById('medidaLargura').value === '' ? null : parseInt(document.getElementById('medidaLargura').value),
+                comprimento_cm: document.getElementById('medidaComprimento').value === '' ? null : parseInt(document.getElementById('medidaComprimento').value),
+                atualizado_em: new Date().toISOString()
+            };
 
+            const btn = document.querySelector('#modalMedidas .btn-salvar');
+            btn.innerHTML = '⏳...'; btn.disabled = true;
             try {
-                const { error } = await supabaseClient
-                    .from('solicitacoes_pg')
-                    .update({ peso_kg: peso, altura_cm: altura, largura_cm: largura, comprimento_cm: comprimento })
-                    .eq('id', id);
-
+                const { error } = await supabaseClient.from('solicitacoes_pg').update(medidas).eq('id', solicitacaoId);
                 if (error) throw error;
-
-                const item = dadosCarregados.find(d => d.id === id);
-                if (item) {
-                    item.peso_kg = peso;
-                    item.altura_cm = altura;
-                    item.largura_cm = largura;
-                    item.comprimento_cm = comprimento;
-                }
-
-                renderizarTabela();
-                fecharModal();
-                mostrarNotificacao('✅ Medidas salvas!');
-            } catch (erro) {
-                alert('❌ Erro ao salvar: ' + erro.message);
-            }
+                const index = dadosCarregados.findIndex(d => d.id === solicitacaoId);
+                if (index !== -1) dadosCarregados[index] = { ...dadosCarregados[index], ...medidas };
+                renderizarTabela(); fecharModal(); mostrarNotificacao('✅ Medidas salvas!');
+            } catch (erro) { alert('❌ Erro: ' + erro.message); }
+            finally { btn.innerHTML = '💾 Salvar'; btn.disabled = false; }
         }
 
-        function abrirModalEdicao(index) {
-            const item = dadosCarregados.find(d => d.index === index);
+        function abrirModalEdicao(solicitacaoId) {
+            const item = dadosCarregados.find(d => d.id === solicitacaoId);
             if (!item) return;
-
-            document.getElementById('editSolicitacaoId').value = item.id;
-            document.getElementById('editNumeroSolicitacao').value = item.numero_solicitacao || '';
+            
+            document.getElementById('editSolicitacaoId').value = solicitacaoId;
+            document.getElementById('editNumeroSolicitacao').value = item.numero_solicitacao || 'Não atribuído';
             document.getElementById('editNome').value = item.nome || '';
-            document.getElementById('editCPF').value = formatarCPF(item.cpf);
+            document.getElementById('editCPF').value = formatarCPF(item.cpf) || '';
             document.getElementById('editDataSolicitacao').value = formatarDataHoraInput(item.data_solicitacao);
             document.getElementById('editDataEnvio').value = item.data_envio ? item.data_envio.split('T')[0] : '';
             document.getElementById('editStatus').value = item.status || 'pendente';
@@ -1262,312 +1054,619 @@
             document.getElementById('editCodigoRastreio').value = item.codigo_rastreio || '';
             document.getElementById('editValorFrete').value = item.valor_frete || '';
             document.getElementById('editObservacoes').value = item.observacoes || '';
-
             document.getElementById('modalEdicao').classList.add('ativo');
         }
 
-        function fecharModalEdicao() {
-            document.getElementById('modalEdicao').classList.remove('ativo');
-        }
+        function fecharModalEdicao() { document.getElementById('modalEdicao').classList.remove('ativo'); }
 
         function atualizarStatusAutomatico() {
             const dataEnvio = document.getElementById('editDataEnvio').value;
             const statusSelect = document.getElementById('editStatus');
-
-            if (dataEnvio && statusSelect.value === 'pendente') {
-                statusSelect.value = 'enviada';
+            if (dataEnvio) {
+                statusSelect.value = 'entregue';
+            } else if (statusSelect.value === 'entregue') {
+                statusSelect.value = 'pendente';
             }
         }
 
         async function salvarEdicaoCompleta() {
-            const id = document.getElementById('editSolicitacaoId').value;
+            const solicitacaoId = document.getElementById('editSolicitacaoId').value;
             const dataSolicitacao = document.getElementById('editDataSolicitacao').value;
             const dataEnvio = document.getElementById('editDataEnvio').value;
-            const status = document.getElementById('editStatus').value;
-            const formaEnvio = document.getElementById('editFormaEnvio').value;
-            const codigoRastreio = document.getElementById('editCodigoRastreio').value;
-            const valorFrete = parseFloat(document.getElementById('editValorFrete').value) || null;
-            const observacoes = document.getElementById('editObservacoes').value;
 
-            try {
-                const updateData = {
-                    data_solicitacao: dataSolicitacao,
-                    data_envio: dataEnvio || null,
-                    status: status,
-                    forma_envio: formaEnvio || null,
-                    codigo_rastreio: codigoRastreio || null,
-                    valor_frete: valorFrete,
-                    observacoes: observacoes || null
-                };
-
-                const { error } = await supabaseClient
-                    .from('solicitacoes_pg')
-                    .update(updateData)
-                    .eq('id', id);
-
-                if (error) throw error;
-
-                const item = dadosCarregados.find(d => d.id === id);
-                if (item) {
-                    item.data_solicitacao = dataSolicitacao;
-                    item.data_envio = dataEnvio;
-                    item.status = status;
-                    item.forma_envio = formaEnvio;
-                    item.codigo_rastreio = codigoRastreio;
-                    item.valor_frete = valorFrete;
-                    item.observacoes = observacoes;
-                }
-
-                renderizarTabela();
-                fecharModalEdicao();
-                mostrarNotificacao('✅ Alterações salvas!');
-            } catch (erro) {
-                alert('❌ Erro ao salvar: ' + erro.message);
+            let novoStatus = document.getElementById('editStatus').value;
+            if (dataEnvio) {
+                novoStatus = 'entregue';
+            } else if (!dataEnvio && novoStatus === 'entregue') {
+                novoStatus = 'pendente';
             }
+            document.getElementById('editStatus').value = novoStatus;
+
+            const dadosAtualizacao = {
+                data_solicitacao: dataSolicitacao,
+                data_envio: dataEnvio ? dataEnvio + 'T00:00:00' : null,
+                status: novoStatus,
+                forma_envio: document.getElementById('editFormaEnvio').value || null,
+                codigo_rastreio: document.getElementById('editCodigoRastreio').value || null,
+                valor_frete: document.getElementById('editValorFrete').value ? parseFloat(document.getElementById('editValorFrete').value) : null,
+                observacoes: document.getElementById('editObservacoes').value || null,
+                atualizado_em: new Date().toISOString()
+            };
+
+            const btn = document.querySelector('#modalEdicao .btn-salvar');
+            btn.innerHTML = '⏳...'; btn.disabled = true;
+            try {
+                const { error } = await supabaseClient.from('solicitacoes_pg').update(dadosAtualizacao).eq('id', solicitacaoId);
+                if (error) throw error;
+                const index = dadosCarregados.findIndex(d => d.id === solicitacaoId);
+                if (index !== -1) dadosCarregados[index] = { ...dadosCarregados[index], ...dadosAtualizacao };
+                renderizarTabela(); fecharModalEdicao();
+                mostrarNotificacao(dataEnvio ? '✅ Atualizado! Status: Entregue' : '✅ Atualizado!');
+            } catch (erro) { alert('❌ Erro: ' + erro.message); }
+            finally { btn.innerHTML = '💾 Salvar'; btn.disabled = false; }
         }
 
-        function abrirModalExclusao(index) {
-            const item = dadosCarregados.find(d => d.index === index);
-            if (!item) return;
-
-            document.getElementById('excluirSolicitacaoId').value = item.id;
+        function abrirModalExclusao(solicitacaoId) {
+            document.getElementById('excluirSolicitacaoId').value = solicitacaoId;
             document.getElementById('modalExclusao').classList.add('ativo');
         }
-
-        function fecharModalExclusao() {
-            document.getElementById('modalExclusao').classList.remove('ativo');
-        }
+        function fecharModalExclusao() { document.getElementById('modalExclusao').classList.remove('ativo'); }
 
         async function confirmarExclusao() {
-            const id = document.getElementById('excluirSolicitacaoId').value;
-
+            const solicitacaoId = document.getElementById('excluirSolicitacaoId').value;
+            const btn = document.querySelector('#modalExclusao .btn-danger');
+            btn.innerHTML = '⏳...'; btn.disabled = true;
             try {
-                const { error } = await supabaseClient
-                    .from('solicitacoes_pg')
-                    .delete()
-                    .eq('id', id);
-
+                const { error } = await supabaseClient.from('solicitacoes_pg').delete().eq('id', solicitacaoId);
                 if (error) throw error;
+                const index = dadosCarregados.findIndex(d => d.id === solicitacaoId);
+                if (index !== -1) { dadosCarregados.splice(index, 1); dadosCarregados.forEach((item, i) => item.index = i); }
+                idsSelecionados.delete(index);
+                renderizarTabela(); atualizarEstatisticas(); fecharModalExclusao(); mostrarNotificacao('🗑️ Excluído!');
+            } catch (erro) { alert('❌ Erro: ' + erro.message); }
+            finally { btn.innerHTML = '🗑️ Excluir'; btn.disabled = false; }
+        }
 
-                dadosCarregados = dadosCarregados.filter(d => d.id !== id);
-                idsSelecionados.delete(dadosCarregados.findIndex(d => d.id === id));
+        function mostrarNotificacao(mensagem) {
+            const notif = document.createElement('div');
+            notif.style.cssText = 'position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #11998e, #38ef7d); color: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 9999; font-weight: 600; animation: slideInRight 0.3s ease;';
+            notif.textContent = mensagem;
+            document.body.appendChild(notif);
+            setTimeout(() => { notif.style.animation = 'slideOutRight 0.3s ease'; setTimeout(() => notif.remove(), 300); }, 3000);
+        }
 
-                renderizarTabela();
-                atualizarEstatisticas();
-                fecharModalExclusao();
-                mostrarNotificacao('🗑️ Excluído com sucesso!');
-            } catch (erro) {
-                alert('❌ Erro ao excluir: ' + erro.message);
-            }
+        function toggleSelecao(index) {
+            if (idsSelecionados.has(index)) idsSelecionados.delete(index); else idsSelecionados.add(index);
+            const tr = document.querySelector(`tr[data-index="${index}"]`);
+            if (tr) tr.classList.toggle('selecionado', idsSelecionados.has(index));
+            atualizarContadores(); atualizarBotoes();
+        }
+
+    function toggleSelecionarTodos() {
+    // Pega o estado do checkbox que foi clicado
+    const checkboxHeader = document.getElementById('checkboxHeader');
+    const checkboxMassa = document.getElementById('selecionarTodos');
+    
+    // Sincroniza ambos os checkboxes
+    const checked = checkboxHeader.checked;
+    checkboxMassa.checked = checked;
+    
+    // Limpa ou preenche o Set de seleção
+    idsSelecionados.clear();
+    if (checked) {
+        dadosCarregados.forEach(item => idsSelecionados.add(item.index));
+    }
+    
+    // ✅ CORREÇÃO: Atualiza visualmente todas as linhas SEM recriar a tabela toda
+    const todasLinhas = document.querySelectorAll('#tabelaBody tr[data-index]');
+    todasLinhas.forEach(tr => {
+        const index = parseInt(tr.dataset.index);
+        const checkbox = tr.querySelector('.checkbox-selecao');
+        
+        if (checkbox) {
+            checkbox.checked = checked;
+        }
+        
+        if (checked) {
+            tr.classList.add('selecionado');
+        } else {
+            tr.classList.remove('selecionado');
+        }
+    });
+    
+    atualizarContadores();
+    atualizarBotoes();
+}
+        function atualizarContadores() {
+            document.getElementById('statSelecionadas').textContent = idsSelecionados.size;
+            document.getElementById('infoSelecao').textContent = idsSelecionados.size > 0 ? `${idsSelecionados.size} de ${dadosCarregados.length}` : '';
+        }
+
+        function atualizarEstatisticas() {
+            const total = dadosCarregados.length;
+            const floripa = dadosCarregados.filter(d => { const r = (d.regiao || '').toLowerCase(); return r.includes('florianópolis') || r.includes('floripa'); }).length;
+            const sc = dadosCarregados.filter(d => { const r = (d.regiao || '').toLowerCase(); return (r.includes('catarina') || r.includes('sc')) && !r.includes('florianópolis'); }).length;
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statFloripa').textContent = floripa;
+            document.getElementById('statSC').textContent = sc;
+            document.getElementById('statOutros').textContent = total - floripa - sc;
+            atualizarContadores();
+        }
+
+        function atualizarBotoes() {
+            const habilitado = idsSelecionados.size > 0;
+            document.getElementById('btnGerarPDF').disabled = !habilitado;
+            document.getElementById('btnGerarEtiquetas').disabled = !habilitado;
+            document.getElementById('btnEmitirEtiquetas').disabled = !habilitado;
         }
 
         function limparFiltros() {
-            document.getElementById('dataInicial').value = '';
+            ['dataInicial', 'dataFinal'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('horaInicial').value = '00:00';
-            document.getElementById('dataFinal').value = '';
             document.getElementById('horaFinal').value = '17:00';
-            removerFiltroCliente();
-            removerFiltroNumeroPedido();
             document.getElementById('tabelaContainer').style.display = 'none';
             document.getElementById('statsContainer').style.display = 'none';
             document.getElementById('emptyState').style.display = 'block';
-            document.getElementById('emptyState').innerHTML = '<div class="empty-state-icon">📅</div><h3>Selecione um período</h3><p>Escolha filtros acima e clique em Buscar</p>';
+            dadosCarregados = []; idsSelecionados.clear();
+            document.getElementById('checkboxHeader').checked = false;
+            document.getElementById('selecionarTodos').checked = false;
+            removerFiltroCliente();
+            removerFiltroNumeroPedido();
+            
+            const hoje = new Date();
+            const seteDiasAtras = new Date(hoje.getTime() - (7 * 24 * 60 * 60 * 1000));
+            document.getElementById('dataFinal').value = formatarDataInput(hoje);
+            document.getElementById('dataInicial').value = formatarDataInput(seteDiasAtras);
         }
 
-        function gerarPDF() {
-            if (idsSelecionados.size === 0) {
-                alert('Selecione pelo menos uma solicitação');
-                return;
-            }
-
-            const selecionados = dadosCarregados.filter(d => idsSelecionados.has(d.index));
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            doc.setFontSize(16);
-            doc.text('Gerenciamento de Entregas - Pingo de Gente', 14, 20);
-            doc.setFontSize(10);
-            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 30);
-
-            const headers = [['Nº Pedido', 'Data', 'Nome', 'CPF', 'Região', 'Status', 'Medidas']];
-            const data = selecionados.map(item => [
-                item.numero_solicitacao || '-',
-                formatarDataBr(item.data_solicitacao),
-                item.nome || '-',
-                formatarCPF(item.cpf),
-                item.regiao || '-',
-                item.status || 'Pendente',
-                item.peso_kg ? `${item.peso_kg}kg` : '-'
-            ]);
-
-            doc.autoTable({
-                head: headers,
-                body: data,
-                startY: 40,
-                styles: { fontSize: 9, cellPadding: 2 },
-                headStyles: { fillColor: [255, 107, 138] }
-            });
-
-            doc.save(`entregas_${new Date().toISOString().split('T')[0]}.pdf`);
-        }
-
-        function gerarEtiquetas() {
-            if (idsSelecionados.size === 0) {
-                alert('Selecione pelo menos uma solicitação');
-                return;
-            }
-
-            const selecionados = dadosCarregados.filter(d => idsSelecionados.has(d.index));
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            const etiquetaWidth = 100;
-            const etiquetaHeight = 60;
-            const margin = 10;
-            let x = margin;
-            let y = margin;
-            let count = 0;
-
-            selecionados.forEach((item, idx) => {
-                if (count > 0 && count % 4 === 0) {
-                    doc.addPage();
-                    x = margin;
-                    y = margin;
-                }
-
-                doc.setDrawColor(200);
-                doc.rect(x, y, etiquetaWidth, etiquetaHeight);
-
-                doc.setFontSize(12);
-                doc.setFont(undefined, 'bold');
-                doc.text('DESTINATÁRIO:', x + 5, y + 10);
-                doc.setFont(undefined, 'normal');
-                doc.setFontSize(10);
-                doc.text(item.nome || '-', x + 5, y + 18);
-                doc.text(`${item.rua || ''}, ${item.numero || ''}`, x + 5, y + 26);
-                doc.text(`${item.bairro || ''} - ${item.cidade || ''}/${item.estado || ''}`, x + 5, y + 34);
-                doc.text(`CEP: ${formatarCEP(item.cep)}`, x + 5, y + 42);
-                doc.text(`Tel: ${item.whatsapp || '-'}`, x + 5, y + 50);
-
-                doc.setFontSize(8);
-                doc.text(`Pedido: ${item.numero_solicitacao || '-'}`, x + 5, y + 57);
-
-                x += etiquetaWidth + 5;
-                if (x > 150) {
-                    x = margin;
-                    y += etiquetaHeight + 5;
-                }
-                count++;
-            });
-
-            doc.save(`etiquetas_${new Date().toISOString().split('T')[0]}.pdf`);
-        }
-
-        function abrirModalEtiquetas() {
-            if (idsSelecionados.size === 0) {
-                alert('Selecione pelo menos uma solicitação');
-                return;
-            }
-
-            const selecionados = dadosCarregados.filter(d => idsSelecionados.has(d.index));
-            const container = document.getElementById('etiquetasContainer');
-
-            container.innerHTML = selecionados.map(item => {
-                const enderecoCompleto = `${item.rua || ''}, ${item.numero || ''}${item.complemento ? ' - ' + item.complemento : ''} - ${item.bairro || ''}, ${item.cidade || ''} - ${item.estado || ''} - CEP: ${formatarCEP(item.cep)}`;
-
-                return `
-                    <div class="etiqueta-card">
-                        <div class="etiqueta-numero">${item.numero_solicitacao || 'Sem número'}</div>
-
-                        <div class="etiqueta-grid">
-                            <div class="campo-copiar">
-                                <span class="campo-label">Nome:</span>
-                                <span class="campo-valor" id="nome_${item.id}">${item.nome || '-'}</span>
-                                <button class="btn-copiar-campo" onclick="copiarCampo('nome_${item.id}', this)">📋 Copiar</button>
-                            </div>
-
-                            <div class="campo-copiar">
-                                <span class="campo-label">WhatsApp:</span>
-                                <span class="campo-valor" id="whatsapp_${item.id}">${item.whatsapp || '-'}</span>
-                                <button class="btn-copiar-campo" onclick="copiarCampo('whatsapp_${item.id}', this)">📋 Copiar</button>
-                            </div>
-
-                            <div class="campo-copiar campo-endereco-completo">
-                                <span class="campo-label">Endereço:</span>
-                                <span class="campo-valor" id="endereco_${item.id}">${enderecoCompleto}</span>
-                                <button class="btn-copiar-campo" onclick="copiarCampo('endereco_${item.id}', this)">📋 Copiar</button>
-                            </div>
-
-                            <div class="campo-copiar">
-                                <span class="campo-label">CEP:</span>
-                                <span class="campo-valor" id="cep_${item.id}">${formatarCEP(item.cep)}</span>
-                                <button class="btn-copiar-campo" onclick="copiarCampo('cep_${item.id}', this)">📋 Copiar</button>
-                            </div>
-
-                            <div class="campo-copiar">
-                                <span class="campo-label">Cidade/UF:</span>
-                                <span class="campo-valor" id="cidade_${item.id}">${item.cidade || '-'}/${item.estado || '-'}</span>
-                                <button class="btn-copiar-campo" onclick="copiarCampo('cidade_${item.id}', this)">📋 Copiar</button>
-                            </div>
-                        </div>
-
-                        ${item.peso_kg ? `
-                        <div class="etiqueta-secao">
-                            <div class="etiqueta-secao-titulo">📦 Medidas do Pacote</div>
-                            <div class="medidas-etiqueta">
-                                <div class="medida-item"><strong>Peso:</strong> ${item.peso_kg} kg</div>
-                                ${item.altura_cm ? `<div class="medida-item"><strong>Dimensões:</strong> ${item.altura_cm}×${item.largura_cm}×${item.comprimento_cm} cm</div>` : ''}
-                            </div>
-                        </div>
-                        ` : ''}
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('modalEtiquetas').classList.add('ativo');
-        }
-
+               // ============================================
+        // NOVA FUNÇÃO: MODAL DE EMISSÃO DE ETIQUETAS
+        // ============================================
+        
+               // ============================================
+        // NOVA FUNÇÃO: MODAL DE EMISSÃO DE ETIQUETAS
+        // ============================================
+        
         function fecharModalEtiquetas() {
             document.getElementById('modalEtiquetas').classList.remove('ativo');
         }
 
-        async function copiarCampo(elementId, btn) {
+        function copiarCampo(elementId, botao) {
             const elemento = document.getElementById(elementId);
+            if (!elemento) return;
+            
             const texto = elemento.textContent;
-
-            try {
-                await navigator.clipboard.writeText(texto);
-
-                btn.classList.add('copiado');
-                btn.textContent = '✅ Copiado!';
-                elemento.parentElement.classList.add('copiado');
-
+            
+            navigator.clipboard.writeText(texto).then(() => {
+                // Feedback visual no botão
+                botao.textContent = '✅ Copiado';
+                botao.classList.add('copiado');
+                
+                // Feedback visual no campo
+                const campoCopiar = botao.closest('.campo-copiar');
+                if (campoCopiar) campoCopiar.classList.add('copiado');
+                
+                // Volta ao normal após 2 segundos
                 setTimeout(() => {
-                    btn.classList.remove('copiado');
-                    btn.textContent = '📋 Copiar';
-                    elemento.parentElement.classList.remove('copiado');
+                    botao.textContent = '📋 Copiar';
+                    botao.classList.remove('copiado');
+                    if (campoCopiar) campoCopiar.classList.remove('copiado');
                 }, 2000);
-            } catch (err) {
+            }).catch(err => {
                 console.error('Erro ao copiar:', err);
-                alert('Erro ao copiar. Selecione e copie manualmente.');
+                // Fallback para navegadores antigos
+                const range = document.createRange();
+                range.selectNode(elemento);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                document.execCommand('copy');
+                window.getSelection().removeAllRanges();
+            });
+        }
+        
+        function abrirModalEtiquetas() {
+            if (idsSelecionados.size === 0) {
+                alert('⚠️ Selecione pelo menos uma entrega para emitir etiquetas.');
+                return;
+            }
+
+            const dadosSelecionados = Array.from(idsSelecionados).map(index => {
+                return dadosCarregados.find(d => d.index === index);
+            }).filter(Boolean);
+
+            const container = document.getElementById('etiquetasContainer');
+            container.innerHTML = '';
+
+            dadosSelecionados.forEach((item, idx) => {
+                const enderecoCompleto = `${item.rua || ''}, ${item.numero || 'S/N'}${item.complemento ? ' - ' + item.complemento : ''}`;
+                const cidadeUF = `${item.cidade || ''} - ${item.estado || 'SC'}`;
+                
+                // Verifica se há medidas preenchidas
+                const temMedidas = item.peso_kg || item.altura_cm || item.largura_cm || item.comprimento_cm;
+                
+                const medidasHtml = temMedidas ? `
+                    <div class="etiqueta-secao">
+                        <div class="etiqueta-secao-titulo">📦 Medidas do Pacote</div>
+                        <div class="etiqueta-grid">
+                            ${item.peso_kg ? `
+                            <div class="campo-copiar">
+                                <span class="campo-label">Peso:</span>
+                                <span class="campo-valor" id="peso-${idx}">${item.peso_kg} kg</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('peso-${idx}', this)">📋 Copiar</button>
+                            </div>` : ''}
+                            ${item.altura_cm ? `
+                            <div class="campo-copiar">
+                                <span class="campo-label">Altura:</span>
+                                <span class="campo-valor" id="altura-${idx}">${item.altura_cm} cm</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('altura-${idx}', this)">📋 Copiar</button>
+                            </div>` : ''}
+                            ${item.largura_cm ? `
+                            <div class="campo-copiar">
+                                <span class="campo-label">Largura:</span>
+                                <span class="campo-valor" id="largura-${idx}">${item.largura_cm} cm</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('largura-${idx}', this)">📋 Copiar</button>
+                            </div>` : ''}
+                            ${item.comprimento_cm ? `
+                            <div class="campo-copiar">
+                                <span class="campo-label">Comprimento:</span>
+                                <span class="campo-valor" id="comprimento-${idx}">${item.comprimento_cm} cm</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('comprimento-${idx}', this)">📋 Copiar</button>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                ` : `
+                    <div class="etiqueta-secao">
+                        <div class="etiqueta-secao-titulo">📦 Medidas do Pacote</div>
+                        <div style="padding: 15px; background: #FFF3E0; border-radius: 8px; color: #E65100; font-size: 0.9rem;">
+                            ⚠️ Medidas não cadastradas para esta entrega
+                        </div>
+                    </div>
+                `;
+
+                const card = document.createElement('div');
+                card.className = 'etiqueta-card';
+                card.innerHTML = `
+                    <div class="etiqueta-numero">${item.numero_solicitacao || 'Sem Número'}</div>
+                    
+                    <div class="etiqueta-secao">
+                        <div class="etiqueta-secao-titulo">👤 Dados do Destinatário</div>
+                        <div class="etiqueta-grid">
+                            <div class="campo-copiar">
+                                <span class="campo-label">Nome:</span>
+                                <span class="campo-valor" id="nome-${idx}">${item.nome || '-'}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('nome-${idx}', this)">📋 Copiar</button>
+                            </div>
+                            <div class="campo-copiar">
+                                <span class="campo-label">CPF:</span>
+                                <span class="campo-valor" id="cpf-${idx}">${formatarCPF(item.cpf)}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('cpf-${idx}', this)">📋 Copiar</button>
+                            </div>
+                            <div class="campo-copiar">
+                                <span class="campo-label">WhatsApp:</span>
+                                <span class="campo-valor" id="whatsapp-${idx}">${item.whatsapp || '-'}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('whatsapp-${idx}', this)">📋 Copiar</button>
+                            </div>
+                            <div class="campo-copiar">
+                                <span class="campo-label">Instagram:</span>
+                                <span class="campo-valor" id="instagram-${idx}">${item.instagram || '-'}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('instagram-${idx}', this)">📋 Copiar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="etiqueta-secao">
+                        <div class="etiqueta-secao-titulo">📍 Endereço de Entrega</div>
+                        <div class="etiqueta-grid">
+                            <div class="campo-copiar campo-endereco-completo">
+                                <span class="campo-label">Endereço:</span>
+                                <span class="campo-valor" id="endereco-${idx}">${enderecoCompleto}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('endereco-${idx}', this)">📋 Copiar</button>
+                            </div>
+                            <div class="campo-copiar">
+                                <span class="campo-label">Bairro:</span>
+                                <span class="campo-valor" id="bairro-${idx}">${item.bairro || '-'}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('bairro-${idx}', this)">📋 Copiar</button>
+                            </div>
+                            <div class="campo-copiar">
+                                <span class="campo-label">Cidade/UF:</span>
+                                <span class="campo-valor" id="cidade-${idx}">${cidadeUF}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('cidade-${idx}', this)">📋 Copiar</button>
+                            </div>
+                            <div class="campo-copiar">
+                                <span class="campo-label">CEP:</span>
+                                <span class="campo-valor" id="cep-${idx}">${formatarCEP(item.cep)}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('cep-${idx}', this)">📋 Copiar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${medidasHtml}
+
+                    <div class="etiqueta-secao">
+                        <div class="etiqueta-secao-titulo">📝 Informações Adicionais</div>
+                        <div class="etiqueta-grid">
+                            <div class="campo-copiar campo-endereco-completo">
+                                <span class="campo-label">Observações:</span>
+                                <span class="campo-valor" id="obs-${idx}">${item.observacoes || 'Nenhuma observação'}</span>
+                                <button class="btn-copiar-campo" onclick="copiarCampo('obs-${idx}', this)">📋 Copiar</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('modalEtiquetas').classList.add('ativo');
+        }
+
+        // ============================================
+        // FUNÇÃO GERAR PDF - MODIFICADA CONFORME SOLICITADO
+        // ============================================
+        async function gerarPDF() {
+    if (idsSelecionados.size === 0) {
+        alert('⚠️ Selecione pelo menos uma solicitação para gerar o PDF.');
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('landscape');
+
+    const dataInicial = document.getElementById('dataInicial').value;
+    const dataFinal = document.getElementById('dataFinal').value;
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Loja e Brechó Pingo de Gente - Solicitações de Entrega', 15, 15);
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Período: ${formatarDataInputParaBr(dataInicial)} a ${formatarDataInputParaBr(dataFinal)}`, 15, 22);
+
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(10, 25, 287, 25);
+
+    // ============================================
+    // ORDENAÇÃO ALFABÉTICA PELA COLUNA NOME
+    // ============================================
+    const dadosSelecionados = Array.from(idsSelecionados).map(index => {
+        return dadosCarregados.find(d => d.index === index);
+    }).filter(Boolean);
+
+    // Ordena alfabeticamente pelo nome (case-insensitive)
+    dadosSelecionados.sort((a, b) => {
+        const nomeA = (a.nome || '').toLowerCase();
+        const nomeB = (b.nome || '').toLowerCase();
+        return nomeA.localeCompare(nomeB, 'pt-BR');
+    });
+
+    // ============================================
+    // MONTA OS DADOS SEM A COLUNA Nº PEDIDO
+    // E COM A NOVA COLUNA "DADOS DO PACOTE"
+    // ============================================
+    const dadosTabela = dadosSelecionados.map(item => {
+        return [
+            formatarDataBr(item.data_solicitacao),
+            item.nome || '-',
+            item.instagram || '-',
+            item.regiao || '-',
+            formatarCEP(item.cep),
+            item.cidade || '-',
+            item.observacoes || '-',
+            'Peso:     Medidas: '  // Nova coluna pré-preenchida
+        ];
+    });
+
+    doc.autoTable({
+        head: [['Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Observações', 'Dados do pacote']],
+        body: dadosTabela,
+        startY: 30,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [255, 255, 255],
+            textColor: [0, 0, 0],
+            fontSize: 11,
+            fontStyle: 'bold',
+            lineColor: [0, 0, 0],
+            lineWidth: 0.5
+        },
+        bodyStyles: {
+            fontSize: 10,
+            textColor: [0, 0, 0],
+            fillColor: [255, 255, 255],
+            minCellHeight: 35,  // ✅ ALTURA MÍNIMA DA CÉLULA PARA 3 LINHAS
+            valign: 'middle'    // Alinhamento vertical no meio
+        },
+        alternateRowStyles: {
+            fillColor: [255, 255, 255]
+        },
+        columnStyles: {
+            0: { cellWidth: 25 },  // Data
+            1: { cellWidth: 45 },  // Nome
+            2: { cellWidth: 30 },  // Instagram
+            3: { cellWidth: 40 },  // Região
+            4: { cellWidth: 25 },  // CEP
+            5: { cellWidth: 30 },  // Cidade
+            6: { cellWidth: 50 },  // Observações
+            7: { cellWidth: 40 }   // Dados do pacote (nova coluna)
+        },
+        margin: { top: 30, left: 10, right: 10 },
+        styles: {
+            lineColor: [0, 0, 0],
+            lineWidth: 0.5,
+            cellPadding: 5  // ✅ ESPAÇAMENTO INTERNO PARA MELHOR ESCRITA
+        }
+    });
+
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(
+            `Página ${i} de ${pageCount} - Total de ${dadosSelecionados.length} solicitações selecionadas`,
+            297 / 2,
+            210 - 10,
+            { align: 'center' }
+        );
+    }
+
+    const pdfBlobUrl = doc.output('bloburl');
+    const novaAba = window.open(pdfBlobUrl, '_blank');
+    if (!novaAba) {
+        alert('❌ O navegador bloqueou a abertura de nova aba. Por favor, permita popups para este site.');
+    }
+}
+        async function gerarEtiquetas() {
+            if (idsSelecionados.size === 0) {
+                alert('⚠️ Selecione pelo menos uma solicitação para gerar as etiquetas.');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('portrait', 'mm', 'a4');
+            
+            const margemX = 10;
+            const margemY = 10;
+            const gapX = 5;
+            const gapY = 5;
+            
+            const etiquetaLargura = 92.5;
+            const etiquetaAltura = 136;
+            
+            const posicoesX = [margemX, margemX + etiquetaLargura + gapX];
+            const posicoesY = [margemY, margemY + etiquetaAltura + gapY];
+
+            const dadosSelecionados = Array.from(idsSelecionados).map(index => 
+                dadosCarregados.find(d => d.index === index)
+            ).filter(Boolean);
+            
+            let etiquetaAtual = 0;
+            
+            dadosSelecionados.forEach((item, index) => {
+                const posicaoNaPagina = etiquetaAtual % 4;
+                const coluna = posicaoNaPagina % 2;
+                const linha = Math.floor(posicaoNaPagina / 2);
+                
+                if (posicaoNaPagina === 0 && index > 0) {
+                    doc.addPage();
+                }
+                
+                const posX = posicoesX[coluna];
+                const posY = posicoesY[linha];
+                
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.5);
+                doc.rect(posX, posY, etiquetaLargura, etiquetaAltura);
+                
+                doc.line(posX, posY + 28, posX + etiquetaLargura, posY + 28);
+                
+                doc.setFontSize(7);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(100, 100, 100);
+                doc.text('REMETENTE:', posX + 3, posY + 6);
+                
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(0, 0, 0);
+                doc.text(REMETENTE.nome, posX + 3, posY + 13);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text(REMETENTE.endereco, posX + 3, posY + 19);
+                doc.text(`${REMETENTE.bairro} - ${REMETENTE.cidade} - ${REMETENTE.estado}`, posX + 3, posY + 24);
+                
+                const destY = posY + 35;
+                
+                doc.setFontSize(7);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(100, 100, 100);
+                doc.text('DESTINATÁRIO:', posX + 3, destY);
+                
+                if (item.numero_solicitacao) {
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(255, 107, 138);
+                    doc.text(`PEDIDO: ${item.numero_solicitacao}`, posX + etiquetaLargura - 3, destY, { align: 'right' });
+                }
+                
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(0, 0, 0);
+                const nome = (item.nome || 'NÃO INFORMADO').toUpperCase();
+                const nomeLinhas = doc.splitTextToSize(nome, etiquetaLargura - 6);
+                doc.text(nomeLinhas, posX + 3, destY + 8);
+                
+                let currentY = destY + 8 + (nomeLinhas.length * 5);
+                
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                
+                const rua = item.rua || '';
+                const numero = item.numero || 'S/N';
+                const complemento = item.complemento || '';
+                let linhaEndereco = `${rua}, ${numero}`;
+                if (complemento) {
+                    linhaEndereco += ` - ${complemento}`;
+                }
+                
+                const linhasEndereco = doc.splitTextToSize(linhaEndereco, etiquetaLargura - 6);
+                doc.text(linhasEndereco, posX + 3, currentY);
+                currentY += (linhasEndereco.length * 4.5) + 2;
+                
+                const bairro = item.bairro || '';
+                if (bairro) {
+                    doc.text(`Bairro: ${bairro}`, posX + 3, currentY);
+                    currentY += 5;
+                }
+                
+                const cidade = item.cidade || '';
+                const estado = item.estado || 'SC';
+                doc.setFont('helvetica', 'bold');
+                doc.text(`${cidade} - ${estado}`, posX + 3, currentY);
+                currentY += 8;
+                
+                const cep = formatarCEP(item.cep);
+                doc.setFontSize(11);
+                doc.text(`CEP: ${cep}`, posX + 3, currentY + 1);
+                
+                const obsY = posY + etiquetaAltura - 20;
+                
+                doc.setDrawColor(150, 150, 150);
+                doc.setLineWidth(0.3);
+                doc.line(posX + 3, obsY, posX + etiquetaLargura - 3, obsY);
+                
+                doc.setFontSize(7);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(100, 100, 100);
+                doc.text('OBSERVAÇÕES:', posX + 3, obsY + 5);
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(0, 0, 0);
+                const obs = item.observacoes || 'Nenhuma observação';
+                const linhasObs = doc.splitTextToSize(obs, etiquetaLargura - 6);
+                const linhasLimitadas = linhasObs.slice(0, 2);
+                doc.text(linhasLimitadas, posX + 3, obsY + 10);
+                
+                doc.setFontSize(6);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`${index + 1}/${dadosSelecionados.length}`, posX + etiquetaLargura - 2, posY + etiquetaAltura - 2, { align: 'right' });
+                
+                etiquetaAtual++;
+            });
+
+            const pdfBlobUrl = doc.output('bloburl');
+            const novaAba = window.open(pdfBlobUrl, '_blank');
+            if (!novaAba) {
+                alert('❌ O navegador bloqueou a abertura de nova aba. Por favor, permita popups para este site.');
             }
         }
 
         function fazerLogout() {
             localStorage.removeItem('pingo_senha_hash');
-            window.location.href = 'login.html';
-        }
-
-        function mostrarNotificacao(mensagem) {
-            const notif = document.createElement('div');
-            notif.style.cssText = 'position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #4ECDC4, #44A08D); color: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 9999; font-weight: 600; animation: slideInRight 0.3s ease;';
-            notif.textContent = mensagem;
-            document.body.appendChild(notif);
-
-            setTimeout(() => {
-                notif.style.animation = 'slideOutRight 0.3s ease';
-                setTimeout(() => notif.remove(), 300);
-            }, 3000);
+            window.location.replace('login.html');
         }
     </script>
 </body>
