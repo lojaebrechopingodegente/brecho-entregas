@@ -833,7 +833,10 @@
         }
 
         // ============================================
-        // BUSCA POR NOME DO CLIENTE - SEM ACENTOS (CORRIGIDO)
+        // BUSCA POR NOME DO CLIENTE - SEM ACENTOS (CORRIGIDO V2)
+        // ============================================
+        // PROBLEMA: PostgreSQL ilike é case-insensitive mas NÃO é accent-insensitive
+        // SOLUÇÃO: Buscar todos os registros potenciais e filtrar 100% client-side
         // ============================================
         async function buscarClientes() {
             if (!supabaseClient) return;
@@ -843,7 +846,7 @@
             const whatsapp = document.getElementById('buscaWhatsApp').value.trim().replace(/\D/g, '');
             
             // Verifica se há critérios de busca suficientes
-            const termoBuscaNome = nome.length >= 2; // Reduzido para 2 caracteres
+            const termoBuscaNome = nome.length >= 2;
             const termoBuscaOutros = cpf.length >= 3 || instagram.length >= 3 || whatsapp.length >= 3;
             
             if (!termoBuscaNome && !termoBuscaOutros) { 
@@ -854,25 +857,29 @@
             try {
                 let query = supabaseClient.from('clientes_pg').select('*');
                 
-                // Para CPF, Instagram e WhatsApp - busca exata parcial
+                // Para CPF, Instagram e WhatsApp - busca exata parcial no banco
                 if (cpf.length >= 3) query = query.ilike('cpf', `%${cpf}%`);
                 if (instagram.length >= 3) query = query.ilike('instagram', `%${instagram}%`);
                 if (whatsapp.length >= 3) query = query.ilike('whatsapp', `%${whatsapp}%`);
                 
-                // Para Nome - busca mais ampla usando ilike (case-insensitive)
-                // Buscamos tanto o termo original quanto variações
+                // Para Nome - ESTRATÉGIA DIFERENTE
+                // Como PostgreSQL ilike não é accent-insensitive, buscamos TODOS os registros
+                // que começam com a primeira letra do termo (para reduzir volume)
+                // e depois filtramos 100% client-side
                 if (nome.length >= 2) {
-                    // Busca com ilike no banco (case-insensitive)
-                    query = query.ilike('nome', `%${nome}%`);
+                    const primeiraLetra = nome.charAt(0).toLowerCase();
+                    // Busca todos os nomes que começam com a mesma letra (com ou sem acento)
+                    // Isso pega "Débora" quando buscamos "debora" porque ambos começam com D/d
+                    query = query.ilike('nome', `${primeiraLetra}%`);
                 }
                 
-                const { data, error } = await query.limit(50); // Aumentado o limite para pegar mais resultados
+                const { data, error } = await query.limit(100); // Aumentado para pegar mais resultados
                 if (error) { 
                     console.error('Erro:', error); 
                     return; 
                 }
                 
-                // Se há busca por nome, aplica filtro client-side sem acentos
+                // Se há busca por nome, aplica filtro client-side SEM ACENTOS
                 let resultadosFiltrados = data || [];
                 if (nome.length >= 2) {
                     resultadosFiltrados = filtrarPorNomeSemAcentos(resultadosFiltrados, nome);
@@ -885,7 +892,7 @@
         }
 
         // ============================================
-        // FILTRO CLIENT-SIDE POR NOME SEM ACENTOS (CORRIGIDO)
+        // FILTRO CLIENT-SIDE POR NOME SEM ACENTOS (CORRIGIDO V2)
         // ============================================
         function filtrarPorNomeSemAcentos(clientes, termoBusca) {
             if (!termoBusca || termoBusca.length < 2) return clientes;
@@ -893,6 +900,7 @@
             const termoNormalizado = removerAcentos(termoBusca);
             
             return clientes.filter(cliente => {
+                if (!cliente.nome) return false;
                 const nomeNormalizado = removerAcentos(cliente.nome);
                 // Verifica se o nome normalizado contém o termo normalizado
                 return nomeNormalizado.includes(termoNormalizado);
