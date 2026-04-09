@@ -1395,6 +1395,9 @@
             document.getElementById('modalEtiquetas').classList.add('ativo');
         }
 
+        // ============================================
+        // FUNÇÃO GERAR PDF - MODIFICADA CONFORME SOLICITADO
+        // ============================================
         async function gerarPDF() {
             if (idsSelecionados.size === 0) {
                 alert('⚠️ Selecione pelo menos uma solicitação para gerar o PDF.');
@@ -1420,23 +1423,40 @@
             doc.setLineWidth(0.5);
             doc.line(10, 25, 287, 25);
 
+            // ============================================
+            // ORDENAÇÃO ALFABÉTICA PELA COLUNA NOME
+            // ============================================
             const dadosSelecionados = Array.from(idsSelecionados).map(index => {
-                const item = dadosCarregados.find(d => d.index === index);
+                return dadosCarregados.find(d => d.index === index);
+            }).filter(Boolean);
+
+            // Ordena alfabeticamente pelo nome (case-insensitive)
+            dadosSelecionados.sort((a, b) => {
+                const nomeA = (a.nome || '').toLowerCase();
+                const nomeB = (b.nome || '').toLowerCase();
+                return nomeA.localeCompare(nomeB, 'pt-BR');
+            });
+
+            // ============================================
+            // MONTA OS DADOS SEM A COLUNA Nº PEDIDO
+            // E COM A NOVA COLUNA "DADOS DO PACOTE"
+            // ============================================
+            const dadosTabela = dadosSelecionados.map(item => {
                 return [
-                    item.numero_solicitacao || '-',
                     formatarDataBr(item.data_solicitacao),
                     item.nome || '-',
                     item.instagram || '-',
                     item.regiao || '-',
                     formatarCEP(item.cep),
                     item.cidade || '-',
-                    item.observacoes || '-'
+                    item.observacoes || '-',
+                    'Peso:     Medidas: '  // Nova coluna pré-preenchida
                 ];
             });
 
             doc.autoTable({
-                head: [['Nº Pedido', 'Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Observações']],
-                body: dadosSelecionados,
+                head: [['Data', 'Nome', 'Instagram', 'Região', 'CEP', 'Cidade', 'Observações', 'Dados do pacote']],
+                body: dadosTabela,
                 startY: 30,
                 theme: 'grid',
                 headStyles: {
@@ -1456,14 +1476,14 @@
                     fillColor: [255, 255, 255]
                 },
                 columnStyles: {
-                    0: { cellWidth: 30, fontStyle: 'bold' },
-                    1: { cellWidth: 25 },
-                    2: { cellWidth: 45 },
-                    3: { cellWidth: 30 },
-                    4: { cellWidth: 40 },
-                    5: { cellWidth: 25 },
-                    6: { cellWidth: 30 },
-                    7: { cellWidth: 'auto' }
+                    0: { cellWidth: 25 },  // Data
+                    1: { cellWidth: 45 },  // Nome
+                    2: { cellWidth: 30 },  // Instagram
+                    3: { cellWidth: 40 },  // Região
+                    4: { cellWidth: 25 },  // CEP
+                    5: { cellWidth: 30 },  // Cidade
+                    6: { cellWidth: 50 },  // Observações
+                    7: { cellWidth: 40 }   // Dados do pacote (nova coluna)
                 },
                 margin: { top: 30, left: 10, right: 10 },
                 styles: {
