@@ -106,6 +106,8 @@
         td { padding: 15px; border-bottom: 1px solid #E0E0E0; color: #636E72; }
         tr:hover { background: #FFF5F7; }
         tr.selecionado { background: #E8F5E9 !important; border-left: 4px solid #4CAF50; }
+        tr.cobrado { background: #E3F2FD !important; }
+        tr.cobrado .btn-cobrar { background: #4CAF50 !important; }
         .checkbox-selecao { width: 20px; height: 20px; cursor: pointer; accent-color: #FF6B8A; }
         
         .acoes-container { display: flex; gap: 5px; flex-wrap: nowrap; }
@@ -114,6 +116,8 @@
         .btn-ver-itens { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
         .btn-cobrar { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; }
         .btn-cobrar:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .btn-cobrar.cobrado { background: #4CAF50 !important; }
+        .btn-cobrar.cobrado::after { content: " ✓"; }
         .btn-add-instagram { background: linear-gradient(135deg, #FF6B6B, #EE5A6F); color: white; }
         .btn-add-instagram:hover { transform: scale(1.05); box-shadow: 0 3px 10px rgba(238, 90, 111, 0.3); }
         
@@ -457,7 +461,7 @@
                 </div>
             </div>
 
-            <button class="btn-salvar" onclick="copiarParaInstagram()" style="margin-top: 20px;">📋 Copiar Mensagem</button>
+            <button class="btn-salvar" onclick="copiarParaInstagram()" style="margin-top: 20px;">📋 Copiar Mensagem e Finalizar</button>
         </div>
     </div>
 
@@ -494,32 +498,6 @@
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="btn-cancelar" onclick="fecharModal('modalInstagramCadastro')" style="flex: 1;">Cancelar</button>
                 <button class="btn-salvar" onclick="salvarInstagram()" style="flex: 2;">💾 Salvar Instagram</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Instruções Desktop -->
-    <div class="modal-instrucoes-overlay" id="modalInstrucoesDesktop">
-        <div class="modal-instrucoes">
-            <h3>📱 Como cobrar <span id="instrucoesUsername"></span></h3>
-            
-            <div class="instrucoes-box">
-                <p>
-                    <strong>Passo a passo:</strong>
-                </p>
-                <p>
-                    1. O perfil do cliente foi aberto em uma nova aba<br>
-                    2. Clique no botão <strong>"Mensagem"</strong> no perfil<br>
-                    3. Cole a mensagem já copiada no Direct
-                </p>
-                <p style="margin-top: 15px;">
-                    <a href="#" id="linkPerfilWeb" target="_blank" class="link-perfil">🔗 Abrir perfil novamente</a>
-                </p>
-            </div>
-            
-            <div class="botoes-instrucoes">
-                <button class="btn-fechar-modal" onclick="fecharModalInstrucoes()">Fechar</button>
-                <button class="btn-copiar-abrir" onclick="copiarEAbrirDirect()">📋 Copiar Mensagem e Abrir Direct</button>
             </div>
         </div>
     </div>
@@ -566,6 +544,10 @@
         let codigoLiveAtual = '';
         let dataLiveAtual = '';
         let clienteIndexAtual = null;
+        let clienteAtualIndex = null; // Para rastrear qual cliente está sendo cobrado
+
+        // Chave para localStorage de cobranças
+        const STORAGE_COBRANCAS = 'cobrancas_enviadas';
 
         // ============================================
         // INICIALIZAÇÃO
@@ -606,7 +588,6 @@
             document.getElementById('modalItens').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalItens(); });
             document.getElementById('modalInstagram').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalInstagram'); });
             document.getElementById('modalInstagramCadastro').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModal('modalInstagramCadastro'); });
-            document.getElementById('modalInstrucoesDesktop').addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalInstrucoes(); });
         });
 
         // ============================================
@@ -620,6 +601,30 @@
         
         function formatarMoeda(valor) {
             return 'R$ ' + parseFloat(valor || 0).toFixed(2).replace('.', ',');
+        }
+
+        // ============================================
+        // GERENCIAMENTO DE COBRANÇAS (localStorage)
+        // ============================================
+        function getCobrancasEnviadas() {
+            const dados = localStorage.getItem(STORAGE_COBRANCAS);
+            return dados ? JSON.parse(dados) : {};
+        }
+
+        function salvarCobrancaEnviada(liveCode, clienteNome) {
+            const cobrancas = getCobrancasEnviadas();
+            if (!cobrancas[liveCode]) {
+                cobrancas[liveCode] = [];
+            }
+            if (!cobrancas[liveCode].includes(clienteNome)) {
+                cobrancas[liveCode].push(clienteNome);
+                localStorage.setItem(STORAGE_COBRANCAS, JSON.stringify(cobrancas));
+            }
+        }
+
+        function clienteJaFoiCobrado(liveCode, clienteNome) {
+            const cobrancas = getCobrancasEnviadas();
+            return cobrancas[liveCode] && cobrancas[liveCode].includes(clienteNome);
         }
 
         // ============================================
@@ -790,6 +795,11 @@
                 tr.dataset.index = index;
                 
                 const temInstagram = cliente.instagram && cliente.instagram.trim() !== '';
+                const jaCobrado = clienteJaFoiCobrado(codigoLiveAtual, cliente.nome);
+                
+                if (jaCobrado) {
+                    tr.classList.add('cobrado');
+                }
                 
                 tr.innerHTML = `
                     <td><input type="checkbox" class="checkbox-selecao" onchange="toggleSelecao(${index})" ${idsSelecionados.has(index) ? 'checked' : ''}></td>
@@ -809,9 +819,9 @@
                             <button class="btn-acao btn-add-instagram" onclick="abrirCadastroInstagram(${index})">
                                 ${temInstagram ? '✏️ Editar IG' : '➕ Add Instagram'}
                             </button>
-                            <button class="btn-acao btn-cobrar" onclick="cobrarCliente(${index})" 
+                            <button class="btn-acao btn-cobrar ${jaCobrado ? 'cobrado' : ''}" onclick="cobrarCliente(${index})" 
                                 ${!temInstagram ? 'disabled title="Cadastre o Instagram primeiro"' : ''}>
-                                📱 Cobrar
+                                📱 ${jaCobrado ? 'Cobrado' : 'Cobrar'}
                             </button>
                         </div>
                     </td>
@@ -1011,6 +1021,7 @@
                 return;
             }
 
+            clienteAtualIndex = index; // Salvar índice do cliente atual
             instagramAtual = cliente.instagram.replace('@', '').trim();
             document.getElementById('igClienteNome').value = `${cliente.nome} (@${instagramAtual})`;
 
@@ -1035,6 +1046,7 @@
                 if (i < indices.length - 1) mensagemCompleta += '\n\n---\n\n';
             });
 
+            clienteAtualIndex = null; // Múltiplos clientes
             instagramAtual = '';
             document.getElementById('igClienteNome').value = `${idsSelecionados.size} clientes selecionados`;
             document.getElementById('igMensagem').value = mensagemCompleta;
@@ -1094,7 +1106,7 @@
                 // ===== MOBILE: Tentar abrir o app nativo =====
                 abrirInstagramMobile(username, isAndroid, isIOS);
             } else {
-                // ===== DESKTOP: Ir direto para web com instruções =====
+                // ===== DESKTOP: Ir direto para web =====
                 abrirInstagramDesktop(username);
             }
         }
@@ -1135,57 +1147,48 @@
         }
 
         function abrirInstagramDesktop(username) {
-            // No desktop, NÃO tentar o protocolo instagram:// pois não está registrado
-            // Ir direto para a versão web com instruções
-            
+            // No desktop, ir direto para a versão web
             const webUrl = `https://www.instagram.com/${username}`;
-            const directUrl = `https://www.instagram.com/direct/inbox/`;
-            
-            // Abrir perfil em nova aba
-            const perfilWindow = window.open(webUrl, '_blank');
-            
-            // Mostrar modal com instruções
-            setTimeout(() => {
-                mostrarInstrucoesDesktop(username, webUrl, directUrl);
-            }, 500);
+            window.open(webUrl, '_blank');
+            showStatus(`Abrindo Instagram de @${username}...`, 'info');
         }
 
-        function mostrarInstrucoesDesktop(username, perfilUrl, directUrl) {
-            document.getElementById('instrucoesUsername').textContent = '@' + username;
-            document.getElementById('linkPerfilWeb').href = perfilUrl;
-            document.getElementById('modalInstrucoesDesktop').classList.add('ativo');
-        }
-
-        function fecharModalInstrucoes() {
-            document.getElementById('modalInstrucoesDesktop').classList.remove('ativo');
-        }
-
-        function copiarEAbrirDirect() {
-            // Copiar mensagem atual
-            const mensagem = document.getElementById('igMensagem').value;
-            navigator.clipboard.writeText(mensagem).then(() => {
-                // Abrir Direct do Instagram Web
-                window.open('https://www.instagram.com/direct/inbox/', '_blank');
-                fecharModalInstrucoes();
-                showStatus('✅ Mensagem copiada! Cole no Direct do Instagram', 'success');
-            }).catch(() => {
-                alert('Erro ao copiar mensagem. Copie manualmente.');
-            });
-        }
-
+        // ============================================
+        // COPIAR E FINALIZAR (NOVO FLUXO)
+        // ============================================
         function copiarParaInstagram() {
             const mensagem = document.getElementById('igMensagem').value;
+            
             navigator.clipboard.writeText(mensagem).then(() => {
-                showStatus('✅ Mensagem copiada!', 'success');
-                
-                // Se estiver no modal de instruções, não perguntar de novo
-                const modalInstrucoes = document.getElementById('modalInstrucoesDesktop');
-                if (!modalInstrucoes.classList.contains('ativo')) {
-                    // Perguntar se quer abrir
-                    if (instagramAtual && confirm('Mensagem copiada! Deseja abrir o Instagram agora?')) {
-                        abrirInstagramCliente();
+                // Marcar cliente como cobrado no localStorage
+                if (clienteAtualIndex !== null && codigoLiveAtual) {
+                    const cliente = clientesAgrupados[clienteAtualIndex];
+                    if (cliente) {
+                        salvarCobrancaEnviada(codigoLiveAtual, cliente.nome);
                     }
+                } else if (idsSelecionados.size > 0 && codigoLiveAtual) {
+                    // Múltiplos clientes selecionados
+                    idsSelecionados.forEach(index => {
+                        const cliente = clientesAgrupados[index];
+                        if (cliente) {
+                            salvarCobrancaEnviada(codigoLiveAtual, cliente.nome);
+                        }
+                    });
                 }
+                
+                // Fechar modal
+                fecharModal('modalInstagram');
+                
+                // Atualizar tabela para mostrar botão verde
+                renderizarTabela();
+                
+                // Redirecionar para coblive.html
+                showStatus('✅ Mensagem copiada! Redirecionando...', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'coblive.html';
+                }, 1000);
+                
             }).catch(() => {
                 // Fallback para navegadores antigos
                 const textarea = document.createElement('textarea');
@@ -1194,7 +1197,21 @@
                 textarea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textarea);
-                alert('✅ Mensagem copiada!');
+                
+                // Mesmo fluxo de sucesso
+                if (clienteAtualIndex !== null && codigoLiveAtual) {
+                    const cliente = clientesAgrupados[clienteAtualIndex];
+                    if (cliente) {
+                        salvarCobrancaEnviada(codigoLiveAtual, cliente.nome);
+                    }
+                }
+                
+                fecharModal('modalInstagram');
+                renderizarTabela();
+                
+                setTimeout(() => {
+                    window.location.href = 'coblive.html';
+                }, 1000);
             });
         }
 
@@ -1219,6 +1236,7 @@
             codigoLiveAtual = '';
             dataLiveAtual = '';
             clienteIndexAtual = null;
+            clienteAtualIndex = null;
             document.getElementById('checkboxHeader').checked = false;
             document.getElementById('selecionarTodos').checked = false;
             carregarLivesNaData();
